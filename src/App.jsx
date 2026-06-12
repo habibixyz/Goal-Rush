@@ -18,7 +18,8 @@ import {
   Flame,
   User,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  LogOut
 } from 'lucide-react'
 
 // Real codebase strings to display in Code Viewer
@@ -763,6 +764,14 @@ export default function App() {
     }
   };
 
+  const handleDisconnectWallet = () => {
+    setWalletConnected(false);
+    setUserAddress('');
+    setUserBalance('0.00');
+    setChainId(null);
+    addLog('Wallet disconnected by user.');
+  };
+
   const handleSwitchNetwork = async () => {
     if (!window.ethereum) return;
     try {
@@ -975,10 +984,31 @@ export default function App() {
           )}
 
           {walletConnected ? (
-            <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.9rem', gap: '8px' }}>
-              <User size={14} /> 
-              <span>{userAddress.slice(0, 6)}...{userAddress.slice(-4)} ({userBalance} OKB)</span>
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'default' }}>
+                <User size={14} /> 
+                <span>{userAddress.slice(0, 6)}...{userAddress.slice(-4)} ({userBalance} OKB)</span>
+              </div>
+              <button 
+                className="btn-secondary" 
+                onClick={handleDisconnectWallet} 
+                style={{ 
+                  padding: '8px 12px', 
+                  fontSize: '0.9rem', 
+                  color: 'var(--color-danger)', 
+                  borderColor: 'rgba(255, 51, 68, 0.2)',
+                  background: 'rgba(255, 51, 68, 0.05)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  transition: 'var(--transition-smooth)'
+                }}
+              >
+                <LogOut size={14} />
+                <span>Disconnect</span>
+              </button>
+            </div>
           ) : (
             <button className="btn-primary" onClick={handleConnectWallet} style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
               Connect Wallet

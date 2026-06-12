@@ -488,7 +488,7 @@ export default function App() {
   });
   const [matchId, setMatchId] = useState(1)
   const [prediction, setPrediction] = useState(1) // 1 = Argentina, 2 = France
-  const [swapAmount, setSwapAmount] = useState('1.5')
+  const [swapAmount, setSwapAmount] = useState('0.001')
   const [jackpot, setJackpot] = useState(128.5)
   const [teamAVotes, setTeamAVotes] = useState(64.2) // Argentina volume OKB
   const [teamBVotes, setTeamBVotes] = useState(48.8) // France volume OKB
@@ -1298,8 +1298,15 @@ export default function App() {
                     onChange={(e) => setSwapAmount(e.target.value)} 
                     className="swap-input" 
                     disabled={isStriking}
+                    step="0.0001"
+                    min="0.0001"
                   />
                   <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fff' }}>OKB</span>
+                </div>
+                <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                  <button type="button" onClick={() => setSwapAmount('0.0001')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>0.0001 OKB</button>
+                  <button type="button" onClick={() => setSwapAmount('0.001')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>0.001 OKB</button>
+                  <button type="button" onClick={() => setSwapAmount('0.01')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>0.01 OKB</button>
                 </div>
               </div>
               

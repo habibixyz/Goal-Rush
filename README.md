@@ -26,11 +26,13 @@ In Uniswap V4, hooks can run arbitrary logic before and after pool transactions.
 hook-the-world-cup/
 ├── contracts/
 │   ├── WorldCupGoalRushHook.sol   # Solidity hook contract
+│   ├── GoalRushToken.sol          # Standalone GRUSH ERC-20 token contract
 │   └── mocks/
 │       └── MockPoolManager.sol    # Local pool manager simulator
 ├── scripts/
-│   ├── deploy.js                  # Hardhat deployment script for X Layer
-│   └── test.js                    # Local test simulation runner
+│   ├── deploy.cjs                 # Hardhat deployment script for Hook on X Layer
+│   ├── deploy-token.cjs           # Hardhat deployment script for GRUSH token
+│   └── test.cjs                   # Local test simulation runner
 ├── src/
 │   ├── main.jsx                   # React application entry point
 │   ├── App.jsx                    # Futuristic soccer-themed landing page & sandbox
@@ -79,10 +81,16 @@ Uniswap V4 hooks rely on the leading flags of the hook address to determine whic
 npx hardhat run scripts/mine-salt.js
 ```
 
-### 3. Deploy
+### 3. Deploy Hook
 Execute the deployment script:
 ```bash
-npx hardhat run scripts/deploy.js --network xlayer
+npx hardhat run scripts/deploy.cjs --network xlayer
+```
+
+### 4. Deploy standalone GRUSH token (Optional fallback)
+Execute the token deployment script:
+```bash
+npx hardhat run scripts/deploy-token.cjs --network xlayer
 ```
 
 ---
@@ -92,11 +100,11 @@ npx hardhat run scripts/deploy.js --network xlayer
 To participate in the **Build X: World Cup x Hooks** hackathon and qualify for the **$200K USDT prize pool**, we leverage the recommended Eulr.fun launchpad route on X Layer:
 
 ### 1. Deploy the Hook Contract on X Layer
-First, deploy `WorldCupGoalRushHook` to the X Layer Mainnet using a mined salt that matches the required flags (`beforeSwap` and `afterSwap`). Save the deployed hook address (e.g., `0xb4f86ecb09BE1FeEbc09C2322A67557F145280c0`).
+First, deploy `WorldCupGoalRushHook` to the X Layer Mainnet using a mined salt that matches the required flags (`beforeSwap` and `afterSwap`). Save the deployed hook address (e.g., `0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0`).
 
 ### 2. Launch your Token on Eulr.fun
 1. Go to [Eulr.fun](https://eulr.fun/) on the X Layer network.
-2. Create your custom World Cup fan token (e.g., `GOAL` or `ARG`).
+2. Create your custom World Cup fan token (e.g., `GRUSH`).
 3. During token creation, specify your deployed `WorldCupGoalRushHook` address as the target hook to be attached to the Uniswap V4 pool upon graduation.
 
 ### 3. Bonding Curve Trading
@@ -117,5 +125,4 @@ From this point on, all swaps on the Uniswap V4 pool will execute with the `Worl
 
 ### 6. Submit Your Project
 1. Share your project on X (Twitter) tagging `@XLayerOfficial`.
-2. Submit your project via the [Official Google Form](https://docs.google.com/forms/d/e/1FAIpQLSfY4MsczrCXsWDM3U_Xo_dEq7dAU04YXZLGhTntiPA2bXL6uQ/viewform?usp=dialog) before the **July 12, 2026** deadline.
-
+2. Submit your project via the [Official Google Form](https://docs.google.com/forms/d/e/1FAIpQLSfY4MsczrCXsWDM3U_Xo_dEq7dAU04YXZLGhTntiPA2bXL6uQ/viewform?usp=dialog) before the deadline.

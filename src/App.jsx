@@ -459,10 +459,22 @@ const getTeamFifaCode = (name) => {
   return mapping[name?.toLowerCase().trim()] || 'UN';
 };
 
-// Helper to get the correct OKX Wallet or Ethereum provider
+// Helper to get the correct OKX Wallet provider strictly
 const getProvider = () => {
   if (typeof window !== 'undefined') {
-    return window.okxwallet || window.ethereum;
+    // 1. Check direct okxwallet injector
+    if (window.okxwallet) return window.okxwallet;
+    
+    // 2. Check if window.ethereum is OKX Wallet
+    if (window.ethereum) {
+      if (window.ethereum.isOKXWallet) return window.ethereum;
+      
+      // 3. Handle multi-provider injection setups (e.g. OKX + MetaMask coexistence)
+      if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
+        const okx = window.ethereum.providers.find(p => p.isOKXWallet);
+        if (okx) return okx;
+      }
+    }
   }
   return null;
 };

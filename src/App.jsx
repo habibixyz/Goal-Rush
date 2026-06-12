@@ -501,6 +501,7 @@ export default function App() {
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
   const [activeRightTab, setActiveRightTab] = useState('match') // match or scores
+  const [shootoutStatus, setShootoutStatus] = useState('')
   const [liveMatches, setLiveMatches] = useState([
     { id: 1, teamA: 'Canada', flagA: 'CAN', teamB: 'Bosnia & Herzegovina', flagB: 'BIH', scoreA: 1, scoreB: 1, minute: "82'", isLive: true },
     { id: 2, teamA: 'United States', flagA: 'USA', teamB: 'Paraguay', flagB: 'PAR', scoreA: 2, scoreB: 0, minute: "41'", isLive: true },
@@ -924,46 +925,99 @@ export default function App() {
         addLog("🟢 GRUSH Holder perk active: 75% penalty shootout success rate boost!");
       }
 
-      // Animate the soccer ball strike
-      const targetX = 45 + Math.random() * 10
+      // 1. Set Status to "READY"
+      setShootoutStatus('READY 🚨')
+      addLog("⚽ Shootout Initiated! Prepare for strike...")
+      await new Promise(resolve => setTimeout(resolve, 800))
+
+      // 2. Set Status to "SET"
+      setShootoutStatus('SET 🎯')
+      await new Promise(resolve => setTimeout(resolve, 800))
+
+      // 3. Set Status to "STRIKE"
+      setShootoutStatus('STRIKE ⚽')
+      await new Promise(resolve => setTimeout(resolve, 600))
+      setShootoutStatus('') // Clear countdown overlay to show action
+
+      // 4. Player runs up to the ball
+      addLog("🏃 Swapper running up to kick...")
+      setPlayerPos({ x: 50, y: 83 })
+      await new Promise(resolve => setTimeout(resolve, 400))
+
+      // 5. Kick the ball (it moves halfway and GK starts to move)
+      addLog("⚡ Strike launched! Ball in mid-air...")
+      const targetX = 42 + Math.random() * 16
       const targetY = 10
+      
+      // Mid-point coordinates for suspenseful slow-mo
+      setBallPos({ x: (50 + targetX) / 2, y: (80 + targetY) / 2 })
+      
+      // Goalkeeper dives at the same time
+      const saveProbability = holdsGrush ? 0.25 : 0.50
+      const gkTargetX = targetX + (Math.random() > saveProbability ? -14 : 14)
+      setGkPos({ x: (50 + gkTargetX) / 2, y: 15 })
+
+      // Dramatic pause at mid-air (slow-mo effect)
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // 6. Impact: Ball reaches the goal, goalkeeper completes the dive
       setBallPos({ x: targetX, y: targetY })
-
-      // Move Goalkeeper to save (GRUSH holders get a 75% goal scoring rate / 25% goalkeeper save chance)
-      const saveProbability = holdsGrush ? 0.25 : 0.50;
-      const gkTargetX = targetX + (Math.random() > saveProbability ? -15 : 15);
       setGkPos({ x: gkTargetX, y: 15 })
+      
+      // Wait for ball to hit target
+      await new Promise(resolve => setTimeout(resolve, 300))
 
-      setTimeout(() => {
-        const distance = Math.abs(gkTargetX - targetX)
-        const isGoal = distance > 10
+      const distance = Math.abs(gkTargetX - targetX)
+      const isGoal = distance > 10
 
-        if (isGoal) {
-          setUserScore((prev) => {
-            const next = prev + 1;
-            localStorage.setItem('goalrush_userScore', next.toString());
-            return next;
-          });
-          setShowGoalFlash(true)
-          confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 }
-          })
-          addLog(`⚽ GOAL! Ball hit the back of the net. You scored!`)
-        } else {
-          setOpponentScore((prev) => prev + 1)
-          addLog(`❌ SAVED! Goalkeeper made a stunning save. Swap executed but penalty missed.`)
-        }
+      // Haptic shake on pitch card
+      const pitchEl = document.querySelector('.pitch-container')
+      if (pitchEl) {
+        pitchEl.classList.add('pitch-shake')
+        setTimeout(() => pitchEl.classList.remove('pitch-shake'), 400)
+      }
 
-        // Reset ball
+      if (isGoal) {
+        setUserScore((prev) => {
+          const next = prev + 1;
+          localStorage.setItem('goalrush_userScore', next.toString());
+          return next;
+        });
+        setShowGoalFlash(true)
+        confetti({
+          particleCount: 120,
+          spread: 80,
+          origin: { y: 0.5 }
+        })
+        // Extra confetti burst for maximum dopamine rush!
         setTimeout(() => {
-          setBallPos({ x: 50, y: 80 })
-          setIsStriking(false)
-          setShowGoalFlash(false)
-        }, 1500)
+          confetti({
+            particleCount: 80,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 }
+          })
+          confetti({
+            particleCount: 80,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 }
+          })
+        }, 300)
+        addLog(`⚽ GOAL! Ball hit the back of the net. You scored!`)
+      } else {
+        setOpponentScore((prev) => prev + 1)
+        addLog(`❌ SAVED! Goalkeeper made a stunning save. Swap executed but penalty missed.`)
+      }
 
-      }, 600)
+      // 7. Reset player, ball, and goalie
+      setTimeout(() => {
+        setBallPos({ x: 50, y: 80 })
+        setPlayerPos({ x: 50, y: 80 })
+        setGkPos({ x: 50, y: 15 })
+        setIsStriking(false)
+        setShowGoalFlash(false)
+      }, 2500)
 
     } catch (err) {
       console.error(err);
@@ -1282,6 +1336,11 @@ export default function App() {
           </div>
           
           <div className="pitch-container">
+            {shootoutStatus && (
+              <div className="shootout-overlay">
+                <div className="shootout-text-main">{shootoutStatus}</div>
+              </div>
+            )}
             <div className="pitch-lines"></div>
             <div className="pitch-midline"></div>
             <div className="pitch-midcircle"></div>

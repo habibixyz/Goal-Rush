@@ -1184,3 +1184,53 @@ body {
   }
 }
 
+/* Shootout Drama Overlay */
+.shootout-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 15;
+  pointer-events: none;
+  border-radius: 12px;
+  animation: overlay-fade-in 0.25s ease-out;
+}
+
+.shootout-text-main {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: #fff;
+  font-family: var(--font-heading);
+  text-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 30px var(--color-primary);
+  animation: countdown-pulse 0.4s ease-out infinite alternate;
+  text-align: center;
+}
+
+@keyframes overlay-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes countdown-pulse {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(1.2); opacity: 1; }
+}
+
+/* Screen haptic shake effect on strike hit */
+.pitch-shake {
+  animation: haptic-shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes haptic-shake {
+  10%, 90% { transform: translate3d(-2px, -1px, 0); }
+  20%, 80% { transform: translate3d(4px, 2px, 0); }
+  30%, 50%, 70% { transform: translate3d(-6px, -1px, 0); }
+  40%, 60% { transform: translate3d(6px, 1px, 0); }
+}
+

@@ -20,7 +20,9 @@ import {
   ShieldCheck,
   AlertTriangle,
   LogOut,
-  X
+  X,
+  Twitter,
+  Send
 } from 'lucide-react'
 
 // Real codebase strings to display in Code Viewer
@@ -496,6 +498,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('hook') // hook, mock, deploy, readme
   const [showDevPortal, setShowDevPortal] = useState(false)
   const [showWhitepaper, setShowWhitepaper] = useState(false)
+  const [showPrivacy, setShowPrivacy] = useState(false)
+  const [showTerms, setShowTerms] = useState(false)
   const [activeRightTab, setActiveRightTab] = useState('match') // match or scores
   const [liveMatches, setLiveMatches] = useState([
     { id: 1, teamA: 'Canada', flagA: 'CAN', teamB: 'Bosnia & Herzegovina', flagB: 'BIH', scoreA: 1, scoreB: 1, minute: "82'", isLive: true },
@@ -1224,6 +1228,28 @@ export default function App() {
               <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Rebate Odds</div>
               <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-secondary)' }}>5% Chance</div>
             </div>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '12px', marginTop: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Community:</span>
+            <a 
+              href="https://x.com/goalrushdotfun" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="btn-secondary" 
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', fontSize: '0.8rem', borderColor: 'rgba(255,255,255,0.15)', cursor: 'pointer', borderRadius: '8px' }}
+            >
+              <Twitter size={14} /> Twitter / X
+            </a>
+            <a 
+              href="https://t.me/+qwzA9MrSA3I2OTk9" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="btn-secondary" 
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', fontSize: '0.8rem', borderColor: 'rgba(255,255,255,0.15)', cursor: 'pointer', borderRadius: '8px' }}
+            >
+              <Send size={14} /> Telegram
+            </a>
           </div>
         </div>
 
@@ -2057,9 +2083,91 @@ export default function App() {
       )}
 
       {/* Footer */}
-      <footer className="app-footer">
-        <p>© 2026 GoalRush. Powered by Uniswap V4 & OKX X Layer.</p>
+      <footer className="app-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <p>© 2026 GoalRush. Powered by Uniswap V4 & OKX X Layer.</p>
+          <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
+            <button onClick={() => setShowTerms(true)} style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline' }}>Terms of Service</button>
+            <span>•</span>
+            <button onClick={() => setShowPrivacy(true)} style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline' }}>Privacy Policy</button>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <a 
+            href="https://x.com/goalrushdotfun" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            style={{ color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
+          >
+            <Twitter size={16} /> Twitter / X
+          </a>
+          <span style={{ color: 'rgba(255,255,255,0.15)' }}>|</span>
+          <a 
+            href="https://t.me/+qwzA9MrSA3I2OTk9" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            style={{ color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-secondary)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
+          >
+            <Send size={16} /> Telegram
+          </a>
+        </div>
       </footer>
+
+      {showTerms && (
+        <div className="whitepaper-modal-overlay" onClick={() => setShowTerms(false)}>
+          <div className="whitepaper-modal-container" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
+            <button className="whitepaper-close-btn" onClick={() => setShowTerms(false)}>
+              <X size={18} />
+            </button>
+            <div className="whitepaper-content" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '1.4rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px', marginBottom: '16px' }}>Terms of Service</h2>
+              <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '12px', opacity: 0.85 }}>
+                <p><strong>Last Updated: June 13, 2026</strong></p>
+                <p>Please read these Terms of Service carefully before interacting with the GoalRush platform. By connecting your wallet and participating, you agree to these Terms.</p>
+                
+                <p><strong>1. Educational & Simulation Use Only</strong></p>
+                <p>GoalRush is a proof-of-concept dApp built for the Build X Hackathon. All on-chain simulations, predictions, and games are provided for educational and gaming purposes. There is no guarantee of profits or rewards.</p>
+
+                <p><strong>2. Assumption of Risk</strong></p>
+                <p>All transactions are executed directly by the user via their Web3 wallet (OKX Wallet) on the public X Layer blockchain. You accept full responsibility for any native OKB, gas costs, or token interactions. We have zero control over on-chain executions.</p>
+
+                <p><strong>3. Solvency & Disclaimer</strong></p>
+                <p>GoalRush is provided "as is" and "as available" without any warranties of any kind. We are not liable for any losses, contract bugs, network downtime, or wallet service provider issues.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPrivacy && (
+        <div className="whitepaper-modal-overlay" onClick={() => setShowPrivacy(false)}>
+          <div className="whitepaper-modal-container" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
+            <button className="whitepaper-close-btn" onClick={() => setShowPrivacy(false)}>
+              <X size={18} />
+            </button>
+            <div className="whitepaper-content" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '1.4rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px', marginBottom: '16px' }}>Privacy Policy</h2>
+              <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '12px', opacity: 0.85 }}>
+                <p><strong>Last Updated: June 13, 2026</strong></p>
+                <p>GoalRush is committed to protecting user privacy. Because our platform is a decentralized application, we operate differently than standard websites.</p>
+
+                <p><strong>1. No Collection of Personal Data</strong></p>
+                <p>We do not collect, store, or process any personal identification information (PII) such as your name, email address, IP address, or physical address. There is no sign-up form or database account registration.</p>
+
+                <p><strong>2. Blockchain Publicity</strong></p>
+                <p>Your connected wallet address, token balances, and prediction transaction details are broadcasted to the public X Layer blockchain network. This data is open-source, permanent, and accessible by anyone.</p>
+
+                <p><strong>3. Third-Party Services</strong></p>
+                <p>When you interact with the OKX Wallet extension or the Eulr.fun bonding curve, you are subject to their respective terms and privacy policies. We do not control third-party Web3 infrastructure.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

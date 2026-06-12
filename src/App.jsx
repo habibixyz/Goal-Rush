@@ -979,7 +979,7 @@ export default function App() {
             <li><a href="#about">About</a></li>
           </ul>
         </nav>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="nav-actions">
           {chainId !== null ? (
             chainId === 196 ? (
               <div className="badge-xlayer" style={{ color: 'var(--color-primary)' }}>
@@ -1005,7 +1005,7 @@ export default function App() {
           )}
 
           {walletConnected ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="wallet-connected-wrapper">
               <div className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'default' }}>
                 <User size={14} /> 
                 <span>{userAddress.slice(0, 6)}...{userAddress.slice(-4)} ({userBalance} OKB)</span>

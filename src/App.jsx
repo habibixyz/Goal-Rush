@@ -544,8 +544,8 @@ export default function App() {
   const [goalsScoredCount, setGoalsScoredCount] = useState(14)
 
   // Soccer field physics & position state
-  const [ballPos, setBallPos] = useState({ x: 20, y: 50 })
-  const [playerPos, setPlayerPos] = useState({ x: 25, y: 50 })
+  const [ballPos, setBallPos] = useState({ x: 50, y: 50 })
+  const [playerPos, setPlayerPos] = useState({ x: 50, y: 56 })
   const [gkPos, setGkPos] = useState({ x: 2, y: 50 })
 
   useEffect(() => {
@@ -899,15 +899,15 @@ export default function App() {
     const selectedTeam = teamId === 1 ? activeMatch.teamA : activeMatch.teamB
     addLog(`Selected Prediction: ${selectedTeam} ⚽`)
     
-    // Automatically shift player and goalie positions to face the predicted goal side!
+    // Ball and player always reset to the middle!
+    setBallPos({ x: 50, y: 50 })
+    setPlayerPos({ x: 50, y: 56 })
+    
+    // Goalkeeper snaps to the predicted goalpost
     if (teamId === 1) {
-      setBallPos({ x: 20, y: 50 })
-      setPlayerPos({ x: 25, y: 50 })
-      setGkPos({ x: 2, y: 50 })
+      setGkPos({ x: 2, y: 50 }) // left goal
     } else {
-      setBallPos({ x: 80, y: 50 })
-      setPlayerPos({ x: 75, y: 50 })
-      setGkPos({ x: 98, y: 50 })
+      setGkPos({ x: 98, y: 50 }) // right goal
     }
   }
 
@@ -975,13 +975,9 @@ export default function App() {
       await new Promise(resolve => setTimeout(resolve, 600))
       setShootoutStatus('') // Clear countdown overlay to show action
 
-      // 4. Player runs up to the ball
+      // 4. Player runs up to the ball (moves from 56 to 50, 50)
       addLog("🏃 Swapper running up to kick...")
-      if (prediction === 1) {
-        setPlayerPos({ x: 21, y: 50 })
-      } else {
-        setPlayerPos({ x: 79, y: 50 })
-      }
+      setPlayerPos({ x: 50, y: 50 })
       await new Promise(resolve => setTimeout(resolve, 400))
 
       // 5. Kick the ball (it moves halfway and GK starts to move)
@@ -996,9 +992,8 @@ export default function App() {
         ? targetY + (Math.random() > 0.5 ? -16 : 16) 
         : targetY + (Math.random() - 0.5) * 4;
 
-      // Mid-point coordinates for suspenseful slow-mo
-      const ballStart = prediction === 1 ? { x: 20, y: 50 } : { x: 80, y: 50 };
-      setBallPos({ x: (ballStart.x + targetX) / 2, y: (ballStart.y + targetY) / 2 })
+      // Mid-point coordinates from the center circle (50, 50)
+      setBallPos({ x: (50 + targetX) / 2, y: (50 + targetY) / 2 })
       setGkPos({ x: gkTargetX, y: (50 + gkTargetY) / 2 })
 
       // Dramatic pause at mid-air (slow-mo effect)
@@ -1078,13 +1073,11 @@ export default function App() {
 
       // 7. Reset player, ball, and goalie
       setTimeout(() => {
+        setBallPos({ x: 50, y: 50 })
+        setPlayerPos({ x: 50, y: 56 })
         if (prediction === 1) {
-          setBallPos({ x: 20, y: 50 })
-          setPlayerPos({ x: 25, y: 50 })
           setGkPos({ x: 2, y: 50 })
         } else {
-          setBallPos({ x: 80, y: 50 })
-          setPlayerPos({ x: 75, y: 50 })
           setGkPos({ x: 98, y: 50 })
         }
         setIsStriking(false)
@@ -1106,8 +1099,8 @@ export default function App() {
       resolved: false
     });
     setPrediction(1);
-    setBallPos({ x: 20, y: 50 })
-    setPlayerPos({ x: 25, y: 50 })
+    setBallPos({ x: 50, y: 50 })
+    setPlayerPos({ x: 50, y: 56 })
     setGkPos({ x: 2, y: 50 })
     addLog(`Selected Match in UI: ${match.teamA} vs ${match.teamB}`);
   };
@@ -1141,8 +1134,8 @@ export default function App() {
         resolved: false
       });
       setPrediction(1);
-      setBallPos({ x: 20, y: 50 })
-      setPlayerPos({ x: 25, y: 50 })
+      setBallPos({ x: 50, y: 50 })
+      setPlayerPos({ x: 50, y: 56 })
       setGkPos({ x: 2, y: 50 })
     } catch (err) {
       console.error(err);

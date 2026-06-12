@@ -1361,6 +1361,20 @@ export default function App() {
             >
               {isStriking ? 'Simulating Swap & Strike...' : !walletConnected ? 'Connect Wallet to Simulate' : 'Simulate Swap & Penalty Strike!'}
             </button>
+
+            <div style={{
+              background: 'rgba(255, 179, 0, 0.05)',
+              border: '1px solid rgba(255, 179, 0, 0.2)',
+              borderRadius: '8px',
+              padding: '10px 12px',
+              fontSize: '0.72rem',
+              color: '#ffb300',
+              marginTop: '12px',
+              textAlign: 'left',
+              lineHeight: '1.45'
+            }}>
+              <strong>⚠️ OKX Wallet Warning Notice:</strong> When submitting, OKX Wallet will show a "Suspicious Receiving Address" alert. This is normal and expected because you are interacting directly with the Smart Contract hook. Click <strong>"Continue (Unsafe)"</strong> to complete your shootout simulation.
+            </div>
             
             <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textAlign: 'center', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: '1.4' }}>
               <span>ℹ️ This simulator runs a test interaction with the V4 hook on-chain to play the shootout and record predictions.</span>

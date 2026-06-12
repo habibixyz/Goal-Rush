@@ -489,6 +489,14 @@ export default function App() {
     teamB: 'France',
     resolved: false
   });
+  
+  const activeMatchRef = useRef(activeMatch);
+  const hasInitializedRef = useRef(false);
+
+  useEffect(() => {
+    activeMatchRef.current = activeMatch;
+  }, [activeMatch]);
+
   const [matchId, setMatchId] = useState(1)
   const [prediction, setPrediction] = useState(1) // 1 = Argentina, 2 = France
   const [swapAmount, setSwapAmount] = useState('0.001')
@@ -645,17 +653,44 @@ export default function App() {
         
         const hookContract = new ethers.Contract(hookAddress, abi, rpcProvider);
 
-        // Fetch active match info safely
+        let currentId = activeMatchRef.current.id;
+
+        // If not initialized yet from the contract, query the default activeMatchId
+        if (!hasInitializedRef.current) {
+          try {
+            const activeId = await hookContract.activeMatchId();
+            const actIdNum = Number(activeId);
+            if (actIdNum > 0) {
+              currentId = actIdNum;
+              hasInitializedRef.current = true;
+            }
+          } catch (activeIdErr) {
+            console.warn("Failed to fetch activeMatchId on initialization:", activeIdErr);
+          }
+        }
+
+        // Fetch selected match info safely
         try {
-          const activeId = await hookContract.activeMatchId();
-          if (Number(activeId) > 0) {
-            const matchData = await hookContract.matches(activeId);
+          const matchData = await hookContract.matches(currentId);
+          const onChainId = Number(matchData[0] || matchData.id || 0);
+          
+          if (onChainId > 0) {
+            const teamAName = matchData[1] || matchData.teamA || activeMatchRef.current.teamA;
+            const teamBName = matchData[2] || matchData.teamB || activeMatchRef.current.teamB;
+            const isResolved = matchData[5] !== undefined ? matchData[5] : matchData.resolved;
             
-            setActiveMatch({
-              id: Number(matchData[0] || matchData.id || activeId),
-              teamA: matchData[1] || matchData.teamA || 'Argentina',
-              teamB: matchData[2] || matchData.teamB || 'France',
-              resolved: matchData[5] !== undefined ? matchData[5] : matchData.resolved
+            setActiveMatch(prev => {
+              if (prev.id !== currentId) return prev;
+              // Only trigger state updates if the data has actually changed to prevent render loops
+              if (prev.teamA === teamAName && prev.teamB === teamBName && prev.resolved === isResolved) {
+                return prev;
+              }
+              return {
+                id: currentId,
+                teamA: teamAName,
+                teamB: teamBName,
+                resolved: isResolved
+              };
             });
 
             const totalJackpotWei = matchData[7] || matchData.totalJackpot || 0n;
@@ -663,13 +698,18 @@ export default function App() {
             const displayJackpot = contractBalance > totalJackpotWei ? contractBalance : totalJackpotWei;
             setJackpot(Number(ethers.formatEther(displayJackpot)));
             
-            const volA = await hookContract.teamPredictionVolume(activeId, 1);
-            const volB = await hookContract.teamPredictionVolume(activeId, 2);
+            const volA = await hookContract.teamPredictionVolume(currentId, 1);
+            const volB = await hookContract.teamPredictionVolume(currentId, 2);
             setTeamAVotes(Number(ethers.formatEther(volA)));
             setTeamBVotes(Number(ethers.formatEther(volB)));
+          } else {
+            // Keep UI match details, but set jackpot/votes to 0 for local simulation
+            setJackpot(0);
+            setTeamAVotes(0);
+            setTeamBVotes(0);
           }
         } catch (matchErr) {
-          console.warn("Failed to fetch active match data from hook contract:", matchErr);
+          console.warn("Failed to fetch match data from hook contract for ID:", currentId, matchErr);
         }
 
         // Query events safely

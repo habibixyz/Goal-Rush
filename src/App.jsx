@@ -505,6 +505,7 @@ export default function App() {
   const [walletConnected, setWalletConnected] = useState(false)
   const [userAddress, setUserAddress] = useState('')
   const [userBalance, setUserBalance] = useState('0.00')
+  const [grushBalance, setGrushBalance] = useState('0.00')
   const [chainId, setChainId] = useState(null)
 
   const [isStriking, setIsStriking] = useState(false)
@@ -725,6 +726,7 @@ export default function App() {
       addLog(`Wallet connected: ${address.slice(0, 6)}...${address.slice(-4)}`);
       
       updateBalance(address);
+      updateGrushBalance(address);
       const provider = getProvider();
       if (provider) {
         const chain = await provider.request({ method: 'eth_chainId' });
@@ -734,7 +736,39 @@ export default function App() {
       setWalletConnected(false);
       setUserAddress('');
       setUserBalance('0.00');
+      setGrushBalance('0.00');
       addLog('Wallet disconnected.');
+    }
+  };
+
+  const updateGrushBalance = async (address) => {
+    try {
+      const provider = getProvider();
+      if (!provider) return;
+      
+      const tokenAddress = '0x422fe165b2da990d18c6dca944b11dcd61519671';
+      // balanceOf signature is 0x70a08231
+      const cleanAddr = address.toLowerCase().replace('0x', '');
+      const data = '0x70a08231' + cleanAddr.padStart(64, '0');
+      
+      const balanceHex = await provider.request({
+        method: 'eth_call',
+        params: [{
+          to: tokenAddress,
+          data: data
+        }, 'latest']
+      });
+      
+      if (balanceHex && balanceHex !== '0x') {
+        const balanceBigInt = BigInt(balanceHex);
+        const balanceDec = Number(balanceBigInt) / 10**18;
+        setGrushBalance(balanceDec.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      } else {
+        setGrushBalance('0.00');
+      }
+    } catch (e) {
+      console.error('Error fetching GRUSH balance:', e);
+      setGrushBalance('0.00');
     }
   };
 
@@ -784,6 +818,7 @@ export default function App() {
     setWalletConnected(false);
     setUserAddress('');
     setUserBalance('0.00');
+    setGrushBalance('0.00');
     setChainId(null);
     addLog('Wallet disconnected by user.');
   };
@@ -865,13 +900,20 @@ export default function App() {
         return next;
       });
 
+      // Check if user holds any GRUSH tokens
+      const holdsGrush = parseFloat(grushBalance.replace(/,/g, '')) > 0;
+      if (holdsGrush) {
+        addLog("🟢 GRUSH Holder perk active: 75% penalty shootout success rate boost!");
+      }
+
       // Animate the soccer ball strike
       const targetX = 45 + Math.random() * 10
       const targetY = 10
       setBallPos({ x: targetX, y: targetY })
 
-      // Move Goalkeeper to save (50% chance of correct direction)
-      const gkTargetX = targetX + (Math.random() > 0.5 ? -15 : 15)
+      // Move Goalkeeper to save (GRUSH holders get a 75% goal scoring rate / 25% goalkeeper save chance)
+      const saveProbability = holdsGrush ? 0.25 : 0.50;
+      const gkTargetX = targetX + (Math.random() > saveProbability ? -15 : 15);
       setGkPos({ x: gkTargetX, y: 15 })
 
       setTimeout(() => {
@@ -1006,9 +1048,25 @@ export default function App() {
 
           {walletConnected ? (
             <div className="wallet-connected-wrapper">
-              <div className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'default' }}>
+              <div 
+                className={`btn-secondary ${parseFloat(grushBalance.replace(/,/g, '')) > 0 ? 'text-glow-green' : ''}`} 
+                style={{ 
+                  padding: '8px 16px', 
+                  fontSize: '0.9rem', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  cursor: 'default',
+                  borderColor: parseFloat(grushBalance.replace(/,/g, '')) > 0 ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.08)',
+                  background: parseFloat(grushBalance.replace(/,/g, '')) > 0 ? 'rgba(157, 255, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)'
+                }}
+              >
                 <User size={14} /> 
-                <span>{userAddress.slice(0, 6)}...{userAddress.slice(-4)} ({userBalance} OKB)</span>
+                <span>
+                  {userAddress.slice(0, 6)}...{userAddress.slice(-4)} ({userBalance} OKB
+                  {parseFloat(grushBalance.replace(/,/g, '')) > 0 && ` | ⚽ ${grushBalance} GRUSH`}
+                  )
+                </span>
               </div>
               <button 
                 className="btn-secondary" 
@@ -1075,7 +1133,7 @@ export default function App() {
               <Play size={18} fill="currentColor" /> Try Live Swap
             </a>
             <a 
-              href="https://eulr.fun/token/0x4226fe165b2da990df8c8dca944bf1dcd8151987" 
+              href="https://eulr.fun/token/0x422fe165b2da990d18c6dca944b11dcd61519671" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="btn-secondary"
@@ -1120,11 +1178,11 @@ export default function App() {
               <div 
                 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
                 onClick={() => {
-                  navigator.clipboard.writeText('0x4226fe165b2da990df8c8dca944bf1dcd8151987');
+                  navigator.clipboard.writeText('0x422fe165b2da990d18c6dca944b11dcd61519671');
                   alert('GRUSH token address copied to clipboard!');
                 }}
               >
-                0x4226...1987
+                0x422f...671
               </div>
             </div>
             <div>
@@ -1240,7 +1298,7 @@ export default function App() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span className="swap-input" style={{ opacity: 0.8 }}>
-                    {parseFloat(swapAmount) ? (parseFloat(swapAmount) * 3.5).toFixed(2) : '0.00'}
+                    {parseFloat(swapAmount) ? (parseFloat(swapAmount) * 350000).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                   </span>
                   <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-primary)' }}>GRUSH</span>
                 </div>
@@ -1282,8 +1340,15 @@ export default function App() {
               disabled={isStriking}
               onClick={!walletConnected ? handleConnectWallet : undefined}
             >
-              {isStriking ? 'Executing Swap...' : !walletConnected ? 'Connect Wallet to Swap' : 'Swap & Penalty Strike!'}
+              {isStriking ? 'Simulating Swap & Strike...' : !walletConnected ? 'Connect Wallet to Simulate' : 'Simulate Swap & Penalty Strike!'}
             </button>
+            
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textAlign: 'center', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: '1.4' }}>
+              <span>ℹ️ This simulator runs a test interaction with the V4 hook on-chain to play the shootout and record predictions.</span>
+              <a href="https://eulr.fun/token/0x422fe165b2da990d18c6dca944b11dcd61519671" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-secondary)', textDecoration: 'underline', fontWeight: 600 }}>
+                To buy or sell real GRUSH, trade on Eulr.fun →
+              </a>
+            </div>
           </form>
         </div>
 

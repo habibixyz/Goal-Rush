@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { ethers } from 'ethers'
 import confetti from 'canvas-confetti'
 import SoccerBall3D from './components/SoccerBall3D'
 import { 
@@ -538,6 +539,45 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const fetchOnChainData = async () => {
+      try {
+        const hookAddress = "0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0";
+        const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
+        const abi = [
+          "function activeMatchId() external view returns (uint256)",
+          "function matches(uint256) external view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)",
+          "function teamPredictionVolume(uint256, uint8) external view returns (uint256)"
+        ];
+        
+        const hookContract = new ethers.Contract(hookAddress, abi, rpcProvider);
+        const activeId = await hookContract.activeMatchId();
+        
+        if (Number(activeId) > 0) {
+          const matchData = await hookContract.matches(activeId);
+          const totalJackpotWei = matchData.totalJackpot;
+          
+          const contractBalance = await rpcProvider.getBalance(hookAddress);
+          const displayJackpot = contractBalance > totalJackpotWei ? contractBalance : totalJackpotWei;
+          
+          setJackpot(Number(ethers.formatEther(displayJackpot)));
+          
+          const volA = await hookContract.teamPredictionVolume(activeId, 1);
+          const volB = await hookContract.teamPredictionVolume(activeId, 2);
+          
+          setTeamAVotes(Number(ethers.formatEther(volA)));
+          setTeamBVotes(Number(ethers.formatEther(volB)));
+        }
+      } catch (err) {
+        console.error("Failed to fetch on-chain stats:", err);
+      }
+    };
+    
+    fetchOnChainData();
+    const interval = setInterval(fetchOnChainData, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleAccountsChanged = async (accounts) => {
     if (accounts.length > 0) {
       setWalletConnected(true);
@@ -631,7 +671,7 @@ export default function App() {
     addLog(`Selected Prediction: ${teamId === 1 ? 'Argentina 🇦🇷' : 'France 🇫🇷'}`)
   }
 
-  const handleSwapAndStrike = (e) => {
+  const handleSwapAndStrike = async (e) => {
     e.preventDefault()
     if (!walletConnected) {
       alert('Please connect your wallet first!')
@@ -645,64 +685,64 @@ export default function App() {
     }
 
     setIsStriking(true)
-    addLog(`[beforeSwap] Swapping ${parsedAmount} OKB. Prediction registered for ${prediction === 1 ? 'Argentina' : 'France'}.`)
+    addLog(`[beforeSwap] Initiating swap transaction of ${parsedAmount} OKB on-chain...`)
 
-    // Animate the soccer ball strike
-    const targetX = 45 + Math.random() * 10
-    const targetY = 10
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const hookAddress = "0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0";
 
-    setBallPos({ x: targetX, y: targetY })
+      // Request user's wallet to send a real transaction to the hook address
+      const tx = await signer.sendTransaction({
+        to: hookAddress,
+        value: ethers.parseEther(swapAmount)
+      });
 
-    // Move Goalkeeper to save (50% chance of correct direction)
-    const gkTargetX = targetX + (Math.random() > 0.5 ? -15 : 15)
-    setGkPos({ x: gkTargetX, y: 15 })
+      addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
+      await tx.wait();
+      addLog(`🎉 Transaction confirmed! Match jackpot successfully funded with ${parsedAmount} OKB.`);
 
-    setTimeout(() => {
-      const distance = Math.abs(gkTargetX - targetX)
-      const isGoal = distance > 10
+      // Animate the soccer ball strike
+      const targetX = 45 + Math.random() * 10
+      const targetY = 10
+      setBallPos({ x: targetX, y: targetY })
 
-      if (isGoal) {
-        setUserScore((prev) => prev + 1)
-        setShowGoalFlash(true)
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        })
-        addLog(`⚽ GOAL! Ball hit the back of the net. You scored!`)
+      // Move Goalkeeper to save (50% chance of correct direction)
+      const gkTargetX = targetX + (Math.random() > 0.5 ? -15 : 15)
+      setGkPos({ x: gkTargetX, y: 15 })
 
-        // Goal Rush rebate
-        const isRebate = Math.random() < 0.20 // elevated rate for fun demo
-        if (isRebate) {
-          setGoalsScoredCount((prev) => prev + 1)
-          addLog(`🔥 GOAL RUSH REBATE TRIGGERED! WorldCupGoalRushHook returned 100% of your swap fee (0.01 OKB).`)
-        }
-
-        // Add to jackpot
-        const contribution = parsedAmount * 0.001
-        setJackpot((prev) => prev + contribution)
-        if (prediction === 1) {
-          setTeamAVotes((prev) => prev + parsedAmount)
-        } else {
-          setTeamBVotes((prev) => prev + parsedAmount)
-        }
-      } else {
-        setOpponentScore((prev) => prev + 1)
-        addLog(`❌ SAVED! Goalkeeper made a stunning save. Swap executed but penalty missed.`)
-        
-        // Still register contribution to jackpot
-        const contribution = parsedAmount * 0.001
-        setJackpot((prev) => prev + contribution)
-      }
-
-      // Reset ball
       setTimeout(() => {
-        setBallPos({ x: 50, y: 80 })
-        setIsStriking(false)
-        setShowGoalFlash(false)
-      }, 1500)
+        const distance = Math.abs(gkTargetX - targetX)
+        const isGoal = distance > 10
 
-    }, 600)
+        if (isGoal) {
+          setUserScore((prev) => prev + 1)
+          setShowGoalFlash(true)
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          })
+          addLog(`⚽ GOAL! Ball hit the back of the net. You scored!`)
+        } else {
+          setOpponentScore((prev) => prev + 1)
+          addLog(`❌ SAVED! Goalkeeper made a stunning save. Swap executed but penalty missed.`)
+        }
+
+        // Reset ball
+        setTimeout(() => {
+          setBallPos({ x: 50, y: 80 })
+          setIsStriking(false)
+          setShowGoalFlash(false)
+        }, 1500)
+
+      }, 600)
+
+    } catch (err) {
+      console.error(err);
+      addLog(`❌ Transaction failed or rejected: ${err.message || err}`);
+      setIsStriking(false);
+    }
   }
 
   const copyCode = (codeText) => {
@@ -807,11 +847,11 @@ export default function App() {
               <div 
                 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-primary)', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
                 onClick={() => {
-                  navigator.clipboard.writeText('0xb4f86ecb09BE1FeEbc09C2322A67557F145280c0');
+                  navigator.clipboard.writeText('0x16756EF929311280af22395e9FFB91b5Fa3d00c0');
                   alert('Hook address copied to clipboard!');
                 }}
               >
-                0xb4f8...80c0
+                0x1675...00c0
               </div>
             </div>
             <div>

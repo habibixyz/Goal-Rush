@@ -7,15 +7,9 @@ async function main() {
 
   // Target PoolManager and CREATE2 Deployer addresses
   // By default, using X Layer Mainnet PoolManager & Standard CREATE2 factory
-  const poolManagerAddress = process.argv[2] || "0x360e68faccca8ca495c1b759fd9eee466db9fb32";
-  const deployerAddress = process.argv[3] || "0x4e59b44847b379578588920cA78FbF26c0B4956C";
-  const salt = process.argv[4];
-
-  if (!salt) {
-    console.error("Error: Please provide the mined salt as the 3rd argument.");
-    console.error("Example: npx hardhat run scripts/deploy.cjs [PoolManager] [Deployer] [MinedSalt]");
-    process.exit(1);
-  }
+  const poolManagerAddress = "0x360e68faccca8ca495c1b759fd9eee466db9fb32";
+  const deployerAddress = "0x4e59b44847b379578588920cA78FbF26c0B4956C";
+  const salt = process.env.MINED_SALT || "0x0000000000000000000000000000000000000000000000000000000000004709";
 
   console.log(`PoolManager: ${poolManagerAddress}`);
   console.log(`CREATE2 Deployer/Factory: ${deployerAddress}`);

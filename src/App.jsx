@@ -613,6 +613,24 @@ export default function App() {
 
   useEffect(() => {
     const fetchOnChainData = async () => {
+      const stats = {};
+      const getOrCreateUser = (addr) => {
+        const lower = addr.toLowerCase();
+        if (!stats[lower]) {
+          stats[lower] = {
+            address: addr,
+            goals: 0,
+            volume: 0n,
+            claimed: 0n
+          };
+        }
+        return stats[lower];
+      };
+
+      if (userAddress) {
+        getOrCreateUser(userAddress);
+      }
+
       try {
         const hookAddress = "0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0";
         const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
@@ -626,39 +644,40 @@ export default function App() {
         ];
         
         const hookContract = new ethers.Contract(hookAddress, abi, rpcProvider);
-        const activeId = await hookContract.activeMatchId();
-        
-        if (Number(activeId) > 0) {
-          const matchData = await hookContract.matches(activeId);
-          
-          setActiveMatch({
-            id: Number(matchData[0] || matchData.id || activeId),
-            teamA: matchData[1] || matchData.teamA || 'Argentina',
-            teamB: matchData[2] || matchData.teamB || 'France',
-            resolved: matchData[5] !== undefined ? matchData[5] : matchData.resolved
-          });
 
-          const totalJackpotWei = matchData[7] || matchData.totalJackpot || 0n;
-          
-          const contractBalance = await rpcProvider.getBalance(hookAddress);
-          const displayJackpot = contractBalance > totalJackpotWei ? contractBalance : totalJackpotWei;
-          
-          setJackpot(Number(ethers.formatEther(displayJackpot)));
-          
-          const volA = await hookContract.teamPredictionVolume(activeId, 1);
-          const volB = await hookContract.teamPredictionVolume(activeId, 2);
-          
-          setTeamAVotes(Number(ethers.formatEther(volA)));
-          setTeamBVotes(Number(ethers.formatEther(volB)));
+        // Fetch active match info safely
+        try {
+          const activeId = await hookContract.activeMatchId();
+          if (Number(activeId) > 0) {
+            const matchData = await hookContract.matches(activeId);
+            
+            setActiveMatch({
+              id: Number(matchData[0] || matchData.id || activeId),
+              teamA: matchData[1] || matchData.teamA || 'Argentina',
+              teamB: matchData[2] || matchData.teamB || 'France',
+              resolved: matchData[5] !== undefined ? matchData[5] : matchData.resolved
+            });
+
+            const totalJackpotWei = matchData[7] || matchData.totalJackpot || 0n;
+            const contractBalance = await rpcProvider.getBalance(hookAddress);
+            const displayJackpot = contractBalance > totalJackpotWei ? contractBalance : totalJackpotWei;
+            setJackpot(Number(ethers.formatEther(displayJackpot)));
+            
+            const volA = await hookContract.teamPredictionVolume(activeId, 1);
+            const volB = await hookContract.teamPredictionVolume(activeId, 2);
+            setTeamAVotes(Number(ethers.formatEther(volA)));
+            setTeamBVotes(Number(ethers.formatEther(volB)));
+          }
+        } catch (matchErr) {
+          console.warn("Failed to fetch active match data from hook contract:", matchErr);
         }
 
-        // Query events from contract
+        // Query events safely
         let goalEvents = [];
         let predictionEvents = [];
         let claimEvents = [];
         
         try {
-          // X Layer blocks are quick, let's query from block 2600000 to latest
           goalEvents = await hookContract.queryFilter(hookContract.filters.GoalScored(), 2600000, "latest");
           predictionEvents = await hookContract.queryFilter(hookContract.filters.PredictionPlaced(), 2600000, "latest");
           claimEvents = await hookContract.queryFilter(hookContract.filters.JackpotClaimed(), 2600000, "latest");
@@ -666,20 +685,7 @@ export default function App() {
           console.warn("Failed to query contract events:", eventErr);
         }
 
-        const stats = {};
-        const getOrCreateUser = (addr) => {
-          const lower = addr.toLowerCase();
-          if (!stats[lower]) {
-            stats[lower] = {
-              address: addr,
-              goals: 0,
-              volume: 0n,
-              claimed: 0n
-            };
-          }
-          return stats[lower];
-        };
-
+        // Process retrieved events
         goalEvents.forEach(evt => {
           if (evt.args) {
             const swapper = evt.args[0];
@@ -703,53 +709,39 @@ export default function App() {
           }
         });
 
-        // Inject active user's local session stats if connected
-        if (userAddress) {
-          const localG = Number(localStorage.getItem('goalrush_userScore') || '0');
-          const localV = parseFloat(localStorage.getItem('goalrush_userVolume') || '0');
-          
-          const u = getOrCreateUser(userAddress);
-          if (localG > u.goals) u.goals = localG;
-          
-          const localWei = ethers.parseEther(localV.toString());
-          if (localWei > u.volume) u.volume = localWei;
-        }
+      } catch (err) {
+        console.error("General error in fetchOnChainData:", err);
+      }
 
-        // Map map to array
-        const leaderboardArray = Object.values(stats).map(item => ({
+      // ALWAYS run this even if on-chain fetch fails!
+      if (userAddress) {
+        const localG = Number(localStorage.getItem('goalrush_userScore') || '0');
+        const localV = parseFloat(localStorage.getItem('goalrush_userVolume') || '0');
+        
+        const u = getOrCreateUser(userAddress);
+        if (localG > u.goals) u.goals = localG;
+        
+        const localWei = ethers.parseEther(localV.toString());
+        if (localWei > u.volume) u.volume = localWei;
+      }
+
+      // Map map to array (filter out entries with 0 goals AND 0 volume so it only displays active players)
+      const leaderboardArray = Object.values(stats)
+        .map(item => ({
           address: item.address,
           goals: item.goals,
           volume: Number(ethers.formatEther(item.volume)),
           claimed: Number(ethers.formatEther(item.claimed))
-        }));
+        }))
+        .filter(item => item.goals > 0 || item.volume > 0);
 
-        // Realistic fallback entries to ensure leaderboard is always active and beautiful
-        const fallbackUsers = [
-          { address: "0x32A2b7201C118d6a8963D6d6C6B616f7D91c6eA3", goals: 28, volume: 1.45, claimed: 0.15 },
-          { address: "0xF2e379dF983226aDbc1b6A1889c2041724f74d02", goals: 22, volume: 0.98, claimed: 0.08 },
-          { address: "0x12c49A4C078a9c2C344E0E87F34BDeB3819A24C9", goals: 17, volume: 0.72, claimed: 0.05 },
-          { address: "0x89D2049e830e2f5b842963d6b6A1889C204174dF", goals: 12, volume: 0.45, claimed: 0.00 }
-        ];
+      // Sort by goals descending, then by volume descending
+      leaderboardArray.sort((a, b) => {
+        if (b.goals !== a.goals) return b.goals - a.goals;
+        return b.volume - a.volume;
+      });
 
-        // Merge and ensure current user is not duplicated
-        const finalArray = [...leaderboardArray];
-        fallbackUsers.forEach(fb => {
-          if (!finalArray.some(item => item.address.toLowerCase() === fb.address.toLowerCase())) {
-            finalArray.push(fb);
-          }
-        });
-
-        // Sort by goals descending, then by volume descending
-        finalArray.sort((a, b) => {
-          if (b.goals !== a.goals) return b.goals - a.goals;
-          return b.volume - a.volume;
-        });
-
-        setLeaderboardData(finalArray);
-
-      } catch (err) {
-        console.error("Failed to fetch on-chain stats:", err);
-      }
+      setLeaderboardData(leaderboardArray);
     };
     
     fetchOnChainData();

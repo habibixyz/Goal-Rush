@@ -1074,6 +1074,15 @@ export default function App() {
             <a href="#dashboard" className="btn-primary">
               <Play size={18} fill="currentColor" /> Try Live Swap
             </a>
+            <a 
+              href="https://eulr.fun/token/0x4226fe165b2da990df8c8dca944bf1dcd8151987" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="btn-secondary"
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', borderColor: 'rgba(0, 229, 255, 0.4)' }}
+            >
+              📈 Trade GRUSH on Eulr
+            </a>
             <button 
               className="btn-secondary"
               onClick={() => {
@@ -1104,6 +1113,18 @@ export default function App() {
                 }}
               >
                 0xD168...40c0
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>GRUSH Token</div>
+              <div 
+                style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
+                onClick={() => {
+                  navigator.clipboard.writeText('0x4226fe165b2da990df8c8dca944bf1dcd8151987');
+                  alert('GRUSH token address copied to clipboard!');
+                }}
+              >
+                0x4226...1987
               </div>
             </div>
             <div>

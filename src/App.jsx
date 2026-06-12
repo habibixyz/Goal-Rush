@@ -459,6 +459,14 @@ const getTeamFifaCode = (name) => {
   return mapping[name?.toLowerCase().trim()] || 'UN';
 };
 
+// Helper to get the correct OKX Wallet or Ethereum provider
+const getProvider = () => {
+  if (typeof window !== 'undefined') {
+    return window.okxwallet || window.ethereum;
+  }
+  return null;
+};
+
 export default function App() {
   const [activeMatch, setActiveMatch] = useState({
     id: 1,
@@ -517,20 +525,22 @@ export default function App() {
   const [gkPos, setGkPos] = useState({ x: 50, y: 15 })
 
   useEffect(() => {
-    if (window.ethereum) {
+    const provider = getProvider();
+    if (provider) {
       // Get current accounts if already connected
-      window.ethereum.request({ method: 'eth_accounts' })
+      provider.request({ method: 'eth_accounts' })
         .then(handleAccountsChanged)
         .catch(console.error);
 
       // Listen for account/network changes
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-      window.ethereum.on('chainChanged', handleChainChanged);
+      provider.on('accountsChanged', handleAccountsChanged);
+      provider.on('chainChanged', handleChainChanged);
     }
     return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-        window.ethereum.removeListener('chainChanged', handleChainChanged);
+      const provider = getProvider();
+      if (provider) {
+        provider.removeListener('accountsChanged', handleAccountsChanged);
+        provider.removeListener('chainChanged', handleChainChanged);
       }
     };
   }, []);
@@ -715,8 +725,11 @@ export default function App() {
       addLog(`Wallet connected: ${address.slice(0, 6)}...${address.slice(-4)}`);
       
       updateBalance(address);
-      const chain = await window.ethereum.request({ method: 'eth_chainId' });
-      handleChainChanged(chain);
+      const provider = getProvider();
+      if (provider) {
+        const chain = await provider.request({ method: 'eth_chainId' });
+        handleChainChanged(chain);
+      }
     } else {
       setWalletConnected(false);
       setUserAddress('');
@@ -739,7 +752,9 @@ export default function App() {
 
   const updateBalance = async (address) => {
     try {
-      const balanceHex = await window.ethereum.request({
+      const provider = getProvider();
+      if (!provider) return;
+      const balanceHex = await provider.request({
         method: 'eth_getBalance',
         params: [address, 'latest']
       });
@@ -751,12 +766,13 @@ export default function App() {
   };
 
   const handleConnectWallet = async () => {
-    if (!window.ethereum) {
-      alert('OKX Wallet or MetaMask was not detected. Please install the extension to connect.');
+    const provider = getProvider();
+    if (!provider) {
+      alert('OKX Wallet was not detected. Please install the OKX Wallet extension on your browser or open this page inside the OKX Wallet mobile app.');
       return;
     }
     try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const accounts = await provider.request({ method: 'eth_requestAccounts' });
       handleAccountsChanged(accounts);
     } catch (error) {
       console.error(error);
@@ -773,16 +789,17 @@ export default function App() {
   };
 
   const handleSwitchNetwork = async () => {
-    if (!window.ethereum) return;
+    const provider = getProvider();
+    if (!provider) return;
     try {
-      await window.ethereum.request({
+      await provider.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: '0xc4' }] // 196 is 0xc4
       });
     } catch (switchError) {
       if (switchError.code === 4902) {
         try {
-          await window.ethereum.request({
+          await provider.request({
             method: 'wallet_addEthereumChain',
             params: [{
               chainId: '0xc4',
@@ -825,7 +842,9 @@ export default function App() {
     addLog(`[beforeSwap] Initiating swap transaction of ${parsedAmount} OKB on-chain...`)
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const rawProvider = getProvider();
+      if (!rawProvider) throw new Error("No wallet provider detected");
+      const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
       const hookAddress = "0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0";
 
@@ -909,7 +928,9 @@ export default function App() {
       return;
     }
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const rawProvider = getProvider();
+      if (!rawProvider) throw new Error("No wallet provider detected");
+      const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
       const hookAddress = "0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0";
       const abi = [

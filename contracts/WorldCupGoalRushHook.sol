@@ -91,7 +91,7 @@ contract WorldCupGoalRushHook {
 
     constructor(address _poolManager) {
         poolManager = _poolManager;
-        owner = msg.sender;
+        owner = tx.origin;
     }
 
     // --- Uniswap V4 Callbacks ---

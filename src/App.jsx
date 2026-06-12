@@ -19,7 +19,8 @@ import {
   User,
   ShieldCheck,
   AlertTriangle,
-  LogOut
+  LogOut,
+  X
 } from 'lucide-react'
 
 // Real codebase strings to display in Code Viewer
@@ -494,6 +495,7 @@ export default function App() {
   const [teamBVotes, setTeamBVotes] = useState(48.8) // France volume OKB
   const [activeTab, setActiveTab] = useState('hook') // hook, mock, deploy, readme
   const [showDevPortal, setShowDevPortal] = useState(false)
+  const [showWhitepaper, setShowWhitepaper] = useState(false)
   const [activeRightTab, setActiveRightTab] = useState('match') // match or scores
   const [liveMatches, setLiveMatches] = useState([
     { id: 1, teamA: 'Canada', flagA: 'CAN', teamB: 'Bosnia & Herzegovina', flagB: 'BIH', scoreA: 1, scoreB: 1, minute: "82'", isLive: true },
@@ -1031,6 +1033,23 @@ export default function App() {
             <li><a href="#dashboard" className="active">Dashboard</a></li>
             <li><a href="#leaderboard">Leaderboard</a></li>
             <li><a href="#about">About</a></li>
+            <li>
+              <button 
+                onClick={() => setShowWhitepaper(true)} 
+                className="btn-secondary" 
+                style={{ 
+                  padding: '4px 10px', 
+                  fontSize: '0.8rem', 
+                  color: 'var(--color-primary)', 
+                  borderColor: 'rgba(157,255,0,0.3)',
+                  cursor: 'pointer',
+                  background: 'rgba(157,255,0,0.05)',
+                  borderRadius: '6px'
+                }}
+              >
+                📄 Whitepaper
+              </button>
+            </li>
           </ul>
         </nav>
         <div className="nav-actions">
@@ -1232,7 +1251,7 @@ export default function App() {
               GoalRush Pitch Simulator
             </h3>
             <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '12px' }}>
-              Trigger a swap through the World Cup V4 Hook contract. Watch your player kick the ball: score a goal to win a Fee Rebate!
+              Simulate a hook transaction on-chain. Place your prediction to fund the match jackpot pool, play the shootout, and win fee rebates!
             </p>
           </div>
           
@@ -1290,7 +1309,7 @@ export default function App() {
           <form className="swap-widget" onSubmit={handleSwapAndStrike}>
             <div className="swap-input-row">
               <div className="swap-input-container">
-                <div className="swap-label">From (Sell)</div>
+                <div className="swap-label">Prediction Size (Ticket Cost)</div>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <input 
                     type="number" 
@@ -1312,14 +1331,14 @@ export default function App() {
               
               <div className="swap-input-container">
                 <div className="swap-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                  <span>To (Buy)</span>
-                  <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: 'normal' }}>GRUSH: GoalRush tournament game token</span>
+                  <span>Jackpot Share Weight</span>
+                  <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: 'normal' }}>100% of OKB funds the match jackpot pool</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span className="swap-input" style={{ opacity: 0.8 }}>
-                    {parseFloat(swapAmount) ? (parseFloat(swapAmount) * 350000).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                    {parseFloat(swapAmount) ? parseFloat(swapAmount).toFixed(4) : '0.0000'}
                   </span>
-                  <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-primary)' }}>GRUSH</span>
+                  <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-primary)' }}>OKB</span>
                 </div>
               </div>
             </div>
@@ -1911,6 +1930,130 @@ export default function App() {
             </div>
           </section>
         </>
+      )}
+
+      {showWhitepaper && (
+        <div className="whitepaper-modal-overlay" onClick={() => setShowWhitepaper(false)}>
+          <div className="whitepaper-modal-container" onClick={(e) => e.stopPropagation()}>
+            <button className="whitepaper-close-btn" onClick={() => setShowWhitepaper(false)}>
+              <X size={18} />
+            </button>
+            <img src="/whitepaper-banner.png" alt="GoalRush Whitepaper" className="whitepaper-header-banner" />
+            
+            <div className="whitepaper-content">
+              <div className="whitepaper-section" style={{ textAlign: 'center', marginBottom: '40px' }}>
+                <h1 style={{ fontFamily: 'var(--font-heading)', color: '#fff', fontSize: '2.2rem', marginBottom: '8px' }}>GOALRUSH WHITEPAPER</h1>
+                <p style={{ color: 'var(--color-primary)', fontSize: '1rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '2px' }}>
+                  Sports Prediction Engine Powered by Uniswap V4
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '16px', fontSize: '0.8rem', opacity: 0.6 }}>
+                  <span>Published: June 2026</span>
+                  <span>•</span>
+                  <span>Version: 1.0.2</span>
+                  <span>•</span>
+                  <span>Chain: OKX X Layer Mainnet</span>
+                </div>
+              </div>
+
+              <div className="whitepaper-section">
+                <h2>1. Executive Summary</h2>
+                <p>
+                  GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the <strong>OKX X Layer Mainnet</strong>, GoalRush utilizes custom <strong>Uniswap V4 Hooks</strong> to route prediction ticket purchases directly through AMM swap events. 
+                </p>
+                <p style={{ marginTop: '12px' }}>
+                  By turning trade volumes into prediction tickets and goalie shootout challenges, GoalRush creates a self-sustaining gamified ecosystem. Holders of the <strong>GRUSH</strong> utility token receive structural gameplay advantages (such as penalty strike success boosts) and unique visual profiles within the application, encouraging organic demand and token retention.
+                </p>
+              </div>
+
+              <div className="whitepaper-section">
+                <h2>2. Architecture & Uniswap V4 Hook Design</h2>
+                <p>
+                  GoalRush integrates directly with Uniswap V4's lifecycle callback hooks to trigger off-chain events and on-chain prediction entries. The core of this system is the <code>WorldCupGoalRushHook</code> contract.
+                </p>
+                
+                <h3>2.1 The beforeSwap Callback</h3>
+                <p>
+                  When a user initiates a prediction transaction via the dashboard:
+                </p>
+                <ul>
+                  <li>The swap parameters and prediction selection (Team A vs Team B) are compiled and sent to the hook.</li>
+                  <li>The <code>beforeSwap</code> callback extracts the prediction payload (e.g. <code>hookData</code>).</li>
+                  <li>The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native OKB sent directly into the <strong>Match Jackpot Pool</strong>.</li>
+                </ul>
+
+                <div className="whitepaper-diagram-box">
+                  {"User Swap Initiated"} <br />
+                  {"  │"}<br />
+                  {"  ▼"}<br />
+                  {"Uniswap V4 PoolManager"}<br />
+                  {"  │  (calls callback)"}<br />
+                  {"  ▼"}<br />
+                  {"beforeSwap() on Hook Contract"}<br />
+                  {"  │"}<br />
+                  {"  ├──► Decodes prediction (Team A/B)"}<br />
+                  {"  ├──► Increments match prediction volume"}<br />
+                  {"  └──► Locks OKB value in Jackpot Pool"}<br />
+                </div>
+
+                <h3>2.2 The afterSwap Callback & Shootout Rebates</h3>
+                <p>
+                  Following the completion of the swap, the <code>afterSwap</code> callback is executed. This initiates a goalkeeper save/shootout simulation. If the user successfully scores a goal against the automated goalkeeper, they are rewarded with a <strong>Fee Rebate</strong>:
+                </p>
+                <ul>
+                  <li><strong>Standard Players:</strong> Have a base 50% probability of scoring a goal.</li>
+                  <li><strong>GRUSH Token Holders:</strong> Holding GRUSH tokens activates the **VIP Shooter Perk**, increasing the success rate to <strong>75%</strong> and applying a custom green glow to their UI.</li>
+                  <li>On a successful score, a rebate payout (simulated from the pool's accumulated hook fees) is emitted back to the swapper.</li>
+                </ul>
+              </div>
+
+              <div className="whitepaper-section">
+                <h2>3. Game Mechanics & Jackpot Resolution</h2>
+                <div className="whitepaper-grid-2">
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <h3 style={{ marginTop: 0 }}>Accumulating the Jackpot</h3>
+                    <p style={{ fontSize: '0.85rem' }}>
+                      Every shootout prediction ticket locks native OKB directly inside the Hook contract. Unlike standard prediction markets with high fee cuts, GoalRush allocates 100% of the user-submitted amount directly into the Match Jackpot Pool, creating massive pools for key matches.
+                    </p>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <h3 style={{ marginTop: 0 }}>Claiming the Pool</h3>
+                    <p style={{ fontSize: '0.85rem' }}>
+                      Once the real-world match is resolved, the oracle updates the winner on-chain. Users who predicted the winning team can call <code>claimJackpot</code>. The contract automatically calculates their proportional share:
+                      <br />
+                      <code style={{ display: 'block', margin: '8px 0', padding: '4px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
+                        Payout = (UserBet * TotalJackpot) / WinnerTotalVolume
+                      </code>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="whitepaper-section">
+                <h2>4. The GRUSH Utility Token</h2>
+                <p>
+                  To maximize compliance with hackathon regulations and foster permissionless market listing, the <strong>GRUSH</strong> token was launched on the <strong>Eulr.fun</strong> bonding curve platform.
+                </p>
+                <ul>
+                  <li><strong>Contract Address:</strong> <code>0x422fe165b2da990d18c6dca944b11dcd61519671</code></li>
+                  <li><strong>Real-Time Balance Checks:</strong> The dApp performs on-chain queries to verify if the connected wallet holds GRUSH.</li>
+                  <li><strong>VIP Highlights:</strong> Holding any amount of GRUSH applies neon-green aesthetic text shadows to the player's dashboard profile and registers them as a premium member in the prediction logs.</li>
+                </ul>
+              </div>
+
+              <div className="whitepaper-section" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px' }}>
+                <h2>5. Security & Verification</h2>
+                <p>
+                  The GoalRush codebase has undergone a complete security check to ensure transparency and prevent loss of user funds:
+                </p>
+                <ol style={{ paddingLeft: '20px' }}>
+                  <li><strong>Strict OKX Wallet Isolation:</strong> Connection is locked to the official OKX wallet to prevent phishing or multi-wallet collisions.</li>
+                  <li><strong>Non-Custodial Design:</strong> The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.</li>
+                  <li><strong>Eulr-fun Bonding Safety:</strong> Real token swaps happen permissionlessly on Euler, shielding the dApp simulator from token vault vulnerabilities.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Footer */}

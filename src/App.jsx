@@ -566,8 +566,8 @@ const getProvider = () => {
   return null;
 };
 
-const HOOK_ADDRESS = '0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0';
-const ROUTER_ADDRESS = '0xe1Ad1C1Ab7600E6c3Fbaf0c80c3b947B7F901B7F';
+const HOOK_ADDRESS = '0x9bA0a504dbdBbe96300E56D69FCbd5154b10C0c0';
+const ROUTER_ADDRESS = '0xB8332a105f2ea7F53Bd94554F74658Bf767f8D67';
 const GRUSH_TOKEN_ADDRESS = '0x422fe165b2da990d18c6dca944b11dcd61519671';
 
 // Helper to get today/tomorrow date strings dynamically
@@ -2625,11 +2625,10 @@ export default function App() {
       if (!rawProvider) throw new Error("No wallet provider detected");
       const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
-      const hookAddress = "0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0";
       const abi = [
         "function createMatch(uint256 _matchId, string _teamA, string _teamB, uint256 _duration) external"
       ];
-      const hookContract = new ethers.Contract(hookAddress, abi, signer);
+      const hookContract = new ethers.Contract(HOOK_ADDRESS, abi, signer);
       addLog(`[Activate Match] Submitting transaction to activate ${match.teamA} vs ${match.teamB} on-chain...`);
 
       const tx = await hookContract.createMatch(match.id, match.teamA, match.teamB, 24 * 60 * 60);
@@ -2665,11 +2664,10 @@ export default function App() {
       if (!rawProvider) throw new Error("No wallet provider detected");
       const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
-      const hookAddress = "0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0";
       const abi = [
         "function claimJackpot(uint256 _matchId) external"
       ];
-      const hookContract = new ethers.Contract(hookAddress, abi, signer);
+      const hookContract = new ethers.Contract(HOOK_ADDRESS, abi, signer);
       addLog(`[claimJackpot] Claiming jackpot shares for Match #${activeMatch.id}...`);
 
       const tx = await hookContract.claimJackpot(activeMatch.id);
@@ -2913,11 +2911,11 @@ export default function App() {
                   <div
                     style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-primary)', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
                     onClick={() => {
-                      navigator.clipboard.writeText('0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0');
+                      navigator.clipboard.writeText(HOOK_ADDRESS);
                       alert('Hook address copied to clipboard!');
                     }}
                   >
-                    0xD168...40c0
+                    {HOOK_ADDRESS.slice(0, 6)}...{HOOK_ADDRESS.slice(-4)}
                   </div>
                 </div>
                 <div>
@@ -2925,11 +2923,11 @@ export default function App() {
                   <div
                     style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
                     onClick={() => {
-                      navigator.clipboard.writeText('0x422fe165b2da990d18c6dca944b11dcd61519671');
+                      navigator.clipboard.writeText(GRUSH_TOKEN_ADDRESS);
                       alert('GRUSH token address copied to clipboard!');
                     }}
                   >
-                    0x422f...671
+                    {GRUSH_TOKEN_ADDRESS.slice(0, 6)}...{GRUSH_TOKEN_ADDRESS.slice(-4)}
                   </div>
                 </div>
                 <div>

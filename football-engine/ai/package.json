@@ -1,0 +1,24 @@
+{
+  "name": "goal-rush-ai",
+  "version": "1.0.0",
+  "description": "AI Football Match Analyst service using OpenAI API",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.13.0",
+    "dotenv": "^16.4.5",
+    "ioredis": "^5.4.1",
+    "openai": "^4.51.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "prisma": "^5.13.0",
+    "tsx": "^4.10.1",
+    "typescript": "^5.4.5"
+  }
+}

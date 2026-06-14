@@ -1,0 +1,22 @@
+{
+  "name": "goal-rush-socket",
+  "version": "1.0.0",
+  "description": "WebSocket broadcast server using Socket.IO and Redis pub/sub",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ioredis": "^5.4.1",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "tsx": "^4.10.1",
+    "typescript": "^5.4.5"
+  }
+}

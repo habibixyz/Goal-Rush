@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 
 async function main() {
   const [owner] = await ethers.getSigners();
-  const hookAddress = "0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0";
+  const hookAddress = "0x9bA0a504dbdBbe96300E56D69FCbd5154b10C0c0";
 
   console.log(`Using owner account: ${owner.address}`);
   
@@ -20,11 +20,11 @@ async function main() {
   console.log(`Active Match ID on contract: ${activeId}`);
 
   if (activeId.toString() === "0") {
-    console.log("Creating Match #1: Argentina vs France (duration 30 days)...");
-    const tx = await hook.createMatch(1, "Argentina", "France", 30 * 24 * 60 * 60);
+    console.log("Creating Match #10: Netherlands vs Japan (duration 30 days)...");
+    const tx = await hook.createMatch(10, "Netherlands", "Japan", 30 * 24 * 60 * 60);
     console.log(`Transaction submitted: ${tx.hash}`);
     await tx.wait();
-    console.log("Match #1 successfully created on-chain!");
+    console.log("Match #10 successfully created on-chain!");
   } else {
     const matchData = await hook.matches(activeId);
     console.log(`Match #${activeId} already active: ${matchData.teamA} vs ${matchData.teamB}`);

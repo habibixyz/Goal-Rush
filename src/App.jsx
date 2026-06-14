@@ -1152,7 +1152,7 @@ export default function App() {
       teamA: 'Haiti', flagA: 'HAI',
       teamB: 'Scotland', flagB: 'SCO',
       scoreA: 0, scoreB: 1,
-      minute: "62'", isLive: true,
+      minute: "FT", isLive: false,
       date: 'June 14',
       stadium: 'Boston Stadium, Foxborough', capacity: '65,878', city: 'Foxborough, USA', referee: 'Adonai Escobedo',
       scorersA: [], scorersB: ["J. McGinn 28'"]

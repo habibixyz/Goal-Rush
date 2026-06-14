@@ -425,6 +425,9 @@ const asciiArtText = `
 `;
 
 const getFlagUrl = (fifaCode) => {
+  if (fifaCode && (fifaCode.startsWith('http://') || fifaCode.startsWith('https://'))) {
+    return fifaCode;
+  }
   const fifaToIso = {
     QAT: 'qa', ECU: 'ec', ENG: 'gb-eng', IRN: 'ir', SEN: 'sn', NED: 'nl',
     USA: 'us', WAL: 'gb-wls', ARG: 'ar', KSA: 'sa', DEN: 'dk', TUN: 'tn',
@@ -568,6 +571,8 @@ export default function App() {
     id: 1,
     teamA: 'Argentina',
     teamB: 'France',
+    flagA: 'ARG',
+    flagB: 'FRA',
     resolved: false,
     winner: 0
   });
@@ -576,6 +581,7 @@ export default function App() {
   const hasInitializedRef = useRef(false);
   const statsCacheRef = useRef({});
   const lastFetchedBlockRef = useRef(62494373); // contract deployment block
+  const activeOnChainMatchRef = useRef({ id: 1, teamA: 'Canada', teamB: 'Bosnia & Herzegovina' });
 
   useEffect(() => {
     activeMatchRef.current = activeMatch;
@@ -757,16 +763,22 @@ export default function App() {
           <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', height: '36px', margin: '0 16px' }}></div>
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '70px', textAlign: 'center' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: m.isLive ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: (m.isLive && m.minute !== 'FT') ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)' }}>
               {m.minute}
             </span>
-            {m.isLive ? (
+            {m.isLive && m.minute !== 'FT' ? (
               <span style={{ fontSize: '0.6rem', color: '#ff3344', fontWeight: 700, marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span className="live-pulse-dot" style={{ width: '4px', height: '4px', background: '#ff3344', borderRadius: '50%', display: 'inline-block' }}></span>
                 LIVE
               </span>
             ) : m.minute === 'FT' ? (
-              <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>Final</span>
+              <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                {m.scoreA > m.scoreB 
+                  ? `${m.teamA} Won` 
+                  : m.scoreB > m.scoreA 
+                    ? `${m.teamB} Won` 
+                    : 'Draw'}
+              </span>
             ) : (
               <span style={{ fontSize: '0.6rem', color: 'var(--color-secondary)', marginTop: '2px', fontWeight: 600 }}>Upcoming</span>
             )}
@@ -803,8 +815,12 @@ export default function App() {
 
             <div className="match-hub-score-wrap">
               <span className="match-hub-score">{m.scoreA} - {m.scoreB}</span>
-              <span className={`match-hub-minute ${m.isLive ? 'live' : ''}`}>
-                {m.minute === 'FT' ? 'FULL TIME (FT)' : m.isLive ? `LIVE ${m.minute}` : 'UPCOMING'}
+              <span className={`match-hub-minute ${(m.isLive && m.minute !== 'FT') ? 'live' : ''}`}>
+                {m.minute === 'FT' 
+                  ? `FULL TIME (FT) • ${m.scoreA > m.scoreB ? `${m.teamA} Won` : m.scoreB > m.scoreA ? `${m.teamB} Won` : 'Draw'}` 
+                  : (m.isLive && m.minute !== 'FT') 
+                    ? `LIVE ${m.minute}` 
+                    : 'UPCOMING'}
               </span>
             </div>
 
@@ -1145,13 +1161,13 @@ export default function App() {
     // Today (June 14) - Upcoming
     {
       id: 8,
-      teamA: 'Argentina', flagA: 'ARG',
+      teamA: 'Australia', flagA: 'AUS',
       teamB: 'Türkiye', flagB: 'TUR',
-      scoreA: 0, scoreB: 0,
-      minute: "8:30 PM", isLive: false,
-      date: 'June 14',
-      stadium: 'El Monumental, Buenos Aires', capacity: '84,567', city: 'Buenos Aires, Argentina', referee: 'Danny Makkelie',
-      scorersA: [], scorersB: []
+      scoreA: 2, scoreB: 0,
+      minute: "FT", isLive: false,
+      date: 'June 13',
+      stadium: 'BC Place, Vancouver', capacity: '54,500', city: 'Vancouver, Canada', referee: 'Ivan Barton',
+      scorersA: ["N. Irankunda 27'", "C. Metcalfe 75'"], scorersB: []
     },
     {
       id: 9,
@@ -1490,6 +1506,38 @@ export default function App() {
       scorersA: [], scorersB: []
     }
   ])
+
+  const liveMatchesRef = useRef([]);
+
+  useEffect(() => {
+    liveMatchesRef.current = liveMatches;
+  }, [liveMatches]);
+
+  useEffect(() => {
+    const loadRealMatches = async () => {
+      try {
+        const response = await fetch('/api/live');
+        if (!response.ok) {
+          throw new Error(`HTTP status ${response.status}`);
+        }
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setLiveMatches(prev => {
+            const realIds = new Set(data.map(m => m.id));
+            const filteredPrev = prev.filter(m => !realIds.has(m.id));
+            return [...data, ...filteredPrev];
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to load real-world matches, using mock simulation:', err);
+      }
+    };
+
+    loadRealMatches();
+    const interval = setInterval(loadRealMatches, 300000);
+    return () => clearInterval(interval);
+  }, []);
+
   const [logs, setLogs] = useState([
     'System: GoalRush Hook verified on X Layer. Ready for mainnet deployment.',
     'System: Active Match #1 - Argentina vs France is accepting predictions.',
@@ -1548,6 +1596,9 @@ export default function App() {
   useEffect(() => {
     const interval = setInterval(() => {
       setLiveMatches(prev => prev.map(m => {
+        if (typeof m.id === 'string' && m.id.startsWith('api-')) {
+          return m;
+        }
         if (m.isLive) {
           let min = parseInt(m.minute);
           if (isNaN(min)) {
@@ -1584,8 +1635,8 @@ export default function App() {
           };
         } else {
           // If match is NOT live
-          // If scheduled for today (June 14), it can kick off!
-          if (m.minute === 'June 14') {
+          // If scheduled for today (June 14) and not completed, it can kick off!
+          if (m.date === 'June 14' && m.minute !== 'FT') {
             const ticks = (m.ticksScheduled || 0) + 1;
             if (ticks >= 5 || Math.random() < 0.1) {
               return {
@@ -1644,6 +1695,18 @@ export default function App() {
             if (actIdNum > 0) {
               currentId = actIdNum;
               hasInitializedRef.current = true;
+              try {
+                const actMatchData = await hookContract.matches(actIdNum);
+                const actTeamA = actMatchData[1] || actMatchData.teamA || 'Canada';
+                const actTeamB = actMatchData[2] || actMatchData.teamB || 'Bosnia & Herzegovina';
+                activeOnChainMatchRef.current = {
+                  id: actIdNum,
+                  teamA: actTeamA,
+                  teamB: actTeamB
+                };
+              } catch (e) {
+                console.warn("Failed to fetch details for default active match:", e);
+              }
             }
           } catch (activeIdErr) {
             console.warn("Failed to fetch activeMatchId on initialization:", activeIdErr);
@@ -1652,43 +1715,82 @@ export default function App() {
 
         // Fetch selected match info safely
         try {
-          const matchData = await hookContract.matches(currentId);
-          const onChainId = Number(matchData[0] || matchData.id || 0);
-          
-          if (onChainId > 0) {
-            const teamAName = matchData[1] || matchData.teamA || activeMatchRef.current.teamA;
-            const teamBName = matchData[2] || matchData.teamB || activeMatchRef.current.teamB;
-            const isResolved = matchData[5] !== undefined ? matchData[5] : matchData.resolved;
-            const winnerId = Number(matchData[6] !== undefined ? matchData[6] : (matchData.winner || 0));
-            
-            setActiveMatch(prev => {
-              if (prev.id !== currentId) return prev;
-              // Only trigger state updates if the data has actually changed to prevent render loops
-              if (prev.teamA === teamAName && prev.teamB === teamBName && prev.resolved === isResolved && prev.winner === winnerId) {
-                return prev;
-              }
-              return {
-                id: currentId,
-                teamA: teamAName,
-                teamB: teamBName,
-                resolved: isResolved,
-                winner: winnerId
-              };
-            });
-
-            const totalJackpotWei = matchData[7] || matchData.totalJackpot || 0n;
-            const contractBalance = await rpcProvider.getBalance(hookAddress);
-            const displayJackpot = contractBalance > totalJackpotWei ? contractBalance : totalJackpotWei;
-            setJackpot(Number(ethers.formatEther(displayJackpot)));
-            
-            const volA = await hookContract.teamPredictionVolume(currentId, 1);
-            const volB = await hookContract.teamPredictionVolume(currentId, 2);
-            setTeamAVotes(Number(ethers.formatEther(volA)));
-            setTeamBVotes(Number(ethers.formatEther(volB)));
+          const isRealWorld = typeof currentId === 'string' && currentId.startsWith('api-');
+          if (isRealWorld) {
+            const liveM = liveMatchesRef.current.find(m => m.id === currentId);
+            if (liveM) {
+              const isResolved = liveM.minute === 'FT';
+              const winnerId = liveM.scoreA > liveM.scoreB ? 1 : liveM.scoreB > liveM.scoreA ? 2 : 3;
+              setActiveMatch(prev => {
+                if (prev.id !== currentId) return prev;
+                if (prev.teamA === liveM.teamA && prev.teamB === liveM.teamB && prev.resolved === isResolved && prev.winner === winnerId) {
+                  return prev;
+                }
+                return {
+                  id: currentId,
+                  teamA: liveM.teamA,
+                  teamB: liveM.teamB,
+                  flagA: liveM.flagA,
+                  flagB: liveM.flagB,
+                  resolved: isResolved,
+                  winner: winnerId
+                };
+              });
+              setJackpot(0);
+              setTeamAVotes(0);
+              setTeamBVotes(0);
+            }
           } else {
-            setJackpot(0);
-            setTeamAVotes(0);
-            setTeamBVotes(0);
+            const matchData = await hookContract.matches(currentId);
+            const onChainId = Number(matchData[0] || matchData.id || 0);
+            
+            if (onChainId > 0) {
+              const teamAName = matchData[1] || matchData.teamA || activeMatchRef.current.teamA;
+              const teamBName = matchData[2] || matchData.teamB || activeMatchRef.current.teamB;
+              const isResolved = matchData[5] !== undefined ? matchData[5] : matchData.resolved;
+              const winnerId = Number(matchData[6] !== undefined ? matchData[6] : (matchData.winner || 0));
+              
+              setActiveMatch(prev => {
+                if (prev.id !== currentId) return prev;
+                // Only trigger state updates if the data has actually changed to prevent render loops
+                if (prev.teamA === teamAName && prev.teamB === teamBName && prev.resolved === isResolved && prev.winner === winnerId) {
+                  return prev;
+                }
+                return {
+                  id: currentId,
+                  teamA: teamAName,
+                  teamB: teamBName,
+                  flagA: getTeamFifaCode(teamAName),
+                  flagB: getTeamFifaCode(teamBName),
+                  resolved: isResolved,
+                  winner: winnerId
+                };
+              });
+
+              // Keep the active onchain match ref updated in case the selected match ID matches the active ID
+              const activeIdFromContract = Number(await hookContract.activeMatchId());
+              if (currentId === activeIdFromContract) {
+                activeOnChainMatchRef.current = {
+                  id: currentId,
+                  teamA: teamAName,
+                  teamB: teamBName
+                };
+              }
+
+              const totalJackpotWei = matchData[7] || matchData.totalJackpot || 0n;
+              const contractBalance = await rpcProvider.getBalance(hookAddress);
+              const displayJackpot = contractBalance > totalJackpotWei ? contractBalance : totalJackpotWei;
+              setJackpot(Number(ethers.formatEther(displayJackpot)));
+              
+              const volA = await hookContract.teamPredictionVolume(currentId, 1);
+              const volB = await hookContract.teamPredictionVolume(currentId, 2);
+              setTeamAVotes(Number(ethers.formatEther(volA)));
+              setTeamBVotes(Number(ethers.formatEther(volB)));
+            } else {
+              setJackpot(0);
+              setTeamAVotes(0);
+              setTeamBVotes(0);
+            }
           }
         } catch (matchErr) {
           console.warn("Failed to fetch match data from hook contract for ID:", currentId, matchErr);
@@ -1995,6 +2097,10 @@ export default function App() {
 
   const handleSwapAndStrike = async (e) => {
     e.preventDefault()
+    if (typeof activeMatch.id === 'string' && activeMatch.id.startsWith('api-')) {
+      alert('This match is not active for on-chain predictions. Please select an active World Cup match to place predictions.');
+      return;
+    }
     if (!walletConnected) {
       alert('Please connect your wallet first!')
       return
@@ -2180,6 +2286,8 @@ export default function App() {
       id: match.id,
       teamA: match.teamA,
       teamB: match.teamB,
+      flagA: match.flagA || getTeamFifaCode(match.teamA),
+      flagB: match.flagB || getTeamFifaCode(match.teamB),
       resolved: false
     });
     setPrediction(1);
@@ -2631,7 +2739,39 @@ export default function App() {
               </div>
             </div>
 
-            {activeMatch.resolved ? (
+            {typeof activeMatch.id === 'string' && activeMatch.id.startsWith('api-') ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+                <div style={{
+                  background: 'rgba(0, 229, 255, 0.04)',
+                  border: '1px solid rgba(0, 229, 255, 0.25)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center'
+                }}>
+                  <h4 style={{ color: 'var(--color-secondary)', margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 700 }}>🌍 REAL-TIME LIVE TRACKING</h4>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.85rem', margin: 0 }}>
+                    This match is a live fixture fetched in real-time from the football API.
+                  </p>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem', marginTop: '8px', marginBottom: 0 }}>
+                    Predictions and shootout games are available only on contract-active World Cup matches.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (activeOnChainMatchRef.current) {
+                      handleSelectMatchUI(activeOnChainMatchRef.current);
+                    } else {
+                      handleSelectMatchUI({ id: 1, teamA: 'Canada', teamB: 'Bosnia & Herzegovina' });
+                    }
+                  }}
+                  className="swap-btn"
+                  style={{ background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
+                >
+                  Switch to Active Prediction Match ⚽
+                </button>
+              </div>
+            ) : activeMatch.resolved ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
                 <div style={{
                   background: 'rgba(157, 255, 0, 0.04)',
@@ -2673,7 +2813,7 @@ export default function App() {
                       disabled={isStriking}
                     >
                       <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        {activeMatch.teamA} <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} style={{ width: '16px', height: '11px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                        {activeMatch.teamA} <img src={getFlagUrl(activeMatch.flagA || getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} style={{ width: '16px', height: '11px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
                       </span>
                     </button>
                     <button
@@ -2684,7 +2824,7 @@ export default function App() {
                       disabled={isStriking}
                     >
                       <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        {activeMatch.teamB} <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} style={{ width: '16px', height: '11px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                        {activeMatch.teamB} <img src={getFlagUrl(activeMatch.flagB || getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} style={{ width: '16px', height: '11px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
                       </span>
                     </button>
                   </div>
@@ -2845,9 +2985,9 @@ export default function App() {
 
             {activeRightTab === 'scores' && (() => {
               const live = liveMatches.filter(m => m.isLive && m.minute !== 'FT');
-              const yesterday = liveMatches.filter(m => m.minute === 'FT' && m.date === 'June 13').slice(-2);
-              const upcoming = liveMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date !== 'June 13').slice(0, 2);
-              const displayMatches = [...live, ...yesterday, ...upcoming];
+              const completed = liveMatches.filter(m => m.minute === 'FT').slice(-3);
+              const upcoming = liveMatches.filter(m => !m.isLive && m.minute !== 'FT').slice(0, 3);
+              const displayMatches = [...live, ...completed, ...upcoming];
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

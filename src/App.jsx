@@ -1110,36 +1110,36 @@ export default function App() {
       scorersA: [], scorersB: []
     },
 
-    // Today (June 14) - Live Matches
+    // Today/Yesterday Matches - Real Scores
     {
       id: 5,
       teamA: 'Qatar', flagA: 'QAT',
       teamB: 'Switzerland', flagB: 'SUI',
       scoreA: 1, scoreB: 1,
-      minute: "89'", isLive: true,
-      date: 'June 14',
-      stadium: 'Lusail Stadium, Doha', capacity: '88,966', city: 'Doha, Qatar', referee: 'Abdulrahman Al-Jassim',
-      scorersA: ["A. Afif 5'"], scorersB: ["X. Shaqiri 62'"]
+      minute: "FT", isLive: false,
+      date: 'June 13',
+      stadium: 'San Francisco Bay Area Stadium', capacity: '68,500', city: 'Santa Clara, USA', referee: 'Abdulrahman Al-Jassim',
+      scorersA: ["B. Khoukhi 94'"], scorersB: ["B. Embolo 17' (Pen)"]
     },
     {
       id: 6,
       teamA: 'Brazil', flagA: 'BRA',
       teamB: 'Morocco', flagB: 'MAR',
-      scoreA: 2, scoreB: 1,
-      minute: "81'", isLive: true,
-      date: 'June 14',
-      stadium: 'Maracanã, Rio de Janeiro', capacity: '78,838', city: 'Rio de Janeiro, Brazil', referee: 'Michael Oliver',
-      scorersA: ["Vinícius Jr. 22'", "Rodrygo 64'"], scorersB: ["Y. En-Nesyri 47'"]
+      scoreA: 1, scoreB: 1,
+      minute: "FT", isLive: false,
+      date: 'June 13',
+      stadium: 'New York New Jersey Stadium', capacity: '82,500', city: 'East Rutherford, USA', referee: 'Michael Oliver',
+      scorersA: ["Vinícius Jr. 32'"], scorersB: ["I. Saibari 21'"]
     },
     {
       id: 7,
       teamA: 'Haiti', flagA: 'HAI',
       teamB: 'Scotland', flagB: 'SCO',
-      scoreA: 2, scoreB: 2,
-      minute: "90+2'", isLive: true,
+      scoreA: 0, scoreB: 1,
+      minute: "62'", isLive: true,
       date: 'June 14',
-      stadium: 'Sylvio Cator Stadium, Port-au-Prince', capacity: '15,000', city: 'Port-au-Prince, Haiti', referee: 'Adonai Escobedo',
-      scorersA: ["F. Frantzdy 14'", "D. Nazon 77'"], scorersB: ["S. McTominay 44'", "J. McGinn 88'"]
+      stadium: 'Boston Stadium, Foxborough', capacity: '65,878', city: 'Foxborough, USA', referee: 'Adonai Escobedo',
+      scorersA: [], scorersB: ["J. McGinn 28'"]
     },
 
     // Today (June 14) - Upcoming

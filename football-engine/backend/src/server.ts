@@ -1,13 +1,83 @@
-import prisma from '../db/prisma.js';
-import * as sofascore from '../services/sofascore.js';
-import { publishEvent } from '../services/redis.js';
+import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import dotenv from 'dotenv';
+import prisma from './db/prisma.js';
+import * as sofascore from './services/sofascore.js';
+import { analyzeMatch } from './services/ai.js';
 import { MatchStatus, EventType } from '@prisma/client';
 
-export const runPollingJob = async () => {
+dotenv.config();
+
+const port = process.env.PORT || 4000;
+const app = express();
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date(), service: 'goal-rush-backend' });
+});
+
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+
+// Event deduplication cache (stores event hash for 30 seconds)
+const processedEvents = new Set<string>();
+
+const isDuplicateEvent = (matchId: string, eventType: string, payload: any): boolean => {
+  let eventHash = `${matchId}:${eventType}`;
+  if (payload.event && payload.event.id) {
+    eventHash += `:${payload.event.id}`;
+  } else if (payload.match && payload.match.updatedAt) {
+    eventHash += `:${payload.match.updatedAt}`;
+  } else {
+    eventHash += `:${JSON.stringify(payload)}`;
+  }
+
+  if (processedEvents.has(eventHash)) {
+    return true;
+  }
+
+  processedEvents.add(eventHash);
+  setTimeout(() => processedEvents.delete(eventHash), 30000);
+  return false;
+};
+
+const broadcastMatchEvent = (matchId: string, type: string, payload: any) => {
+  if (isDuplicateEvent(matchId, type, payload)) {
+    return;
+  }
+  console.log(`[Socket] Broadcasting event [${type}] on room [match:${matchId}]`);
+  io.to(`match:${matchId}`).emit('match_event', { type, ...payload });
+};
+
+// Client connections
+io.on('connection', (socket) => {
+  console.log(`[Socket] Client connected: ${socket.id}`);
+
+  socket.on('join_match', (matchId: string) => {
+    socket.join(`match:${matchId}`);
+    console.log(`[Socket] Client ${socket.id} joined room: match:${matchId}`);
+    socket.emit('joined_room', { matchId });
+  });
+
+  socket.on('leave_match', (matchId: string) => {
+    socket.leave(`match:${matchId}`);
+    console.log(`[Socket] Client ${socket.id} left room: match:${matchId}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`[Socket] Client disconnected: ${socket.id}`);
+  });
+});
+
+// Polling Scheduler Loop
+const runPollingJob = async () => {
   try {
     console.log(`[Collector] Starting poll cycle at ${new Date().toISOString()}`);
-    
-    // 1. Fetch live matches
     const liveMatches = await sofascore.getLiveMatches();
     
     for (const liveMatch of liveMatches) {
@@ -24,19 +94,16 @@ export const runPollingJob = async () => {
         create: { sofaId: liveMatch.awayTeam.id, name: liveMatch.awayTeam.name, shortName: liveMatch.awayTeam.shortName || null }
       });
 
-      // Map SofaScore status to Prisma MatchStatus
       let status: MatchStatus = MatchStatus.LIVE;
       if (liveMatch.status === 'scheduled') status = MatchStatus.SCHEDULED;
       else if (liveMatch.status === 'finished') status = MatchStatus.FINISHED;
 
-      // Check if match already exists in our database
       const existingMatch = await prisma.match.findUnique({
         where: { sofaId: liveMatch.id }
       });
 
       let match;
       if (!existingMatch) {
-        // Create match
         match = await prisma.match.create({
           data: {
             sofaId: liveMatch.id,
@@ -49,10 +116,9 @@ export const runPollingJob = async () => {
             startTime: new Date(liveMatch.startTime)
           }
         });
-        console.log(`[Collector] Created new match on-chain/db: ${homeTeam.name} vs ${awayTeam.name}`);
-        await publishEvent(`match:${match.id}`, 'match_created', { match });
+        console.log(`[Collector] Created new match: ${homeTeam.name} vs ${awayTeam.name}`);
+        broadcastMatchEvent(match.id, 'match_created', { match });
       } else {
-        // Diff match details
         const changed = 
           existingMatch.scoreHome !== liveMatch.homeScore ||
           existingMatch.scoreAway !== liveMatch.awayScore ||
@@ -69,14 +135,17 @@ export const runPollingJob = async () => {
               minute: liveMatch.minute || 0
             }
           });
-          console.log(`[Collector] Match update detected: ${homeTeam.name} ${match.scoreHome}-${match.scoreAway} ${awayTeam.name} (Min: ${match.minute})`);
-          await publishEvent(`match:${match.id}`, 'match_updated', { match });
+          console.log(`[Collector] Match update: ${homeTeam.name} ${match.scoreHome}-${match.scoreAway} ${awayTeam.name} (${match.minute}')`);
+          broadcastMatchEvent(match.id, 'match_updated', { match });
+          
+          // Trigger background AI Analysis
+          analyzeMatch(match.id).catch(err => console.error('[AI Analyst] Analysis error:', err));
         } else {
           match = existingMatch;
         }
       }
 
-      // 2. Fetch and Sync Lineups (once per match or periodically)
+      // Sync Lineups
       const lineups = await sofascore.getMatchLineups(liveMatch.id);
       for (const line of [...lineups.home, ...lineups.away]) {
         const team = lineups.home.includes(line) ? homeTeam : awayTeam;
@@ -87,16 +156,14 @@ export const runPollingJob = async () => {
         });
       }
 
-      // 3. Fetch and Sync Match Events
+      // Sync Match Events
       const sofaEvents = await sofascore.getMatchEvents(liveMatch.id);
       for (const sofaEv of sofaEvents) {
-        // Find if this event exists
         const existingEvent = await prisma.event.findUnique({
           where: { sofaId: sofaEv.id }
         });
 
         if (!existingEvent) {
-          // Find player by name/id to link
           const player = await prisma.player.findFirst({
             where: { name: sofaEv.playerName }
           });
@@ -120,8 +187,8 @@ export const runPollingJob = async () => {
             }
           });
 
-          console.log(`[Collector] New event recorded: [${event.type}] ${sofaEv.playerName} at ${event.minute}'`);
-          await publishEvent(`match:${match.id}`, 'new_event', {
+          console.log(`[Collector] Recorded: [${event.type}] ${sofaEv.playerName} (${event.minute}')`);
+          broadcastMatchEvent(match.id, 'new_event', {
             event: {
               id: event.id,
               type: event.type,
@@ -130,11 +197,14 @@ export const runPollingJob = async () => {
               player: sofaEv.playerName
             }
           });
+
+          // Trigger background AI Analysis on new incident
+          analyzeMatch(match.id).catch(err => console.error('[AI Analyst] Analysis error:', err));
         }
       }
     }
 
-    // 4. Standings
+    // Standings
     const standings = await sofascore.getStandings();
     for (const std of standings) {
       const team = await prisma.team.findUnique({
@@ -170,3 +240,16 @@ export const runPollingJob = async () => {
     console.error('[Collector] Error during poll cycle:', err);
   }
 };
+
+// Start Polling Loops
+runPollingJob();
+const POLL_INTERVAL = 15000;
+setInterval(runPollingJob, POLL_INTERVAL);
+
+// Start HTTP / socket.io server
+httpServer.listen(port, () => {
+  console.log(`[Backend] Combined server listening on port ${port}`);
+});
+
+process.on('SIGINT', () => process.exit(0));
+process.on('SIGTERM', () => process.exit(0));

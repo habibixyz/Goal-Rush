@@ -51,14 +51,11 @@ const simEvents: SofaEvent[] = [];
 
 export const getLiveMatches = async (): Promise<SofaMatch[]> => {
   if (!SOFASCORE_API_URL) {
-    // Return mock live match simulating in real-time
     const now = new Date();
     const startTime = new Date(now.getTime() - simMinute * 60000).toISOString();
     
-    // Auto-advance simulation minute
     simMinute = simMinute >= 90 ? 1 : simMinute + 1;
     
-    // Simulate dynamic scoring events
     if (simMinute === 15 && simHomeScore === 0) {
       simHomeScore = 1;
       simEvents.push({
@@ -127,7 +124,6 @@ export const getLiveMatches = async (): Promise<SofaMatch[]> => {
 
 export const getMatchEvents = async (matchId: number): Promise<SofaEvent[]> => {
   if (!SOFASCORE_API_URL) {
-    // Return filtered simulated events based on current simulation minute
     return simEvents.filter(e => e.minute <= simMinute);
   }
 
@@ -145,7 +141,6 @@ export const getMatchEvents = async (matchId: number): Promise<SofaEvent[]> => {
 
 export const getMatchLineups = async (matchId: number): Promise<SofaLineup> => {
   if (!SOFASCORE_API_URL) {
-    // Mock Lineups
     return {
       home: [
         { player: { id: 201, name: 'Lionel Messi', position: 'FW', number: 10 } },
@@ -189,7 +184,6 @@ export const getMatchLineups = async (matchId: number): Promise<SofaLineup> => {
 
 export const getStandings = async (): Promise<SofaStanding[]> => {
   if (!SOFASCORE_API_URL) {
-    // Return Group C Standings mock
     return [
       { teamId: 101, name: 'Argentina', points: 6, played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 5, goalsAgainst: 2 },
       { teamId: 102, name: 'France', points: 6, played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 6, goalsAgainst: 3 },

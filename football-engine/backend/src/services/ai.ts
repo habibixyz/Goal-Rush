@@ -1,35 +1,23 @@
-import prisma from './db/prisma.js';
-import Redis from 'ioredis';
+import prisma from '../db/prisma.js';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 const openaiApiKey = process.env.OPENAI_API_KEY || '';
-
-// Initialize OpenAI SDK if key is set
 const openai = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey }) : null;
 
-// Initialize Redis Subscriber
-const subscriber = new Redis(redisUrl);
-
-console.log('[AI Analyst] Starting AI Match Analyst Service...');
-
-// Cache to prevent duplicate analyses within 60 seconds
 const analysisCooldown = new Map<string, number>();
 
-const analyzeMatch = async (matchId: string) => {
+export const analyzeMatch = async (matchId: string) => {
   const now = Date.now();
   const lastAnalyzed = analysisCooldown.get(matchId) || 0;
-  if (now - lastAnalyzed < 60000) {
-    console.log(`[AI Analyst] Cooldown active for match ${matchId}. Skipping analysis.`);
-    return;
+  if (now - lastAnalyzed < 45000) {
+    return; // Cooldown of 45 seconds per match
   }
   analysisCooldown.set(matchId, now);
 
   try {
-    console.log(`[AI Analyst] Fetching match data for match ${matchId}...`);
     const match = await prisma.match.findUnique({
       where: { id: matchId },
       include: {
@@ -41,12 +29,7 @@ const analyzeMatch = async (matchId: string) => {
       }
     });
 
-    if (!match) {
-      console.warn(`[AI Analyst] Match ${matchId} not found in database.`);
-      return;
-    }
-
-    console.log(`[AI Analyst] Run analysis for: ${match.homeTeam.name} vs ${match.awayTeam.name} (${match.scoreHome}-${match.scoreAway})`);
+    if (!match) return;
 
     let analysisResult;
 
@@ -88,11 +71,11 @@ Return ONLY a valid JSON object matching this TypeScript interface:
           analysisResult = JSON.parse(text);
         }
       } catch (openaiErr) {
-        console.error('[AI Analyst] OpenAI analysis failed, falling back to local heuristic:', openaiErr);
+        console.error('[AI Analyst] OpenAI failed, using fallback:', openaiErr);
       }
     }
 
-    // Heuristic Local Fallback Analysis Engine
+    // Heuristic Local Fallback
     if (!analysisResult) {
       const min = match.minute || 0;
       const scoreDiff = match.scoreHome - match.scoreAway;
@@ -102,27 +85,23 @@ Return ONLY a valid JSON object matching this TypeScript interface:
       let winProbDraw = 33.4;
 
       if (scoreDiff > 0) {
-        // Home team is leading
         const timeFactor = min / 90;
         winProbHome = 50 + (scoreDiff * 15) + (timeFactor * 25);
         winProbAway = Math.max(5, 25 - (scoreDiff * 10) - (timeFactor * 15));
         winProbDraw = 100 - winProbHome - winProbAway;
       } else if (scoreDiff < 0) {
-        // Away team is leading
         const absDiff = Math.abs(scoreDiff);
         const timeFactor = min / 90;
         winProbAway = 50 + (absDiff * 15) + (timeFactor * 25);
         winProbHome = Math.max(5, 25 - (absDiff * 10) - (timeFactor * 15));
         winProbDraw = 100 - winProbAway - winProbHome;
       } else {
-        // Draw
         const timeFactor = min / 90;
         winProbDraw = 40 + (timeFactor * 40);
         winProbHome = (100 - winProbDraw) / 2;
         winProbAway = winProbHome;
       }
 
-      // Round percentages
       winProbHome = Math.round(winProbHome * 10) / 10;
       winProbAway = Math.round(winProbAway * 10) / 10;
       winProbDraw = Math.round(winProbDraw * 10) / 10;
@@ -153,7 +132,6 @@ Return ONLY a valid JSON object matching this TypeScript interface:
       };
     }
 
-    // Save Prediction record to Database
     const prediction = await prisma.prediction.create({
       data: {
         matchId: match.id,
@@ -168,30 +146,9 @@ Return ONLY a valid JSON object matching this TypeScript interface:
       }
     });
 
-    console.log(`[AI Analyst] Prediction saved successfully. Match: ${match.homeTeam.name} vs ${match.awayTeam.name}. Predicted Winner: ${prediction.predictedWinner} (${analysisResult.winProbHome}% / ${analysisResult.winProbDraw}% / ${analysisResult.winProbAway}%)`);
-
+    console.log(`[AI Analyst] Prediction saved: ${match.homeTeam.name} vs ${match.awayTeam.name}. AI Pick: ${prediction.predictedWinner}`);
+    return prediction;
   } catch (err) {
     console.error(`[AI Analyst] Error analyzing match ${matchId}:`, err);
   }
 };
-
-// Listen to match changes and new events via Redis
-subscriber.psubscribe('match:*').then(() => {
-  console.log('[AI Analyst] Subscribed to match:* channels');
-});
-
-subscriber.on('pmessage', async (pattern, channel, message) => {
-  try {
-    const matchId = channel.split(':')[1];
-    const payload = JSON.parse(message);
-    const { type } = payload;
-
-    // Trigger analysis on match updates or key events
-    if (type === 'match_updated' || type === 'new_event') {
-      console.log(`[AI Analyst] Event [${type}] received. Scheduling analysis for match ${matchId}...`);
-      await analyzeMatch(matchId);
-    }
-  } catch (err) {
-    console.error('[AI Analyst] Failed to handle message from Redis:', err);
-  }
-});

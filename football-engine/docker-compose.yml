@@ -13,47 +13,19 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  redis:
-    image: redis:alpine
-    container_name: goalrush-redis
-    ports:
-      - "6379:6379"
-
-  collector:
+  backend:
     build:
-      context: ./collector
-    container_name: goalrush-collector
-    depends_on:
-      - postgres
-      - redis
-    environment:
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/goalrush?schema=public
-      REDIS_URL: redis://redis:6379
-      SOFASCORE_API_URL: ""
-      SOFASCORE_API_KEY: ""
-
-  socket:
-    build:
-      context: ./socket
-    container_name: goalrush-socket
+      context: ./backend
+    container_name: goalrush-backend
     ports:
       - "4000:4000"
     depends_on:
-      - redis
-    environment:
-      PORT: 4000
-      REDIS_URL: redis://redis:6379
-
-  ai:
-    build:
-      context: ./ai
-    container_name: goalrush-ai
-    depends_on:
       - postgres
-      - redis
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/goalrush?schema=public
-      REDIS_URL: redis://redis:6379
+      PORT: 4000
+      SOFASCORE_API_URL: ""
+      SOFASCORE_API_KEY: ""
       OPENAI_API_KEY: ""
 
   frontend:

@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsx src/server.ts",
-    "prisma:generate": "prisma generate --schema=../prisma/schema.prisma"
+    "prisma:generate": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^5.13.0",

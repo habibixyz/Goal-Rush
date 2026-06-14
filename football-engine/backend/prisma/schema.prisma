@@ -1,0 +1,122 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+  POSTPONED
+  CANCELLED
+}
+
+enum EventType {
+  GOAL
+  YELLOW_CARD
+  RED_CARD
+  SUBSTITUTION
+  KICKOFF
+  HALF_TIME
+  FULL_TIME
+  VAR
+  PENALTY
+}
+
+model Team {
+  id           String     @id @default(uuid())
+  sofaId       Int        @unique
+  name         String
+  shortName    String?
+  logoUrl      String?
+  players      Player[]
+  homeMatches  Match[]    @relation("HomeTeam")
+  awayMatches  Match[]    @relation("AwayTeam")
+  standings    Standing?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Player {
+  id           String     @id @default(uuid())
+  sofaId       Int        @unique
+  name         String
+  position     String?
+  number       Int?
+  teamId       String
+  team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  events       Event[]    @relation("MainPlayer")
+  subEvents    Event[]    @relation("SubPlayer")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Match {
+  id           String      @id @default(uuid())
+  sofaId       Int         @unique
+  homeTeamId   String
+  homeTeam     Team        @relation("HomeTeam", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  awayTeamId   String
+  awayTeam     Team        @relation("AwayTeam", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  status       MatchStatus @default(SCHEDULED)
+  scoreHome    Int         @default(0)
+  scoreAway    Int         @default(0)
+  minute       Int?
+  startTime    DateTime
+  endTime      DateTime?
+  events       Event[]
+  predictions  Prediction[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([status])
+  @@index([startTime])
+}
+
+model Event {
+  id           String     @id @default(uuid())
+  sofaId       Int?       @unique // Sofascore event ID if available
+  matchId      String
+  match        Match      @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  type         EventType
+  minute       Int
+  detail       String?    // e.g., "Assisted by X", "Second Yellow"
+  playerAId    String?
+  playerA      Player?    @relation("MainPlayer", fields: [playerAId], references: [id])
+  playerBId    String?
+  playerB      Player?    @relation("SubPlayer", fields: [playerBId], references: [id]) // For sub out or assist
+  createdAt    DateTime   @default(now())
+}
+
+model Standing {
+  id           String     @id @default(uuid())
+  teamId       String     @unique
+  team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  points       Int        @default(0)
+  played       Int        @default(0)
+  won          Int        @default(0)
+  drawn        Int        @default(0)
+  lost         Int        @default(0)
+  goalsFor     Int        @default(0)
+  goalsAgainst Int        @default(0)
+  updatedAt    DateTime   @updatedAt
+}
+
+model Prediction {
+  id              String   @id @default(uuid())
+  matchId         String
+  match           Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  predictedWinner String   // "HOME", "AWAY", or "DRAW"
+  confidence      Float    // 0.0 to 1.0 confidence score
+  winProbHome     Float
+  winProbAway     Float
+  winProbDraw     Float
+  tacticalAnalysis String  @db.Text
+  keyPlayerInsight String  @db.Text
+  scorePrediction  String? // e.g., "2-1"
+  createdAt       DateTime @default(now())
+}

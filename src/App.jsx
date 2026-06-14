@@ -584,9 +584,9 @@ export default function App() {
   const [matchId, setMatchId] = useState(1)
   const [prediction, setPrediction] = useState(1) // 1 = Argentina, 2 = France
   const [swapAmount, setSwapAmount] = useState('0.001')
-  const [jackpot, setJackpot] = useState(128.5)
-  const [teamAVotes, setTeamAVotes] = useState(64.2) // Argentina volume OKB
-  const [teamBVotes, setTeamBVotes] = useState(48.8) // France volume OKB
+  const [jackpot, setJackpot] = useState(0)
+  const [teamAVotes, setTeamAVotes] = useState(0) // Argentina volume OKB
+  const [teamBVotes, setTeamBVotes] = useState(0) // France volume OKB
   const [activeTab, setActiveTab] = useState('hook') // hook, mock, deploy, readme
   const [showDevPortal, setShowDevPortal] = useState(false)
   const [showWhitepaper, setShowWhitepaper] = useState(false)
@@ -594,18 +594,901 @@ export default function App() {
   const [showTerms, setShowTerms] = useState(false)
   const [activeRightTab, setActiveRightTab] = useState('match') // match or scores
   const [shootoutStatus, setShootoutStatus] = useState('')
+  const [currentView, setCurrentView] = useState('dashboard') // dashboard or match-center
+  const [selectedMatchCenterId, setSelectedMatchCenterId] = useState(5)
+  const [matchFilter, setMatchFilter] = useState('all')
+  const [matchCenterSubTab, setMatchCenterSubTab] = useState('lineup')
+
+  const getMatchStats = (m) => {
+    const seed = m.id;
+    const possessionA = 40 + (seed % 21);
+    const possessionB = 100 - possessionA;
+    const shotsA = 5 + (seed % 12);
+    const shotsB = 5 + ((seed * 3) % 12);
+    const targetA = Math.max(1, Math.round(shotsA * 0.4));
+    const targetB = Math.max(1, Math.round(shotsB * 0.4));
+    const cornersA = 2 + (seed % 6);
+    const cornersB = 2 + ((seed * 2) % 6);
+    const foulsA = 8 + (seed % 8);
+    const foulsB = 8 + ((seed * 3) % 8);
+    const yellowA = seed % 3;
+    const yellowB = (seed * 2) % 3;
+
+    return {
+      possession: [possessionA, possessionB],
+      shots: [shotsA, shotsB],
+      shotsOnTarget: [targetA, targetB],
+      corners: [cornersA, cornersB],
+      fouls: [foulsA, foulsB],
+      yellowCards: [yellowA, yellowB]
+    };
+  };
+
+  const getLineups = (teamAName, teamBName) => {
+    const getRoster = (teamName) => {
+      const name = teamName?.toLowerCase() || '';
+      if (name.includes('canada')) {
+        return ['M. Crépeau', 'A. Johnston', 'K. Miller', 'D. Cornelius', 'A. Davies', 'I. Koné', 'S. Eustáquio', 'T. Buchanan', 'J. David', 'C. Larin', 'L. Millar'];
+      }
+      if (name.includes('bosnia')) {
+        return ['I. Šehić', 'A. Dedić', 'D. Hadžikadunić', 'S. Kolašinac', 'J. Gazibegović', 'M. Krunić', 'B. Tahirović', 'D. Huseinbašić', 'E. Džeko', 'E. Demirović', 'H. Hajradinović'];
+      }
+      if (name.includes('united states') || name.includes('usa')) {
+        return ['M. Turner', 'J. Scally', 'C. Richards', 'T. Ream', 'A. Robinson', 'W. McKennie', 'Y. Musah', 'T. Adams', 'T. Weah', 'F. Balogun', 'C. Pulisic'];
+      }
+      if (name.includes('paraguay')) {
+        return ['R. Fernández', 'G. Gómez', 'F. Balbuena', 'O. Alderete', 'M. Almirón', 'A. Cubas', 'D. Gómez', 'R. Sosa', 'A. Sanabria', 'J. Enciso', 'A. Romero'];
+      }
+      if (name.includes('brazil')) {
+        return ['Ederson', 'Danilo', 'Marquinhos', 'Gabriel', 'W. Lodi', 'Casemiro', 'B. Guimarães', 'L. Paquetá', 'Raphinha', 'Rodrygo', 'Vinícius Jr.'];
+      }
+      if (name.includes('morocco')) {
+        return ['Y. Bounou', 'A. Hakimi', 'N. Aguerd', 'R. Saïss', 'N. Mazraoui', 'S. Amrabat', 'A. Ounahi', 'I. Chair', 'H. Ziyech', 'Y. En-Nesyri', 'S. Boufal'];
+      }
+      if (name.includes('qatar')) {
+        return ['M. Barsham', 'P. Miguel', 'B. Khoukhi', 'T. Salman', 'H. Ahmed', 'A. Hatem', 'K. Boudiaf', 'H. Al-Haydos', 'A. Afif', 'A. Ali', 'M. Muntari'];
+      }
+      if (name.includes('switzerland')) {
+        return ['Y. Sommer', 'S. Widmer', 'M. Akanji', 'N. Elvedi', 'R. Rodriguez', 'R. Freuler', 'G. Xhaka', 'D. Sow', 'X. Shaqiri', 'B. Embolo', 'R. Vargas'];
+      }
+      if (name.includes('haiti')) {
+        return ['J. Placide', 'C. Arcus', 'R. Adé', 'A. Christian', 'W. Guerrier', 'B. Alceus', 'C. Sainte', 'D. Nazon', 'F. Frantzdy', 'D. Etienne', 'M. Antoine'];
+      }
+      if (name.includes('scotland')) {
+        return ['A. Gunn', 'A. Hickey', 'R. Porteous', 'J. Hendry', 'K. Tierney', 'A. Robertson', 'S. McTominay', 'B. Gilmour', 'C. McGregor', 'J. McGinn', 'L. Shankland'];
+      }
+      if (name.includes('argentina')) {
+        return ['E. Martínez', 'N. Molina', 'C. Romero', 'N. Otamendi', 'N. Tagliafico', 'R. De Paul', 'E. Fernández', 'A. Mac Allister', 'L. Messi', 'J. Álvarez', 'A. Di María'];
+      }
+      if (name.includes('türkiye') || name.includes('turkey')) {
+        return ['U. Çakır', 'Z. Çelik', 'M. Demiral', 'A. Bardakcı', 'F. Kadıoğlu', 'H. Çalhanoğlu', 'S. Özcan', 'K. Kökçü', 'C. Ünder', 'C. Tosun', 'K. Aktürkoğlu'];
+      }
+      if (name.includes('germany')) {
+        return ['M. Neuer', 'J. Kimmich', 'A. Rüdiger', 'J. Tah', 'M. Mittelstädt', 'R. Andrich', 'T. Kroos', 'I. Gündoğan', 'J. Musiala', 'F. Wirtz', 'K. Havertz'];
+      }
+      if (name.includes('curacao')) {
+        return ['E. Room', 'J. Gaari', 'C. Martina', 'R. Martina', 'S. Floranus', 'V. Anita', 'L. Bacuna', 'J. Bacuna', 'K. Felida', 'R. Janga', 'G. Kastaneer'];
+      }
+      if (name.includes('sweden')) {
+        return ['R. Olsen', 'E. Krafth', 'V. Lindelöf', 'I. Hien', 'L. Augustinsson', 'J. Cajuste', 'H. Larsson', 'E. Forsberg', 'D. Kulusevski', 'A. Isak', 'V. Gyökeres'];
+      }
+      if (name.includes('colombia')) {
+        return ['C. Vargas', 'D. Muñoz', 'D. Sánchez', 'J. Lucumí', 'J. Mojica', 'J. Lerma', 'R. Ríos', 'J. Arias', 'J. Rodríguez', 'L. Díaz', 'R. Borré'];
+      }
+      const positions = ['GK', 'DF', 'DF', 'DF', 'DF', 'MF', 'MF', 'MF', 'FW', 'FW', 'FW'];
+      const commonSurnames = ['Smith', 'Silva', 'Jones', 'Garcia', 'Martinez', 'Rodriguez', 'Miller', 'Davis', 'Lopez', 'Hernandez', 'Gonzalez'];
+      return positions.map((pos, idx) => {
+        const charCodeSum = teamName.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+        const index = (charCodeSum + idx * 7) % commonSurnames.length;
+        const initial = String.fromCharCode(65 + ((charCodeSum + idx) % 26));
+        return initial + '. ' + commonSurnames[index];
+      });
+    };
+
+    const squadA = getRoster(teamAName);
+    const squadB = getRoster(teamBName);
+
+    const coordsA = [
+      { pos: 'GK', x: 50, y: 8 },
+      { pos: 'DF', x: 20, y: 22 },
+      { pos: 'DF', x: 40, y: 20 },
+      { pos: 'DF', x: 60, y: 20 },
+      { pos: 'DF', x: 80, y: 22 },
+      { pos: 'MF', x: 30, y: 35 },
+      { pos: 'MF', x: 50, y: 33 },
+      { pos: 'MF', x: 70, y: 35 },
+      { pos: 'FW', x: 20, y: 45 },
+      { pos: 'FW', x: 50, y: 47 },
+      { pos: 'FW', x: 80, y: 45 }
+    ];
+
+    const coordsB = [
+      { pos: 'GK', x: 50, y: 92 },
+      { pos: 'DF', x: 20, y: 78 },
+      { pos: 'DF', x: 40, y: 80 },
+      { pos: 'DF', x: 60, y: 80 },
+      { pos: 'DF', x: 80, y: 78 },
+      { pos: 'MF', x: 30, y: 65 },
+      { pos: 'MF', x: 50, y: 67 },
+      { pos: 'MF', x: 70, y: 65 },
+      { pos: 'FW', x: 20, y: 55 },
+      { pos: 'FW', x: 50, y: 53 },
+      { pos: 'FW', x: 80, y: 55 }
+    ];
+
+    return {
+      teamA: squadA.map((name, i) => ({ name, ...coordsA[i] })),
+      teamB: squadB.map((name, i) => ({ name, ...coordsB[i] }))
+    };
+  };
+
+  const renderMatchCard = (m) => {
+    const isSelected = selectedMatchCenterId === m.id;
+    return (
+      <div 
+        key={m.id}
+        onClick={() => setSelectedMatchCenterId(m.id)}
+        style={{
+          background: isSelected ? 'rgba(157, 255, 0, 0.04)' : 'var(--color-surface)',
+          border: isSelected ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.05)',
+          borderRadius: '12px',
+          padding: '16px',
+          cursor: 'pointer',
+          transition: 'var(--transition-smooth)',
+          position: 'relative'
+        }}
+      >
+        {isSelected && <div style={{ position: 'absolute', left: 0, top: '15%', bottom: '15%', width: '3px', background: 'var(--color-primary)', borderRadius: '0 4px 4px 0' }}></div>}
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <img src={getFlagUrl(m.flagA)} alt={m.teamA} style={{ width: '18px', height: '12px', objectFit: 'cover', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamA}</span>
+              <span style={{ marginLeft: 'auto', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreA}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <img src={getFlagUrl(m.flagB)} alt={m.teamB} style={{ width: '18px', height: '12px', objectFit: 'cover', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamB}</span>
+              <span style={{ marginLeft: 'auto', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreB}</span>
+            </div>
+          </div>
+
+          <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', height: '36px', margin: '0 16px' }}></div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '70px', textAlign: 'center' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: m.isLive ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)' }}>
+              {m.minute}
+            </span>
+            {m.isLive ? (
+              <span style={{ fontSize: '0.6rem', color: '#ff3344', fontWeight: 700, marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span className="live-pulse-dot" style={{ width: '4px', height: '4px', background: '#ff3344', borderRadius: '50%', display: 'inline-block' }}></span>
+                LIVE
+              </span>
+            ) : m.minute === 'FT' ? (
+              <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>Final</span>
+            ) : (
+              <span style={{ fontSize: '0.6rem', color: 'var(--color-secondary)', marginTop: '2px', fontWeight: 600 }}>Upcoming</span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderMatchHubDetails = (m) => {
+    const isMainActive = activeMatch.id === m.id;
+    const stats = getMatchStats(m);
+    const lineups = getLineups(m.teamA, m.teamB);
+    
+    const displayJackpot = isMainActive ? jackpot : 0;
+    const displayVotesA = isMainActive ? teamAVotes : 0;
+    const displayVotesB = isMainActive ? teamBVotes : 0;
+    const totalVotes = displayVotesA + displayVotesB;
+    const percentA = totalVotes > 0 ? ((displayVotesA / totalVotes) * 100).toFixed(0) : '50';
+    const percentB = totalVotes > 0 ? ((displayVotesB / totalVotes) * 100).toFixed(0) : '50';
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="match-hub-header">
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
+            {m.date} • {m.stadium.split(',')[0]}
+          </div>
+
+          <div className="match-hub-teams">
+            <div className="match-hub-team-col">
+              <img src={getFlagUrl(m.flagA)} alt={m.teamA} className="match-hub-team-flag" />
+              <span className="match-hub-team-name">{m.teamA}</span>
+            </div>
+
+            <div className="match-hub-score-wrap">
+              <span className="match-hub-score">{m.scoreA} - {m.scoreB}</span>
+              <span className={`match-hub-minute ${m.isLive ? 'live' : ''}`}>
+                {m.minute === 'FT' ? 'FULL TIME (FT)' : m.isLive ? `LIVE ${m.minute}` : 'UPCOMING'}
+              </span>
+            </div>
+
+            <div className="match-hub-team-col">
+              <img src={getFlagUrl(m.flagB)} alt={m.teamB} className="match-hub-team-flag" />
+              <span className="match-hub-team-name">{m.teamB}</span>
+            </div>
+          </div>
+
+          {((m.scorersA && m.scorersA.length > 0) || (m.scorersB && m.scorersB.length > 0)) && (
+            <div className="match-hub-scorers">
+              <div className="scorer-list">
+                {m.scorersA?.map((sc, i) => (
+                  <div key={i} className="scorer-item">⚽ {sc}</div>
+                ))}
+              </div>
+              <div className="scorer-list right">
+                {m.scorersB?.map((sc, i) => (
+                  <div key={i} className="scorer-item">{sc} ⚽</div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="card-bezel">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '12px' }}>
+            <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🎯 Prediction Jackpot Pool
+            </h4>
+            {isMainActive ? (
+              <span style={{ fontSize: '0.65rem', background: 'rgba(157, 255, 0, 0.15)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)', padding: '2px 8px', borderRadius: '4px', fontWeight: 700, textTransform: 'uppercase' }}>
+                Active On-Chain
+              </span>
+            ) : (
+              <button 
+                onClick={() => handleActivateMatchOnChain(m)}
+                style={{
+                  fontSize: '0.65rem',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: '#fff',
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => { e.target.style.background = 'var(--color-primary)'; e.target.style.color = '#000'; }}
+                onMouseLeave={(e) => { e.target.style.background = 'rgba(255, 255, 255, 0.05)'; e.target.style.color = '#fff'; }}
+              >
+                Set Active On-Chain
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Jackpot Size</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-secondary)' }}>{displayJackpot.toFixed(4)} OKB</div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)' }}>≈ ${(displayJackpot * 60).toFixed(2)} USD</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Prediction Volume</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>{totalVotes.toFixed(4)} OKB</div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)' }}>Total user tickets</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+              <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{m.teamA} ({percentA}%)</span>
+              <span style={{ fontWeight: 600, color: 'var(--color-secondary)' }}>{m.teamB} ({percentB}%)</span>
+            </div>
+            <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '99px', overflow: 'hidden', display: 'flex' }}>
+              <div style={{ width: `${percentA}%`, background: 'var(--color-primary)', height: '100%' }}></div>
+              <div style={{ width: `${percentB}%`, background: 'var(--color-secondary)', height: '100%' }}></div>
+            </div>
+          </div>
+
+          <button 
+            onClick={() => {
+              handleSelectMatchUI(m);
+              setCurrentView('dashboard');
+              setTimeout(() => {
+                document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            }}
+            className="swap-btn"
+            style={{ marginTop: '20px', background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
+          >
+            Predict Match Winner & Play Shootout! ⚽
+          </button>
+        </div>
+
+        <div className="card-bezel">
+          <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '20px', paddingBottom: '4px' }}>
+            <button 
+              onClick={() => setMatchCenterSubTab('lineup')}
+              style={{ 
+                background: 'transparent', 
+                border: 'none', 
+                color: matchCenterSubTab === 'lineup' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)', 
+                fontFamily: 'var(--font-display)', 
+                fontWeight: 700, 
+                fontSize: '0.9rem',
+                padding: '8px 4px', 
+                cursor: 'pointer',
+                borderBottom: matchCenterSubTab === 'lineup' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                transition: 'var(--transition-smooth)'
+              }}
+            >
+              Lineups
+            </button>
+            <button 
+              onClick={() => setMatchCenterSubTab('stats')}
+              style={{ 
+                background: 'transparent', 
+                border: 'none', 
+                color: matchCenterSubTab === 'stats' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)', 
+                fontFamily: 'var(--font-display)', 
+                fontWeight: 700, 
+                fontSize: '0.9rem',
+                padding: '8px 4px', 
+                cursor: 'pointer',
+                borderBottom: matchCenterSubTab === 'stats' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                transition: 'var(--transition-smooth)'
+              }}
+            >
+              Match Stats
+            </button>
+          </div>
+
+          {matchCenterSubTab === 'lineup' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }}>Formation: <strong>4-3-3 (Classic)</strong></span>
+                <div style={{ display: 'flex', gap: '12px', fontSize: '0.72rem' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-primary)', display: 'inline-block' }}></span> {m.teamA}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-secondary)', display: 'inline-block' }}></span> {m.teamB}</span>
+                </div>
+              </div>
+
+              <div className="tactical-pitch">
+                <div className="tactical-lines"></div>
+                <div className="tactical-midline"></div>
+                <div className="tactical-center-circle"></div>
+                <div className="tactical-box-top"></div>
+                <div className="tactical-box-bottom"></div>
+
+                {lineups.teamA.map((p, idx) => (
+                  <div key={`ta-${idx}`} className="tactical-player" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
+                    <div className="tactical-player-circle">{idx + 1}</div>
+                    <span className="tactical-player-name">{p.name}</span>
+                  </div>
+                ))}
+
+                {lineups.teamB.map((p, idx) => (
+                  <div key={`tb-${idx}`} className="tactical-player team-b" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
+                    <div className="tactical-player-circle">{idx + 1}</div>
+                    <span className="tactical-player-name">{p.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {matchCenterSubTab === 'stats' && (
+            <div className="match-stats-grid">
+              <div className="stat-row-wrap">
+                <div className="stat-label-row">
+                  <span>{stats.possession[0]}%</span>
+                  <span className="stat-label-title">Possession</span>
+                  <span>{stats.possession[1]}%</span>
+                </div>
+                <div className="stat-bar-bg">
+                  <div className="stat-bar-fill-a" style={{ width: `${stats.possession[0]}%` }}></div>
+                  <div className="stat-bar-fill-b" style={{ width: `${stats.possession[1]}%` }}></div>
+                </div>
+              </div>
+
+              <div className="stat-row-wrap">
+                <div className="stat-label-row">
+                  <span>{stats.shots[0]}</span>
+                  <span className="stat-label-title">Total Shots</span>
+                  <span>{stats.shots[1]}</span>
+                </div>
+                <div className="stat-bar-bg">
+                  <div className="stat-bar-fill-a" style={{ width: `${(stats.shots[0] / (stats.shots[0] + stats.shots[1] || 1)) * 100}%` }}></div>
+                  <div className="stat-bar-fill-b" style={{ width: `${(stats.shots[1] / (stats.shots[0] + stats.shots[1] || 1)) * 100}%` }}></div>
+                </div>
+              </div>
+
+              <div className="stat-row-wrap">
+                <div className="stat-label-row">
+                  <span>{stats.shotsOnTarget[0]}</span>
+                  <span className="stat-label-title">Shots on Target</span>
+                  <span>{stats.shotsOnTarget[1]}</span>
+                </div>
+                <div className="stat-bar-bg">
+                  <div className="stat-bar-fill-a" style={{ width: `${(stats.shotsOnTarget[0] / (stats.shotsOnTarget[0] + stats.shotsOnTarget[1] || 1)) * 100}%` }}></div>
+                  <div className="stat-bar-fill-b" style={{ width: `${(stats.shotsOnTarget[1] / (stats.shotsOnTarget[0] + stats.shotsOnTarget[1] || 1)) * 100}%` }}></div>
+                </div>
+              </div>
+
+              <div className="stat-row-wrap">
+                <div className="stat-label-row">
+                  <span>{stats.corners[0]}</span>
+                  <span className="stat-label-title">Corners</span>
+                  <span>{stats.corners[1]}</span>
+                </div>
+                <div className="stat-bar-bg">
+                  <div className="stat-bar-fill-a" style={{ width: `${(stats.corners[0] / (stats.corners[0] + stats.corners[1] || 1)) * 100}%` }}></div>
+                  <div className="stat-bar-fill-b" style={{ width: `${(stats.corners[1] / (stats.corners[0] + stats.corners[1] || 1)) * 100}%` }}></div>
+                </div>
+              </div>
+
+              <div className="stat-row-wrap">
+                <div className="stat-label-row">
+                  <span>{stats.fouls[0]}</span>
+                  <span className="stat-label-title">Fouls</span>
+                  <span>{stats.fouls[1]}</span>
+                </div>
+                <div className="stat-bar-bg">
+                  <div className="stat-bar-fill-a" style={{ width: `${(stats.fouls[0] / (stats.fouls[0] + stats.fouls[1] || 1)) * 100}%` }}></div>
+                  <div className="stat-bar-fill-b" style={{ width: `${(stats.fouls[1] / (stats.fouls[0] + stats.fouls[1] || 1)) * 100}%` }}></div>
+                </div>
+              </div>
+
+              <div className="stat-row-wrap">
+                <div className="stat-label-row">
+                  <span>{stats.yellowCards[0]}</span>
+                  <span className="stat-label-title">Yellow Cards</span>
+                  <span>{stats.yellowCards[1]}</span>
+                </div>
+                <div className="stat-bar-bg">
+                  <div className="stat-bar-fill-a" style={{ width: `${(stats.yellowCards[0] / (stats.yellowCards[0] + stats.yellowCards[1] || 1)) * 100}%` }}></div>
+                  <div className="stat-bar-fill-b" style={{ width: `${(stats.yellowCards[1] / (stats.yellowCards[0] + stats.yellowCards[1] || 1)) * 100}%` }}></div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="match-venue-card">
+          <div className="venue-icon-wrap">
+            🏟️
+          </div>
+          <div className="venue-details">
+            <div className="venue-name">{m.stadium}</div>
+            <div className="venue-meta">Capacity: {m.capacity} • City: {m.city}</div>
+            <div className="venue-meta" style={{ marginTop: '2px' }}>Referee: <strong>{m.referee}</strong></div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const [history, setHistory] = useState(() => {
     const saved = localStorage.getItem('goalrush_history')
     return saved ? JSON.parse(saved) : []
   })
   const [liveMatches, setLiveMatches] = useState([
-    { id: 1, teamA: 'Canada', flagA: 'CAN', teamB: 'Bosnia & Herzegovina', flagB: 'BIH', scoreA: 1, scoreB: 1, minute: "FT", isLive: false },
-    { id: 2, teamA: 'United States', flagA: 'USA', teamB: 'Paraguay', flagB: 'PAR', scoreA: 2, scoreB: 0, minute: "82'", isLive: true },
-    { id: 3, teamA: 'Mexico', flagA: 'MEX', teamB: 'South Africa', flagB: 'RSA', scoreA: 2, scoreB: 1, minute: "FT", isLive: false },
-    { id: 4, teamA: 'Korea Republic', flagA: 'KOR', teamB: 'Czechia', flagB: 'CZE', scoreA: 0, scoreB: 0, minute: "FT", isLive: false },
-    { id: 5, teamA: 'Qatar', flagA: 'QAT', teamB: 'Switzerland', flagB: 'SUI', scoreA: 0, scoreB: 0, minute: "June 14", isLive: false, ticksScheduled: 0 },
-    { id: 6, teamA: 'Brazil', flagA: 'BRA', teamB: 'Morocco', flagB: 'MAR', scoreA: 1, scoreB: 1, minute: "76'", isLive: true },
-    { id: 7, teamA: 'Spain', flagA: 'ESP', teamB: 'Germany', flagB: 'GER', scoreA: 0, scoreB: 0, minute: "June 15", isLive: false }
+    // Yesterday (June 13) - Completed (FT)
+    {
+      id: 1,
+      teamA: 'Canada', flagA: 'CAN',
+      teamB: 'Bosnia & Herzegovina', flagB: 'BIH',
+      scoreA: 1, scoreB: 1,
+      minute: "FT", isLive: false,
+      date: 'June 13',
+      stadium: 'BC Place, Vancouver', capacity: '54,500', city: 'Vancouver, Canada', referee: 'Ivan Barton',
+      scorersA: ["A. Davies 32'"], scorersB: ["E. Džeko 74'"]
+    },
+    {
+      id: 2,
+      teamA: 'United States', flagA: 'USA',
+      teamB: 'Paraguay', flagB: 'PAR',
+      scoreA: 2, scoreB: 0,
+      minute: "FT", isLive: false,
+      date: 'June 13',
+      stadium: 'Mercedes-Benz Stadium, Atlanta', capacity: '71,000', city: 'Atlanta, USA', referee: 'Piero Maza',
+      scorersA: ["C. Pulisic 18'", "F. Balogun 65'"], scorersB: []
+    },
+    {
+      id: 3,
+      teamA: 'Mexico', flagA: 'MEX',
+      teamB: 'South Africa', flagB: 'RSA',
+      scoreA: 2, scoreB: 1,
+      minute: "FT", isLive: false,
+      date: 'June 13',
+      stadium: 'Estadio Azteca, Mexico City', capacity: '87,523', city: 'Mexico City, Mexico', referee: 'Wilmar Roldán',
+      scorersA: ["S. Giménez 41'", "H. Martín 89'"], scorersB: ["P. Tau 55'"]
+    },
+    {
+      id: 4,
+      teamA: 'Korea Republic', flagA: 'KOR',
+      teamB: 'Czechia', flagB: 'CZE',
+      scoreA: 0, scoreB: 0,
+      minute: "FT", isLive: false,
+      date: 'June 13',
+      stadium: 'Seoul World Cup Stadium', capacity: '66,704', city: 'Seoul, South Korea', referee: 'Szymon Marciniak',
+      scorersA: [], scorersB: []
+    },
+
+    // Today (June 14) - Live Matches
+    {
+      id: 5,
+      teamA: 'Qatar', flagA: 'QAT',
+      teamB: 'Switzerland', flagB: 'SUI',
+      scoreA: 1, scoreB: 1,
+      minute: "89'", isLive: true,
+      date: 'June 14',
+      stadium: 'Lusail Stadium, Doha', capacity: '88,966', city: 'Doha, Qatar', referee: 'Abdulrahman Al-Jassim',
+      scorersA: ["A. Afif 5'"], scorersB: ["X. Shaqiri 62'"]
+    },
+    {
+      id: 6,
+      teamA: 'Brazil', flagA: 'BRA',
+      teamB: 'Morocco', flagB: 'MAR',
+      scoreA: 2, scoreB: 1,
+      minute: "81'", isLive: true,
+      date: 'June 14',
+      stadium: 'Maracanã, Rio de Janeiro', capacity: '78,838', city: 'Rio de Janeiro, Brazil', referee: 'Michael Oliver',
+      scorersA: ["Vinícius Jr. 22'", "Rodrygo 64'"], scorersB: ["Y. En-Nesyri 47'"]
+    },
+    {
+      id: 7,
+      teamA: 'Haiti', flagA: 'HAI',
+      teamB: 'Scotland', flagB: 'SCO',
+      scoreA: 2, scoreB: 2,
+      minute: "90+2'", isLive: true,
+      date: 'June 14',
+      stadium: 'Sylvio Cator Stadium, Port-au-Prince', capacity: '15,000', city: 'Port-au-Prince, Haiti', referee: 'Adonai Escobedo',
+      scorersA: ["F. Frantzdy 14'", "D. Nazon 77'"], scorersB: ["S. McTominay 44'", "J. McGinn 88'"]
+    },
+
+    // Today (June 14) - Upcoming
+    {
+      id: 8,
+      teamA: 'Argentina', flagA: 'ARG',
+      teamB: 'Türkiye', flagB: 'TUR',
+      scoreA: 0, scoreB: 0,
+      minute: "8:30 PM", isLive: false,
+      date: 'June 14',
+      stadium: 'El Monumental, Buenos Aires', capacity: '84,567', city: 'Buenos Aires, Argentina', referee: 'Danny Makkelie',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 9,
+      teamA: 'Germany', flagA: 'GER',
+      teamB: 'Curaçao', flagB: 'CUW',
+      scoreA: 0, scoreB: 0,
+      minute: "10:30 PM", isLive: false,
+      date: 'June 14',
+      stadium: 'Allianz Arena, Munich', capacity: '75,000', city: 'Munich, Germany', referee: 'Halil Umut Meler',
+      scorersA: [], scorersB: []
+    },
+
+    // Tomorrow (June 15) - Upcoming
+    {
+      id: 10,
+      teamA: 'Netherlands', flagA: 'NED',
+      teamB: 'Japan', flagB: 'JPN',
+      scoreA: 0, scoreB: 0,
+      minute: "Tomorrow 5:30 AM", isLive: false,
+      date: 'June 15',
+      stadium: 'Johan Cruyff ArenA, Amsterdam', capacity: '55,865', city: 'Amsterdam, Netherlands', referee: 'Clément Turpin',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 11,
+      teamA: 'Ivory Coast', flagA: 'CIV',
+      teamB: 'Ecuador', flagB: 'ECU',
+      scoreA: 0, scoreB: 0,
+      minute: "Tomorrow 8:30 AM", isLive: false,
+      date: 'June 15',
+      stadium: 'Stade Alassane Ouattara, Abidjan', capacity: '60,012', city: 'Abidjan, Ivory Coast', referee: 'Mustapha Ghorbal',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 12,
+      teamA: 'Sweden', flagA: 'SWE',
+      teamB: 'Tunisia', flagB: 'TUN',
+      scoreA: 0, scoreB: 0,
+      minute: "Tomorrow 11:30 AM", isLive: false,
+      date: 'June 15',
+      stadium: 'Friends Arena, Stockholm', capacity: '50,653', city: 'Stockholm, Sweden', referee: 'Victor Gomes',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 13,
+      teamA: 'Spain', flagA: 'ESP',
+      teamB: 'Cabo Verde', flagB: 'CPV',
+      scoreA: 0, scoreB: 0,
+      minute: "Tomorrow 2:30 PM", isLive: false,
+      date: 'June 15',
+      stadium: 'Estadio Metropolitano, Madrid', capacity: '70,460', city: 'Madrid, Spain', referee: 'Daniele Orsato',
+      scorersA: [], scorersB: []
+    },
+
+    // Tue, June 16 - Upcoming
+    {
+      id: 14,
+      teamA: 'Belgium', flagA: 'BEL',
+      teamB: 'Egypt', flagB: 'EGY',
+      scoreA: 0, scoreB: 0,
+      minute: "Tue 16 Jun 5:30 AM", isLive: false,
+      date: 'June 16',
+      stadium: 'King Baudouin Stadium, Brussels', capacity: '50,093', city: 'Brussels, Belgium', referee: 'Anthony Taylor',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 15,
+      teamA: 'Saudi Arabia', flagA: 'KSA',
+      teamB: 'Uruguay', flagB: 'URU',
+      scoreA: 0, scoreB: 0,
+      minute: "Tue 16 Jun 8:30 AM", isLive: false,
+      date: 'June 16',
+      stadium: 'King Abdullah Sports City, Jeddah', capacity: '62,345', city: 'Jeddah, Saudi Arabia', referee: 'Wilmar Roldán',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 16,
+      teamA: 'Iran', flagA: 'IRN',
+      teamB: 'New Zealand', flagB: 'NZL',
+      scoreA: 0, scoreB: 0,
+      minute: "Tue 16 Jun 11:30 AM", isLive: false,
+      date: 'June 16',
+      stadium: 'Azadi Stadium, Tehran', capacity: '78,116', city: 'Tehran, Iran', referee: 'Ma Ning',
+      scorersA: [], scorersB: []
+    },
+
+    // Wed, June 17 - Upcoming
+    {
+      id: 17,
+      teamA: 'France', flagA: 'FRA',
+      teamB: 'Senegal', flagB: 'SEN',
+      scoreA: 0, scoreB: 0,
+      minute: "Wed 17 Jun 5:30 AM", isLive: false,
+      date: 'June 17',
+      stadium: 'Stade de France, Paris', capacity: '80,698', city: 'Paris, France', referee: 'Szymon Marciniak',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 18,
+      teamA: 'Iraq', flagA: 'IRQ',
+      teamB: 'Norway', flagB: 'NOR',
+      scoreA: 0, scoreB: 0,
+      minute: "Wed 17 Jun 8:30 AM", isLive: false,
+      date: 'June 17',
+      stadium: 'Basra International Stadium, Basra', capacity: '65,227', city: 'Basra, Iraq', referee: 'Alireza Faghani',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 19,
+      teamA: 'Argentina', flagA: 'ARG',
+      teamB: 'Algeria', flagB: 'ALG',
+      scoreA: 0, scoreB: 0,
+      minute: "Wed 17 Jun 11:30 AM", isLive: false,
+      date: 'June 17',
+      stadium: 'El Monumental, Buenos Aires', capacity: '84,567', city: 'Buenos Aires, Argentina', referee: 'Piero Maza',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 20,
+      teamA: 'Austria', flagA: 'AUT',
+      teamB: 'Jordan', flagB: 'JOR',
+      scoreA: 0, scoreB: 0,
+      minute: "Wed 17 Jun 2:30 PM", isLive: false,
+      date: 'June 17',
+      stadium: 'Ernst-Happel-Stadion, Vienna', capacity: '50,865', city: 'Vienna, Austria', referee: 'Felix Zwayer',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 21,
+      teamA: 'Portugal', flagA: 'POR',
+      teamB: 'DR Congo', flagB: 'COD',
+      scoreA: 0, scoreB: 0,
+      minute: "Wed 17 Jun 10:30 PM", isLive: false,
+      date: 'June 17',
+      stadium: 'Estádio da Luz, Lisbon', capacity: '64,642', city: 'Lisbon, Portugal', referee: 'Artur Soares Dias',
+      scorersA: [], scorersB: []
+    },
+
+    // Thu, June 18 - Upcoming
+    {
+      id: 22,
+      teamA: 'England', flagA: 'ENG',
+      teamB: 'Croatia', flagB: 'CRO',
+      scoreA: 0, scoreB: 0,
+      minute: "Thu 18 Jun 5:30 AM", isLive: false,
+      date: 'June 18',
+      stadium: 'Wembley Stadium, London', capacity: '90,000', city: 'London, England', referee: 'Michael Oliver',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 23,
+      teamA: 'Ghana', flagA: 'GHA',
+      teamB: 'Panama', flagB: 'PAN',
+      scoreA: 0, scoreB: 0,
+      minute: "Thu 18 Jun 8:30 AM", isLive: false,
+      date: 'June 18',
+      stadium: 'Baba Yara Stadium, Kumasi', capacity: '40,528', city: 'Kumasi, Ghana', referee: 'Mustapha Ghorbal',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 24,
+      teamA: 'Uzbekistan', flagA: 'UZB',
+      teamB: 'Colombia', flagB: 'COL',
+      scoreA: 0, scoreB: 0,
+      minute: "Thu 18 Jun 11:30 AM", isLive: false,
+      date: 'June 18',
+      stadium: 'Milliy Stadium, Tashkent', capacity: '34,000', city: 'Tashkent, Uzbekistan', referee: 'Kim Jong-hyeok',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 25,
+      teamA: 'Czechia', flagA: 'CZE',
+      teamB: 'South Africa', flagB: 'RSA',
+      scoreA: 0, scoreB: 0,
+      minute: "Thu 18 Jun 2:30 PM", isLive: false,
+      date: 'June 18',
+      stadium: 'Sinobo Stadium, Prague', capacity: '19,370', city: 'Prague, Czechia', referee: 'Ivan Barton',
+      scorersA: [], scorersB: []
+    },
+
+    // Fri, June 19 - Upcoming
+    {
+      id: 26,
+      teamA: 'Switzerland', flagA: 'SUI',
+      teamB: 'Bosnia & Herzegovina', flagB: 'BIH',
+      scoreA: 0, scoreB: 0,
+      minute: "Fri 19 Jun 12:30 PM", isLive: false,
+      date: 'June 19',
+      stadium: 'Stadion Wankdorf, Bern', capacity: '31,789', city: 'Bern, Switzerland', referee: 'Daniele Orsato',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 27,
+      teamA: 'Canada', flagA: 'CAN',
+      teamB: 'Qatar', flagB: 'QAT',
+      scoreA: 0, scoreB: 0,
+      minute: "Fri 19 Jun 3:30 PM", isLive: false,
+      date: 'June 19',
+      stadium: 'BMO Field, Toronto', capacity: '30,000', city: 'Toronto, Canada', referee: 'Piero Maza',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 28,
+      teamA: 'Ghana', flagA: 'GHA',
+      teamB: 'Korea Republic', flagB: 'KOR',
+      scoreA: 0, scoreB: 0,
+      minute: "Fri 19 Jun 6:30 PM", isLive: false,
+      date: 'June 19',
+      stadium: 'Accra Sports Stadium, Accra', capacity: '40,000', city: 'Accra, Ghana', referee: 'Victor Gomes',
+      scorersA: [], scorersB: []
+    },
+
+    // Sat, June 20 - Upcoming
+    {
+      id: 29,
+      teamA: 'United States', flagA: 'USA',
+      teamB: 'Australia', flagB: 'AUS',
+      scoreA: 0, scoreB: 0,
+      minute: "Sat 20 Jun 12:30 PM", isLive: false,
+      date: 'June 20',
+      stadium: 'Lumen Field, Seattle', capacity: '68,740', city: 'Seattle, USA', referee: 'Danny Makkelie',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 30,
+      teamA: 'Scotland', flagA: 'SCO',
+      teamB: 'Morocco', flagB: 'MAR',
+      scoreA: 0, scoreB: 0,
+      minute: "Sat 20 Jun 3:30 PM", isLive: false,
+      date: 'June 20',
+      stadium: 'Hampden Park, Glasgow', capacity: '51,866', city: 'Glasgow, Scotland', referee: 'Felix Zwayer',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 31,
+      teamA: 'Brazil', flagA: 'BRA',
+      teamB: 'Haiti', flagB: 'HAI',
+      scoreA: 0, scoreB: 0,
+      minute: "Sat 20 Jun 11:30 AM", isLive: false,
+      date: 'June 20',
+      stadium: 'Maracanã, Rio de Janeiro', capacity: '78,838', city: 'Rio de Janeiro, Brazil', referee: 'Michael Oliver',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 32,
+      teamA: 'Türkiye', flagA: 'TUR',
+      teamB: 'Paraguay', flagB: 'PAR',
+      scoreA: 0, scoreB: 0,
+      minute: "Sat 20 Jun 11:30 AM", isLive: false,
+      date: 'June 20',
+      stadium: 'Atatürk Olympic Stadium, Istanbul', capacity: '76,092', city: 'Istanbul, Turkey', referee: 'Halil Umut Meler',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 33,
+      teamA: 'Netherlands', flagA: 'NED',
+      teamB: 'Sweden', flagB: 'SWE',
+      scoreA: 0, scoreB: 0,
+      minute: "Sat 20 Jun 10:30 PM", isLive: false,
+      date: 'June 20',
+      stadium: 'Johan Cruyff ArenA, Amsterdam', capacity: '55,865', city: 'Amsterdam, Netherlands', referee: 'Clément Turpin',
+      scorersA: [], scorersB: []
+    },
+
+    // Sun, June 21 - Upcoming
+    {
+      id: 34,
+      teamA: 'Germany', flagA: 'GER',
+      teamB: 'Ivory Coast', flagB: 'CIV',
+      scoreA: 0, scoreB: 0,
+      minute: "Sun 21 Jun 12:30 PM", isLive: false,
+      date: 'June 21',
+      stadium: 'Signal Iduna Park, Dortmund', capacity: '81,365', city: 'Dortmund, Germany', referee: 'Halil Umut Meler',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 35,
+      teamA: 'Ecuador', flagA: 'ECU',
+      teamB: 'Curaçao', flagB: 'CUW',
+      scoreA: 0, scoreB: 0,
+      minute: "Sun 21 Jun 3:30 PM", isLive: false,
+      date: 'June 21',
+      stadium: 'Estadio Monumental, Guayaquil', capacity: '59,283', city: 'Guayaquil, Ecuador', referee: 'Wilmar Roldán',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 36,
+      teamA: 'Tunisia', flagA: 'TUN',
+      teamB: 'Japan', flagB: 'JPN',
+      scoreA: 0, scoreB: 0,
+      minute: "Sun 21 Jun 6:30 PM", isLive: false,
+      date: 'June 21',
+      stadium: 'Stade Hammadi Agrebi, Tunis', capacity: '60,000', city: 'Tunis, Tunisia', referee: 'Mustapha Ghorbal',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 37,
+      teamA: 'Spain', flagA: 'ESP',
+      teamB: 'Saudi Arabia', flagB: 'KSA',
+      scoreA: 0, scoreB: 0,
+      minute: "Sun 21 Jun 9:30 PM", isLive: false,
+      date: 'June 21',
+      stadium: 'Camp Nou, Barcelona', capacity: '99,354', city: 'Barcelona, Spain', referee: 'Daniele Orsato',
+      scorersA: [], scorersB: []
+    },
+
+    // Mon, June 22 - Upcoming
+    {
+      id: 38,
+      teamA: 'Belgium', flagA: 'BEL',
+      teamB: 'Iran', flagB: 'IRN',
+      scoreA: 0, scoreB: 0,
+      minute: "Mon 22 Jun 12:30 PM", isLive: false,
+      date: 'June 22',
+      stadium: 'Stade Maurice Dufrasne, Liège', capacity: '27,670', city: 'Liège, Belgium', referee: 'Felix Zwayer',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 39,
+      teamA: 'Uruguay', flagA: 'URU',
+      teamB: 'Cabo Verde', flagB: 'CPV',
+      scoreA: 0, scoreB: 0,
+      minute: "Mon 22 Jun 3:30 PM", isLive: false,
+      date: 'June 22',
+      stadium: 'Estadio Centenario, Montevideo', capacity: '60,235', city: 'Montevideo, Uruguay', referee: 'Piero Maza',
+      scorersA: [], scorersB: []
+    },
+    {
+      id: 40,
+      teamA: 'New Zealand', flagA: 'NZL',
+      teamB: 'Egypt', flagB: 'EGY',
+      scoreA: 0, scoreB: 0,
+      minute: "Mon 22 Jun 6:30 PM", isLive: false,
+      date: 'June 22',
+      stadium: 'Sky Stadium, Wellington', capacity: '34,500', city: 'Wellington, New Zealand', referee: 'Ma Ning',
+      scorersA: [], scorersB: []
+    }
   ])
   const [logs, setLogs] = useState([
     'System: GoalRush Hook verified on X Layer. Ready for mainnet deployment.',
@@ -1392,25 +2275,39 @@ export default function App() {
         </div>
         <nav>
           <ul className="nav-links">
-            <li><a href="#dashboard" className="active">Dashboard</a></li>
-            <li><a href="#leaderboard">Leaderboard</a></li>
-            <li><a href="#about">About</a></li>
             <li>
               <button 
-                onClick={() => setShowWhitepaper(true)} 
-                className="btn-secondary" 
-                style={{ 
-                  padding: '4px 10px', 
-                  fontSize: '0.8rem', 
-                  color: 'var(--color-primary)', 
-                  borderColor: 'rgba(157,255,0,0.3)',
-                  cursor: 'pointer',
-                  background: 'rgba(157,255,0,0.05)',
-                  borderRadius: '6px'
-                }}
+                onClick={() => setCurrentView('dashboard')} 
+                className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`}
               >
-                📄 Whitepaper
+                Dashboard
               </button>
+            </li>
+            <li>
+              <button 
+                onClick={() => setCurrentView('match-center')} 
+                className={`nav-btn ${currentView === 'match-center' ? 'active' : ''}`}
+              >
+                Match Center
+              </button>
+            </li>
+            <li>
+              <a 
+                href="#leaderboard" 
+                className="nav-btn-link"
+                onClick={() => setCurrentView('dashboard')}
+              >
+                Leaderboard
+              </a>
+            </li>
+            <li>
+              <a 
+                href="#about" 
+                className="nav-btn-link"
+                onClick={() => setCurrentView('dashboard')}
+              >
+                About
+              </a>
             </li>
           </ul>
         </nav>
@@ -1489,6 +2386,8 @@ export default function App() {
         </div>
       </header>
 
+      {currentView === 'dashboard' && (
+      <>
       {/* Hackathon Hero Section */}
       <section className="hackathon-hero-container">
         <div className="hackathon-left">
@@ -1944,170 +2843,185 @@ export default function App() {
               );
             })()}
 
-            {activeRightTab === 'scores' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {[...liveMatches]
-                  .sort((a, b) => {
-                    // 1. LIVE matches on top
-                    if (a.isLive && !b.isLive) return -1;
-                    if (!a.isLive && b.isLive) return 1;
+            {activeRightTab === 'scores' && (() => {
+              const live = liveMatches.filter(m => m.isLive && m.minute !== 'FT');
+              const yesterday = liveMatches.filter(m => m.minute === 'FT' && m.date === 'June 13').slice(-2);
+              const upcoming = liveMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date !== 'June 13').slice(0, 2);
+              const displayMatches = [...live, ...yesterday, ...upcoming];
 
-                    // 2. Upcoming matches in middle
-                    const aUpcoming = !a.isLive && a.minute !== 'FT';
-                    const bUpcoming = !b.isLive && b.minute !== 'FT';
-                    if (aUpcoming && !bUpcoming) return -1;
-                    if (!aUpcoming && bUpcoming) return 1;
-
-                    // 3. Completed matches (FT) at the bottom
-                    return 0;
-                  })
-                  .map((m) => {
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {displayMatches.map((m) => {
                     const isSelected = activeMatch.id === m.id;
-                  return (
-                    <div 
-                      key={m.id} 
-                      onClick={() => handleSelectMatchUI(m)}
-                      style={{ 
-                        background: isSelected ? 'rgba(157, 255, 0, 0.03)' : 'rgba(255,255,255,0.02)', 
-                        padding: '16px', 
-                        borderRadius: '12px', 
-                        border: isSelected ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.05)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        cursor: 'pointer',
-                        transition: 'var(--transition-smooth)'
-                      }}
-                    >
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <img 
-                            src={getFlagUrl(m.flagA)} 
-                            alt={m.teamA} 
-                            style={{ 
-                              width: '20px', 
-                              height: '14px', 
-                              objectFit: 'cover', 
-                              borderRadius: '2px', 
-                              border: '1px solid rgba(255, 255, 255, 0.15)',
-                              display: 'inline-block'
-                            }} 
-                          />
-                          <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamA}</span>
-                          <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreA}</span>
+                    return (
+                      <div 
+                        key={m.id} 
+                        onClick={() => handleSelectMatchUI(m)}
+                        style={{ 
+                          background: isSelected ? 'rgba(157, 255, 0, 0.03)' : 'rgba(255,255,255,0.02)', 
+                          padding: '16px', 
+                          borderRadius: '12px', 
+                          border: isSelected ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.05)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          cursor: 'pointer',
+                          transition: 'var(--transition-smooth)'
+                        }}
+                      >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <img 
+                              src={getFlagUrl(m.flagA)} 
+                              alt={m.teamA} 
+                              style={{ 
+                                width: '20px', 
+                                height: '14px', 
+                                objectFit: 'cover', 
+                                borderRadius: '2px', 
+                                border: '1px solid rgba(255, 255, 255, 0.15)',
+                                display: 'inline-block'
+                              }} 
+                            />
+                            <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamA}</span>
+                            <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreA}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <img 
+                              src={getFlagUrl(m.flagB)} 
+                              alt={m.teamB} 
+                              style={{ 
+                                width: '20px', 
+                                height: '14px', 
+                                objectFit: 'cover', 
+                                borderRadius: '2px', 
+                                border: '1px solid rgba(255, 255, 255, 0.15)',
+                                display: 'inline-block'
+                              }} 
+                            />
+                            <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamB}</span>
+                            <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreB}</span>
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <img 
-                            src={getFlagUrl(m.flagB)} 
-                            alt={m.teamB} 
-                            style={{ 
-                              width: '20px', 
-                              height: '14px', 
-                              objectFit: 'cover', 
-                              borderRadius: '2px', 
-                              border: '1px solid rgba(255, 255, 255, 0.15)',
-                              display: 'inline-block'
-                            }} 
-                          />
-                          <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamB}</span>
-                          <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreB}</span>
+                        
+                        <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '16px', marginLeft: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '80px' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: (m.isLive && m.minute !== 'FT') ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)' }}>
+                            {m.minute}
+                          </span>
+                          {m.isLive && m.minute !== 'FT' ? (
+                            <span 
+                              style={{ 
+                                fontSize: '0.65rem', 
+                                color: '#ff3344', 
+                                textTransform: 'uppercase', 
+                                fontWeight: 700, 
+                                marginTop: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              <span style={{ width: '4px', height: '4px', backgroundColor: '#ff3344', borderRadius: '50%', display: 'inline-block', animation: 'live-pulse 1.2s infinite' }}></span>
+                              LIVE
+                            </span>
+                          ) : m.minute === 'FT' ? (
+                            <span 
+                              style={{ 
+                                fontSize: '0.65rem', 
+                                color: 'rgba(255, 255, 255, 0.4)', 
+                                marginTop: '4px',
+                                textAlign: 'center',
+                                fontWeight: 500,
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              {m.scoreA > m.scoreB 
+                                ? `${m.teamA} Won` 
+                                : m.scoreB > m.scoreA 
+                                  ? `${m.teamB} Won` 
+                                  : 'Draw'}
+                            </span>
+                          ) : (
+                            <span 
+                              style={{ 
+                                fontSize: '0.65rem', 
+                                color: '#00e5ff', 
+                                marginTop: '4px',
+                                textAlign: 'center',
+                                fontWeight: 600,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                              }}
+                            >
+                              Upcoming
+                            </span>
+                          )}
+                          {isSelected ? (
+                            <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 700, marginTop: '6px', background: 'rgba(157, 255, 0, 0.12)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                              ON-CHAIN
+                            </span>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleActivateMatchOnChain(m);
+                              }}
+                              style={{
+                                fontSize: '0.65rem',
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                border: '1px solid rgba(255, 255, 255, 0.15)',
+                                color: '#fff',
+                                padding: '3px 8px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                marginTop: '6px',
+                                transition: 'all 0.2s',
+                                fontWeight: 600
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.background = 'var(--color-primary)';
+                                e.target.style.color = '#000';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                                e.target.style.color = '#fff';
+                              }}
+                            >
+                              Activate
+                            </button>
+                          )}
                         </div>
                       </div>
-                      
-                      <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '16px', marginLeft: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '80px' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: (m.isLive && m.minute !== 'FT') ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)' }}>
-                          {m.minute}
-                        </span>
-                        {m.isLive && m.minute !== 'FT' ? (
-                          <span 
-                            style={{ 
-                              fontSize: '0.65rem', 
-                              color: '#ff3344', 
-                              textTransform: 'uppercase', 
-                              fontWeight: 700, 
-                              marginTop: '4px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px'
-                            }}
-                          >
-                            <span style={{ width: '4px', height: '4px', backgroundColor: '#ff3344', borderRadius: '50%', display: 'inline-block', animation: 'live-pulse 1.2s infinite' }}></span>
-                            LIVE
-                          </span>
-                        ) : m.minute === 'FT' ? (
-                          <span 
-                            style={{ 
-                              fontSize: '0.65rem', 
-                              color: 'rgba(255, 255, 255, 0.4)', 
-                              marginTop: '4px',
-                              textAlign: 'center',
-                              fontWeight: 500,
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            {m.scoreA > m.scoreB 
-                              ? `${m.teamA} Won` 
-                              : m.scoreB > m.scoreA 
-                                ? `${m.teamB} Won` 
-                                : 'Draw'}
-                          </span>
-                        ) : m.minute.includes('June') ? (
-                          <span 
-                            style={{ 
-                              fontSize: '0.65rem', 
-                              color: '#00e5ff', 
-                              marginTop: '4px',
-                              textAlign: 'center',
-                              fontWeight: 600,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px'
-                            }}
-                          >
-                            Upcoming
-                          </span>
-                        ) : null}
-                        {isSelected ? (
-                          <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 700, marginTop: '6px', background: 'rgba(157, 255, 0, 0.12)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
-                            ON-CHAIN
-                          </span>
-                        ) : (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleActivateMatchOnChain(m);
-                            }}
-                            style={{
-                              fontSize: '0.65rem',
-                              background: 'rgba(255, 255, 255, 0.05)',
-                              border: '1px solid rgba(255, 255, 255, 0.15)',
-                              color: '#fff',
-                              padding: '3px 8px',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              marginTop: '6px',
-                              transition: 'all 0.2s',
-                              fontWeight: 600
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.background = 'var(--color-primary)';
-                              e.target.style.color = '#000';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.background = 'rgba(255, 255, 255, 0.05)';
-                              e.target.style.color = '#fff';
-                            }}
-                          >
-                            Activate
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
 
-            {activeRightTab === 'history' && (
+                  <button 
+                    onClick={() => setCurrentView('match-center')}
+                    style={{
+                      marginTop: '8px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '8px',
+                      padding: '12px 16px',
+                      color: 'var(--color-primary)',
+                      fontFamily: 'var(--font-display)',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      transition: 'var(--transition-smooth)'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(157, 255, 0, 0.1)'}
+                    onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
+                  >
+                    View All Matches in Match Center 🏆 →
+                  </button>
+                </div>
+              );
+            })()}{activeRightTab === 'history' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <h4 style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
                   Your Simulation Logs
@@ -2305,6 +3219,94 @@ export default function App() {
           </button>
         </div>
       </section>
+      </>
+      )}
+
+      {currentView === 'match-center' && (() => {
+        const selectedMatch = liveMatches.find(m => m.id === selectedMatchCenterId) || liveMatches[0];
+        const filteredMatches = liveMatches.filter(m => {
+          if (matchFilter === 'live') return m.isLive && m.minute !== 'FT';
+          if (matchFilter === 'completed') return m.minute === 'FT';
+          if (matchFilter === 'upcoming') return !m.isLive && m.minute !== 'FT';
+          return true;
+        });
+
+        const liveGroup = filteredMatches.filter(m => m.isLive && m.minute !== 'FT');
+        const todayUpcomingGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date === 'June 14');
+        const tomorrowGroup = filteredMatches.filter(m => m.date === 'June 15');
+        const completedGroup = filteredMatches.filter(m => m.minute === 'FT');
+        const upcomingFutureGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date !== 'June 14' && m.date !== 'June 15');
+
+        return (
+          <div style={{ marginTop: '32px' }}>
+            <section className="match-center-header" style={{ marginBottom: '32px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '2.5rem' }}>🏆</span>
+                <div>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 800, background: 'linear-gradient(135deg, #fff 0%, var(--color-primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Match Center Hub</h2>
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '4px' }}>Real-time match scoring, tactical formations, and decentralized prediction jackpot pools.</p>
+                </div>
+              </div>
+            </section>
+
+            <div className="match-center-container">
+              <div className="match-center-left">
+                <div className="match-filter-tabs">
+                  <button onClick={() => setMatchFilter('all')} className={`match-filter-btn ${matchFilter === 'all' ? 'active' : ''}`}>All</button>
+                  <button onClick={() => setMatchFilter('live')} className={`match-filter-btn ${matchFilter === 'live' ? 'active' : ''} live-tab`}>Live 🔴</button>
+                  <button onClick={() => setMatchFilter('upcoming')} className={`match-filter-btn ${matchFilter === 'upcoming' ? 'active' : ''}`}>Upcoming</button>
+                  <button onClick={() => setMatchFilter('completed')} className={`match-filter-btn ${matchFilter === 'completed' ? 'active' : ''}`}>Completed</button>
+                </div>
+
+                {liveGroup.length > 0 && (
+                  <>
+                    <div className="match-group-header">Live Matches 🔴</div>
+                    {liveGroup.map(m => renderMatchCard(m))}
+                  </>
+                )}
+
+                {todayUpcomingGroup.length > 0 && (
+                  <>
+                    <div className="match-group-header">Today - Upcoming (June 14)</div>
+                    {todayUpcomingGroup.map(m => renderMatchCard(m))}
+                  </>
+                )}
+
+                {tomorrowGroup.length > 0 && (
+                  <>
+                    <div className="match-group-header">Tomorrow (June 15)</div>
+                    {tomorrowGroup.map(m => renderMatchCard(m))}
+                  </>
+                )}
+
+                {upcomingFutureGroup.length > 0 && (
+                  <>
+                    <div className="match-group-header">Upcoming Fixtures</div>
+                    {upcomingFutureGroup.map(m => renderMatchCard(m))}
+                  </>
+                )}
+
+                {completedGroup.length > 0 && (
+                  <>
+                    <div className="match-group-header">Completed Matches (FT)</div>
+                    {completedGroup.map(m => renderMatchCard(m))}
+                  </>
+                )}
+
+                {filteredMatches.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.4)', background: 'var(--color-surface)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    No matches found for the selected filter.
+                  </div>
+                )}
+              </div>
+
+              <div className="match-center-right">
+                {renderMatchHubDetails(selectedMatch)}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {showDevPortal && (
         <>

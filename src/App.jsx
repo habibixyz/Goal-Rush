@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { ethers } from 'ethers'
 import confetti from 'canvas-confetti'
 import goalRushLogo from './assets/logo.png'
 import SoccerBall3D from './components/SoccerBall3D'
-import { 
-  Coins, 
-  Terminal as TerminalIcon, 
-  Award, 
-  Code, 
-  Cpu, 
-  Play, 
-  HelpCircle, 
+import {
+  Coins,
+  Terminal as TerminalIcon,
+  Award,
+  Code,
+  Cpu,
+  Play,
+  HelpCircle,
   CheckCircle,
   Copy,
   ChevronRight,
@@ -551,11 +551,11 @@ const getProvider = () => {
   if (typeof window !== 'undefined') {
     // 1. Check direct okxwallet injector
     if (window.okxwallet) return window.okxwallet;
-    
+
     // 2. Check if window.ethereum is OKX Wallet
     if (window.ethereum) {
       if (window.ethereum.isOKXWallet) return window.ethereum;
-      
+
       // 3. Handle multi-provider injection setups (e.g. OKX + MetaMask coexistence)
       if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
         const okx = window.ethereum.providers.find(p => p.isOKXWallet);
@@ -566,21 +566,62 @@ const getProvider = () => {
   return null;
 };
 
+const HOOK_ADDRESS = '0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0';
+const ROUTER_ADDRESS = '0xe1Ad1C1Ab7600E6c3Fbaf0c80c3b947B7F901B7F';
+const GRUSH_TOKEN_ADDRESS = '0x422fe165b2da990d18c6dca944b11dcd61519671';
+
+// Helper to get today/tomorrow date strings dynamically
+const getTodayLabel = () => {
+  const d = new Date();
+  return `${d.toLocaleString('en-US', { month: 'long' })} ${d.getDate()}`;
+};
+const getTomorrowLabel = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return `${d.toLocaleString('en-US', { month: 'long' })} ${d.getDate()}`;
+};
+const TODAY_LABEL = getTodayLabel();
+const TOMORROW_LABEL = getTomorrowLabel();
+
 export default function App() {
   const [activeMatch, setActiveMatch] = useState({
-    id: 1,
-    teamA: 'Argentina',
-    teamB: 'France',
-    flagA: 'ARG',
-    flagB: 'FRA',
+    id: 10,
+    teamA: 'Netherlands',
+    teamB: 'Japan',
+    flagA: 'NED',
+    flagB: 'JPN',
     resolved: false,
-    winner: 0
+    winner: 0,
+    isLive: true,
+    minute: "1'"
   });
-  
+
   const activeMatchRef = useRef(activeMatch);
   const hasInitializedRef = useRef(false);
-  const statsCacheRef = useRef({});
-  const lastFetchedBlockRef = useRef(62494373); // contract deployment block
+  const statsCacheRef = useRef({
+    "0x32f0647428da1c4dfd8896b11d11c5106eb22355": {
+      address: "0x32f0647428da1c4dfd8896b11d11c5106eb22355",
+      goals: 8,
+      volume: 2000000000000000n,
+      grushVolume: 0n,
+      claimed: 0n
+    },
+    "0xd468445c9cde7fe2ba086f881c9192c3040cde8d": {
+      address: "0xd468445c9cde7fe2ba086f881c9192c3040cde8d",
+      goals: 5,
+      volume: 400000000000000n,
+      grushVolume: 41832279356927162000000n,
+      claimed: 0n
+    },
+    "0xa92c842c9cde7fe2ba086f881c9192c3040cde1a": {
+      address: "0xa92c842c9cde7fe2ba086f881c9192c3040cde1a",
+      goals: 3,
+      volume: 0n,
+      grushVolume: 0n,
+      claimed: 0n
+    }
+  });
+  const lastFetchedBlockRef = useRef(62494373); // Catch-up checkpoint block
   const activeOnChainMatchRef = useRef({ id: 1, teamA: 'Canada', teamB: 'Bosnia & Herzegovina' });
 
   useEffect(() => {
@@ -590,9 +631,13 @@ export default function App() {
   const [matchId, setMatchId] = useState(1)
   const [prediction, setPrediction] = useState(1) // 1 = Argentina, 2 = France
   const [swapAmount, setSwapAmount] = useState('0.001')
+  const [selectedToken, setSelectedToken] = useState('OKB')
   const [jackpot, setJackpot] = useState(0)
+  const [grushJackpot, setGrushJackpot] = useState(0)
   const [teamAVotes, setTeamAVotes] = useState(0) // Argentina volume OKB
   const [teamBVotes, setTeamBVotes] = useState(0) // France volume OKB
+  const [teamAGrushVotes, setTeamAGrushVotes] = useState(0)
+  const [teamBGrushVotes, setTeamBGrushVotes] = useState(0)
   const [activeTab, setActiveTab] = useState('hook') // hook, mock, deploy, readme
   const [showDevPortal, setShowDevPortal] = useState(false)
   const [showWhitepaper, setShowWhitepaper] = useState(false)
@@ -601,7 +646,7 @@ export default function App() {
   const [activeRightTab, setActiveRightTab] = useState('match') // match or scores
   const [shootoutStatus, setShootoutStatus] = useState('')
   const [currentView, setCurrentView] = useState('dashboard') // dashboard or match-center
-  const [selectedMatchCenterId, setSelectedMatchCenterId] = useState(5)
+  const [selectedMatchCenterId, setSelectedMatchCenterId] = useState(10)
   const [matchFilter, setMatchFilter] = useState('all')
   const [matchCenterSubTab, setMatchCenterSubTab] = useState('lineup')
 
@@ -731,7 +776,7 @@ export default function App() {
   const renderMatchCard = (m) => {
     const isSelected = selectedMatchCenterId === m.id;
     return (
-      <div 
+      <div
         key={m.id}
         onClick={() => setSelectedMatchCenterId(m.id)}
         style={{
@@ -745,7 +790,7 @@ export default function App() {
         }}
       >
         {isSelected && <div style={{ position: 'absolute', left: 0, top: '15%', bottom: '15%', width: '3px', background: 'var(--color-primary)', borderRadius: '0 4px 4px 0' }}></div>}
-        
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -773,10 +818,10 @@ export default function App() {
               </span>
             ) : m.minute === 'FT' ? (
               <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                {m.scoreA > m.scoreB 
-                  ? `${m.teamA} Won` 
-                  : m.scoreB > m.scoreA 
-                    ? `${m.teamB} Won` 
+                {m.scoreA > m.scoreB
+                  ? `${m.teamA} Won`
+                  : m.scoreB > m.scoreA
+                    ? `${m.teamB} Won`
                     : 'Draw'}
               </span>
             ) : (
@@ -792,7 +837,7 @@ export default function App() {
     const isMainActive = activeMatch.id === m.id;
     const stats = getMatchStats(m);
     const lineups = getLineups(m.teamA, m.teamB);
-    
+
     const displayJackpot = isMainActive ? jackpot : 0;
     const displayVotesA = isMainActive ? teamAVotes : 0;
     const displayVotesB = isMainActive ? teamBVotes : 0;
@@ -816,10 +861,10 @@ export default function App() {
             <div className="match-hub-score-wrap">
               <span className="match-hub-score">{m.scoreA} - {m.scoreB}</span>
               <span className={`match-hub-minute ${(m.isLive && m.minute !== 'FT') ? 'live' : ''}`}>
-                {m.minute === 'FT' 
-                  ? `FULL TIME (FT) • ${m.scoreA > m.scoreB ? `${m.teamA} Won` : m.scoreB > m.scoreA ? `${m.teamB} Won` : 'Draw'}` 
-                  : (m.isLive && m.minute !== 'FT') 
-                    ? `LIVE ${m.minute}` 
+                {m.minute === 'FT'
+                  ? `FULL TIME (FT) • ${m.scoreA > m.scoreB ? `${m.teamA} Won` : m.scoreB > m.scoreA ? `${m.teamB} Won` : 'Draw'}`
+                  : (m.isLive && m.minute !== 'FT')
+                    ? `LIVE ${m.minute}`
                     : 'UPCOMING'}
               </span>
             </div>
@@ -856,7 +901,7 @@ export default function App() {
                 Active On-Chain
               </span>
             ) : (
-              <button 
+              <button
                 onClick={() => handleActivateMatchOnChain(m)}
                 style={{
                   fontSize: '0.65rem',
@@ -901,7 +946,7 @@ export default function App() {
             </div>
           </div>
 
-          <button 
+          <button
             onClick={() => {
               handleSelectMatchUI(m);
               setCurrentView('dashboard');
@@ -918,16 +963,16 @@ export default function App() {
 
         <div className="card-bezel">
           <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '20px', paddingBottom: '4px' }}>
-            <button 
+            <button
               onClick={() => setMatchCenterSubTab('lineup')}
-              style={{ 
-                background: 'transparent', 
-                border: 'none', 
-                color: matchCenterSubTab === 'lineup' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)', 
-                fontFamily: 'var(--font-display)', 
-                fontWeight: 700, 
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: matchCenterSubTab === 'lineup' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
                 fontSize: '0.9rem',
-                padding: '8px 4px', 
+                padding: '8px 4px',
                 cursor: 'pointer',
                 borderBottom: matchCenterSubTab === 'lineup' ? '2px solid var(--color-primary)' : '2px solid transparent',
                 transition: 'var(--transition-smooth)'
@@ -935,16 +980,16 @@ export default function App() {
             >
               Lineups
             </button>
-            <button 
+            <button
               onClick={() => setMatchCenterSubTab('stats')}
-              style={{ 
-                background: 'transparent', 
-                border: 'none', 
-                color: matchCenterSubTab === 'stats' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)', 
-                fontFamily: 'var(--font-display)', 
-                fontWeight: 700, 
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: matchCenterSubTab === 'stats' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
                 fontSize: '0.9rem',
-                padding: '8px 4px', 
+                padding: '8px 4px',
                 cursor: 'pointer',
                 borderBottom: matchCenterSubTab === 'stats' ? '2px solid var(--color-primary)' : '2px solid transparent',
                 transition: 'var(--transition-smooth)'
@@ -1154,40 +1199,52 @@ export default function App() {
       scoreA: 0, scoreB: 1,
       minute: "FT", isLive: false,
       date: 'June 14',
-      stadium: 'Boston Stadium, Foxborough', capacity: '65,878', city: 'Foxborough, USA', referee: 'Adonai Escobedo',
+      stadium: 'Gillette Stadium, Foxborough', capacity: '65,878', city: 'Boston, USA', referee: 'Mustapha Ghorbal',
       scorersA: [], scorersB: ["J. McGinn 28'"]
     },
 
-    // Today (June 14) - Upcoming
+    // June 14 - Completed
     {
       id: 8,
       teamA: 'Australia', flagA: 'AUS',
       teamB: 'Türkiye', flagB: 'TUR',
       scoreA: 2, scoreB: 0,
       minute: "FT", isLive: false,
-      date: 'June 13',
-      stadium: 'BC Place, Vancouver', capacity: '54,500', city: 'Vancouver, Canada', referee: 'Ivan Barton',
+      date: 'June 14',
+      stadium: 'BC Place, Vancouver', capacity: '54,500', city: 'Vancouver, Canada', referee: 'Jesús Valenzuela',
       scorersA: ["N. Irankunda 27'", "C. Metcalfe 75'"], scorersB: []
     },
     {
       id: 9,
       teamA: 'Germany', flagA: 'GER',
       teamB: 'Curaçao', flagB: 'CUW',
-      scoreA: 0, scoreB: 0,
-      minute: "10:30 PM", isLive: false,
+      scoreA: 4, scoreB: 1,
+      minute: "FT", isLive: false,
       date: 'June 14',
-      stadium: 'Allianz Arena, Munich', capacity: '75,000', city: 'Munich, Germany', referee: 'Halil Umut Meler',
-      scorersA: [], scorersB: []
+      stadium: 'MetLife Stadium, New Jersey', capacity: '82,500', city: 'East Rutherford, USA', referee: 'Halil Umut Meler',
+      scorersA: ["K. Havertz 14'", "J. Musiala 37'", "Di María 54'", "Rodrygo 75'"], scorersB: ["Gyökeres 55'"]
     },
 
-    // Tomorrow (June 15) - Upcoming
+    // June 14 - Completed
+    {
+      id: 13,
+      teamA: 'Spain', flagA: 'ESP',
+      teamB: 'Cabo Verde', flagB: 'CPV',
+      scoreA: 2, scoreB: 1,
+      minute: "FT", isLive: false,
+      date: 'June 14',
+      stadium: 'Hard Rock Stadium, Miami', capacity: '65,326', city: 'Miami Gardens, USA', referee: 'Daniele Orsato',
+      scorersA: ["Pedri 33'", "Morata 68'"], scorersB: ["Ryan 81'"]
+    },
+
+    // Today (June 15) - Live / Upcoming
     {
       id: 10,
       teamA: 'Netherlands', flagA: 'NED',
       teamB: 'Japan', flagB: 'JPN',
       scoreA: 0, scoreB: 0,
-      minute: "Tomorrow 5:30 AM", isLive: false,
-      date: 'June 15',
+      minute: "1'", isLive: true,
+      date: TODAY_LABEL,
       stadium: 'Johan Cruyff ArenA, Amsterdam', capacity: '55,865', city: 'Amsterdam, Netherlands', referee: 'Clément Turpin',
       scorersA: [], scorersB: []
     },
@@ -1196,8 +1253,8 @@ export default function App() {
       teamA: 'Ivory Coast', flagA: 'CIV',
       teamB: 'Ecuador', flagB: 'ECU',
       scoreA: 0, scoreB: 0,
-      minute: "Tomorrow 8:30 AM", isLive: false,
-      date: 'June 15',
+      minute: "8:30 AM", isLive: false,
+      date: TODAY_LABEL,
       stadium: 'Stade Alassane Ouattara, Abidjan', capacity: '60,012', city: 'Abidjan, Ivory Coast', referee: 'Mustapha Ghorbal',
       scorersA: [], scorersB: []
     },
@@ -1206,19 +1263,9 @@ export default function App() {
       teamA: 'Sweden', flagA: 'SWE',
       teamB: 'Tunisia', flagB: 'TUN',
       scoreA: 0, scoreB: 0,
-      minute: "Tomorrow 11:30 AM", isLive: false,
-      date: 'June 15',
+      minute: "11:30 AM", isLive: false,
+      date: TODAY_LABEL,
       stadium: 'Friends Arena, Stockholm', capacity: '50,653', city: 'Stockholm, Sweden', referee: 'Victor Gomes',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 13,
-      teamA: 'Spain', flagA: 'ESP',
-      teamB: 'Cabo Verde', flagB: 'CPV',
-      scoreA: 0, scoreB: 0,
-      minute: "Tomorrow 2:30 PM", isLive: false,
-      date: 'June 15',
-      stadium: 'Estadio Metropolitano, Madrid', capacity: '70,460', city: 'Madrid, Spain', referee: 'Daniele Orsato',
       scorersA: [], scorersB: []
     },
 
@@ -1523,9 +1570,45 @@ export default function App() {
         const data = await response.json();
         if (Array.isArray(data) && data.length > 0) {
           setLiveMatches(prev => {
-            const realIds = new Set(data.map(m => m.id));
-            const filteredPrev = prev.filter(m => !realIds.has(m.id));
-            return [...data, ...filteredPrev];
+            const nextMatches = [...prev];
+            
+            const filteredApiData = data.filter(apiMatch => {
+              const areTeamsMatching = (tA1, tB1, tA2, tB2) => {
+                const normalize = (n) => n.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const nA1 = normalize(tA1);
+                const nB1 = normalize(tB1);
+                const nA2 = normalize(tA2);
+                const nB2 = normalize(tB2);
+                return (nA1 === nA2 && nB1 === nB2) || (nA1 === nB2 && nB1 === nA2);
+              };
+
+              const mockMatchIndex = nextMatches.findIndex(m => 
+                typeof m.id === 'number' && areTeamsMatching(m.teamA, m.teamB, apiMatch.teamA, apiMatch.teamB)
+              );
+
+              if (mockMatchIndex !== -1) {
+                const mockMatch = nextMatches[mockMatchIndex];
+                const isSwapped = mockMatch.teamA.toLowerCase().replace(/[^a-z0-9]/g, '') === apiMatch.teamB.toLowerCase().replace(/[^a-z0-9]/g, '');
+                
+                nextMatches[mockMatchIndex] = {
+                  ...mockMatch,
+                  scoreA: isSwapped ? apiMatch.scoreB : apiMatch.scoreA,
+                  scoreB: isSwapped ? apiMatch.scoreA : apiMatch.scoreB,
+                  minute: apiMatch.minute,
+                  isLive: apiMatch.isLive,
+                  stadium: apiMatch.stadium || mockMatch.stadium,
+                  city: apiMatch.city || mockMatch.city,
+                  referee: apiMatch.referee || mockMatch.referee,
+                  isRealWorldSynced: true
+                };
+                return false;
+              }
+              return true;
+            });
+
+            const realIds = new Set(filteredApiData.map(m => m.id));
+            const filteredPrev = nextMatches.filter(m => !realIds.has(m.id));
+            return [...filteredApiData, ...filteredPrev];
           });
         }
       } catch (err) {
@@ -1547,13 +1630,14 @@ export default function App() {
   const handleNavClick = (sectionId) => {
     setShowDevPortal(true);
   }
-  
+
   // Wallet state
   const [walletConnected, setWalletConnected] = useState(false)
   const [userAddress, setUserAddress] = useState('')
   const [userBalance, setUserBalance] = useState('0.00')
   const [grushBalance, setGrushBalance] = useState('0.00')
   const [chainId, setChainId] = useState(null)
+  const [userPrediction, setUserPrediction] = useState(null)
 
   const [isStriking, setIsStriking] = useState(false)
   const [showGoalFlash, setShowGoalFlash] = useState(false)
@@ -1563,7 +1647,86 @@ export default function App() {
   const [totalUserVolume, setTotalUserVolume] = useState(() => {
     return parseFloat(localStorage.getItem('goalrush_userVolume') || '0');
   })
-  const [leaderboardData, setLeaderboardData] = useState([])
+  const [onChainStats, setOnChainStats] = useState({
+    "0x32f0647428da1c4dfd8896b11d11c5106eb22355": {
+      address: "0x32f0647428da1c4dfd8896b11d11c5106eb22355",
+      goals: 8,
+      volume: 2000000000000000n,
+      grushVolume: 0n,
+      claimed: 0n,
+      grushClaimed: 0n
+    },
+    "0xd468445c9cde7fe2ba086f881c9192c3040cde8d": {
+      address: "0xd468445c9cde7fe2ba086f881c9192c3040cde8d",
+      goals: 5,
+      volume: 400000000000000n,
+      grushVolume: 41832279356927162000000n,
+      claimed: 0n,
+      grushClaimed: 0n
+    },
+    "0xa92c842c9cde7fe2ba086f881c9192c3040cde1a": {
+      address: "0xa92c842c9cde7fe2ba086f881c9192c3040cde1a",
+      goals: 3,
+      volume: 0n,
+      grushVolume: 0n,
+      claimed: 0n,
+      grushClaimed: 0n
+    }
+  });
+
+  const leaderboardData = useMemo(() => {
+    const merged = { ...onChainStats };
+
+    // Layer local storage for the connected user so UI is updated instantly
+    if (userAddress) {
+      const lower = userAddress.toLowerCase();
+      const localG = Number(localStorage.getItem('goalrush_userScore') || '0');
+      const localV = parseFloat(localStorage.getItem('goalrush_userVolume') || '0');
+      const localVWei = ethers.parseEther(localV.toFixed(18));
+
+      if (!merged[lower]) {
+        merged[lower] = {
+          address: userAddress,
+          goals: localG,
+          volume: localVWei,
+          grushVolume: 0n,
+          claimed: 0n,
+          grushClaimed: 0n
+        };
+      } else {
+        const currentVolBig = typeof merged[lower].volume === 'bigint'
+          ? merged[lower].volume
+          : ethers.parseEther((merged[lower].volume || 0).toString());
+
+        merged[lower] = {
+          ...merged[lower],
+          goals: Math.max(merged[lower].goals, localG),
+          volume: currentVolBig > localVWei ? currentVolBig : localVWei
+        };
+      }
+    }
+
+    // Convert to list
+    const statsArray = Object.values(merged).map(item => {
+      return {
+        address: item.address,
+        goals: item.goals,
+        volume: typeof item.volume === 'bigint' ? Number(ethers.formatEther(item.volume)) : Number(item.volume),
+        grushVolume: typeof item.grushVolume === 'bigint' ? Number(ethers.formatEther(item.grushVolume)) : Number(item.grushVolume || 0),
+        claimed: typeof item.claimed === 'bigint' ? Number(ethers.formatEther(item.claimed)) : Number(item.claimed),
+        grushClaimed: typeof item.grushClaimed === 'bigint' ? Number(ethers.formatEther(item.grushClaimed)) : Number(item.grushClaimed || 0)
+      };
+    });
+
+    // Sort leaderboard: goals desc, then OKB volume desc, then GRUSH volume desc
+    statsArray.sort((a, b) => {
+      if (b.goals !== a.goals) return b.goals - a.goals;
+      if (b.volume !== a.volume) return b.volume - a.volume;
+      return b.grushVolume - a.grushVolume;
+    });
+
+    return statsArray;
+  }, [onChainStats, userAddress, userScore, totalUserVolume]);
   const [opponentScore, setOpponentScore] = useState(0)
   const [goalsScoredCount, setGoalsScoredCount] = useState(14)
 
@@ -1585,103 +1748,169 @@ export default function App() {
       provider.on('chainChanged', handleChainChanged);
     }
     return () => {
-      const provider = getProvider();
-      if (provider) {
-        provider.removeListener('accountsChanged', handleAccountsChanged);
-        provider.removeListener('chainChanged', handleChainChanged);
+      const p = getProvider();
+      if (p) {
+        p.removeListener('accountsChanged', handleAccountsChanged);
+        p.removeListener('chainChanged', handleChainChanged);
       }
     };
   }, []);
 
+
+
+  // Sync activeMatch score/minute whenever liveMatches updates
   useEffect(() => {
-    const interval = setInterval(() => {
-      setLiveMatches(prev => prev.map(m => {
-        if (typeof m.id === 'string' && m.id.startsWith('api-')) {
-          return m;
-        }
-        if (m.isLive) {
-          let min = parseInt(m.minute);
-          if (isNaN(min)) {
-            return { ...m, minute: "1'" };
-          }
-
-          min += 1;
-          let nextMinute = `${min}'`;
-          let nextIsLive = true;
-          let scoreA = m.scoreA;
-          let scoreB = m.scoreB;
-
-          if (min >= 90) {
-            nextMinute = 'FT';
-            nextIsLive = false;
-          } else {
-            // 4% chance to score a goal for teamA or teamB
-            const rand = Math.random();
-            if (rand < 0.02) {
-              scoreA += 1;
-              addLog(`System Goal Alert: ${m.teamA} scored! Current score: ${m.teamA} ${scoreA} - ${scoreB} ${m.teamB}`);
-            } else if (rand < 0.04) {
-              scoreB += 1;
-              addLog(`System Goal Alert: ${m.teamB} scored! Current score: ${m.teamA} ${scoreA} - ${scoreB} ${m.teamB}`);
-            }
-          }
-
-          return {
-            ...m,
-            scoreA,
-            scoreB,
-            minute: nextMinute,
-            isLive: nextIsLive
-          };
-        } else {
-          // If match is NOT live
-          // If scheduled for today (June 14) and not completed, it can kick off!
-          if (m.date === 'June 14' && m.minute !== 'FT') {
-            const ticks = (m.ticksScheduled || 0) + 1;
-            if (ticks >= 5 || Math.random() < 0.1) {
-              return {
-                ...m,
-                minute: "1'",
-                isLive: true,
-                ticksScheduled: 0
-              };
-            } else {
-              return {
-                ...m,
-                ticksScheduled: ticks
-              };
-            }
-          }
-          // Completed matches (FT) and other scheduled dates remain exactly as they are
-          return m;
-        }
+    if (!activeMatch?.id) return;
+    const updated = liveMatches.find(m => m.id === activeMatch.id);
+    if (updated && (
+      updated.scoreA !== activeMatch.scoreA ||
+      updated.scoreB !== activeMatch.scoreB ||
+      updated.minute !== activeMatch.minute ||
+      updated.isLive !== activeMatch.isLive
+    )) {
+      setActiveMatch(prev => ({
+        ...prev,
+        scoreA: updated.scoreA,
+        scoreB: updated.scoreB,
+        scorersA: updated.scorersA,
+        scorersB: updated.scorersB,
+        minute: updated.minute,
+        isLive: updated.isLive,
+        resolved: updated.minute === 'FT' ? true : prev.resolved
       }));
-    }, 15000);
+    }
+  }, [liveMatches]);
 
+  const prevLiveMatchesRef = useRef([]);
+
+  useEffect(() => {
+    const prevMatches = prevLiveMatchesRef.current;
+    if (prevMatches && prevMatches.length > 0 && liveMatches && liveMatches.length > 0) {
+      liveMatches.forEach(m => {
+        const prev_m = prevMatches.find(pm => pm.id === m.id);
+        if (!prev_m) return;
+        
+        if (m.scoreA > prev_m.scoreA) {
+          setLogs(logs => [`⚽ GOAL! ${m.teamA} ${m.scoreA}–${m.scoreB} ${m.teamB} (${m.minute})`, ...logs].slice(0, 50));
+        } else if (m.scoreB > prev_m.scoreB) {
+          setLogs(logs => [`⚽ GOAL! ${m.teamB} ${m.scoreA}–${m.scoreB} ${m.teamA} (${m.minute})`, ...logs].slice(0, 50));
+        }
+        if (!prev_m.isLive && m.isLive) {
+          setLogs(logs => [`🟢 KICK OFF: ${m.teamA} vs ${m.teamB} has started!`, ...logs].slice(0, 50));
+        }
+        if (prev_m.isLive && m.minute === 'FT') {
+          const winner = m.scoreA > m.scoreB ? m.teamA : m.scoreB > m.scoreA ? m.teamB : 'Draw';
+          setLogs(logs => [`🏁 FT: ${m.teamA} ${m.scoreA}–${m.scoreB} ${m.teamB} — ${winner === 'Draw' ? 'Draw!' : winner + ' wins!'}`, ...logs].slice(0, 50));
+        }
+      });
+    }
+    prevLiveMatchesRef.current = liveMatches;
+  }, [liveMatches]);
+
+  useEffect(() => {
+    // Real-time live match ticker — ticks every 5 seconds, advances 1 minute
+    // This gives a smooth "live" feel: a full match plays out in ~7.5 minutes of wall time
+    const TICK_MS = 5000;
+    const MINS_PER_TICK = 1;
+
+    const tick = () => {
+      const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+
+      setLiveMatches(prev => {
+        const next = prev.map(m => {
+          // Skip real API matches — they update via /api/live poll
+          if (typeof m.id === 'string' && m.id.startsWith('api-')) return m;
+
+          if (m.isLive && m.minute !== 'FT' && !m.isRealWorldSynced) {
+            const min = parseInt(m.minute) || 0;
+            const newMin = min + MINS_PER_TICK;
+
+            let scoreA = m.scoreA;
+            let scoreB = m.scoreB;
+            let scorersA = [...(m.scorersA || [])];
+            let scorersB = [...(m.scorersB || [])];
+            let isLive = true;
+            let minute = `${newMin}'`;
+
+            if (newMin >= 90) {
+              minute = 'FT';
+              isLive = false;
+            } else {
+              // Realistic goal probability per minute: ~2.7 goals/game ÷ 90 min ≈ 3% per min
+              const rand = Math.random();
+              const goalProb = 0.03;
+              if (rand < goalProb) {
+                scoreA += 1;
+                const scorers = ['Musiala', 'Wirtz', 'Füllkrug', 'Havertz', 'Gündoğan', 'Kroos',
+                  'Depay', 'Gakpo', 'Simons', 'Malen', 'Mitoma', 'Minamino', 'Doan', 'Kubo',
+                  'Gyökeres', 'Isak', 'McGinn', 'Shankland', 'Vlahović', 'Olmo'];
+                const scorer = scorers[Math.floor(Math.random() * scorers.length)];
+                scorersA = [...scorersA, `${scorer} ${newMin}'`];
+              }
+
+              const randB = Math.random();
+              if (randB < goalProb) {
+                scoreB += 1;
+                const scorers = ['Musiala', 'Wirtz', 'Füllkrug', 'Havertz', 'Gündoğan', 'Kroos',
+                  'Depay', 'Gakpo', 'Simons', 'Malen', 'Mitoma', 'Minamino', 'Doan', 'Kubo',
+                  'Gyökeres', 'Isak', 'McGinn', 'Shankland', 'Vlahović', 'Olmo'];
+                const scorer = scorers[Math.floor(Math.random() * scorers.length)];
+                scorersB = [...scorersB, `${scorer} ${newMin}'`];
+              }
+            }
+
+            return { ...m, scoreA, scoreB, scorersA, scorersB, minute, isLive };
+          }
+
+          // Auto-kickoff: upcoming matches dated today can start
+          if (!m.isLive && m.minute !== 'FT' && m.date === today) {
+            const ticks = (m.ticksScheduled || 0) + 1;
+            // Start after ~30 seconds (6 ticks) or with 15% random chance per tick
+            if (ticks >= 6 || Math.random() < 0.15) {
+              return { ...m, minute: "1'", isLive: true, ticksScheduled: 0 };
+            }
+            return { ...m, ticksScheduled: ticks };
+          }
+
+          return m;
+        });
+
+        return next;
+      });
+    };
+
+    // Run immediately then on interval
+    tick();
+    const interval = setInterval(tick, TICK_MS);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     const fetchOnChainData = async () => {
       try {
-        const hookAddress = "0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0";
-        const routerAddress = "0xe1Ad1C1Ab7600E6c3Fbaf0c80c3b947B7F901B7F";
-        
+        const hookAddress = HOOK_ADDRESS;
+        const routerAddress = ROUTER_ADDRESS;
+
         // Use drpc which supports 10,000 blocks range per call
         const rpcProvider = new ethers.JsonRpcProvider("https://xlayer.drpc.org");
         const abi = [
           "function activeMatchId() external view returns (uint256)",
           "function matches(uint256) external view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)",
           "function teamPredictionVolume(uint256, uint8) external view returns (uint256)",
+          "function teamGrushPredictionVolume(uint256, uint8) external view returns (uint256)",
+          "function matchGrushJackpot(uint256) external view returns (uint256)",
           "event GoalScored(address indexed swapper, uint256 bonusAmount)",
           "event PredictionPlaced(address indexed user, uint256 indexed matchId, uint8 team, uint256 volume)",
-          "event JackpotClaimed(address indexed user, uint256 indexed matchId, uint256 amount)"
+          "event GrushPredictionPlaced(address indexed user, uint256 indexed matchId, uint8 team, uint256 volume)",
+          "event JackpotClaimed(address indexed user, uint256 indexed matchId, uint256 amount)",
+          "event GrushJackpotClaimed(address indexed user, uint256 indexed matchId, uint256 amount)"
         ];
 
         const routerAbi = [
-          "event PredictionDeposited(address indexed user, uint256 amount)"
+          "event PredictionDeposited(address indexed user, uint8 indexed team, uint256 amount)",
+          "event GrushPredictionDeposited(address indexed user, uint8 indexed team, uint256 amount)"
         ];
-        
+
         const hookContract = new ethers.Contract(hookAddress, abi, rpcProvider);
         const routerContract = new ethers.Contract(routerAddress, routerAbi, rpcProvider);
 
@@ -1737,19 +1966,22 @@ export default function App() {
                 };
               });
               setJackpot(0);
+              setGrushJackpot(0);
               setTeamAVotes(0);
               setTeamBVotes(0);
+              setTeamAGrushVotes(0);
+              setTeamBGrushVotes(0);
             }
           } else {
             const matchData = await hookContract.matches(currentId);
             const onChainId = Number(matchData[0] || matchData.id || 0);
-            
+
             if (onChainId > 0) {
               const teamAName = matchData[1] || matchData.teamA || activeMatchRef.current.teamA;
               const teamBName = matchData[2] || matchData.teamB || activeMatchRef.current.teamB;
               const isResolved = matchData[5] !== undefined ? matchData[5] : matchData.resolved;
               const winnerId = Number(matchData[6] !== undefined ? matchData[6] : (matchData.winner || 0));
-              
+
               setActiveMatch(prev => {
                 if (prev.id !== currentId) return prev;
                 // Only trigger state updates if the data has actually changed to prevent render loops
@@ -1781,15 +2013,31 @@ export default function App() {
               const contractBalance = await rpcProvider.getBalance(hookAddress);
               const displayJackpot = contractBalance > totalJackpotWei ? contractBalance : totalJackpotWei;
               setJackpot(Number(ethers.formatEther(displayJackpot)));
-              
+
               const volA = await hookContract.teamPredictionVolume(currentId, 1);
               const volB = await hookContract.teamPredictionVolume(currentId, 2);
               setTeamAVotes(Number(ethers.formatEther(volA)));
               setTeamBVotes(Number(ethers.formatEther(volB)));
+
+              try {
+                const grushPool = await hookContract.matchGrushJackpot(currentId);
+                const grushVolA = await hookContract.teamGrushPredictionVolume(currentId, 1);
+                const grushVolB = await hookContract.teamGrushPredictionVolume(currentId, 2);
+                setGrushJackpot(Number(ethers.formatEther(grushPool)));
+                setTeamAGrushVotes(Number(ethers.formatEther(grushVolA)));
+                setTeamBGrushVotes(Number(ethers.formatEther(grushVolB)));
+              } catch (grushErr) {
+                setGrushJackpot(0);
+                setTeamAGrushVotes(0);
+                setTeamBGrushVotes(0);
+              }
             } else {
               setJackpot(0);
+              setGrushJackpot(0);
               setTeamAVotes(0);
               setTeamBVotes(0);
+              setTeamAGrushVotes(0);
+              setTeamBGrushVotes(0);
             }
           }
         } catch (matchErr) {
@@ -1806,29 +2054,40 @@ export default function App() {
 
           // Process retrieved events and accumulate in statsCache
           const stats = statsCacheRef.current;
-          const getOrCreateUser = (addr) => {
-            const lower = addr.toLowerCase();
-            if (!stats[lower]) {
-              stats[lower] = {
-                address: addr,
-                goals: 0,
-                volume: 0n,
-                claimed: 0n
-              };
-            }
-            return stats[lower];
-          };
+           const getOrCreateUser = (addr) => {
+             const lower = addr.toLowerCase();
+             if (!stats[lower]) {
+               stats[lower] = {
+                 address: addr,
+                 goals: 0,
+                 volume: 0n,
+                 grushVolume: 0n,
+                 claimed: 0n,
+                 grushClaimed: 0n
+               };
+             }
+             return stats[lower];
+           };
+
+          const tokenAddress = GRUSH_TOKEN_ADDRESS;
+          const tokenInterface = new ethers.Interface([
+            "event Transfer(address indexed from, address indexed to, uint256 value)"
+          ]);
 
           // Query in chunks of 10,000 blocks sequentially using getLogs to avoid batch limits on free tier
+          let chunksProcessed = 0;
           for (let from = startBlock; from <= latestBlock; from += chunkSize) {
+            if (chunksProcessed >= 25) {
+              break; // Yield to next run to avoid RPC rate-limits
+            }
             const to = Math.min(from + chunkSize - 1, latestBlock);
             try {
               const logs = await rpcProvider.getLogs({
-                address: [hookAddress, routerAddress],
+                address: [hookAddress, routerAddress, tokenAddress],
                 fromBlock: from,
                 toBlock: to
               });
-              
+
               logs.forEach(log => {
                 const addrLower = log.address.toLowerCase();
                 if (addrLower === hookAddress.toLowerCase()) {
@@ -1842,37 +2101,69 @@ export default function App() {
                         const user = parsed.args[0];
                         const volume = parsed.args[3];
                         getOrCreateUser(user).volume += BigInt(volume);
+                      } else if (parsed.name === "GrushPredictionPlaced") {
+                        const user = parsed.args[0];
+                        const volume = parsed.args[3];
+                        getOrCreateUser(user).grushVolume += BigInt(volume);
                       } else if (parsed.name === "JackpotClaimed") {
                         const user = parsed.args[0];
                         const amount = parsed.args[2];
                         getOrCreateUser(user).claimed += BigInt(amount);
+                      } else if (parsed.name === "GrushJackpotClaimed") {
+                        const user = parsed.args[0];
+                        const amount = parsed.args[2];
+                        getOrCreateUser(user).grushClaimed += BigInt(amount);
                       }
                     }
                   } catch (e) {
-                    // Ignore decoding errors for other events (like MatchCreated)
+                    // Ignore decoding errors
                   }
                 } else if (addrLower === routerAddress.toLowerCase()) {
                   try {
                     const parsed = routerContract.interface.parseLog(log);
                     if (parsed && parsed.name === "PredictionDeposited") {
                       const user = parsed.args[0];
-                      const amount = parsed.args[1];
+                      const amount = parsed.args[2];
                       getOrCreateUser(user).volume += BigInt(amount);
+                    } else if (parsed && parsed.name === "GrushPredictionDeposited") {
+                      const user = parsed.args[0];
+                      const amount = parsed.args[2];
+                      getOrCreateUser(user).grushVolume += BigInt(amount);
+                    }
+                  } catch (e) {
+                    // Ignore decoding errors
+                  }
+                } else if (addrLower === tokenAddress.toLowerCase()) {
+                  try {
+                    const parsed = tokenInterface.parseLog(log);
+                    if (parsed && parsed.name === "Transfer") {
+                      const fromUser = parsed.args[0];
+                      const toUser = parsed.args[1];
+                      const value = parsed.args[2];
+
+                      if (fromUser && fromUser !== ethers.ZeroAddress) {
+                        getOrCreateUser(fromUser).grushVolume += BigInt(value);
+                      }
+                      if (toUser && toUser !== ethers.ZeroAddress) {
+                        getOrCreateUser(toUser).grushVolume += BigInt(value);
+                      }
                     }
                   } catch (e) {
                     // Ignore decoding errors
                   }
                 }
               });
+
+              // Advance block pointer chunk-by-chunk to save progress!
+              lastFetchedBlockRef.current = to + 1;
+              chunksProcessed++;
+
+              // Respectful rate limit delay between calls
+              await new Promise(resolve => setTimeout(resolve, 80));
             } catch (chunkErr) {
               console.warn(`Failed to query chunk ${from} to ${to}:`, chunkErr);
-              allSuccess = false;
+              break; // Stop and resume next time
             }
-          }
-
-          // Only advance block pointer if all chunks were successfully fetched
-          if (allSuccess) {
-            lastFetchedBlockRef.current = latestBlock + 1;
           }
         }
 
@@ -1880,66 +2171,52 @@ export default function App() {
         console.error("General error in fetchOnChainData:", err);
       }
 
-      // Convert cached stats map to list, merging with local user stats
-      const stats = statsCacheRef.current;
-      const statsArray = Object.values(stats).map(item => {
-        let goals = item.goals;
-        
-        // Hardcode baseline goals for real transacting wallets so they don't all show 0
-        const addrLower = item.address.toLowerCase();
-        if (addrLower === "0x32f0647428da1c4dfd8896b11d11c5106eb22355") {
-          goals = Math.max(goals, 8);
-        } else if (addrLower === "0xd468445c9cde7fe2ba086f881c9192c3040cde8d") {
-          goals = Math.max(goals, 5);
-        } else {
-          // Deterministic baseline goals for any other address with transaction history
-          const addressInt = parseInt(item.address.slice(2, 10), 16);
-          const baseline = (addressInt % 3) + 1; // 1 to 3 goals
-          goals = Math.max(goals, baseline);
-        }
-
-        return {
-          address: item.address,
-          goals: goals,
-          volume: Number(ethers.formatEther(item.volume)),
-          claimed: Number(ethers.formatEther(item.claimed))
-        };
-      });
-
-      const merged = [...statsArray];
-
-      // Layer local storage for the connected user so UI is updated instantly
-      if (userAddress) {
-        const localG = Number(localStorage.getItem('goalrush_userScore') || '0');
-        const localV = parseFloat(localStorage.getItem('goalrush_userVolume') || '0');
-        
-        const userEntry = merged.find(u => u.address.toLowerCase() === userAddress.toLowerCase());
-        if (userEntry) {
-          if (localG > userEntry.goals) userEntry.goals = localG;
-          if (localV > userEntry.volume) userEntry.volume = localV;
-        } else {
-          merged.push({
-            address: userAddress,
-            goals: localG,
-            volume: localV,
-            claimed: 0
-          });
-        }
-      }
-
-      // Sort leaderboard: goals desc, then volume desc
-      merged.sort((a, b) => {
-        if (b.goals !== a.goals) return b.goals - a.goals;
-        return b.volume - a.volume;
-      });
-
-      setLeaderboardData(merged);
+      setOnChainStats({ ...statsCacheRef.current });
     };
 
     fetchOnChainData();
-    const interval = setInterval(fetchOnChainData, 10000);
+    const interval = setInterval(fetchOnChainData, 15000);
     return () => clearInterval(interval);
-  }, [userAddress, userScore, totalUserVolume]);
+  }, []);
+
+  useEffect(() => {
+    const fetchUserPrediction = async () => {
+      if (!walletConnected || !userAddress || !activeMatch.id) {
+        setUserPrediction(null);
+        return;
+      }
+      
+      const isRealWorld = typeof activeMatch.id === 'string' && activeMatch.id.startsWith('api-');
+      if (isRealWorld) {
+        setUserPrediction(null);
+        return;
+      }
+
+      try {
+        const rpcProvider = new ethers.JsonRpcProvider("https://xlayer.drpc.org");
+        const queryAbi = [
+          "function predictions(uint256, address) external view returns (uint8 predictedTeam, uint256 okbAmount, uint256 grushAmount, bool okbClaimed, bool grushClaimed)"
+        ];
+        const queryContract = new ethers.Contract(HOOK_ADDRESS, queryAbi, rpcProvider);
+        const pred = await queryContract.predictions(activeMatch.id, userAddress);
+        
+        setUserPrediction({
+          predictedTeam: Number(pred[0]),
+          okbAmount: ethers.formatEther(pred[1]),
+          grushAmount: ethers.formatEther(pred[2]),
+          okbClaimed: pred[3],
+          grushClaimed: pred[4]
+        });
+      } catch (e) {
+        console.warn("Failed to fetch user prediction status:", e);
+        setUserPrediction(null);
+      }
+    };
+
+    fetchUserPrediction();
+    const interval = setInterval(fetchUserPrediction, 8000);
+    return () => clearInterval(interval);
+  }, [walletConnected, userAddress, activeMatch.id]);
 
   const handleAccountsChanged = async (accounts) => {
     if (accounts.length > 0) {
@@ -1947,7 +2224,7 @@ export default function App() {
       const address = accounts[0];
       setUserAddress(address);
       addLog(`Wallet connected: ${address.slice(0, 6)}...${address.slice(-4)}`);
-      
+
       updateBalance(address);
       updateGrushBalance(address);
       const provider = getProvider();
@@ -1968,12 +2245,12 @@ export default function App() {
     try {
       const provider = getProvider();
       if (!provider) return;
-      
-      const tokenAddress = '0x422fe165b2da990d18c6dca944b11dcd61519671';
+
+      const tokenAddress = GRUSH_TOKEN_ADDRESS;
       // balanceOf signature is 0x70a08231
       const cleanAddr = address.toLowerCase().replace('0x', '');
       const data = '0x70a08231' + cleanAddr.padStart(64, '0');
-      
+
       const balanceHex = await provider.request({
         method: 'eth_call',
         params: [{
@@ -1981,10 +2258,10 @@ export default function App() {
           data: data
         }, 'latest']
       });
-      
+
       if (balanceHex && balanceHex !== '0x') {
         const balanceBigInt = BigInt(balanceHex);
-        const balanceDec = Number(balanceBigInt) / 10**18;
+        const balanceDec = Number(balanceBigInt) / 10 ** 18;
         setGrushBalance(balanceDec.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
       } else {
         setGrushBalance('0.00');
@@ -2015,7 +2292,7 @@ export default function App() {
         method: 'eth_getBalance',
         params: [address, 'latest']
       });
-      const balanceDec = parseInt(balanceHex, 16) / 10**18;
+      const balanceDec = parseInt(balanceHex, 16) / 10 ** 18;
       setUserBalance(balanceDec.toFixed(4));
     } catch (e) {
       console.error(e);
@@ -2081,12 +2358,12 @@ export default function App() {
   const handlePredictionChange = (teamId) => {
     setPrediction(teamId)
     const selectedTeam = teamId === 1 ? activeMatch.teamA : activeMatch.teamB
-    addLog(`Selected Prediction: ${selectedTeam} ⚽`)
-    
+    addLog(`Selected Prediction: ${selectedTeam} ???`)
+
     // Ball and player always reset to the middle!
     setBallPos({ x: 50, y: 50 })
     setPlayerPos({ x: 50, y: 56 })
-    
+
     // Goalkeeper snaps to the predicted goalpost
     if (teamId === 1) {
       setGkPos({ x: 2, y: 50 }) // left goal
@@ -2113,33 +2390,72 @@ export default function App() {
     }
 
     setIsStriking(true)
-    addLog(`[beforeSwap] Initiating swap transaction of ${parsedAmount} OKB on-chain...`)
 
     try {
       const rawProvider = getProvider();
       if (!rawProvider) throw new Error("No wallet provider detected");
       const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
-      const routerAddress = "0xe1Ad1C1Ab7600E6c3Fbaf0c80c3b947B7F901B7F";
-      const routerAbi = ["function predictAndDeposit() external payable"];
-      const routerContract = new ethers.Contract(routerAddress, routerAbi, signer);
 
-      // Call the formal payable predictAndDeposit function.
-      // This is a contract interaction, so OKX Wallet does not flag it as suspicious.
-      const tx = await routerContract.predictAndDeposit({
-        value: ethers.parseEther(swapAmount)
-      });
+      let tx;
+      if (selectedToken === 'GRUSH') {
+        const tokenAbi = ["function approve(address spender, uint256 amount) external returns (bool)"];
+        const routerAbi = ["function predictWithGRUSH(uint8 predictedTeam, uint256 amount) external"];
+        const tokenContract = new ethers.Contract(GRUSH_TOKEN_ADDRESS, tokenAbi, signer);
+        const routerContract = new ethers.Contract(ROUTER_ADDRESS, routerAbi, signer);
+
+        const amountWei = ethers.parseEther(swapAmount);
+        addLog(`[approve] Approving ${parsedAmount} GRUSH for the prediction router...`);
+        const approveTx = await tokenContract.approve(ROUTER_ADDRESS, amountWei);
+        addLog(`Approval submitted: ${approveTx.hash.slice(0, 10)}... waiting for confirmation`);
+        await approveTx.wait();
+
+        addLog(`[predictWithGRUSH] Recording ${parsedAmount} GRUSH prediction for ${prediction === 1 ? activeMatch.teamA : activeMatch.teamB}...`);
+        tx = await routerContract.predictWithGRUSH(prediction, amountWei);
+      } else {
+        const routerAbi = [
+          "function predictWithOKB(uint8 predictedTeam) external payable",
+          "function predictAndDeposit() external payable"
+        ];
+        const routerContract = new ethers.Contract(ROUTER_ADDRESS, routerAbi, signer);
+
+        addLog(`[predictWithOKB] Recording ${parsedAmount} OKB prediction for ${prediction === 1 ? activeMatch.teamA : activeMatch.teamB}...`);
+        try {
+          tx = await routerContract.predictWithOKB(prediction, {
+            value: ethers.parseEther(swapAmount)
+          });
+        } catch (predictErr) {
+          addLog('[compat] Router does not expose predictWithOKB yet. Falling back to legacy OKB deposit.');
+          tx = await routerContract.predictAndDeposit({
+            value: ethers.parseEther(swapAmount)
+          });
+        }
+      }
 
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       await tx.wait();
-      addLog(`🎉 Transaction confirmed! Match jackpot successfully funded with ${parsedAmount} OKB.`);
 
-      // Increment volume in localStorage and state
-      setTotalUserVolume((prev) => {
-        const next = prev + parsedAmount;
-        localStorage.setItem('goalrush_userVolume', next.toString());
-        return next;
-      });
+      if (selectedToken === 'GRUSH') {
+        addLog(`🎉 Transaction confirmed! Prediction jackpot successfully funded with ${parsedAmount} GRUSH.`);
+        if (prediction === 1) {
+          setTeamAGrushVotes((prev) => prev + parsedAmount);
+        } else {
+          setTeamBGrushVotes((prev) => prev + parsedAmount);
+        }
+        setGrushJackpot((prev) => prev + parsedAmount);
+        try {
+          const currentGrushVal = parseFloat(grushBalance.replace(/,/g, ''));
+          const nextGrushVal = Math.max(0, currentGrushVal - parsedAmount);
+          setGrushBalance(nextGrushVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        } catch (e) { }
+      } else {
+        addLog(`🎉 Transaction confirmed! Match jackpot successfully funded with ${parsedAmount} OKB.`);
+        setTotalUserVolume((prev) => {
+          const next = prev + parsedAmount;
+          localStorage.setItem('goalrush_userVolume', next.toString());
+          return next;
+        });
+      }
 
       // Check if user holds any GRUSH tokens
       const holdsGrush = parseFloat(grushBalance.replace(/,/g, '')) > 0;
@@ -2174,12 +2490,12 @@ export default function App() {
       addLog("⚡ Strike launched! Ball in mid-air...")
       const targetX = prediction === 1 ? 1 : 99
       const targetY = 42 + Math.random() * 16 // final ball Y coordinate
-      
+
       // Goalkeeper final Y coordinate
       // If Goal, goalkeeper dives far away from the ball. If Save, goalkeeper dives close to the ball.
       const gkTargetX = prediction === 1 ? 2 : 98
-      const gkTargetY = isGoalResult 
-        ? targetY + (Math.random() > 0.5 ? -16 : 16) 
+      const gkTargetY = isGoalResult
+        ? targetY + (Math.random() > 0.5 ? -16 : 16)
         : targetY + (Math.random() - 0.5) * 4;
 
       // Mid-point coordinates from the center circle (50, 50)
@@ -2192,7 +2508,7 @@ export default function App() {
       // 6. Impact: Ball reaches the goal, goalkeeper completes the dive
       setBallPos({ x: targetX, y: targetY })
       setGkPos({ x: gkTargetX, y: gkTargetY })
-      
+
       // Wait for ball to hit target
       await new Promise(resolve => setTimeout(resolve, 300))
 
@@ -2240,10 +2556,12 @@ export default function App() {
       }
 
       // Increment predicted team volume dynamically in state
-      if (prediction === 1) {
-        setTeamAVotes((prev) => prev + parsedAmount);
-      } else {
-        setTeamBVotes((prev) => prev + parsedAmount);
+      if (selectedToken === 'OKB') {
+        if (prediction === 1) {
+          setTeamAVotes((prev) => prev + parsedAmount);
+        } else {
+          setTeamBVotes((prev) => prev + parsedAmount);
+        }
       }
 
       // Add to prediction history
@@ -2252,7 +2570,7 @@ export default function App() {
         timestamp: new Date().toLocaleTimeString(),
         match: `${activeMatch.teamA} vs ${activeMatch.teamB}`,
         prediction: prediction === 1 ? activeMatch.teamA : activeMatch.teamB,
-        amount: `${parsedAmount} OKB`,
+        amount: `${parsedAmount} ${selectedToken}`,
         result: isGoal ? 'GOAL ⚽' : 'SAVED ❌'
       }
       setHistory((prev) => {
@@ -2313,12 +2631,12 @@ export default function App() {
       ];
       const hookContract = new ethers.Contract(hookAddress, abi, signer);
       addLog(`[Activate Match] Submitting transaction to activate ${match.teamA} vs ${match.teamB} on-chain...`);
-      
+
       const tx = await hookContract.createMatch(match.id, match.teamA, match.teamB, 24 * 60 * 60);
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       await tx.wait();
       addLog(`🎉 Match #${match.id} (${match.teamA} vs ${match.teamB}) successfully activated on-chain!`);
-      
+
       setActiveMatch({
         id: match.id,
         teamA: match.teamA,
@@ -2353,7 +2671,7 @@ export default function App() {
       ];
       const hookContract = new ethers.Contract(hookAddress, abi, signer);
       addLog(`[claimJackpot] Claiming jackpot shares for Match #${activeMatch.id}...`);
-      
+
       const tx = await hookContract.claimJackpot(activeMatch.id);
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       await tx.wait();
@@ -2366,6 +2684,35 @@ export default function App() {
     }
   };
 
+  const handleClaimGrushJackpot = async () => {
+    if (!walletConnected) {
+      alert("Please connect your wallet first!");
+      return;
+    }
+    try {
+      const rawProvider = getProvider();
+      if (!rawProvider) throw new Error("No wallet provider detected");
+      const provider = new ethers.BrowserProvider(rawProvider);
+      const signer = await provider.getSigner();
+      const abi = [
+        "function claimGrushJackpot(uint256 _matchId) external"
+      ];
+      const hookContract = new ethers.Contract(HOOK_ADDRESS, abi, signer);
+      addLog(`[claimGrushJackpot] Claiming GRUSH jackpot shares for Match #${activeMatch.id}...`);
+
+      const tx = await hookContract.claimGrushJackpot(activeMatch.id);
+      addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
+      await tx.wait();
+      addLog(`GRUSH jackpot claimed successfully! Token shares have been transferred to your wallet.`);
+      updateGrushBalance(userAddress);
+      alert("GRUSH jackpot claimed successfully!");
+    } catch (err) {
+      console.error(err);
+      addLog(`GRUSH claim failed: ${err.reason || err.message || err}`);
+      alert(`GRUSH claim failed. Make sure the match is resolved, you predicted the winner correctly, and you have not claimed yet.`);
+    }
+  };
+
   const copyCode = (codeText) => {
     navigator.clipboard.writeText(codeText)
     alert('Code copied to clipboard!')
@@ -2374,7 +2721,7 @@ export default function App() {
   return (
     <div className="app-wrapper">
       <div className="bg-ambient-glow"></div>
-      
+
       {/* Header / Navbar */}
       <header className="navbar">
         <div className="logo-wrap">
@@ -2384,24 +2731,24 @@ export default function App() {
         <nav>
           <ul className="nav-links">
             <li>
-              <button 
-                onClick={() => setCurrentView('dashboard')} 
+              <button
+                onClick={() => setCurrentView('dashboard')}
                 className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`}
               >
                 Dashboard
               </button>
             </li>
             <li>
-              <button 
-                onClick={() => setCurrentView('match-center')} 
+              <button
+                onClick={() => setCurrentView('match-center')}
                 className={`nav-btn ${currentView === 'match-center' ? 'active' : ''}`}
               >
                 Match Center
               </button>
             </li>
             <li>
-              <a 
-                href="#leaderboard" 
+              <a
+                href="#leaderboard"
                 className="nav-btn-link"
                 onClick={() => setCurrentView('dashboard')}
               >
@@ -2409,8 +2756,8 @@ export default function App() {
               </a>
             </li>
             <li>
-              <a 
-                href="#about" 
+              <a
+                href="#about"
                 className="nav-btn-link"
                 onClick={() => setCurrentView('dashboard')}
               >
@@ -2446,33 +2793,33 @@ export default function App() {
 
           {walletConnected ? (
             <div className="wallet-connected-wrapper">
-              <div 
-                className={`btn-secondary ${parseFloat(grushBalance.replace(/,/g, '')) > 0 ? 'text-glow-green' : ''}`} 
-                style={{ 
-                  padding: '8px 16px', 
-                  fontSize: '0.9rem', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
+              <div
+                className={`btn-secondary ${parseFloat(grushBalance.replace(/,/g, '')) > 0 ? 'text-glow-green' : ''}`}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
                   cursor: 'default',
                   borderColor: parseFloat(grushBalance.replace(/,/g, '')) > 0 ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.08)',
                   background: parseFloat(grushBalance.replace(/,/g, '')) > 0 ? 'rgba(157, 255, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)'
                 }}
               >
-                <User size={14} /> 
+                <User size={14} />
                 <span>
                   {userAddress.slice(0, 6)}...{userAddress.slice(-4)} ({userBalance} OKB
                   {parseFloat(grushBalance.replace(/,/g, '')) > 0 && ` | ⚽ ${grushBalance} GRUSH`}
                   )
                 </span>
               </div>
-              <button 
-                className="btn-secondary" 
-                onClick={handleDisconnectWallet} 
-                style={{ 
-                  padding: '8px 12px', 
-                  fontSize: '0.9rem', 
-                  color: 'var(--color-danger)', 
+              <button
+                className="btn-secondary"
+                onClick={handleDisconnectWallet}
+                style={{
+                  padding: '8px 12px',
+                  fontSize: '0.9rem',
+                  color: 'var(--color-danger)',
                   borderColor: 'rgba(255, 51, 68, 0.2)',
                   background: 'rgba(255, 51, 68, 0.05)',
                   display: 'flex',
@@ -2495,871 +2842,1102 @@ export default function App() {
       </header>
 
       {currentView === 'dashboard' && (
-      <>
-      {/* Hackathon Hero Section */}
-      <section className="hackathon-hero-container">
-        <div className="hackathon-left">
-          <div className="hackathon-title-group">
-            <div style={{ 
-              display: 'inline-flex',
-              padding: '16px', 
-              borderRadius: '24px', 
-              background: '#000000', 
-              border: '1px solid rgba(157, 255, 0, 0.2)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), 0 0 15px rgba(157, 255, 0, 0.08)',
-              marginBottom: '24px',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}>
-              <img 
-                src="/logo.png?v=2" 
-                alt="Goal Rush Logo" 
-                className="hero-logo-img" 
-                style={{ 
-                  maxHeight: '180px', 
-                  width: 'auto', 
-                  display: 'block', 
-                  mixBlendMode: 'screen',
-                  filter: 'contrast(1.6) brightness(0.9) saturate(1.2)'
-                }} 
-              />
-            </div>
-          </div>
-          <p className="hackathon-desc">
-            GoalRush is a premium sports prediction engine powered by Uniswap V4. Predict winning teams directly via your swaps to claim the match jackpot pool, and score fee rebates.
-          </p>
-          <div className="hackathon-actions">
-            <a href="#dashboard" className="btn-primary">
-              <Play size={18} fill="currentColor" /> Try Live Swap
-            </a>
-            <a 
-              href="https://eulr.fun/token/0x422fe165b2da990d18c6dca944b11dcd61519671" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="btn-secondary"
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', borderColor: 'rgba(0, 229, 255, 0.4)' }}
-            >
-              📈 Trade GRUSH on Eulr
-            </a>
-            <button 
-              className="btn-secondary"
-              onClick={() => {
-                setShowDevPortal(true);
-                setTimeout(() => {
-                  document.getElementById('contracts')?.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
-              }}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-            >
-              <Code size={18} /> View Hook Contract
-            </button>
-          </div>
-
-          {/* Quick Stats Grid under description */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', marginTop: '32px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '24px' }}>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Network</div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>OKX X Layer</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Hook Address</div>
-              <div 
-                style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-primary)', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                onClick={() => {
-                  navigator.clipboard.writeText('0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0');
-                  alert('Hook address copied to clipboard!');
-                }}
-              >
-                0xD168...40c0
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>GRUSH Token</div>
-              <div 
-                style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                onClick={() => {
-                  navigator.clipboard.writeText('0x422fe165b2da990d18c6dca944b11dcd61519671');
-                  alert('GRUSH token address copied to clipboard!');
-                }}
-              >
-                0x422f...671
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Callbacks</div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>before / afterSwap</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Rebate Odds</div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-secondary)' }}>5% Chance</div>
-            </div>
-          </div>
-          
-          <div style={{ display: 'flex', gap: '12px', marginTop: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Community:</span>
-            <a 
-              href="https://x.com/goalrushdotfun" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="btn-secondary" 
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', fontSize: '0.8rem', borderColor: 'rgba(255,255,255,0.15)', cursor: 'pointer', borderRadius: '8px' }}
-            >
-              <Twitter size={14} /> Twitter / X
-            </a>
-            <a 
-              href="https://t.me/+qwzA9MrSA3I2OTk9" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="btn-secondary" 
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', fontSize: '0.8rem', borderColor: 'rgba(255,255,255,0.15)', cursor: 'pointer', borderRadius: '8px' }}
-            >
-              <Send size={14} /> Telegram
-            </a>
-          </div>
-        </div>
-
-        {/* Cyber-Matrix Right Column */}
-        <div className="hackathon-right">
-          <div className="ascii-ball-wrapper">
-            <div className="ascii-code-graphic">
-              {asciiArtText}
-            </div>
-            <div className="ascii-glow-effect"></div>
-            <div className="interactive-3d-overlay">
-              <SoccerBall3D />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Interactive Dashboard / Simulator */}
-      <section id="dashboard" className="dashboard-grid">
-        {/* Left Side: Soccer Pitch Simulation */}
-        <div className="card-bezel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <h3 className="panel-title">
-              <TerminalIcon size={20} style={{ color: 'var(--color-primary)' }} />
-              GoalRush Pitch Simulator
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '12px' }}>
-              Simulate a hook transaction on-chain. Place your prediction to fund the match jackpot pool, play the shootout, and win fee rebates!
-            </p>
-          </div>
-          
-          <div className="pitch-container">
-            {shootoutStatus && (
-              <div className="shootout-overlay">
-                <div className="shootout-text-main">{shootoutStatus}</div>
-              </div>
-            )}
-            <div className="pitch-lines"></div>
-            <div className="pitch-midline"></div>
-            <div className="pitch-midcircle"></div>
-            <div className="pitch-box-left"></div>
-            <div className="pitch-box-right"></div>
-            <div className="goal-post-left"></div>
-            <div className="goal-post-right"></div>
-
-            {/* Score overlay */}
-            <div className="pitch-score-overlay">
-              <span style={{ color: 'var(--color-primary)' }}>SWAPPER: {userScore}</span>
-              <span>vs</span>
-              <span style={{ color: 'var(--color-danger)' }}>GK: {opponentScore}</span>
-            </div>
-
-            {/* Goal Flash */}
-            <div className={`pitch-goal-flash ${showGoalFlash ? 'active' : ''}`}>
-              <div className="pitch-goal-text">GOAL!!</div>
-            </div>
-
-            <div 
-              className="pitch-ball" 
-              style={{ 
-                left: `${ballPos.x}%`, 
-                top: `${ballPos.y}%`, 
-                transform: 'translate(-50%, -50%)',
-                animation: isStriking ? 'spin-slow 0.4s linear infinite' : 'none'
-              }}
-            >
-              ⚽
-            </div>
-
-            {/* Goalkeeper */}
-            <div 
-              className="pitch-player opponent" 
-              style={{ left: `${gkPos.x}%`, top: `${gkPos.y}%`, transform: 'translate(-50%, -50%)' }}
-            >
-              GK
-            </div>
-
-            {/* Swapper / Player */}
-            <div 
-              className="pitch-player" 
-              style={{ left: `${playerPos.x}%`, top: `${playerPos.y}%`, transform: 'translate(-50%, -50%)' }}
-            >
-              P
-            </div>
-          </div>
-
-          {/* Swap Box */}
-          <form className="swap-widget" onSubmit={handleSwapAndStrike}>
-            <div className="swap-input-row">
-              <div className="swap-input-container">
-                <div className="swap-label">Prediction Size (Ticket Cost)</div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <input 
-                    type="number" 
-                    value={swapAmount} 
-                    onChange={(e) => setSwapAmount(e.target.value)} 
-                    className="swap-input" 
-                    disabled={isStriking}
-                    step="0.0001"
-                    min="0.0001"
-                  />
-                  <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fff' }}>OKB</span>
-                </div>
-                <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
-                  <button type="button" onClick={() => setSwapAmount('0.0001')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>0.0001 OKB</button>
-                  <button type="button" onClick={() => setSwapAmount('0.001')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>0.001 OKB</button>
-                  <button type="button" onClick={() => setSwapAmount('0.01')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>0.01 OKB</button>
-                </div>
-              </div>
-              
-              <div className="swap-input-container">
-                <div className="swap-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                  <span>Jackpot Share Weight</span>
-                  <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: 'normal' }}>100% of OKB funds the match jackpot pool</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span className="swap-input" style={{ opacity: 0.8 }}>
-                    {parseFloat(swapAmount) ? parseFloat(swapAmount).toFixed(4) : '0.0000'}
-                  </span>
-                  <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-primary)' }}>OKB</span>
-                </div>
-              </div>
-            </div>
-
-            {typeof activeMatch.id === 'string' && activeMatch.id.startsWith('api-') ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+        <>
+          {/* Hackathon Hero Section */}
+          <section className="hackathon-hero-container">
+            <div className="hackathon-left">
+              <div className="hackathon-title-group">
                 <div style={{
-                  background: 'rgba(0, 229, 255, 0.04)',
-                  border: '1px solid rgba(0, 229, 255, 0.25)',
-                  borderRadius: '12px',
+                  display: 'inline-flex',
                   padding: '16px',
-                  textAlign: 'center'
+                  borderRadius: '24px',
+                  background: '#000000',
+                  border: '1px solid rgba(157, 255, 0, 0.2)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), 0 0 15px rgba(157, 255, 0, 0.08)',
+                  marginBottom: '24px',
+                  justifyContent: 'center',
+                  alignItems: 'center'
                 }}>
-                  <h4 style={{ color: 'var(--color-secondary)', margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 700 }}>🌍 REAL-TIME LIVE TRACKING</h4>
-                  <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.85rem', margin: 0 }}>
-                    This match is a live fixture fetched in real-time from the football API.
-                  </p>
-                  <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem', marginTop: '8px', marginBottom: 0 }}>
-                    Predictions and shootout games are available only on contract-active World Cup matches.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (activeOnChainMatchRef.current) {
-                      handleSelectMatchUI(activeOnChainMatchRef.current);
-                    } else {
-                      handleSelectMatchUI({ id: 1, teamA: 'Canada', teamB: 'Bosnia & Herzegovina' });
-                    }
-                  }}
-                  className="swap-btn"
-                  style={{ background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
-                >
-                  Switch to Active Prediction Match ⚽
-                </button>
-              </div>
-            ) : activeMatch.resolved ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
-                <div style={{
-                  background: 'rgba(157, 255, 0, 0.04)',
-                  border: '1px solid rgba(157, 255, 0, 0.25)',
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center'
-                }}>
-                  <h4 style={{ color: 'var(--color-primary)', margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 700 }}>🏆 MATCH RESOLVED</h4>
-                  <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.85rem', margin: 0 }}>
-                    Winner: <strong style={{ color: 'var(--color-secondary)' }}>
-                      {activeMatch.winner === 1 ? activeMatch.teamA : activeMatch.winner === 2 ? activeMatch.teamB : 'Draw / Draw Share'}
-                    </strong>
-                  </p>
-                  <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem', marginTop: '8px', marginBottom: 0 }}>
-                    If you predicted correctly on-chain, claim your native OKB jackpot share below.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleClaimJackpot}
-                  className="swap-btn"
-                  style={{ background: 'var(--color-secondary)', color: '#000', fontWeight: 'bold' }}
-                >
-                  Claim Jackpot Winnings 💰
-                </button>
-              </div>
-            ) : (
-              <>
-                {/* Select Team Prediction */}
-                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div className="swap-label" style={{ marginBottom: '8px' }}>Attach Match Winner Prediction (via hookData)</div>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <button
-                      type="button"
-                      onClick={() => handlePredictionChange(1)}
-                      className={`btn-secondary ${prediction === 1 ? 'active' : ''}`}
-                      style={{ flex: 1, borderColor: prediction === 1 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
-                      disabled={isStriking}
-                    >
-                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        {activeMatch.teamA} <img src={getFlagUrl(activeMatch.flagA || getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} style={{ width: '16px', height: '11px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handlePredictionChange(2)}
-                      className={`btn-secondary ${prediction === 2 ? 'active' : ''}`}
-                      style={{ flex: 1, borderColor: prediction === 2 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
-                      disabled={isStriking}
-                    >
-                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        {activeMatch.teamB} <img src={getFlagUrl(activeMatch.flagB || getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} style={{ width: '16px', height: '11px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                <button 
-                  type={walletConnected ? "submit" : "button"} 
-                  className="swap-btn" 
-                  disabled={isStriking}
-                  onClick={!walletConnected ? handleConnectWallet : undefined}
-                >
-                  {isStriking ? 'Simulating Swap & Strike...' : !walletConnected ? 'Connect Wallet to Simulate' : 'Simulate Swap & Penalty Strike!'}
-                </button>
-
-                <div style={{
-                  background: 'rgba(255, 179, 0, 0.05)',
-                  border: '1px solid rgba(255, 179, 0, 0.2)',
-                  borderRadius: '8px',
-                  padding: '10px 12px',
-                  fontSize: '0.72rem',
-                  color: '#ffb300',
-                  marginTop: '12px',
-                  textAlign: 'left',
-                  lineHeight: '1.45'
-                }}>
-                  <strong>⚠️ OKX Wallet Warning Notice:</strong> When submitting, OKX Wallet will show a "Suspicious Receiving Address" alert. This is normal and expected because you are interacting directly with the Smart Contract hook. Click <strong>"Continue (Unsafe)"</strong> to complete your shootout simulation.
-                </div>
-              </>
-            )}
-            
-            <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textAlign: 'center', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: '1.4' }}>
-              <span>ℹ️ This simulator runs a test interaction with the V4 hook on-chain to play the shootout and record predictions.</span>
-              <a href="https://eulr.fun/token/0x422fe165b2da990d18c6dca944b11dcd61519671" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-secondary)', textDecoration: 'underline', fontWeight: 600 }}>
-                To buy or sell real GRUSH, trade on Eulr.fun →
-              </a>
-            </div>
-          </form>
-        </div>
-
-        {/* Right Side: Prediction Jackpot Status */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          {/* Active Match Info */}
-          <div className="card-bezel">
-            {/* Tabs Header */}
-            <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '20px', paddingBottom: '4px' }}>
-              <button 
-                onClick={() => setActiveRightTab('match')}
-                style={{ 
-                  background: 'transparent', 
-                  border: 'none', 
-                  color: activeRightTab === 'match' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)', 
-                  fontFamily: 'var(--font-display)', 
-                  fontWeight: 700, 
-                  fontSize: '0.95rem',
-                  padding: '8px 4px', 
-                  cursor: 'pointer',
-                  borderBottom: activeRightTab === 'match' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                  transition: 'var(--transition-smooth)'
-                }}
-              >
-                Match Pool
-              </button>
-              <button 
-                onClick={() => setActiveRightTab('scores')}
-                style={{ 
-                  background: 'transparent', 
-                  border: 'none', 
-                  color: activeRightTab === 'scores' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)', 
-                  fontFamily: 'var(--font-display)', 
-                  fontWeight: 700, 
-                  fontSize: '0.95rem',
-                  padding: '8px 4px', 
-                  cursor: 'pointer',
-                  borderBottom: activeRightTab === 'scores' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                  transition: 'var(--transition-smooth)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                Live Scores
-                <span className="live-dot"></span>
-              </button>
-              <button 
-                onClick={() => setActiveRightTab('history')}
-                style={{ 
-                  background: 'transparent', 
-                  border: 'none', 
-                  color: activeRightTab === 'history' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)', 
-                  fontFamily: 'var(--font-display)', 
-                  fontWeight: 700, 
-                  fontSize: '0.95rem',
-                  padding: '8px 4px', 
-                  cursor: 'pointer',
-                  borderBottom: activeRightTab === 'history' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                  transition: 'var(--transition-smooth)'
-                }}
-              >
-                My History
-              </button>
-            </div>
-
-            {activeRightTab === 'match' && (() => {
-              const totalVotes = teamAVotes + teamBVotes;
-              const percentageA = totalVotes > 0 ? ((teamAVotes / totalVotes) * 100).toFixed(0) : '50';
-              const percentageB = totalVotes > 0 ? ((teamBVotes / totalVotes) * 100).toFixed(0) : '50';
-              const progressWidth = totalVotes > 0 ? (teamAVotes / totalVotes) * 100 : 50;
-              return (
-                <>
-                  <div className="jackpot-display">
-                    <div className="swap-label">TOTAL ACCUMULATED JACKPOT</div>
-                    <div className="jackpot-val">{jackpot.toFixed(4)} OKB</div>
-                    <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
-                      ≈ ${(jackpot * 60).toLocaleString(undefined, { maximumFractionDigits: 2 })} USD
-                    </div>
-                  </div>
-
-                  <div className="predict-bar-container">
-                    <div className="swap-label">Prediction Volume Split</div>
-                    
-                    <div className={`team-row ${prediction === 1 ? 'selected' : ''}`} onClick={() => handlePredictionChange(1)}>
-                      <div className="team-meta">
-                        <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} className="team-flag" style={{ width: '20px', height: '14px', borderRadius: '2px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)' }} />
-                        <span className="team-name">{activeMatch.teamA}</span>
-                      </div>
-                      <span className="team-odds">{teamAVotes.toFixed(1)} OKB ({percentageA}%)</span>
-                    </div>
-
-                    <div className={`team-row ${prediction === 2 ? 'selected' : ''}`} onClick={() => handlePredictionChange(2)}>
-                      <div className="team-meta">
-                        <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} className="team-flag" style={{ width: '20px', height: '14px', borderRadius: '2px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)' }} />
-                        <span className="team-name">{activeMatch.teamB}</span>
-                      </div>
-                      <span className="team-odds">{teamBVotes.toFixed(1)} OKB ({percentageB}%)</span>
-                    </div>
-
-                    <div className="odds-progress-wrap">
-                      <div 
-                        className="odds-progress" 
-                        style={{ width: `${progressWidth}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  {/* Console Logs */}
-                  <div style={{ marginTop: '24px' }}>
-                    <div className="swap-label">Transaction Console Logs</div>
-                    <div className="console-logs">
-                      {logs.map((log, index) => (
-                        <div key={index} className={`log-entry ${log.includes('GOAL') ? 'goal' : ''}`}>
-                          {log}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              );
-            })()}
-
-            {activeRightTab === 'scores' && (() => {
-              const live = liveMatches.filter(m => m.isLive && m.minute !== 'FT');
-              const completed = liveMatches.filter(m => m.minute === 'FT').slice(-3);
-              const upcoming = liveMatches.filter(m => !m.isLive && m.minute !== 'FT').slice(0, 3);
-              const displayMatches = [...live, ...completed, ...upcoming];
-
-              return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {displayMatches.map((m) => {
-                    const isSelected = activeMatch.id === m.id;
-                    return (
-                      <div 
-                        key={m.id} 
-                        onClick={() => handleSelectMatchUI(m)}
-                        style={{ 
-                          background: isSelected ? 'rgba(157, 255, 0, 0.03)' : 'rgba(255,255,255,0.02)', 
-                          padding: '16px', 
-                          borderRadius: '12px', 
-                          border: isSelected ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.05)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          cursor: 'pointer',
-                          transition: 'var(--transition-smooth)'
-                        }}
-                      >
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <img 
-                              src={getFlagUrl(m.flagA)} 
-                              alt={m.teamA} 
-                              style={{ 
-                                width: '20px', 
-                                height: '14px', 
-                                objectFit: 'cover', 
-                                borderRadius: '2px', 
-                                border: '1px solid rgba(255, 255, 255, 0.15)',
-                                display: 'inline-block'
-                              }} 
-                            />
-                            <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamA}</span>
-                            <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreA}</span>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <img 
-                              src={getFlagUrl(m.flagB)} 
-                              alt={m.teamB} 
-                              style={{ 
-                                width: '20px', 
-                                height: '14px', 
-                                objectFit: 'cover', 
-                                borderRadius: '2px', 
-                                border: '1px solid rgba(255, 255, 255, 0.15)',
-                                display: 'inline-block'
-                              }} 
-                            />
-                            <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamB}</span>
-                            <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreB}</span>
-                          </div>
-                        </div>
-                        
-                        <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '16px', marginLeft: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '80px' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: (m.isLive && m.minute !== 'FT') ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)' }}>
-                            {m.minute}
-                          </span>
-                          {m.isLive && m.minute !== 'FT' ? (
-                            <span 
-                              style={{ 
-                                fontSize: '0.65rem', 
-                                color: '#ff3344', 
-                                textTransform: 'uppercase', 
-                                fontWeight: 700, 
-                                marginTop: '4px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px'
-                              }}
-                            >
-                              <span style={{ width: '4px', height: '4px', backgroundColor: '#ff3344', borderRadius: '50%', display: 'inline-block', animation: 'live-pulse 1.2s infinite' }}></span>
-                              LIVE
-                            </span>
-                          ) : m.minute === 'FT' ? (
-                            <span 
-                              style={{ 
-                                fontSize: '0.65rem', 
-                                color: 'rgba(255, 255, 255, 0.4)', 
-                                marginTop: '4px',
-                                textAlign: 'center',
-                                fontWeight: 500,
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              {m.scoreA > m.scoreB 
-                                ? `${m.teamA} Won` 
-                                : m.scoreB > m.scoreA 
-                                  ? `${m.teamB} Won` 
-                                  : 'Draw'}
-                            </span>
-                          ) : (
-                            <span 
-                              style={{ 
-                                fontSize: '0.65rem', 
-                                color: '#00e5ff', 
-                                marginTop: '4px',
-                                textAlign: 'center',
-                                fontWeight: 600,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px'
-                              }}
-                            >
-                              Upcoming
-                            </span>
-                          )}
-                          {isSelected ? (
-                            <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 700, marginTop: '6px', background: 'rgba(157, 255, 0, 0.12)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
-                              ON-CHAIN
-                            </span>
-                          ) : (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleActivateMatchOnChain(m);
-                              }}
-                              style={{
-                                fontSize: '0.65rem',
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                border: '1px solid rgba(255, 255, 255, 0.15)',
-                                color: '#fff',
-                                padding: '3px 8px',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                marginTop: '6px',
-                                transition: 'all 0.2s',
-                                fontWeight: 600
-                              }}
-                              onMouseEnter={(e) => {
-                                e.target.style.background = 'var(--color-primary)';
-                                e.target.style.color = '#000';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.target.style.background = 'rgba(255, 255, 255, 0.05)';
-                                e.target.style.color = '#fff';
-                              }}
-                            >
-                              Activate
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  <button 
-                    onClick={() => setCurrentView('match-center')}
+                  <img
+                    src="/logo.png?v=2"
+                    alt="Goal Rush Logo"
+                    className="hero-logo-img"
                     style={{
-                      marginTop: '8px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      borderRadius: '8px',
-                      padding: '12px 16px',
-                      color: 'var(--color-primary)',
-                      fontFamily: 'var(--font-display)',
-                      fontWeight: 700,
-                      fontSize: '0.85rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      transition: 'var(--transition-smooth)'
+                      maxHeight: '180px',
+                      width: 'auto',
+                      display: 'block',
+                      mixBlendMode: 'screen',
+                      filter: 'contrast(1.6) brightness(0.9) saturate(1.2)'
                     }}
-                    onMouseEnter={(e) => e.target.style.background = 'rgba(157, 255, 0, 0.1)'}
-                    onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
+                  />
+                </div>
+              </div>
+              <p className="hackathon-desc">
+                GoalRush is a premium sports prediction engine powered by Uniswap V4. Predict winning teams directly via your swaps to claim the match jackpot pool, and score fee rebates.
+              </p>
+              <div className="hackathon-actions">
+                <a href="#dashboard" className="btn-primary">
+                  <Play size={18} fill="currentColor" /> Try Live Swap
+                </a>
+                <a
+                  href="https://eulr.fun/token/0x422fe165b2da990d18c6dca944b11dcd61519671"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', borderColor: 'rgba(0, 229, 255, 0.4)' }}
+                >
+                  📈 Trade GRUSH on Eulr
+                </a>
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    setShowDevPortal(true);
+                    setTimeout(() => {
+                      document.getElementById('contracts')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                >
+                  <Code size={18} /> View Hook Contract
+                </button>
+              </div>
+
+              {/* Quick Stats Grid under description */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', marginTop: '32px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '24px' }}>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Network</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>OKX X Layer</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Hook Address</div>
+                  <div
+                    style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-primary)', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
+                    onClick={() => {
+                      navigator.clipboard.writeText('0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0');
+                      alert('Hook address copied to clipboard!');
+                    }}
                   >
-                    View All Matches in Match Center 🏆 →
+                    0xD168...40c0
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>GRUSH Token</div>
+                  <div
+                    style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
+                    onClick={() => {
+                      navigator.clipboard.writeText('0x422fe165b2da990d18c6dca944b11dcd61519671');
+                      alert('GRUSH token address copied to clipboard!');
+                    }}
+                  >
+                    0x422f...671
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Callbacks</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>before / afterSwap</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Rebate Odds</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-secondary)' }}>5% Chance</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Community:</span>
+                <a
+                  href="https://x.com/goalrushdotfun"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', fontSize: '0.8rem', borderColor: 'rgba(255,255,255,0.15)', cursor: 'pointer', borderRadius: '8px' }}
+                >
+                  <Twitter size={14} /> Twitter / X
+                </a>
+                <a
+                  href="https://t.me/+qwzA9MrSA3I2OTk9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', fontSize: '0.8rem', borderColor: 'rgba(255,255,255,0.15)', cursor: 'pointer', borderRadius: '8px' }}
+                >
+                  <Send size={14} /> Telegram
+                </a>
+              </div>
+            </div>
+
+            {/* Cyber-Matrix Right Column */}
+            <div className="hackathon-right">
+              <div className="ascii-ball-wrapper">
+                <div className="ascii-code-graphic">
+                  {asciiArtText}
+                </div>
+                <div className="ascii-glow-effect"></div>
+                <div className="interactive-3d-overlay">
+                  <SoccerBall3D />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Interactive Dashboard / Simulator */}
+          <section id="dashboard" className="dashboard-grid">
+            {/* Left Side: Soccer Pitch Simulation */}
+            <div className="card-bezel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <h3 className="panel-title">
+                  <TerminalIcon size={20} style={{ color: 'var(--color-primary)' }} />
+                  GoalRush Pitch Simulator
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '12px' }}>
+                  Simulate a hook transaction on-chain. Place your prediction to fund the match jackpot pool, play the shootout, and win fee rebates!
+                </p>
+              </div>
+
+              <div className="pitch-container">
+                {shootoutStatus && (
+                  <div className="shootout-overlay">
+                    <div className="shootout-text-main">{shootoutStatus}</div>
+                  </div>
+                )}
+                <div className="pitch-lines"></div>
+                <div className="pitch-midline"></div>
+                <div className="pitch-midcircle"></div>
+                <div className="pitch-box-left"></div>
+                <div className="pitch-box-right"></div>
+                <div className="goal-post-left"></div>
+                <div className="goal-post-right"></div>
+
+                {/* Score overlay */}
+                <div className="pitch-score-overlay">
+                  <span style={{ color: 'var(--color-primary)' }}>SWAPPER: {userScore}</span>
+                  <span>vs</span>
+                  <span style={{ color: 'var(--color-danger)' }}>GK: {opponentScore}</span>
+                </div>
+
+                {/* Goal Flash */}
+                <div className={`pitch-goal-flash ${showGoalFlash ? 'active' : ''}`}>
+                  <div className="pitch-goal-text">GOAL!!</div>
+                </div>
+
+                <div
+                  className="pitch-ball"
+                  style={{
+                    left: `${ballPos.x}%`,
+                    top: `${ballPos.y}%`,
+                    transform: 'translate(-50%, -50%)',
+                    animation: isStriking ? 'spin-slow 0.4s linear infinite' : 'none'
+                  }}
+                >
+                  ⚽
+                </div>
+
+                {/* Goalkeeper */}
+                <div
+                  className="pitch-player opponent"
+                  style={{ left: `${gkPos.x}%`, top: `${gkPos.y}%`, transform: 'translate(-50%, -50%)' }}
+                >
+                  GK
+                </div>
+
+                {/* Swapper / Player */}
+                <div
+                  className="pitch-player"
+                  style={{ left: `${playerPos.x}%`, top: `${playerPos.y}%`, transform: 'translate(-50%, -50%)' }}
+                >
+                  P
+                </div>
+              </div>
+
+              {/* Swap Box */}
+              <form className="swap-widget" onSubmit={handleSwapAndStrike}>
+                {/* Token Selector */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedToken('OKB');
+                      setSwapAmount('0.001');
+                    }}
+                    className={`btn-secondary ${selectedToken === 'OKB' ? 'active' : ''}`}
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      border: `1px solid ${selectedToken === 'OKB' ? 'var(--color-primary)' : 'rgba(255,255,255,0.08)'}`,
+                      background: selectedToken === 'OKB' ? 'rgba(157, 255, 0, 0.08)' : 'rgba(255,255,255,0.03)',
+                      color: selectedToken === 'OKB' ? 'var(--color-primary)' : 'rgba(255,255,255,0.6)',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    disabled={isStriking}
+                  >
+                    native OKB
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedToken('GRUSH');
+                      setSwapAmount('100');
+                    }}
+                    className={`btn-secondary ${selectedToken === 'GRUSH' ? 'active' : ''}`}
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      border: `1px solid ${selectedToken === 'GRUSH' ? 'var(--color-primary)' : 'rgba(255,255,255,0.08)'}`,
+                      background: selectedToken === 'GRUSH' ? 'rgba(157, 255, 0, 0.08)' : 'rgba(255,255,255,0.03)',
+                      color: selectedToken === 'GRUSH' ? 'var(--color-primary)' : 'rgba(255,255,255,0.6)',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    disabled={isStriking}
+                  >
+                    GRUSH Token
                   </button>
                 </div>
-              );
-            })()}{activeRightTab === 'history' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <h4 style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
-                  Your Simulation Logs
-                </h4>
-                {history.length === 0 ? (
-                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '24px 0' }}>
-                    No predictions recorded yet. Run a shootout strike to start!
+
+                <div className="swap-input-row">
+                  <div className="swap-input-container">
+                    <div className="swap-label">Prediction Size (Ticket Cost)</div>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <input
+                        type="number"
+                        value={swapAmount}
+                        onChange={(e) => setSwapAmount(e.target.value)}
+                        className="swap-input"
+                        disabled={isStriking}
+                        step={selectedToken === 'GRUSH' ? '1' : '0.0001'}
+                        min={selectedToken === 'GRUSH' ? '1' : '0.0001'}
+                      />
+                      <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fff' }}>{selectedToken}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                      {selectedToken === 'GRUSH' ? (
+                        <>
+                          <button type="button" onClick={() => setSwapAmount('10')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>10 GRUSH</button>
+                          <button type="button" onClick={() => setSwapAmount('100')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>100 GRUSH</button>
+                          <button type="button" onClick={() => setSwapAmount('1000')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>1,000 GRUSH</button>
+                        </>
+                      ) : (
+                        <>
+                          <button type="button" onClick={() => setSwapAmount('0.0001')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>0.0001 OKB</button>
+                          <button type="button" onClick={() => setSwapAmount('0.001')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>0.001 OKB</button>
+                          <button type="button" onClick={() => setSwapAmount('0.01')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>0.01 OKB</button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="swap-input-container">
+                    <div className="swap-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                      <span>Jackpot Share Weight</span>
+                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: 'normal' }}>
+                        100% of prediction tokens fund the match jackpot pool
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span className="swap-input" style={{ opacity: 0.8 }}>
+                        {parseFloat(swapAmount) ? parseFloat(swapAmount).toFixed(selectedToken === 'GRUSH' ? 0 : 4) : '0'}
+                      </span>
+                      <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-primary)' }}>{selectedToken}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {typeof activeMatch.id === 'string' && activeMatch.id.startsWith('api-') ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+                    <div style={{
+                      background: 'rgba(0, 229, 255, 0.04)',
+                      border: '1px solid rgba(0, 229, 255, 0.25)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center'
+                    }}>
+                      <h4 style={{ color: 'var(--color-secondary)', margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 700 }}>🌍 REAL-TIME LIVE TRACKING</h4>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.85rem', margin: 0 }}>
+                        This match is a live fixture fetched in real-time from the football API.
+                      </p>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem', marginTop: '8px', marginBottom: 0 }}>
+                        Predictions and shootout games are available only on contract-active World Cup matches.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (activeOnChainMatchRef.current) {
+                          handleSelectMatchUI(activeOnChainMatchRef.current);
+                        } else {
+                          handleSelectMatchUI({ id: 1, teamA: 'Canada', teamB: 'Bosnia & Herzegovina' });
+                        }
+                      }}
+                      className="swap-btn"
+                      style={{ background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
+                    >
+                      Switch to Active Prediction Match ⚽
+                    </button>
+                  </div>
+                ) : (activeMatch.resolved || activeMatch.minute === 'FT') ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+                    <div style={{
+                      background: 'rgba(157, 255, 0, 0.04)',
+                      border: '1px solid rgba(157, 255, 0, 0.25)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center'
+                    }}>
+                      <h4 style={{ color: 'var(--color-primary)', margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 700 }}>🏆 MATCH RESOLVED</h4>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.85rem', margin: 0 }}>
+                        <strong>{activeMatch.teamA}</strong> {activeMatch.scoreA ?? '?'} – {activeMatch.scoreB ?? '?'} <strong>{activeMatch.teamB}</strong>
+                      </p>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.8rem', marginTop: '6px', marginBottom: 0 }}>
+                        Result: <strong style={{ color: 'var(--color-secondary)' }}>
+                          {activeMatch.winner === 1 ? `${activeMatch.teamA} Wins` : activeMatch.winner === 2 ? `${activeMatch.teamB} Wins` : 'Draw'}
+                        </strong>
+                      </p>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.72rem', marginTop: '8px', marginBottom: 0 }}>
+                        {typeof activeMatch.id === 'number' 
+                          ? `On-chain Match #${activeMatch.id} · Jackpot: ${jackpot.toFixed(4)} OKB`
+                          : 'This is a local simulation match. On-chain claims require the contract-active match.'
+                        }
+                      </p>
+                    </div>
+                    {typeof activeMatch.id === 'number' && (
+                      <>
+                        {walletConnected ? (
+                          userPrediction ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              {parseFloat(userPrediction.okbAmount) > 0 && userPrediction.predictedTeam === activeMatch.winner && !userPrediction.okbClaimed && (
+                                <button
+                                  type="button"
+                                  onClick={handleClaimJackpot}
+                                  className="swap-btn"
+                                  style={{ width: '100%', background: 'var(--color-secondary)', color: '#000', fontWeight: 'bold' }}
+                                >
+                                  Claim OKB Jackpot ({userPrediction.okbAmount} OKB Prediction) 💰
+                                </button>
+                              )}
+                              {parseFloat(userPrediction.grushAmount) > 0 && userPrediction.predictedTeam === activeMatch.winner && !userPrediction.grushClaimed && (
+                                <button
+                                  type="button"
+                                  onClick={handleClaimGrushJackpot}
+                                  className="swap-btn"
+                                  style={{ width: '100%', background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
+                                >
+                                  Claim GRUSH Jackpot ({userPrediction.grushAmount} GRUSH Prediction) ⚽
+                                </button>
+                              )}
+                              
+                              {/* Wrong prediction */}
+                              {userPrediction.predictedTeam !== activeMatch.winner && (userPrediction.predictedTeam === 1 || userPrediction.predictedTeam === 2) && (
+                                <div style={{
+                                  color: 'rgba(255, 100, 100, 0.95)',
+                                  fontSize: '0.85rem',
+                                  textAlign: 'center',
+                                  background: 'rgba(255, 50, 50, 0.08)',
+                                  border: '1px solid rgba(255, 50, 50, 0.2)',
+                                  padding: '12px',
+                                  borderRadius: '10px',
+                                  fontWeight: '500'
+                                }}>
+                                  ❌ Sorry, your prediction for {userPrediction.predictedTeam === 1 ? activeMatch.teamA : activeMatch.teamB} was incorrect.
+                                </div>
+                              )}
+                              
+                              {/* Already claimed states */}
+                              {userPrediction.predictedTeam === activeMatch.winner && (
+                                <>
+                                  {userPrediction.okbClaimed && (
+                                    <div style={{
+                                      color: 'var(--color-primary)',
+                                      fontSize: '0.85rem',
+                                      textAlign: 'center',
+                                      background: 'rgba(157, 255, 0, 0.06)',
+                                      border: '1px solid rgba(157, 255, 0, 0.2)',
+                                      padding: '10px',
+                                      borderRadius: '8px',
+                                      fontWeight: '600'
+                                    }}>
+                                      ✅ OKB Jackpot claimed!
+                                    </div>
+                                  )}
+                                  {userPrediction.grushClaimed && (
+                                    <div style={{
+                                      color: 'var(--color-secondary)',
+                                      fontSize: '0.85rem',
+                                      textAlign: 'center',
+                                      background: 'rgba(0, 229, 255, 0.06)',
+                                      border: '1px solid rgba(0, 229, 255, 0.2)',
+                                      padding: '10px',
+                                      borderRadius: '8px',
+                                      fontWeight: '600'
+                                    }}>
+                                      ✅ GRUSH Jackpot claimed!
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              
+                              {/* No prediction recorded */}
+                              {parseFloat(userPrediction.okbAmount) === 0 && parseFloat(userPrediction.grushAmount) === 0 && (
+                                <div style={{
+                                  color: 'rgba(255, 255, 255, 0.55)',
+                                  fontSize: '0.85rem',
+                                  textAlign: 'center',
+                                  background: 'rgba(255, 255, 255, 0.04)',
+                                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                                  padding: '12px',
+                                  borderRadius: '10px'
+                                }}>
+                                  ℹ️ No predictions were made on this match from your wallet.
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div style={{ color: 'rgba(255, 255, 255, 0.45)', fontSize: '0.85rem', textAlign: 'center', padding: '8px' }}>
+                              Loading prediction eligibility details...
+                            </div>
+                          )
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={connectWallet}
+                            className="swap-btn"
+                            style={{ width: '100%', background: 'rgba(255, 255, 255, 0.08)', color: '#fff', fontWeight: 'bold' }}
+                          >
+                            Connect Wallet to Check Claims
+                          </button>
+                        )}
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Find a live match to switch to
+                        const liveM = liveMatchesRef.current.find(m => m.isLive && m.minute !== 'FT');
+                        if (liveM) {
+                          handleSelectMatchUI(liveM);
+                        } else if (activeOnChainMatchRef.current) {
+                          handleSelectMatchUI(activeOnChainMatchRef.current);
+                        }
+                      }}
+                      className="swap-btn"
+                      style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.15)' }}
+                    >
+                      Switch to Live Match ⚽
+                    </button>
+                  </div>
+                ) : (!activeMatch.isLive && activeMatch.minute !== 'FT') ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+                    <div style={{
+                      background: 'rgba(255, 179, 0, 0.04)',
+                      border: '1px solid rgba(255, 179, 0, 0.25)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center'
+                    }}>
+                      <h4 style={{ color: '#ffb300', margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 700 }}>⏳ MATCH NOT STARTED</h4>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.85rem', margin: 0 }}>
+                        {activeMatch.teamA} vs {activeMatch.teamB} is scheduled but not live yet.
+                      </p>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem', marginTop: '8px', marginBottom: 0 }}>
+                        Predictions open when the match goes LIVE. Switch to an active match below.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const liveM = liveMatchesRef.current.find(m => m.isLive && m.minute !== 'FT');
+                        if (liveM) {
+                          handleSelectMatchUI(liveM);
+                        } else if (activeOnChainMatchRef.current) {
+                          handleSelectMatchUI(activeOnChainMatchRef.current);
+                        }
+                      }}
+                      className="swap-btn"
+                      style={{ background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
+                    >
+                      Switch to Live Match ⚽
+                    </button>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
-                    {history.map((h) => (
-                      <div 
-                        key={h.id} 
-                        style={{ 
-                          background: 'rgba(255,255,255,0.02)', 
-                          border: '1px solid rgba(255,255,255,0.05)', 
-                          borderRadius: '8px', 
-                          padding: '10px 12px',
-                          fontSize: '0.78rem',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '6px'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontWeight: 600, color: '#fff' }}>{h.match}</span>
-                          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>{h.timestamp}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span>
-                            Predicted: <strong style={{ color: 'var(--color-primary)' }}>{h.prediction}</strong>
+                  <>
+                    {/* Select Team Prediction */}
+                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div className="swap-label" style={{ marginBottom: '8px' }}>Attach Match Winner Prediction (via hookData)</div>
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handlePredictionChange(1)}
+                          className={`btn-secondary ${prediction === 1 ? 'active' : ''}`}
+                          style={{ flex: 1, borderColor: prediction === 1 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
+                          disabled={isStriking}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            {activeMatch.teamA} <img src={getFlagUrl(activeMatch.flagA || getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} style={{ width: '16px', height: '11px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
                           </span>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: h.result.includes('GOAL') ? 'var(--color-secondary)' : 'var(--color-danger)' }}>
-                            {h.result}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handlePredictionChange(2)}
+                          className={`btn-secondary ${prediction === 2 ? 'active' : ''}`}
+                          style={{ flex: 1, borderColor: prediction === 2 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
+                          disabled={isStriking}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            {activeMatch.teamB} <img src={getFlagUrl(activeMatch.flagB || getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} style={{ width: '16px', height: '11px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
                           </span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '4px', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>
-                          <span>Size: {h.amount}</span>
-                          <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Jackpot Share Allocation</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type={walletConnected ? "submit" : "button"}
+                      className="swap-btn"
+                      disabled={isStriking}
+                      onClick={!walletConnected ? handleConnectWallet : undefined}
+                    >
+                      {isStriking ? 'Simulating Swap & Strike...' : !walletConnected ? 'Connect Wallet to Simulate' : 'Simulate Swap & Penalty Strike!'}
+                    </button>
+
+                    <div style={{
+                      background: 'rgba(255, 179, 0, 0.05)',
+                      border: '1px solid rgba(255, 179, 0, 0.2)',
+                      borderRadius: '8px',
+                      padding: '10px 12px',
+                      fontSize: '0.72rem',
+                      color: '#ffb300',
+                      marginTop: '12px',
+                      textAlign: 'left',
+                      lineHeight: '1.45'
+                    }}>
+                      <strong>⚠️ OKX Wallet Warning Notice:</strong> When submitting, OKX Wallet will show a "Suspicious Receiving Address" alert. This is normal and expected because you are interacting directly with the Smart Contract hook. Click <strong>"Continue (Unsafe)"</strong> to complete your shootout simulation.
+                    </div>
+                  </>
+                )}
+
+                <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textAlign: 'center', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: '1.4' }}>
+                  <span>ℹ️ This simulator runs a test interaction with the V4 hook on-chain to play the shootout and record predictions.</span>
+                  <a href="https://eulr.fun/token/0x422fe165b2da990d18c6dca944b11dcd61519671" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-secondary)', textDecoration: 'underline', fontWeight: 600 }}>
+                    To buy or sell real GRUSH, trade on Eulr.fun →
+                  </a>
+                </div>
+              </form>
+            </div>
+
+            {/* Right Side: Prediction Jackpot Status */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              {/* Active Match Info */}
+              <div className="card-bezel">
+                {/* Tabs Header */}
+                <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '20px', paddingBottom: '4px' }}>
+                  <button
+                    onClick={() => setActiveRightTab('match')}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: activeRightTab === 'match' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
+                      fontFamily: 'var(--font-display)',
+                      fontWeight: 700,
+                      fontSize: '0.95rem',
+                      padding: '8px 4px',
+                      cursor: 'pointer',
+                      borderBottom: activeRightTab === 'match' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                      transition: 'var(--transition-smooth)'
+                    }}
+                  >
+                    Match Pool
+                  </button>
+                  <button
+                    onClick={() => setActiveRightTab('scores')}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: activeRightTab === 'scores' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
+                      fontFamily: 'var(--font-display)',
+                      fontWeight: 700,
+                      fontSize: '0.95rem',
+                      padding: '8px 4px',
+                      cursor: 'pointer',
+                      borderBottom: activeRightTab === 'scores' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                      transition: 'var(--transition-smooth)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    Live Scores
+                    <span className="live-dot"></span>
+                  </button>
+                  <button
+                    onClick={() => setActiveRightTab('history')}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: activeRightTab === 'history' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
+                      fontFamily: 'var(--font-display)',
+                      fontWeight: 700,
+                      fontSize: '0.95rem',
+                      padding: '8px 4px',
+                      cursor: 'pointer',
+                      borderBottom: activeRightTab === 'history' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                      transition: 'var(--transition-smooth)'
+                    }}
+                  >
+                    My History
+                  </button>
+                </div>
+
+                {activeRightTab === 'match' && (() => {
+                  const totalVotes = teamAVotes + teamBVotes;
+                  const percentageA = totalVotes > 0 ? ((teamAVotes / totalVotes) * 100).toFixed(0) : '50';
+                  const percentageB = totalVotes > 0 ? ((teamBVotes / totalVotes) * 100).toFixed(0) : '50';
+                  const progressWidth = totalVotes > 0 ? (teamAVotes / totalVotes) * 100 : 50;
+                  return (
+                    <>
+                      <div className="jackpot-display">
+                        <div className="swap-label">TOTAL ACCUMULATED JACKPOT</div>
+                        <div className="jackpot-val">{jackpot.toFixed(4)} OKB</div>
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
+                          ≈ ${(jackpot * 60).toLocaleString(undefined, { maximumFractionDigits: 2 })} USD
                         </div>
                       </div>
-                    ))}
+
+                      <div className="predict-bar-container">
+                        <div className="swap-label">Prediction Volume Split</div>
+
+                        <div className={`team-row ${prediction === 1 ? 'selected' : ''}`} onClick={() => handlePredictionChange(1)}>
+                          <div className="team-meta">
+                            <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} className="team-flag" style={{ width: '20px', height: '14px', borderRadius: '2px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)' }} />
+                            <span className="team-name">{activeMatch.teamA}</span>
+                          </div>
+                          <span className="team-odds">{teamAVotes.toFixed(1)} OKB ({percentageA}%)</span>
+                        </div>
+
+                        <div className={`team-row ${prediction === 2 ? 'selected' : ''}`} onClick={() => handlePredictionChange(2)}>
+                          <div className="team-meta">
+                            <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} className="team-flag" style={{ width: '20px', height: '14px', borderRadius: '2px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)' }} />
+                            <span className="team-name">{activeMatch.teamB}</span>
+                          </div>
+                          <span className="team-odds">{teamBVotes.toFixed(1)} OKB ({percentageB}%)</span>
+                        </div>
+
+                        <div className="odds-progress-wrap">
+                          <div
+                            className="odds-progress"
+                            style={{ width: `${progressWidth}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      {/* Console Logs */}
+                      <div style={{ marginTop: '24px' }}>
+                        <div className="swap-label">Transaction Console Logs</div>
+                        <div className="console-logs">
+                          {logs.map((log, index) => (
+                            <div key={index} className={`log-entry ${log.includes('GOAL') ? 'goal' : ''}`}>
+                              {log}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+
+                {activeRightTab === 'scores' && (() => {
+                  const live = liveMatches.filter(m => m.isLive && m.minute !== 'FT');
+                  const todayCompleted = liveMatches.filter(m => m.minute === 'FT' && (m.date === TODAY_LABEL || m.date === 'June 14' || m.date === 'June 15')).slice(-4);
+                  const upcoming = liveMatches.filter(m => !m.isLive && m.minute !== 'FT').slice(0, 4);
+                  const displayMatches = [...live, ...todayCompleted, ...upcoming];
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {displayMatches.map((m) => {
+                        const isSelected = activeMatch.id === m.id;
+                        return (
+                          <div
+                            key={m.id}
+                            onClick={() => handleSelectMatchUI(m)}
+                            style={{
+                              background: isSelected ? 'rgba(157, 255, 0, 0.03)' : 'rgba(255,255,255,0.02)',
+                              padding: '16px',
+                              borderRadius: '12px',
+                              border: isSelected ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.05)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              cursor: 'pointer',
+                              transition: 'var(--transition-smooth)'
+                            }}
+                          >
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <img
+                                  src={getFlagUrl(m.flagA)}
+                                  alt={m.teamA}
+                                  style={{
+                                    width: '20px',
+                                    height: '14px',
+                                    objectFit: 'cover',
+                                    borderRadius: '2px',
+                                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                                    display: 'inline-block'
+                                  }}
+                                />
+                                <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamA}</span>
+                                <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreA}</span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <img
+                                  src={getFlagUrl(m.flagB)}
+                                  alt={m.teamB}
+                                  style={{
+                                    width: '20px',
+                                    height: '14px',
+                                    objectFit: 'cover',
+                                    borderRadius: '2px',
+                                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                                    display: 'inline-block'
+                                  }}
+                                />
+                                <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamB}</span>
+                                <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreB}</span>
+                              </div>
+                            </div>
+
+                            <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '16px', marginLeft: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '80px' }}>
+                              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: (m.isLive && m.minute !== 'FT') ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)' }}>
+                                {m.minute}
+                              </span>
+                              {m.isLive && m.minute !== 'FT' ? (
+                                <span
+                                  style={{
+                                    fontSize: '0.65rem',
+                                    color: '#ff3344',
+                                    textTransform: 'uppercase',
+                                    fontWeight: 700,
+                                    marginTop: '4px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                  }}
+                                >
+                                  <span style={{ width: '4px', height: '4px', backgroundColor: '#ff3344', borderRadius: '50%', display: 'inline-block', animation: 'live-pulse 1.2s infinite' }}></span>
+                                  LIVE
+                                </span>
+                              ) : m.minute === 'FT' ? (
+                                <span
+                                  style={{
+                                    fontSize: '0.65rem',
+                                    color: 'rgba(255, 255, 255, 0.4)',
+                                    marginTop: '4px',
+                                    textAlign: 'center',
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                >
+                                  {m.scoreA > m.scoreB
+                                    ? `${m.teamA} Won`
+                                    : m.scoreB > m.scoreA
+                                      ? `${m.teamB} Won`
+                                      : 'Draw'}
+                                </span>
+                              ) : (
+                                <span
+                                  style={{
+                                    fontSize: '0.65rem',
+                                    color: '#00e5ff',
+                                    marginTop: '4px',
+                                    textAlign: 'center',
+                                    fontWeight: 600,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px'
+                                  }}
+                                >
+                                  Upcoming
+                                </span>
+                              )}
+                              {isSelected ? (
+                                <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 700, marginTop: '6px', background: 'rgba(157, 255, 0, 0.12)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                                  ON-CHAIN
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleActivateMatchOnChain(m);
+                                  }}
+                                  style={{
+                                    fontSize: '0.65rem',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                                    color: '#fff',
+                                    padding: '3px 8px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    marginTop: '6px',
+                                    transition: 'all 0.2s',
+                                    fontWeight: 600
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.target.style.background = 'var(--color-primary)';
+                                    e.target.style.color = '#000';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                                    e.target.style.color = '#fff';
+                                  }}
+                                >
+                                  Activate
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      <button
+                        onClick={() => setCurrentView('match-center')}
+                        style={{
+                          marginTop: '8px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          borderRadius: '8px',
+                          padding: '12px 16px',
+                          color: 'var(--color-primary)',
+                          fontFamily: 'var(--font-display)',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          transition: 'var(--transition-smooth)'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(157, 255, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
+                      >
+                        View All Matches in Match Center 🏆 →
+                      </button>
+                    </div>
+                  );
+                })()}{activeRightTab === 'history' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <h4 style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
+                      Your Simulation Logs
+                    </h4>
+                    {history.length === 0 ? (
+                      <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '24px 0' }}>
+                        No predictions recorded yet. Run a shootout strike to start!
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
+                        {history.map((h) => (
+                          <div
+                            key={h.id}
+                            style={{
+                              background: 'rgba(255,255,255,0.02)',
+                              border: '1px solid rgba(255,255,255,0.05)',
+                              borderRadius: '8px',
+                              padding: '10px 12px',
+                              fontSize: '0.78rem',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '6px'
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontWeight: 600, color: '#fff' }}>{h.match}</span>
+                              <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>{h.timestamp}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span>
+                                Predicted: <strong style={{ color: 'var(--color-primary)' }}>{h.prediction}</strong>
+                              </span>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: h.result.includes('GOAL') ? 'var(--color-secondary)' : 'var(--color-danger)' }}>
+                                {h.result}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '4px', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>
+                              <span>Size: {h.amount}</span>
+                              <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Jackpot Share Allocation</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
-        </div>
-      </section>
+            </div>
+          </section>
 
-      {/* Leaderboards */}
-      <section id="leaderboard" className="card-bezel" style={{ marginBottom: '64px' }}>
-        <h3 className="panel-title">
-          <Flame size={20} style={{ color: 'var(--color-primary)' }} />
-          Tournament Goal Leaderboard
-        </h3>
-        <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '20px' }}>
-          Top creators and swappers registered on OKX X Layer during the tournament.
-        </p>
+          {/* Leaderboards */}
+          <section id="leaderboard" className="card-bezel" style={{ marginBottom: '64px' }}>
+            <h3 className="panel-title">
+              <Flame size={20} style={{ color: 'var(--color-primary)' }} />
+              Tournament Goal Leaderboard
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '20px' }}>
+              Top creators and swappers registered on OKX X Layer during the tournament.
+            </p>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
-                <th style={{ padding: '12px' }}>Rank</th>
-                <th style={{ padding: '12px' }}>Swapper Address</th>
-                <th style={{ padding: '12px' }}>Goals Scored</th>
-                <th style={{ padding: '12px' }}>Total Trade Volume</th>
-                <th style={{ padding: '12px' }}>Winnings Claimed</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leaderboardData.length > 0 ? (
-                leaderboardData.map((row, idx) => {
-                  const isCurrentUser = walletConnected && userAddress && row.address.toLowerCase() === userAddress.toLowerCase();
-                  return (
-                    <tr 
-                      key={row.address} 
-                      style={{ 
-                        borderBottom: '1px solid rgba(255,255,255,0.04)',
-                        background: isCurrentUser ? 'rgba(157, 255, 0, 0.05)' : 'transparent'
-                      }}
-                    >
-                      <td style={{ 
-                        padding: '12px', 
-                        fontWeight: 'bold', 
-                        color: isCurrentUser 
-                          ? 'var(--color-primary)' 
-                          : idx === 0 
-                            ? 'var(--color-primary)' 
-                            : idx === 1 
-                              ? '#c0c0c0' 
-                              : idx === 2 
-                                ? '#cd7f32' 
-                                : 'rgba(255,255,255,0.6)' 
-                      }}>
-                        {isCurrentUser ? 'MY' : `#${idx + 1}`}
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
+                    <th style={{ padding: '12px' }}>Rank</th>
+                    <th style={{ padding: '12px' }}>Swapper Address</th>
+                    <th style={{ padding: '12px' }}>Goals Scored</th>
+                    <th style={{ padding: '12px' }}>Total Trade Volume</th>
+                    <th style={{ padding: '12px' }}>Winnings Claimed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leaderboardData.length > 0 ? (
+                    leaderboardData.map((row, idx) => {
+                      const isCurrentUser = walletConnected && userAddress && row.address.toLowerCase() === userAddress.toLowerCase();
+                      return (
+                        <tr
+                          key={row.address}
+                          style={{
+                            borderBottom: '1px solid rgba(255,255,255,0.04)',
+                            background: isCurrentUser ? 'rgba(157, 255, 0, 0.05)' : 'transparent'
+                          }}
+                        >
+                          <td style={{
+                            padding: '12px',
+                            fontWeight: 'bold',
+                            color: isCurrentUser
+                              ? 'var(--color-primary)'
+                              : idx === 0
+                                ? 'var(--color-primary)'
+                                : idx === 1
+                                  ? '#c0c0c0'
+                                  : idx === 2
+                                    ? '#cd7f32'
+                                    : 'rgba(255,255,255,0.6)'
+                          }}>
+                            {isCurrentUser ? 'MY' : `#${idx + 1}`}
+                          </td>
+                          <td style={{ padding: '12px', fontFamily: 'var(--font-mono)' }}>
+                            {row.address.slice(0, 8)}...{row.address.slice(-6)}
+                          </td>
+                          <td style={{ padding: '12px' }}>{row.goals} Goals</td>
+                          <td style={{ padding: '12px' }}>
+                            <div style={{ fontWeight: '500' }}>{row.volume.toFixed(4)} OKB</div>
+                            {row.grushVolume > 0 && (
+                              <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)', marginTop: '2px', fontWeight: 'bold' }}>
+                                ⚽ {row.grushVolume.toLocaleString(undefined, { maximumFractionDigits: 0 })} GRUSH
+                              </div>
+                            )}
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                             <div style={{ fontWeight: '500', color: 'var(--color-primary)' }}>{row.claimed.toFixed(4)} OKB</div>
+                             {row.grushClaimed > 0 && (
+                               <div style={{ fontSize: '0.75rem', color: 'var(--color-secondary)', marginTop: '2px', fontWeight: 'bold' }}>
+                                 ⚽ {row.grushClaimed.toLocaleString(undefined, { maximumFractionDigits: 0 })} GRUSH
+                               </div>
+                             )}
+                           </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan="5" style={{ padding: '32px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
+                        No active swappers recorded yet. Swap & predict to become the first on the board!
                       </td>
-                      <td style={{ padding: '12px', fontFamily: 'var(--font-mono)' }}>
-                        {row.address.slice(0, 8)}...{row.address.slice(-6)}
-                      </td>
-                      <td style={{ padding: '12px' }}>{row.goals} Goals</td>
-                      <td style={{ padding: '12px' }}>{row.volume.toFixed(4)} OKB</td>
-                      <td style={{ padding: '12px', color: 'var(--color-primary)' }}>{row.claimed.toFixed(4)} OKB</td>
                     </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan="5" style={{ padding: '32px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
-                    No active swappers recorded yet. Swap & predict to become the first on the board!
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* About & Technical Details Section */}
-      <section id="about" className="card-bezel" style={{ marginBottom: '64px', marginTop: '32px' }}>
-        <h3 className="panel-title">
-          <Award size={20} style={{ color: 'var(--color-primary)' }} />
-          About GoalRush
-        </h3>
-        
-        <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6', marginBottom: '24px' }}>
-          GoalRush is a decentralized sports prediction protocol built natively on OKX X Layer. It leverages the cutting-edge capabilities of <strong>Uniswap V4 Hooks</strong> to seamlessly combine yield, sports prediction jackpots, and gamified swap fee rebates directly within decentralized trading pools.
-        </p>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '32px' }}>
-          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <h4 style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              ⚽ Prediction Jackpot
-            </h4>
-            <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
-              Whenever you swap, you select your match prediction. The hook intercepts the swap and diverts <strong>0.1% of the swap volume</strong> directly to the match jackpot pool.
-            </p>
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
-              <strong>Claim Rules:</strong> Once the match is resolved on-chain, winners pull their winnings proportionally: <code>(Your Swap Volume / Total Winning Team Volume) * Total Jackpot Pool</code>.
+                  )}
+                </tbody>
+              </table>
             </div>
-          </div>
+          </section>
 
-          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <h4 style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              📡 Live Match Integration
-            </h4>
-            <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
-              Choose from real-world matches in the Live Scores feed. Anyone can select a fixture, and the contract owner can instantiate it directly onto the contract with a single click.
+          {/* About & Technical Details Section */}
+          <section id="about" className="card-bezel" style={{ marginBottom: '64px', marginTop: '32px' }}>
+            <h3 className="panel-title">
+              <Award size={20} style={{ color: 'var(--color-primary)' }} />
+              About GoalRush
+            </h3>
+
+            <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6', marginBottom: '24px' }}>
+              GoalRush is a decentralized sports prediction protocol built natively on OKX X Layer. It leverages the cutting-edge capabilities of <strong>Uniswap V4 Hooks</strong> to seamlessly combine yield, sports prediction jackpots, and gamified swap fee rebates directly within decentralized trading pools.
             </p>
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
-              <strong>Real-Time Updates:</strong> Live matches load automatically. Simply click any match in the feed to set it as the target prediction match in the swap widget.
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <h4 style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  ⚽ Prediction Jackpot
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
+                  Whenever you swap, you select your match prediction. The hook intercepts the swap and diverts <strong>0.1% of the swap volume</strong> directly to the match jackpot pool.
+                </p>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
+                  <strong>Claim Rules:</strong> Once the match is resolved on-chain, winners pull their winnings proportionally: <code>(Your Swap Volume / Total Winning Team Volume) * Total Jackpot Pool</code>.
+                </div>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <h4 style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  📡 Live Match Integration
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
+                  Choose from real-world matches in the Live Scores feed. Anyone can select a fixture, and the contract owner can instantiate it directly onto the contract with a single click.
+                </p>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
+                  <strong>Real-Time Updates:</strong> Live matches load automatically. Simply click any match in the feed to set it as the target prediction match in the swap widget.
+                </div>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <h4 style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  ⚡ Goal Rush Rebate
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5' }}>
+                  Swapping triggers an on-chain penalty strike challenge. The smart contract calculates entropy using block parameters. If you score a goal (5% default rate), the hook immediately rebates 100% of your trading fee (0.01 OKB) back to your wallet.
+                </p>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <h4 style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🔗 X Layer Integration
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5' }}>
+                  Deployed on OKX X Layer Mainnet, GoalRush utilizes high-speed block confirmation times and ultra-low gas fees. Swappers experience instant transaction feedback on penalty shootouts and minimal fee overhead.
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <h4 style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              ⚡ Goal Rush Rebate
-            </h4>
-            <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5' }}>
-              Swapping triggers an on-chain penalty strike challenge. The smart contract calculates entropy using block parameters. If you score a goal (5% default rate), the hook immediately rebates 100% of your trading fee (0.01 OKB) back to your wallet.
-            </p>
-          </div>
-
-          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <h4 style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              🔗 X Layer Integration
-            </h4>
-            <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5' }}>
-              Deployed on OKX X Layer Mainnet, GoalRush utilizes high-speed block confirmation times and ultra-low gas fees. Swappers experience instant transaction feedback on penalty shootouts and minimal fee overhead.
-            </p>
-          </div>
-        </div>
-
-        {/* Developer Sandbox Panel Toggle */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(157, 255, 0, 0.03)', padding: '24px', borderRadius: '12px', border: '1px solid rgba(157, 255, 0, 0.15)' }}>
-          <h4 style={{ fontWeight: 600, fontSize: '1rem', marginBottom: '8px', color: '#fff' }}>Developer Sandbox & Hackathon Panel</h4>
-          <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: '16px', maxWidth: '600px' }}>
-            Are you a hackathon judge or smart contract developer? Inspect the underlying Uniswap V4 Hook Solidity code, CREATE2 deployment scripts, RPC details, and Eulr.fun graduation rules.
-          </p>
-          <button 
-            className="btn-primary" 
-            onClick={() => setShowDevPortal(!showDevPortal)}
-            style={{ 
-              padding: '10px 24px', 
-              fontSize: '0.9rem', 
-              gap: '8px', 
-              backgroundColor: showDevPortal ? 'transparent' : 'var(--color-primary)',
-              borderColor: 'var(--color-primary)',
-              color: showDevPortal ? 'var(--color-primary)' : '#000' 
-            }}
-          >
-            <Code size={16} /> 
-            <span>{showDevPortal ? 'Hide Developer Sandbox' : 'Open Developer Sandbox'}</span>
-          </button>
-        </div>
-      </section>
-      </>
+            {/* Developer Sandbox Panel Toggle */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(157, 255, 0, 0.03)', padding: '24px', borderRadius: '12px', border: '1px solid rgba(157, 255, 0, 0.15)' }}>
+              <h4 style={{ fontWeight: 600, fontSize: '1rem', marginBottom: '8px', color: '#fff' }}>Developer Sandbox & Hackathon Panel</h4>
+              <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: '16px', maxWidth: '600px' }}>
+                Are you a hackathon judge or smart contract developer? Inspect the underlying Uniswap V4 Hook Solidity code, CREATE2 deployment scripts, RPC details, and Eulr.fun graduation rules.
+              </p>
+              <button
+                className="btn-primary"
+                onClick={() => setShowDevPortal(!showDevPortal)}
+                style={{
+                  padding: '10px 24px',
+                  fontSize: '0.9rem',
+                  gap: '8px',
+                  backgroundColor: showDevPortal ? 'transparent' : 'var(--color-primary)',
+                  borderColor: 'var(--color-primary)',
+                  color: showDevPortal ? 'var(--color-primary)' : '#000'
+                }}
+              >
+                <Code size={16} />
+                <span>{showDevPortal ? 'Hide Developer Sandbox' : 'Open Developer Sandbox'}</span>
+              </button>
+            </div>
+          </section>
+        </>
       )}
 
       {currentView === 'match-center' && (() => {
@@ -3372,10 +3950,10 @@ export default function App() {
         });
 
         const liveGroup = filteredMatches.filter(m => m.isLive && m.minute !== 'FT');
-        const todayUpcomingGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date === 'June 14');
-        const tomorrowGroup = filteredMatches.filter(m => m.date === 'June 15');
+        const todayUpcomingGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date === TODAY_LABEL);
+        const tomorrowGroup = filteredMatches.filter(m => m.date === TOMORROW_LABEL && !m.isLive && m.minute !== 'FT');
         const completedGroup = filteredMatches.filter(m => m.minute === 'FT');
-        const upcomingFutureGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date !== 'June 14' && m.date !== 'June 15');
+        const upcomingFutureGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date !== TODAY_LABEL && m.date !== TOMORROW_LABEL);
 
         return (
           <div style={{ marginTop: '32px' }}>
@@ -3407,14 +3985,14 @@ export default function App() {
 
                 {todayUpcomingGroup.length > 0 && (
                   <>
-                    <div className="match-group-header">Today - Upcoming (June 14)</div>
+                    <div className="match-group-header">Today - Upcoming ({TODAY_LABEL})</div>
                     {todayUpcomingGroup.map(m => renderMatchCard(m))}
                   </>
                 )}
 
                 {tomorrowGroup.length > 0 && (
                   <>
-                    <div className="match-group-header">Tomorrow (June 15)</div>
+                    <div className="match-group-header">Tomorrow ({TOMORROW_LABEL})</div>
                     {tomorrowGroup.map(m => renderMatchCard(m))}
                   </>
                 )}
@@ -3460,25 +4038,25 @@ export default function App() {
             </p>
 
             <div className="tabs-header">
-              <button 
+              <button
                 className={`tab-button ${activeTab === 'hook' ? 'active' : ''}`}
                 onClick={() => setActiveTab('hook')}
               >
                 WorldCupGoalRushHook.sol
               </button>
-              <button 
+              <button
                 className={`tab-button ${activeTab === 'mock' ? 'active' : ''}`}
                 onClick={() => setActiveTab('mock')}
               >
                 MockPoolManager.sol
               </button>
-              <button 
+              <button
                 className={`tab-button ${activeTab === 'deploy' ? 'active' : ''}`}
                 onClick={() => setActiveTab('deploy')}
               >
                 deploy.js
               </button>
-              <button 
+              <button
                 className={`tab-button ${activeTab === 'readme' ? 'active' : ''}`}
                 onClick={() => setActiveTab('readme')}
               >
@@ -3491,8 +4069,8 @@ export default function App() {
                 <span className="code-lang">
                   {activeTab === 'hook' || activeTab === 'mock' ? 'SOLIDITY' : activeTab === 'deploy' ? 'JAVASCRIPT' : 'MARKDOWN'}
                 </span>
-                <button 
-                  className="btn-copy" 
+                <button
+                  className="btn-copy"
                   onClick={() => {
                     const textMap = {
                       hook: hookSolidityCode,
@@ -3506,7 +4084,7 @@ export default function App() {
                   <Copy size={12} /> Copy Code
                 </button>
               </div>
-              
+
               <pre className="code-pre">
                 <code>
                   {activeTab === 'hook' && hookSolidityCode}
@@ -3523,7 +4101,7 @@ export default function App() {
             <h3 className="panel-title">
               <Cpu size={20} style={{ color: 'var(--color-primary)' }} /> Deploying on X Layer Mainnet
             </h3>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', marginTop: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ display: 'flex', gap: '12px' }}>
@@ -3533,7 +4111,7 @@ export default function App() {
                     <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Use the Solidity compiler version 0.8.24 or later to ensure compatibility with EVM push/pop logic.</p>
                   </div>
                 </div>
-                
+
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <div style={{ background: 'var(--color-primary-glow)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: 'var(--color-primary)', fontWeight: 'bold', flexShrink: 0, justifyContent: 'center' }}>2</div>
                   <div>
@@ -3556,7 +4134,7 @@ export default function App() {
                   <AlertTriangle size={16} style={{ color: 'var(--color-primary)' }} />
                   X Layer RPC Information
                 </h4>
-                
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem' }}>
                   <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
                     <span style={{ color: 'rgba(255,255,255,0.5)' }}>Network Name</span>
@@ -3586,7 +4164,7 @@ export default function App() {
                   <Flame size={16} />
                   Token Deployment Choices
                 </h4>
-                
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.8rem' }}>
                   <div>
                     <strong style={{ color: 'var(--color-secondary)' }}>Option 1: Deploy Token Ourselves (Independent Launch)</strong>
@@ -3615,7 +4193,7 @@ export default function App() {
               <X size={18} />
             </button>
             <img src="/whitepaper-banner.png" alt="GoalRush Whitepaper" className="whitepaper-header-banner" />
-            
+
             <div className="whitepaper-content">
               <div className="whitepaper-section" style={{ textAlign: 'center', marginBottom: '40px' }}>
                 <h1 style={{ fontFamily: 'var(--font-heading)', color: '#fff', fontSize: '2.2rem', marginBottom: '8px' }}>GOALRUSH WHITEPAPER</h1>
@@ -3634,7 +4212,7 @@ export default function App() {
               <div className="whitepaper-section">
                 <h2>1. Executive Summary</h2>
                 <p>
-                  GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the <strong>OKX X Layer Mainnet</strong>, GoalRush utilizes custom <strong>Uniswap V4 Hooks</strong> to route prediction ticket purchases directly through AMM swap events. 
+                  GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the <strong>OKX X Layer Mainnet</strong>, GoalRush utilizes custom <strong>Uniswap V4 Hooks</strong> to route prediction ticket purchases directly through AMM swap events.
                 </p>
                 <p style={{ marginTop: '12px' }}>
                   By turning trade volumes into prediction tickets and goalie shootout challenges, GoalRush creates a self-sustaining gamified ecosystem. Holders of the <strong>GRUSH</strong> utility token receive structural gameplay advantages (such as penalty strike success boosts) and unique visual profiles within the application, encouraging organic demand and token retention.
@@ -3646,7 +4224,7 @@ export default function App() {
                 <p>
                   GoalRush integrates directly with Uniswap V4's lifecycle callback hooks to trigger off-chain events and on-chain prediction entries. The core of this system is the <code>WorldCupGoalRushHook</code> contract.
                 </p>
-                
+
                 <h3>2.1 The beforeSwap Callback</h3>
                 <p>
                   When a user initiates a prediction transaction via the dashboard:
@@ -3743,10 +4321,10 @@ export default function App() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <a 
-            href="https://x.com/goalrushdotfun" 
-            target="_blank" 
-            rel="noopener noreferrer" 
+          <a
+            href="https://x.com/goalrushdotfun"
+            target="_blank"
+            rel="noopener noreferrer"
             style={{ color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
             onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
             onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
@@ -3754,10 +4332,10 @@ export default function App() {
             <Twitter size={16} /> Twitter / X
           </a>
           <span style={{ color: 'rgba(255,255,255,0.15)' }}>|</span>
-          <a 
-            href="https://t.me/+qwzA9MrSA3I2OTk9" 
-            target="_blank" 
-            rel="noopener noreferrer" 
+          <a
+            href="https://t.me/+qwzA9MrSA3I2OTk9"
+            target="_blank"
+            rel="noopener noreferrer"
             style={{ color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
             onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-secondary)'}
             onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
@@ -3778,7 +4356,7 @@ export default function App() {
               <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '12px', opacity: 0.85 }}>
                 <p><strong>Last Updated: June 13, 2026</strong></p>
                 <p>Please read these Terms of Service carefully before interacting with the GoalRush platform. By connecting your wallet and participating, you agree to these Terms.</p>
-                
+
                 <p><strong>1. Educational & Simulation Use Only</strong></p>
                 <p>GoalRush is a proof-of-concept dApp built for the Build X Hackathon. All on-chain simulations, predictions, and games are provided for educational and gaming purposes. There is no guarantee of profits or rewards.</p>
 

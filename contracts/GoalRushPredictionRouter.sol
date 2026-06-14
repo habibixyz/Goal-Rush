@@ -1,29 +1,53 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+interface IGoalRushHook {
+    function placeOkbPredictionFor(address user, uint8 predictedTeam) external payable;
+    function placeGrushPredictionFor(address user, uint8 predictedTeam, uint256 amount) external;
+}
+
+interface IERC20 {
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+}
+
 contract GoalRushPredictionRouter {
     address payable public immutable hookAddress;
+    IERC20 public immutable grushToken;
 
-    event PredictionDeposited(address indexed user, uint256 amount);
+    event PredictionDeposited(address indexed user, uint8 indexed team, uint256 amount);
+    event GrushPredictionDeposited(address indexed user, uint8 indexed team, uint256 amount);
 
-    constructor(address payable _hookAddress) {
+    constructor(address payable _hookAddress, address _grushToken) {
         hookAddress = _hookAddress;
+        grushToken = IERC20(_grushToken);
     }
 
-    // Explicit payable function to submit a prediction
+    function predictWithOKB(uint8 predictedTeam) external payable {
+        require(msg.value > 0, "Amount must be greater than 0");
+        require(predictedTeam == 1 || predictedTeam == 2, "Invalid prediction");
+        
+        IGoalRushHook(hookAddress).placeOkbPredictionFor{value: msg.value}(msg.sender, predictedTeam);
+        
+        emit PredictionDeposited(msg.sender, predictedTeam, msg.value);
+    }
+
+    function predictWithGRUSH(uint8 predictedTeam, uint256 amount) external {
+        require(amount > 0, "Amount must be greater than 0");
+        require(predictedTeam == 1 || predictedTeam == 2, "Invalid prediction");
+
+        require(grushToken.transferFrom(msg.sender, hookAddress, amount), "GRUSH transfer failed");
+        IGoalRushHook(hookAddress).placeGrushPredictionFor(msg.sender, predictedTeam, amount);
+
+        emit GrushPredictionDeposited(msg.sender, predictedTeam, amount);
+    }
+
+    // Backward-compatible OKB helper for older UI deployments.
     function predictAndDeposit() external payable {
         require(msg.value > 0, "Amount must be greater than 0");
-        
-        // Forward the native OKB to the hook contract
-        (bool success, ) = hookAddress.call{value: msg.value}("");
-        require(success, "Forwarding to hook contract failed");
-        
-        emit PredictionDeposited(msg.sender, msg.value);
+        IGoalRushHook(hookAddress).placeOkbPredictionFor{value: msg.value}(msg.sender, 1);
+        emit PredictionDeposited(msg.sender, 1, msg.value);
     }
 
     // Fallback receive to accept any leftover native tokens
-    receive() external payable {
-        (bool success, ) = hookAddress.call{value: msg.value}("");
-        require(success, "Forwarding failed");
-    }
+    receive() external payable {}
 }

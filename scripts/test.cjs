@@ -19,6 +19,17 @@ async function main() {
   await hook.waitForDeployment();
   console.log("WorldCupGoalRushHook deployed to:", await hook.getAddress());
 
+  console.log("\nDeploying GRUSH token and prediction router...");
+  const GoalRushToken = await ethers.getContractFactory("GoalRushToken");
+  const grush = await GoalRushToken.deploy(100000000);
+  await grush.waitForDeployment();
+  const Router = await ethers.getContractFactory("GoalRushPredictionRouter");
+  const router = await Router.deploy(await hook.getAddress(), await grush.getAddress());
+  await router.waitForDeployment();
+  await hook.setPredictionRouter(await router.getAddress());
+  await hook.setGrushToken(await grush.getAddress());
+  console.log("Prediction router deployed to:", await router.getAddress());
+
   // 3. Create a Match: Argentina (1) vs France (2)
   console.log("\nCreating Match #1: Argentina vs France (duration: 2 hours)...");
   const matchId = 1;
@@ -63,7 +74,13 @@ async function main() {
   matchInfo = await hook.matches(matchId);
   console.log("Jackpot Pool Status:", ethers.formatEther(matchInfo.totalJackpot), "ETH");
 
-  // 6. Resolve Match: Argentina wins! (Winner = 1)
+  // 6. Add a token-backed prediction through the router.
+  console.log("\nSwapper 1 predicts Argentina with 100 GRUSH through the router...");
+  await grush.transfer(swapper1.address, ethers.parseEther("100"));
+  await grush.connect(swapper1).approve(await router.getAddress(), ethers.parseEther("100"));
+  await router.connect(swapper1).predictWithGRUSH(1, ethers.parseEther("100"));
+
+  // 7. Resolve Match: Argentina wins! (Winner = 1)
   console.log("\nResolving Match #1: Declaring Argentina (1) as Winner...");
   await hook.resolveMatch(matchId, 1);
   
@@ -74,11 +91,15 @@ async function main() {
     value: ethers.parseEther("1.0")
   });
   
-  // 7. Claim Winnings for Swapper 1
+  // 8. Claim Winnings for Swapper 1
   console.log("\nClaiming Jackpot share for Swapper 1...");
   const initialBalance = await ethers.provider.getBalance(swapper1.address);
   await hook.connect(swapper1).claimJackpot(matchId);
   console.log("Jackpot share successfully claimed by Swapper 1!");
+
+  console.log("\nClaiming GRUSH Jackpot share for Swapper 1...");
+  await hook.connect(swapper1).claimGrushJackpot(matchId);
+  console.log("GRUSH jackpot share successfully claimed by Swapper 1!");
 }
 
 main().catch((error) => {

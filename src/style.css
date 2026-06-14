@@ -12,6 +12,7 @@
   --color-liberty-glow: rgba(0, 168, 150, 0.15);
   --color-danger: #ff3344;
   --font-display: "Space Grotesk", "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: "Space Grotesk", "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-body: "Outfit", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   --shadow-neon-green: 0 0 20px rgba(157, 255, 0, 0.3);

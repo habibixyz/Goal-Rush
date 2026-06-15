@@ -1502,7 +1502,9 @@ export default function App() {
         }
 
         if (latestBlock >= startBlock) {
-          const chunkSize = 10000;
+          // Fix: DRPC free tier throws "ranges over 10000 blocks are not supported"
+          // We use 2000 to be perfectly safe across all RPC nodes
+          const chunkSize = 2000;
           let allSuccess = true;
 
           // Process retrieved events and accumulate in statsCache
@@ -1530,7 +1532,7 @@ export default function App() {
           // Query in chunks of 10,000 blocks sequentially using getLogs to avoid batch limits on free tier
           let chunksProcessed = 0;
           for (let from = startBlock; from <= latestBlock; from += chunkSize) {
-            if (chunksProcessed >= 25) {
+            if (chunksProcessed >= 150) {
               break; // Yield to next run to avoid RPC rate-limits
             }
             const to = Math.min(from + chunkSize - 1, latestBlock);

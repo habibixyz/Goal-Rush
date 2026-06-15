@@ -36,7 +36,7 @@ async function fetchESPN() {
         const detail = comp.status?.type?.detail || '';
 
         let status = 'SCHEDULED';
-        if (statusType === 'STATUS_IN_PROGRESS') status = 'LIVE';
+        if (statusType === 'STATUS_IN_PROGRESS' || statusType.includes('HALF') || statusType.includes('HALFTIME') || statusType.includes('PROGRESS')) status = 'LIVE';
         else if (statusType === 'STATUS_FULL_TIME' || statusType === 'STATUS_FINAL') status = 'FINISHED';
         else if (statusType === 'STATUS_POSTPONED' || statusType === 'STATUS_CANCELED') status = 'POSTPONED';
 

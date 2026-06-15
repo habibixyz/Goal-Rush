@@ -550,6 +550,7 @@ export default function App() {
   const hasInitializedRef = useRef(false);
   const statsCacheRef = useRef({});
   const leaderboardScannedRef = useRef(false); // Track if we have done a full historical scan
+  const hasInitializedLeaderboardRef = useRef(false); // Track if we started the historical scan
   const lastFetchedBlockRef = useRef(62494373); // Start from first contract deployment block
   const activeOnChainMatchRef = useRef({ id: 1, teamA: 'Canada', teamB: 'Bosnia & Herzegovina' });
 
@@ -1127,6 +1128,8 @@ export default function App() {
     return parseFloat(localStorage.getItem('goalrush_userVolume') || '0');
   })
   const [onChainStats, setOnChainStats] = useState({});
+  const [scanState, setScanState] = useState({ current: 62494373, total: 62494373, done: false });
+
 
   const leaderboardData = useMemo(() => {
     const merged = { ...onChainStats };
@@ -1373,7 +1376,9 @@ export default function App() {
 
         const routerAbi = [
           "event PredictionDeposited(address indexed user, uint8 indexed team, uint256 amount)",
-          "event GrushPredictionDeposited(address indexed user, uint8 indexed team, uint256 amount)"
+          "event GrushPredictionDeposited(address indexed user, uint8 indexed team, uint256 amount)",
+          "event PredictionDeposited(address indexed user, uint256 amount)",
+          "event GrushPredictionDeposited(address indexed user, uint256 amount)"
         ];
 
         const hookContract = new ethers.Contract(hookAddress, abi, rpcProvider);
@@ -1479,6 +1484,33 @@ export default function App() {
                   winner: winnerId
                 };
               });
+            } else if (typeof currentId === 'number' && currentId > 0) {
+              // If viewing a different on-chain match (e.g. past resolved match), sync its resolution and winner from the blockchain too!
+              try {
+                const selectedMatchData = await hookContract.matches(currentId);
+                const selResolved = selectedMatchData[5] !== undefined ? selectedMatchData[5] : selectedMatchData.resolved;
+                const selWinner = Number(selectedMatchData[6] !== undefined ? selectedMatchData[6] : (selectedMatchData.winner || 0));
+                const selTeamA = selectedMatchData[1] || selectedMatchData.teamA || 'Team A';
+                const selTeamB = selectedMatchData[2] || selectedMatchData.teamB || 'Team B';
+
+                setActiveMatch(prev => {
+                  if (prev.id !== currentId) return prev;
+                  if (prev.resolved === selResolved && prev.winner === selWinner) {
+                    return prev;
+                  }
+                  return {
+                    ...prev,
+                    teamA: selTeamA,
+                    teamB: selTeamB,
+                    flagA: getTeamFifaCode(selTeamA),
+                    flagB: getTeamFifaCode(selTeamB),
+                    resolved: selResolved,
+                    winner: selWinner
+                  };
+                });
+              } catch (e) {
+                console.warn("Failed to fetch past match details for ID:", currentId, e);
+              }
             }
           } else {
             setJackpot(0);
@@ -1496,19 +1528,31 @@ export default function App() {
         const latestBlock = await rpcProvider.getBlockNumber();
         // Always scan from deployment block so we never miss historical txns
         const DEPLOY_BLOCK = 62494373;
-        const startBlock = leaderboardScannedRef.current
-          ? lastFetchedBlockRef.current
-          : DEPLOY_BLOCK;
-        if (!leaderboardScannedRef.current) {
-          // Reset cache for a clean full rescan
+        if (!leaderboardScannedRef.current && !hasInitializedLeaderboardRef.current) {
+          // Reset cache for a clean full rescan only once on component mount
           statsCacheRef.current = {};
           lastFetchedBlockRef.current = DEPLOY_BLOCK;
+          hasInitializedLeaderboardRef.current = true;
         }
+        const startBlock = lastFetchedBlockRef.current || DEPLOY_BLOCK;
+
+        if (!leaderboardScannedRef.current) {
+          setScanState(prev => {
+            const nextCurrent = Math.max(prev.current, startBlock);
+            if (prev.total !== latestBlock || prev.current !== nextCurrent) {
+              return { ...prev, current: nextCurrent, total: latestBlock, done: false };
+            }
+            return prev;
+          });
+        } else {
+          setScanState({ current: latestBlock, total: latestBlock, done: true });
+        }
+
 
         if (latestBlock >= startBlock) {
           // Fix: DRPC free tier throws "ranges over 10000 blocks are not supported"
-          // We use 2000 to be perfectly safe across all RPC nodes
-          const chunkSize = 2000;
+          // We use 500 to be perfectly safe and avoid request timeouts on free tier
+          const chunkSize = 500;
           let allSuccess = true;
 
           // Process retrieved events and accumulate in statsCache
@@ -1533,10 +1577,10 @@ export default function App() {
             "event Transfer(address indexed from, address indexed to, uint256 value)"
           ]);
 
-          // Query in chunks of 10,000 blocks sequentially using getLogs to avoid batch limits on free tier
+          // Query in chunks of blocks sequentially using getLogs to avoid batch limits on free tier
           let chunksProcessed = 0;
           for (let from = startBlock; from <= latestBlock; from += chunkSize) {
-            if (chunksProcessed >= 150) {
+            if (chunksProcessed >= 100) {
               break; // Yield to next run to avoid RPC rate-limits
             }
             const to = Math.min(from + chunkSize - 1, latestBlock);
@@ -1584,24 +1628,39 @@ export default function App() {
                     // data = abi-encoded (amount) or (team, amount) depending on version
                     if (log.topics.length >= 2) {
                       const user = ethers.getAddress('0x' + log.topics[1].slice(26));
-                      // Try ABI parse first, fall back to raw decode
                       let amount = 0n;
                       let isGrush = false;
+
+                      // Check topic hash directly to determine isGrush
+                      const topic0 = log.topics[0];
+                      if (topic0 === '0x2e01df39b7a4eb312b9a7c6c4ea6c4d7ec6be99e19574cd621570d588523c90a' ||
+                          topic0 === '0x68f7053e14bf6b672cf8419d143181591a688ca022a665aedce174ed730b8a9a') {
+                        isGrush = true;
+                      }
+
                       try {
                         const parsed = routerContract.interface.parseLog(log);
-                        if (parsed && parsed.name === 'PredictionDeposited') {
-                          amount = BigInt(parsed.args[2]);
-                        } else if (parsed && parsed.name === 'GrushPredictionDeposited') {
-                          amount = BigInt(parsed.args[2]);
-                          isGrush = true;
+                        if (parsed) {
+                          if (parsed.name === 'PredictionDeposited' || parsed.name === 'GrushPredictionDeposited') {
+                            const args = parsed.args;
+                            // Grab the last element in args which is the amount
+                            if (args && args.length > 0) {
+                              amount = BigInt(args[args.length - 1]);
+                            }
+                          }
                         }
                       } catch (_) {
-                        // Raw fallback: decode amount directly from data (strip 0x prefix)
+                        // ignore
+                      }
+
+                      // Fallback if parsing failed or didn't extract any amount
+                      if (amount === 0n) {
                         const dataHex = log.data;
                         if (dataHex && dataHex.length >= 66) {
                           amount = BigInt('0x' + dataHex.slice(2));
                         }
                       }
+
                       if (amount > 0n) {
                         if (isGrush) {
                           getOrCreateUser(user).grushVolume += amount;
@@ -1622,6 +1681,7 @@ export default function App() {
               // Advance block pointer chunk-by-chunk to save progress!
               lastFetchedBlockRef.current = to + 1;
               chunksProcessed++;
+              setScanState(prev => ({ ...prev, current: to }));
 
               // Respectful rate limit delay between calls
               await new Promise(resolve => setTimeout(resolve, 80));
@@ -1633,7 +1693,9 @@ export default function App() {
           // Mark full scan as done once we reach latest block
           if (lastFetchedBlockRef.current > latestBlock) {
             leaderboardScannedRef.current = true;
+            setScanState(prev => ({ ...prev, done: true }));
           }
+
         }
 
       } catch (err) {
@@ -3258,6 +3320,27 @@ export default function App() {
             <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '20px' }}>
               Top creators and swappers registered on OKX X Layer during the tournament.
             </p>
+
+            {!scanState.done && (
+              <div style={{
+                fontSize: '0.82rem',
+                color: '#9dff00',
+                background: 'rgba(157, 255, 0, 0.05)',
+                border: '1px solid rgba(157, 255, 0, 0.15)',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                fontFamily: 'system-ui, -apple-system, sans-serif'
+              }}>
+                <span style={{ fontSize: '1rem' }}>⚡</span>
+                <span style={{ fontWeight: '500' }}>
+                  Syncing on-chain predictions: {Math.min(99, Math.floor(((scanState.current - 62494373) / Math.max(1, scanState.total - 62494373)) * 100))}% complete (indexing blocks {scanState.current.toLocaleString()} of {scanState.total.toLocaleString()})
+                </span>
+              </div>
+            )}
 
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>

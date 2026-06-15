@@ -7,7 +7,7 @@ const { resolveMatchManually } = require('./resolver');
 // ── GET /api/matches/live ─────────────────────────────────
 router.get('/matches/live', (req, res) => {
   try {
-    const matches = db.getLiveMatches();
+    const matches = db.getAllMatches();
     res.json({ success: true, data: matches, count: matches.length });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });

@@ -79,6 +79,10 @@ function getLiveMatches() {
   return db.prepare("SELECT * FROM matches WHERE status = 'LIVE' ORDER BY kickoff_utc").all();
 }
 
+function getAllMatches() {
+  return db.prepare("SELECT * FROM matches ORDER BY kickoff_utc DESC").all();
+}
+
 function getUpcomingMatches(hours = 48) {
   return db.prepare(`
     SELECT * FROM matches

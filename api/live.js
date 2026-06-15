@@ -41,23 +41,26 @@ function mapDatabaseMatches(matches) {
 
     let dateDisplay = 'Today';
     try {
-      const matchDate = new Date(match.startTime);
+      const matchDate = new Date(match.start_time || match.startTime || Date.now());
       dateDisplay = matchDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
     } catch (e) {}
+
+    const homeName = match.home_team || (match.homeTeam && match.homeTeam.name) || 'Unknown';
+    const awayName = match.away_team || (match.awayTeam && match.awayTeam.name) || 'Unknown';
 
     return {
       id: match.sofaId || match.id,
       dbId: match.id,
-      teamA: match.homeTeam.name,
-      flagA: match.homeTeam.logo || getTeamFifaCode(match.homeTeam.name),
-      teamB: match.awayTeam.name,
-      flagB: match.awayTeam.logo || getTeamFifaCode(match.awayTeam.name),
-      scoreA: match.scoreHome,
-      scoreB: match.scoreAway,
+      teamA: homeName,
+      flagA: getTeamFifaCode(homeName),
+      teamB: awayName,
+      flagB: getTeamFifaCode(awayName),
+      scoreA: match.home_score !== undefined ? match.home_score : match.scoreHome,
+      scoreB: match.away_score !== undefined ? match.away_score : match.scoreAway,
       minute: minuteDisplay,
       isLive: isLive,
       date: dateDisplay,
-      startTime: match.startTime,
+      startTime: match.start_time || match.startTime,
       stadium: 'Stadium',
       capacity: 'N/A',
       city: 'City',
@@ -111,8 +114,13 @@ export default async function handler(req, res) {
       // Prioritize international matches
       const internationalTeams = ['Belgium', 'Egypt', 'Saudi Arabia', 'Uruguay', 'Iran', 'New Zealand', 'Spain', 'Cape Verde', 'France', 'Argentina', 'Netherlands', 'Japan'];
       backendData.sort((a, b) => {
-        const aIsIntl = internationalTeams.includes(a.homeTeam.name) || internationalTeams.includes(a.awayTeam.name);
-        const bIsIntl = internationalTeams.includes(b.homeTeam.name) || internationalTeams.includes(b.awayTeam.name);
+        const homeA = a.home_team || (a.homeTeam && a.homeTeam.name) || '';
+        const awayA = a.away_team || (a.awayTeam && a.awayTeam.name) || '';
+        const homeB = b.home_team || (b.homeTeam && b.homeTeam.name) || '';
+        const awayB = b.away_team || (b.awayTeam && b.awayTeam.name) || '';
+
+        const aIsIntl = internationalTeams.includes(homeA) || internationalTeams.includes(awayA);
+        const bIsIntl = internationalTeams.includes(homeB) || internationalTeams.includes(awayB);
         if (aIsIntl && !bIsIntl) return -1;
         if (!aIsIntl && bIsIntl) return 1;
         return 0;

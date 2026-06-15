@@ -13,13 +13,6 @@ const db = require('./db');
 
 // ─── ESPN Public API (completely free, no key) ────────────
 const ESPN_LEAGUES = [
-  { id: 'eng.1',  name: 'Premier League' },
-  { id: 'esp.1',  name: 'La Liga' },
-  { id: 'ger.1',  name: 'Bundesliga' },
-  { id: 'ita.1',  name: 'Serie A' },
-  { id: 'fra.1',  name: 'Ligue 1' },
-  { id: 'uefa.champions', name: 'Champions League' },
-  { id: 'usa.1',  name: 'MLS' },
   { id: 'fifa.world',  name: 'World Cup' },
 ];
 
@@ -72,7 +65,7 @@ async function fetchESPN() {
 // Sign up free at https://www.football-data.org/
 // Set FOOTBALL_DATA_KEY in Railway environment variables
 const FD_KEY = process.env.FOOTBALL_DATA_KEY;
-const FD_COMPETITIONS = ['PL', 'PD', 'BL1', 'SA', 'FL1', 'CL', 'WC'];
+const FD_COMPETITIONS = ['WC'];
 
 async function fetchFootballData() {
   if (!FD_KEY) return []; // gracefully skip if no key
@@ -168,11 +161,11 @@ async function fetchOpenLiga() {
 // ─── Main orchestrator ────────────────────────────────────
 async function fetchAndStoreMatches() {
   try {
-    const [espnMatches, fdMatches, olMatches] = await Promise.all([
+    const [espnMatches, fdMatches] = await Promise.all([
       fetchESPN(),
-      fetchFootballData(),
-      fetchOpenLiga(),
+      fetchFootballData()
     ]);
+    const olMatches = []; // OpenLigaDB is German league only, disabled for FIFA feed
 
     // Guarantee exact hackathon demo matches (Google Search replica)
     const demoMatches = [

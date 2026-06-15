@@ -1471,16 +1471,7 @@ export default function App() {
             const totalJackpotWei = matchData[7] || matchData.totalJackpot || 0n;
             const contractBalance = await rpcProvider.getBalance(hookAddress);
             const displayJackpot = contractBalance > totalJackpotWei ? contractBalance : totalJackpotWei;
-            let finalJackpot = Number(ethers.formatEther(displayJackpot));
-            if (finalJackpot < 1) {
-              // Simulate massive volume for the demo using onChainStats
-              let simulatedWei = 0n;
-              Object.values(onChainStats).forEach(s => {
-                simulatedWei += BigInt(s.volume);
-              });
-              finalJackpot = Number(ethers.formatEther(simulatedWei)) * 2.5;
-            }
-            setJackpot(finalJackpot > 0 ? finalJackpot : 421.5);
+            setJackpot(Number(ethers.formatEther(displayJackpot)));
 
             const volA = await hookContract.teamPredictionVolume(activeIdFromContract, 1);
             const volB = await hookContract.teamPredictionVolume(activeIdFromContract, 2);
@@ -1492,19 +1483,11 @@ export default function App() {
               const grushVolA = await hookContract.teamGrushPredictionVolume(activeIdFromContract, 1);
               const grushVolB = await hookContract.teamGrushPredictionVolume(activeIdFromContract, 2);
               
-              let finalGrushJackpot = Number(ethers.formatEther(grushPool));
-              if (finalGrushJackpot < 1) {
-                let simulatedGrushWei = 0n;
-                Object.values(onChainStats).forEach(s => {
-                  simulatedGrushWei += BigInt(s.grushVolume || 0n);
-                });
-                finalGrushJackpot = Number(ethers.formatEther(simulatedGrushWei)) * 1.5;
-              }
-              setGrushJackpot(finalGrushJackpot > 0 ? finalGrushJackpot : 18500.50);
+              setGrushJackpot(Number(ethers.formatEther(grushPool)));
               setTeamAGrushVotes(Number(ethers.formatEther(grushVolA)));
               setTeamBGrushVotes(Number(ethers.formatEther(grushVolB)));
             } catch (grushErr) {
-              setGrushJackpot(18500.50);
+              setGrushJackpot(0);
               setTeamAGrushVotes(0);
               setTeamBGrushVotes(0);
             }

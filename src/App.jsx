@@ -510,8 +510,8 @@ const getProvider = () => {
   return null;
 };
 
-const HOOK_ADDRESS = '0x9bA0a504dbdBbe96300E56D69FCbd5154b10C0c0';
-const ROUTER_ADDRESS = '0xB8332a105f2ea7F53Bd94554F74658Bf767f8D67';
+const HOOK_ADDRESS = '0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0';
+const ROUTER_ADDRESS = '0xe1Ad1C1Ab7600E6c3Fbaf0c80c3b947B7F901B7F';
 const GRUSH_TOKEN_ADDRESS = '0x422fe165b2da990d18c6dca944b11dcd61519671';
 
 // Helper to get today/tomorrow date strings dynamically

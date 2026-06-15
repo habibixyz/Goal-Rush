@@ -7,17 +7,25 @@ let cache = {
 
 function getTeamFifaCode(name) {
   const map = {
-    'Argentina': 'ARG',
-    'France': 'FRA',
-    'Netherlands': 'NED',
-    'Japan': 'JPN',
-    'Ivory Coast': 'CIV',
-    'Ecuador': 'ECU',
-    'Sweden': 'SWE',
-    'Tunisia': 'TUN',
-    'Algeria': 'ALG'
+    'argentina': 'ARG',
+    'france': 'FRA',
+    'netherlands': 'NED',
+    'japan': 'JPN',
+    'ivory coast': 'CIV',
+    'ecuador': 'ECU',
+    'sweden': 'SWE',
+    'tunisia': 'TUN',
+    'algeria': 'ALG',
+    'spain': 'ESP',
+    'cape verde': 'CPV',
+    'iran': 'IRN',
+    'new zealand': 'NZL',
+    'saudi arabia': 'KSA',
+    'uruguay': 'URU',
+    'belgium': 'BEL',
+    'egypt': 'EGY'
   };
-  return map[name] || 'UN';
+  return map[name?.toLowerCase().trim()] || 'UN';
 }
 
 function mapDatabaseMatches(matches) {

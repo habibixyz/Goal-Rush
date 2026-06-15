@@ -436,7 +436,8 @@ const getFlagUrl = (fifaCode) => {
     GER: 'de', JPN: 'jp', ESP: 'es', CRC: 'cr', BEL: 'be', CAN: 'ca',
     SUI: 'ch', CMR: 'cm', URU: 'uy', KOR: 'kr', POR: 'pt', GHA: 'gh',
     SRB: 'rs', BRA: 'br', ITA: 'it', SCO: 'gb-sct',
-    BIH: 'ba', PAR: 'py', RSA: 'za', CZE: 'cz', HAI: 'ht', CUW: 'cw'
+    BIH: 'ba', PAR: 'py', RSA: 'za', CZE: 'cz', HAI: 'ht', CUW: 'cw',
+    NZL: 'nz', EGY: 'eg', CPV: 'cv'
   };
   const iso = fifaToIso[fifaCode?.toUpperCase()] || 'un';
   return `https://flagcdn.com/w40/${iso}.png`;
@@ -484,7 +485,10 @@ const getTeamFifaCode = (name) => {
     'south africa': 'RSA',
     'czechia': 'CZE',
     'haiti': 'HAI',
-    'curacao': 'CUW'
+    'curacao': 'CUW',
+    'new zealand': 'NZL',
+    'egypt': 'EGY',
+    'cape verde': 'CPV'
   };
   return mapping[name?.toLowerCase().trim()] || 'UN';
 };

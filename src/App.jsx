@@ -1435,13 +1435,15 @@ export default function App() {
             setTeamAVotes(Number(ethers.formatEther(volA)));
             setTeamBVotes(Number(ethers.formatEther(volB)));
 
-            // Read GRUSH jackpot from token balance of hook (works regardless of matchId)
+            // Read GRUSH jackpot - check both new and old Hook contracts
             try {
               const grushAbi = ["function balanceOf(address) view returns (uint256)"];
               const grushContract = new ethers.Contract(GRUSH_TOKEN_ADDRESS, grushAbi, rpcProvider);
-              const grushBalance = await grushContract.balanceOf(hookAddress);
-              setGrushJackpot(Number(ethers.formatEther(grushBalance)));
-              // Try to also get per-team GRUSH volumes if available
+              // Check new Hook first, then old Hook as fallback
+              const newHookGrush = await grushContract.balanceOf(hookAddress);
+              const oldHookGrush = await grushContract.balanceOf('0x9bA0a504dbdBbe96300E56D69FCbd5154b10C0c0');
+              const totalGrush = newHookGrush + oldHookGrush;
+              setGrushJackpot(Number(ethers.formatEther(totalGrush)));
               try {
                 const grushVolA = await hookContract.teamGrushPredictionVolume(activeIdFromContract, 1);
                 const grushVolB = await hookContract.teamGrushPredictionVolume(activeIdFromContract, 2);
@@ -1534,7 +1536,7 @@ export default function App() {
             const to = Math.min(from + chunkSize - 1, latestBlock);
             try {
               const logs = await rpcProvider.getLogs({
-                address: [hookAddress, routerAddress, tokenAddress],
+                address: [hookAddress, routerAddress],
                 fromBlock: from,
                 toBlock: to
               });
@@ -1588,10 +1590,10 @@ export default function App() {
                           isGrush = true;
                         }
                       } catch (_) {
-                        // Raw fallback: last 32 bytes of data = amount
+                        // Raw fallback: decode amount directly from data (strip 0x prefix)
                         const dataHex = log.data;
                         if (dataHex && dataHex.length >= 66) {
-                          amount = BigInt('0x' + dataHex.slice(-64));
+                          amount = BigInt('0x' + dataHex.slice(2));
                         }
                       }
                       if (amount > 0n) {
@@ -1606,24 +1608,9 @@ export default function App() {
                     // Ignore
                   }
                 } else if (addrLower === tokenAddress.toLowerCase()) {
-                  try {
-                    const parsed = tokenInterface.parseLog(log);
-                    if (parsed && parsed.name === "Transfer") {
-                      const fromUser = parsed.args[0];
-                      const toUser = parsed.args[1];
-                      const value = parsed.args[2];
-
-                      if (fromUser && fromUser !== ethers.ZeroAddress) {
-                        getOrCreateUser(fromUser).grushVolume += BigInt(value);
-                      }
-                      if (toUser && toUser !== ethers.ZeroAddress) {
-                        getOrCreateUser(toUser).grushVolume += BigInt(value);
-                      }
-                    }
-                  } catch (e) {
-                    // Ignore decoding errors
-                  }
+                  // SKIP: GRUSH Transfer events = trading noise, not predictions
                 }
+
               });
 
               // Advance block pointer chunk-by-chunk to save progress!

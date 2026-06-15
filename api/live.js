@@ -5,11 +5,115 @@ let cache = {
   timestamp: 0
 };
 
+function getTeamFifaCode(name) {
+  const map = {
+    'Argentina': 'ARG',
+    'France': 'FRA',
+    'Netherlands': 'NED',
+    'Japan': 'JPN',
+    'Ivory Coast': 'CIV',
+    'Ecuador': 'ECU',
+    'Sweden': 'SWE',
+    'Tunisia': 'TUN',
+    'Algeria': 'ALG'
+  };
+  return map[name] || 'UN';
+}
+
+function mapDatabaseMatches(matches) {
+  return matches.map(match => {
+    const isLive = match.status === 'LIVE';
+    const isCompleted = match.status === 'FINISHED';
+    
+    let minuteDisplay = 'Upcoming';
+    if (isLive) {
+      minuteDisplay = `${match.minute}'`;
+    } else if (isCompleted) {
+      minuteDisplay = 'FT';
+    } else {
+      try {
+        const matchDate = new Date(match.startTime);
+        minuteDisplay = matchDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        minuteDisplay = 'Upcoming';
+      }
+    }
+
+    let dateDisplay = 'Today';
+    try {
+      const matchDate = new Date(match.startTime);
+      dateDisplay = matchDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    } catch (e) {}
+
+    return {
+      id: match.sofaId || match.id,
+      dbId: match.id,
+      teamA: match.homeTeam.name,
+      flagA: match.homeTeam.logo || getTeamFifaCode(match.homeTeam.name),
+      teamB: match.awayTeam.name,
+      flagB: match.awayTeam.logo || getTeamFifaCode(match.awayTeam.name),
+      scoreA: match.scoreHome,
+      scoreB: match.scoreAway,
+      minute: minuteDisplay,
+      isLive: isLive,
+      date: dateDisplay,
+      stadium: 'Stadium',
+      capacity: 'N/A',
+      city: 'City',
+      referee: 'Referee',
+      scorersA: [],
+      scorersB: []
+    };
+  });
+}
+
+function fetchFromBackend() {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'goal-rush-backend-production.up.railway.app',
+      path: '/api/live',
+      method: 'GET',
+      timeout: 3000
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(body));
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Backend timeout'));
+    });
+    req.end();
+  });
+}
+
 export default async function handler(req, res) {
   // Add CORS headers so the local app can call it
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Try database/backend first
+  try {
+    const backendData = await fetchFromBackend();
+    if (Array.isArray(backendData) && backendData.length > 0) {
+      const mapped = mapDatabaseMatches(backendData);
+      res.setHeader('X-Cache', 'BACKEND-LIVE');
+      return res.status(200).json(mapped);
+    }
+  } catch (err) {
+    console.warn('Failed to fetch live matches from backend, falling back to API Sports:', err.message);
+  }
 
   const now = Date.now();
   // Cache for 5 minutes (300,000 ms) to be very safe with the 100 requests/day limit

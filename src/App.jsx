@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
+import { io } from 'socket.io-client'
 import { ethers } from 'ethers'
 import confetti from 'canvas-confetti'
 import goalRushLogo from './assets/logo.png'
@@ -488,62 +489,6 @@ const getTeamFifaCode = (name) => {
   return mapping[name?.toLowerCase().trim()] || 'UN';
 };
 
-const TEAM_POOL = [
-  { name: 'Argentina', flag: 'ARG' },
-  { name: 'France', flag: 'FRA' },
-  { name: 'Canada', flag: 'CAN' },
-  { name: 'United States', flag: 'USA' },
-  { name: 'Mexico', flag: 'MEX' },
-  { name: 'Brazil', flag: 'BRA' },
-  { name: 'Spain', flag: 'ESP' },
-  { name: 'Germany', flag: 'GER' },
-  { name: 'England', flag: 'ENG' },
-  { name: 'Italy', flag: 'ITA' },
-  { name: 'Portugal', flag: 'POR' },
-  { name: 'Croatia', flag: 'CRO' },
-  { name: 'Netherlands', flag: 'NED' },
-  { name: 'Belgium', flag: 'BEL' },
-  { name: 'Japan', flag: 'JPN' },
-  { name: 'Korea Republic', flag: 'KOR' },
-  { name: 'Switzerland', flag: 'SUI' },
-  { name: 'Morocco', flag: 'MAR' },
-  { name: 'Qatar', flag: 'QAT' },
-  { name: 'Ecuador', flag: 'ECU' },
-  { name: 'Senegal', flag: 'SEN' },
-  { name: 'Saudi Arabia', flag: 'KSA' },
-  { name: 'Denmark', flag: 'DEN' },
-  { name: 'Tunisia', flag: 'TUN' },
-  { name: 'Poland', flag: 'POL' },
-  { name: 'Australia', flag: 'AUS' },
-  { name: 'Cameroon', flag: 'CMR' },
-  { name: 'Uruguay', flag: 'URU' },
-  { name: 'Ghana', flag: 'GHA' },
-  { name: 'Serbia', flag: 'SRB' },
-  { name: 'Bosnia & Herzegovina', flag: 'BIH' },
-  { name: 'Paraguay', flag: 'PAR' },
-  { name: 'South Africa', flag: 'RSA' },
-  { name: 'Czechia', flag: 'CZE' }
-];
-
-const generateRandomMatch = (id) => {
-  const idxA = Math.floor(Math.random() * TEAM_POOL.length);
-  let idxB = Math.floor(Math.random() * TEAM_POOL.length);
-  while (idxB === idxA) {
-    idxB = Math.floor(Math.random() * TEAM_POOL.length);
-  }
-  return {
-    id,
-    teamA: TEAM_POOL[idxA].name,
-    flagA: TEAM_POOL[idxA].flag,
-    teamB: TEAM_POOL[idxB].name,
-    flagB: TEAM_POOL[idxB].flag,
-    scoreA: 0,
-    scoreB: 0,
-    minute: "1'",
-    isLive: true,
-    ticksAtFT: 0,
-    ticksScheduled: 0
-  };
 };
 
 // Helper to get the correct OKX Wallet provider strictly
@@ -597,6 +542,7 @@ export default function App() {
   });
 
   const activeMatchRef = useRef(activeMatch);
+  const socketRef = useRef(null);
   const hasInitializedRef = useRef(false);
   const statsCacheRef = useRef({
     "0x32f0647428da1c4dfd8896b11d11c5106eb22355": {
@@ -1128,434 +1074,7 @@ export default function App() {
     const saved = localStorage.getItem('goalrush_history')
     return saved ? JSON.parse(saved) : []
   })
-  const [liveMatches, setLiveMatches] = useState([
-    // Yesterday (June 13) - Completed (FT)
-    {
-      id: 1,
-      teamA: 'Canada', flagA: 'CAN',
-      teamB: 'Bosnia & Herzegovina', flagB: 'BIH',
-      scoreA: 1, scoreB: 1,
-      minute: "FT", isLive: false,
-      date: 'June 13',
-      stadium: 'BC Place, Vancouver', capacity: '54,500', city: 'Vancouver, Canada', referee: 'Ivan Barton',
-      scorersA: ["A. Davies 32'"], scorersB: ["E. Džeko 74'"]
-    },
-    {
-      id: 2,
-      teamA: 'United States', flagA: 'USA',
-      teamB: 'Paraguay', flagB: 'PAR',
-      scoreA: 2, scoreB: 0,
-      minute: "FT", isLive: false,
-      date: 'June 13',
-      stadium: 'Mercedes-Benz Stadium, Atlanta', capacity: '71,000', city: 'Atlanta, USA', referee: 'Piero Maza',
-      scorersA: ["C. Pulisic 18'", "F. Balogun 65'"], scorersB: []
-    },
-    {
-      id: 3,
-      teamA: 'Mexico', flagA: 'MEX',
-      teamB: 'South Africa', flagB: 'RSA',
-      scoreA: 2, scoreB: 1,
-      minute: "FT", isLive: false,
-      date: 'June 13',
-      stadium: 'Estadio Azteca, Mexico City', capacity: '87,523', city: 'Mexico City, Mexico', referee: 'Wilmar Roldán',
-      scorersA: ["S. Giménez 41'", "H. Martín 89'"], scorersB: ["P. Tau 55'"]
-    },
-    {
-      id: 4,
-      teamA: 'Korea Republic', flagA: 'KOR',
-      teamB: 'Czechia', flagB: 'CZE',
-      scoreA: 0, scoreB: 0,
-      minute: "FT", isLive: false,
-      date: 'June 13',
-      stadium: 'Seoul World Cup Stadium', capacity: '66,704', city: 'Seoul, South Korea', referee: 'Szymon Marciniak',
-      scorersA: [], scorersB: []
-    },
-
-    // Today/Yesterday Matches - Real Scores
-    {
-      id: 5,
-      teamA: 'Qatar', flagA: 'QAT',
-      teamB: 'Switzerland', flagB: 'SUI',
-      scoreA: 1, scoreB: 1,
-      minute: "FT", isLive: false,
-      date: 'June 13',
-      stadium: 'San Francisco Bay Area Stadium', capacity: '68,500', city: 'Santa Clara, USA', referee: 'Abdulrahman Al-Jassim',
-      scorersA: ["B. Khoukhi 94'"], scorersB: ["B. Embolo 17' (Pen)"]
-    },
-    {
-      id: 6,
-      teamA: 'Brazil', flagA: 'BRA',
-      teamB: 'Morocco', flagB: 'MAR',
-      scoreA: 1, scoreB: 1,
-      minute: "FT", isLive: false,
-      date: 'June 13',
-      stadium: 'New York New Jersey Stadium', capacity: '82,500', city: 'East Rutherford, USA', referee: 'Michael Oliver',
-      scorersA: ["Vinícius Jr. 32'"], scorersB: ["I. Saibari 21'"]
-    },
-    {
-      id: 7,
-      teamA: 'Haiti', flagA: 'HAI',
-      teamB: 'Scotland', flagB: 'SCO',
-      scoreA: 0, scoreB: 1,
-      minute: "FT", isLive: false,
-      date: 'June 14',
-      stadium: 'Gillette Stadium, Foxborough', capacity: '65,878', city: 'Boston, USA', referee: 'Mustapha Ghorbal',
-      scorersA: [], scorersB: ["J. McGinn 28'"]
-    },
-
-    // June 14 - Completed
-    {
-      id: 8,
-      teamA: 'Australia', flagA: 'AUS',
-      teamB: 'Türkiye', flagB: 'TUR',
-      scoreA: 2, scoreB: 0,
-      minute: "FT", isLive: false,
-      date: 'June 14',
-      stadium: 'BC Place, Vancouver', capacity: '54,500', city: 'Vancouver, Canada', referee: 'Jesús Valenzuela',
-      scorersA: ["N. Irankunda 27'", "C. Metcalfe 75'"], scorersB: []
-    },
-    {
-      id: 9,
-      teamA: 'Germany', flagA: 'GER',
-      teamB: 'Curaçao', flagB: 'CUW',
-      scoreA: 4, scoreB: 1,
-      minute: "FT", isLive: false,
-      date: 'June 14',
-      stadium: 'MetLife Stadium, New Jersey', capacity: '82,500', city: 'East Rutherford, USA', referee: 'Halil Umut Meler',
-      scorersA: ["K. Havertz 14'", "J. Musiala 37'", "Di María 54'", "Rodrygo 75'"], scorersB: ["Gyökeres 55'"]
-    },
-
-    // June 14 - Completed
-    {
-      id: 13,
-      teamA: 'Spain', flagA: 'ESP',
-      teamB: 'Cabo Verde', flagB: 'CPV',
-      scoreA: 2, scoreB: 1,
-      minute: "FT", isLive: false,
-      date: 'June 14',
-      stadium: 'Hard Rock Stadium, Miami', capacity: '65,326', city: 'Miami Gardens, USA', referee: 'Daniele Orsato',
-      scorersA: ["Pedri 33'", "Morata 68'"], scorersB: ["Ryan 81'"]
-    },
-
-    // Today (June 15) - Live / Upcoming
-    {
-      id: 10,
-      teamA: 'Netherlands', flagA: 'NED',
-      teamB: 'Japan', flagB: 'JPN',
-      scoreA: 0, scoreB: 0,
-      minute: "1'", isLive: true,
-      date: TODAY_LABEL,
-      stadium: 'Johan Cruyff ArenA, Amsterdam', capacity: '55,865', city: 'Amsterdam, Netherlands', referee: 'Clément Turpin',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 11,
-      teamA: 'Ivory Coast', flagA: 'CIV',
-      teamB: 'Ecuador', flagB: 'ECU',
-      scoreA: 0, scoreB: 0,
-      minute: "8:30 AM", isLive: false,
-      date: TODAY_LABEL,
-      stadium: 'Stade Alassane Ouattara, Abidjan', capacity: '60,012', city: 'Abidjan, Ivory Coast', referee: 'Mustapha Ghorbal',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 12,
-      teamA: 'Sweden', flagA: 'SWE',
-      teamB: 'Tunisia', flagB: 'TUN',
-      scoreA: 0, scoreB: 0,
-      minute: "11:30 AM", isLive: false,
-      date: TODAY_LABEL,
-      stadium: 'Friends Arena, Stockholm', capacity: '50,653', city: 'Stockholm, Sweden', referee: 'Victor Gomes',
-      scorersA: [], scorersB: []
-    },
-
-    // Tue, June 16 - Upcoming
-    {
-      id: 14,
-      teamA: 'Belgium', flagA: 'BEL',
-      teamB: 'Egypt', flagB: 'EGY',
-      scoreA: 0, scoreB: 0,
-      minute: "Tue 16 Jun 5:30 AM", isLive: false,
-      date: 'June 16',
-      stadium: 'King Baudouin Stadium, Brussels', capacity: '50,093', city: 'Brussels, Belgium', referee: 'Anthony Taylor',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 15,
-      teamA: 'Saudi Arabia', flagA: 'KSA',
-      teamB: 'Uruguay', flagB: 'URU',
-      scoreA: 0, scoreB: 0,
-      minute: "Tue 16 Jun 8:30 AM", isLive: false,
-      date: 'June 16',
-      stadium: 'King Abdullah Sports City, Jeddah', capacity: '62,345', city: 'Jeddah, Saudi Arabia', referee: 'Wilmar Roldán',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 16,
-      teamA: 'Iran', flagA: 'IRN',
-      teamB: 'New Zealand', flagB: 'NZL',
-      scoreA: 0, scoreB: 0,
-      minute: "Tue 16 Jun 11:30 AM", isLive: false,
-      date: 'June 16',
-      stadium: 'Azadi Stadium, Tehran', capacity: '78,116', city: 'Tehran, Iran', referee: 'Ma Ning',
-      scorersA: [], scorersB: []
-    },
-
-    // Wed, June 17 - Upcoming
-    {
-      id: 17,
-      teamA: 'France', flagA: 'FRA',
-      teamB: 'Senegal', flagB: 'SEN',
-      scoreA: 0, scoreB: 0,
-      minute: "Wed 17 Jun 5:30 AM", isLive: false,
-      date: 'June 17',
-      stadium: 'Stade de France, Paris', capacity: '80,698', city: 'Paris, France', referee: 'Szymon Marciniak',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 18,
-      teamA: 'Iraq', flagA: 'IRQ',
-      teamB: 'Norway', flagB: 'NOR',
-      scoreA: 0, scoreB: 0,
-      minute: "Wed 17 Jun 8:30 AM", isLive: false,
-      date: 'June 17',
-      stadium: 'Basra International Stadium, Basra', capacity: '65,227', city: 'Basra, Iraq', referee: 'Alireza Faghani',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 19,
-      teamA: 'Argentina', flagA: 'ARG',
-      teamB: 'Algeria', flagB: 'ALG',
-      scoreA: 0, scoreB: 0,
-      minute: "Wed 17 Jun 11:30 AM", isLive: false,
-      date: 'June 17',
-      stadium: 'El Monumental, Buenos Aires', capacity: '84,567', city: 'Buenos Aires, Argentina', referee: 'Piero Maza',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 20,
-      teamA: 'Austria', flagA: 'AUT',
-      teamB: 'Jordan', flagB: 'JOR',
-      scoreA: 0, scoreB: 0,
-      minute: "Wed 17 Jun 2:30 PM", isLive: false,
-      date: 'June 17',
-      stadium: 'Ernst-Happel-Stadion, Vienna', capacity: '50,865', city: 'Vienna, Austria', referee: 'Felix Zwayer',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 21,
-      teamA: 'Portugal', flagA: 'POR',
-      teamB: 'DR Congo', flagB: 'COD',
-      scoreA: 0, scoreB: 0,
-      minute: "Wed 17 Jun 10:30 PM", isLive: false,
-      date: 'June 17',
-      stadium: 'Estádio da Luz, Lisbon', capacity: '64,642', city: 'Lisbon, Portugal', referee: 'Artur Soares Dias',
-      scorersA: [], scorersB: []
-    },
-
-    // Thu, June 18 - Upcoming
-    {
-      id: 22,
-      teamA: 'England', flagA: 'ENG',
-      teamB: 'Croatia', flagB: 'CRO',
-      scoreA: 0, scoreB: 0,
-      minute: "Thu 18 Jun 5:30 AM", isLive: false,
-      date: 'June 18',
-      stadium: 'Wembley Stadium, London', capacity: '90,000', city: 'London, England', referee: 'Michael Oliver',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 23,
-      teamA: 'Ghana', flagA: 'GHA',
-      teamB: 'Panama', flagB: 'PAN',
-      scoreA: 0, scoreB: 0,
-      minute: "Thu 18 Jun 8:30 AM", isLive: false,
-      date: 'June 18',
-      stadium: 'Baba Yara Stadium, Kumasi', capacity: '40,528', city: 'Kumasi, Ghana', referee: 'Mustapha Ghorbal',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 24,
-      teamA: 'Uzbekistan', flagA: 'UZB',
-      teamB: 'Colombia', flagB: 'COL',
-      scoreA: 0, scoreB: 0,
-      minute: "Thu 18 Jun 11:30 AM", isLive: false,
-      date: 'June 18',
-      stadium: 'Milliy Stadium, Tashkent', capacity: '34,000', city: 'Tashkent, Uzbekistan', referee: 'Kim Jong-hyeok',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 25,
-      teamA: 'Czechia', flagA: 'CZE',
-      teamB: 'South Africa', flagB: 'RSA',
-      scoreA: 0, scoreB: 0,
-      minute: "Thu 18 Jun 2:30 PM", isLive: false,
-      date: 'June 18',
-      stadium: 'Sinobo Stadium, Prague', capacity: '19,370', city: 'Prague, Czechia', referee: 'Ivan Barton',
-      scorersA: [], scorersB: []
-    },
-
-    // Fri, June 19 - Upcoming
-    {
-      id: 26,
-      teamA: 'Switzerland', flagA: 'SUI',
-      teamB: 'Bosnia & Herzegovina', flagB: 'BIH',
-      scoreA: 0, scoreB: 0,
-      minute: "Fri 19 Jun 12:30 PM", isLive: false,
-      date: 'June 19',
-      stadium: 'Stadion Wankdorf, Bern', capacity: '31,789', city: 'Bern, Switzerland', referee: 'Daniele Orsato',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 27,
-      teamA: 'Canada', flagA: 'CAN',
-      teamB: 'Qatar', flagB: 'QAT',
-      scoreA: 0, scoreB: 0,
-      minute: "Fri 19 Jun 3:30 PM", isLive: false,
-      date: 'June 19',
-      stadium: 'BMO Field, Toronto', capacity: '30,000', city: 'Toronto, Canada', referee: 'Piero Maza',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 28,
-      teamA: 'Ghana', flagA: 'GHA',
-      teamB: 'Korea Republic', flagB: 'KOR',
-      scoreA: 0, scoreB: 0,
-      minute: "Fri 19 Jun 6:30 PM", isLive: false,
-      date: 'June 19',
-      stadium: 'Accra Sports Stadium, Accra', capacity: '40,000', city: 'Accra, Ghana', referee: 'Victor Gomes',
-      scorersA: [], scorersB: []
-    },
-
-    // Sat, June 20 - Upcoming
-    {
-      id: 29,
-      teamA: 'United States', flagA: 'USA',
-      teamB: 'Australia', flagB: 'AUS',
-      scoreA: 0, scoreB: 0,
-      minute: "Sat 20 Jun 12:30 PM", isLive: false,
-      date: 'June 20',
-      stadium: 'Lumen Field, Seattle', capacity: '68,740', city: 'Seattle, USA', referee: 'Danny Makkelie',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 30,
-      teamA: 'Scotland', flagA: 'SCO',
-      teamB: 'Morocco', flagB: 'MAR',
-      scoreA: 0, scoreB: 0,
-      minute: "Sat 20 Jun 3:30 PM", isLive: false,
-      date: 'June 20',
-      stadium: 'Hampden Park, Glasgow', capacity: '51,866', city: 'Glasgow, Scotland', referee: 'Felix Zwayer',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 31,
-      teamA: 'Brazil', flagA: 'BRA',
-      teamB: 'Haiti', flagB: 'HAI',
-      scoreA: 0, scoreB: 0,
-      minute: "Sat 20 Jun 11:30 AM", isLive: false,
-      date: 'June 20',
-      stadium: 'Maracanã, Rio de Janeiro', capacity: '78,838', city: 'Rio de Janeiro, Brazil', referee: 'Michael Oliver',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 32,
-      teamA: 'Türkiye', flagA: 'TUR',
-      teamB: 'Paraguay', flagB: 'PAR',
-      scoreA: 0, scoreB: 0,
-      minute: "Sat 20 Jun 11:30 AM", isLive: false,
-      date: 'June 20',
-      stadium: 'Atatürk Olympic Stadium, Istanbul', capacity: '76,092', city: 'Istanbul, Turkey', referee: 'Halil Umut Meler',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 33,
-      teamA: 'Netherlands', flagA: 'NED',
-      teamB: 'Sweden', flagB: 'SWE',
-      scoreA: 0, scoreB: 0,
-      minute: "Sat 20 Jun 10:30 PM", isLive: false,
-      date: 'June 20',
-      stadium: 'Johan Cruyff ArenA, Amsterdam', capacity: '55,865', city: 'Amsterdam, Netherlands', referee: 'Clément Turpin',
-      scorersA: [], scorersB: []
-    },
-
-    // Sun, June 21 - Upcoming
-    {
-      id: 34,
-      teamA: 'Germany', flagA: 'GER',
-      teamB: 'Ivory Coast', flagB: 'CIV',
-      scoreA: 0, scoreB: 0,
-      minute: "Sun 21 Jun 12:30 PM", isLive: false,
-      date: 'June 21',
-      stadium: 'Signal Iduna Park, Dortmund', capacity: '81,365', city: 'Dortmund, Germany', referee: 'Halil Umut Meler',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 35,
-      teamA: 'Ecuador', flagA: 'ECU',
-      teamB: 'Curaçao', flagB: 'CUW',
-      scoreA: 0, scoreB: 0,
-      minute: "Sun 21 Jun 3:30 PM", isLive: false,
-      date: 'June 21',
-      stadium: 'Estadio Monumental, Guayaquil', capacity: '59,283', city: 'Guayaquil, Ecuador', referee: 'Wilmar Roldán',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 36,
-      teamA: 'Tunisia', flagA: 'TUN',
-      teamB: 'Japan', flagB: 'JPN',
-      scoreA: 0, scoreB: 0,
-      minute: "Sun 21 Jun 6:30 PM", isLive: false,
-      date: 'June 21',
-      stadium: 'Stade Hammadi Agrebi, Tunis', capacity: '60,000', city: 'Tunis, Tunisia', referee: 'Mustapha Ghorbal',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 37,
-      teamA: 'Spain', flagA: 'ESP',
-      teamB: 'Saudi Arabia', flagB: 'KSA',
-      scoreA: 0, scoreB: 0,
-      minute: "Sun 21 Jun 9:30 PM", isLive: false,
-      date: 'June 21',
-      stadium: 'Camp Nou, Barcelona', capacity: '99,354', city: 'Barcelona, Spain', referee: 'Daniele Orsato',
-      scorersA: [], scorersB: []
-    },
-
-    // Mon, June 22 - Upcoming
-    {
-      id: 38,
-      teamA: 'Belgium', flagA: 'BEL',
-      teamB: 'Iran', flagB: 'IRN',
-      scoreA: 0, scoreB: 0,
-      minute: "Mon 22 Jun 12:30 PM", isLive: false,
-      date: 'June 22',
-      stadium: 'Stade Maurice Dufrasne, Liège', capacity: '27,670', city: 'Liège, Belgium', referee: 'Felix Zwayer',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 39,
-      teamA: 'Uruguay', flagA: 'URU',
-      teamB: 'Cabo Verde', flagB: 'CPV',
-      scoreA: 0, scoreB: 0,
-      minute: "Mon 22 Jun 3:30 PM", isLive: false,
-      date: 'June 22',
-      stadium: 'Estadio Centenario, Montevideo', capacity: '60,235', city: 'Montevideo, Uruguay', referee: 'Piero Maza',
-      scorersA: [], scorersB: []
-    },
-    {
-      id: 40,
-      teamA: 'New Zealand', flagA: 'NZL',
-      teamB: 'Egypt', flagB: 'EGY',
-      scoreA: 0, scoreB: 0,
-      minute: "Mon 22 Jun 6:30 PM", isLive: false,
-      date: 'June 22',
-      stadium: 'Sky Stadium, Wellington', capacity: '34,500', city: 'Wellington, New Zealand', referee: 'Ma Ning',
-      scorersA: [], scorersB: []
-    }
-  ])
-
-  const liveMatchesRef = useRef([]);
-
+    const [liveMatches, setLiveMatches] = useState([]);
   useEffect(() => {
     liveMatchesRef.current = liveMatches;
   }, [liveMatches]);
@@ -1564,60 +1083,18 @@ export default function App() {
     const loadRealMatches = async () => {
       try {
         const response = await fetch('/api/live');
-        if (!response.ok) {
-          throw new Error(`HTTP status ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP status ${response.status}`);
         const data = await response.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setLiveMatches(prev => {
-            const nextMatches = [...prev];
-            
-            const filteredApiData = data.filter(apiMatch => {
-              const areTeamsMatching = (tA1, tB1, tA2, tB2) => {
-                const normalize = (n) => n.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const nA1 = normalize(tA1);
-                const nB1 = normalize(tB1);
-                const nA2 = normalize(tA2);
-                const nB2 = normalize(tB2);
-                return (nA1 === nA2 && nB1 === nB2) || (nA1 === nB2 && nB1 === nA2);
-              };
-
-              const mockMatchIndex = nextMatches.findIndex(m => 
-                typeof m.id === 'number' && areTeamsMatching(m.teamA, m.teamB, apiMatch.teamA, apiMatch.teamB)
-              );
-
-              if (mockMatchIndex !== -1) {
-                const mockMatch = nextMatches[mockMatchIndex];
-                const isSwapped = mockMatch.teamA.toLowerCase().replace(/[^a-z0-9]/g, '') === apiMatch.teamB.toLowerCase().replace(/[^a-z0-9]/g, '');
-                
-                nextMatches[mockMatchIndex] = {
-                  ...mockMatch,
-                  scoreA: isSwapped ? apiMatch.scoreB : apiMatch.scoreA,
-                  scoreB: isSwapped ? apiMatch.scoreA : apiMatch.scoreB,
-                  minute: apiMatch.minute,
-                  isLive: apiMatch.isLive,
-                  stadium: apiMatch.stadium || mockMatch.stadium,
-                  city: apiMatch.city || mockMatch.city,
-                  referee: apiMatch.referee || mockMatch.referee,
-                  isRealWorldSynced: true
-                };
-                return false;
-              }
-              return true;
-            });
-
-            const realIds = new Set(filteredApiData.map(m => m.id));
-            const filteredPrev = nextMatches.filter(m => !realIds.has(m.id));
-            return [...filteredApiData, ...filteredPrev];
-          });
+        if (Array.isArray(data)) {
+          setLiveMatches(data);
         }
       } catch (err) {
-        console.warn('Failed to load real-world matches, using mock simulation:', err);
+        console.warn('Failed to load real-world matches:', err);
       }
     };
 
     loadRealMatches();
-    const interval = setInterval(loadRealMatches, 300000);
+    const interval = setInterval(loadRealMatches, 60000); // refresh every minute to catch anything socket missed
     return () => clearInterval(interval);
   }, []);
 
@@ -1808,82 +1285,93 @@ export default function App() {
   }, [liveMatches]);
 
   useEffect(() => {
-    // Real-time live match ticker — ticks every 5 seconds, advances 1 minute
-    // This gives a smooth "live" feel: a full match plays out in ~7.5 minutes of wall time
-    const TICK_MS = 5000;
-    const MINS_PER_TICK = 1;
+    const socketUrl = 'https://goal-rush-backend-production.up.railway.app';
+    const socket = io(socketUrl, { reconnectionDelayMax: 10000 });
+    socketRef.current = socket;
 
-    const tick = () => {
-      const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    socket.on('connect', () => {
+      console.log('Connected to Goal Rush Backend Socket Server');
+    });
 
-      setLiveMatches(prev => {
-        const next = prev.map(m => {
-          // Skip real API matches — they update via /api/live poll
-          if (typeof m.id === 'string' && m.id.startsWith('api-')) return m;
+    // Listen for realtime match events
+    socket.on('match_event', (data) => {
+      console.log('Received socket event:', data);
+      const { type, match, event } = data;
 
-          if (m.isLive && m.minute !== 'FT' && !m.isRealWorldSynced) {
-            const min = parseInt(m.minute) || 0;
-            const newMin = min + MINS_PER_TICK;
-
-            let scoreA = m.scoreA;
-            let scoreB = m.scoreB;
-            let scorersA = [...(m.scorersA || [])];
-            let scorersB = [...(m.scorersB || [])];
-            let isLive = true;
-            let minute = `${newMin}'`;
-
-            if (newMin >= 90) {
-              minute = 'FT';
-              isLive = false;
-            } else {
-              // Realistic goal probability per minute: ~2.7 goals/game ÷ 90 min ≈ 3% per min
-              const rand = Math.random();
-              const goalProb = 0.03;
-              if (rand < goalProb) {
-                scoreA += 1;
-                const scorers = ['Musiala', 'Wirtz', 'Füllkrug', 'Havertz', 'Gündoğan', 'Kroos',
-                  'Depay', 'Gakpo', 'Simons', 'Malen', 'Mitoma', 'Minamino', 'Doan', 'Kubo',
-                  'Gyökeres', 'Isak', 'McGinn', 'Shankland', 'Vlahović', 'Olmo'];
-                const scorer = scorers[Math.floor(Math.random() * scorers.length)];
-                scorersA = [...scorersA, `${scorer} ${newMin}'`];
+      if (type === 'match_updated' && match) {
+        setLiveMatches((prev) =>
+          prev.map((m) => {
+            if (m.dbId === match.id) {
+              const isLive = match.status === 'LIVE';
+              const isCompleted = match.status === 'FINISHED';
+              
+              let minuteDisplay = 'Upcoming';
+              if (isLive) {
+                minuteDisplay = `${match.minute}'`;
+              } else if (isCompleted) {
+                minuteDisplay = 'FT';
               }
 
-              const randB = Math.random();
-              if (randB < goalProb) {
-                scoreB += 1;
-                const scorers = ['Musiala', 'Wirtz', 'Füllkrug', 'Havertz', 'Gündoğan', 'Kroos',
-                  'Depay', 'Gakpo', 'Simons', 'Malen', 'Mitoma', 'Minamino', 'Doan', 'Kubo',
-                  'Gyökeres', 'Isak', 'McGinn', 'Shankland', 'Vlahović', 'Olmo'];
-                const scorer = scorers[Math.floor(Math.random() * scorers.length)];
-                scorersB = [...scorersB, `${scorer} ${newMin}'`];
-              }
+              return {
+                ...m,
+                scoreA: match.scoreHome,
+                scoreB: match.scoreAway,
+                minute: minuteDisplay,
+                isLive: isLive
+              };
+            }
+            return m;
+          })
+        );
+
+        // Also update the selected match in details if the active match updates
+        setActiveMatch((prevActive) => {
+          if (prevActive && prevActive.dbId === match.id) {
+            const isLive = match.status === 'LIVE';
+            const isCompleted = match.status === 'FINISHED';
+            
+            let minuteDisplay = 'Upcoming';
+            if (isLive) {
+              minuteDisplay = `${match.minute}'`;
+            } else if (isCompleted) {
+              minuteDisplay = 'FT';
             }
 
-            return { ...m, scoreA, scoreB, scorersA, scorersB, minute, isLive };
+            return {
+              ...prevActive,
+              scoreA: match.scoreHome,
+              scoreB: match.scoreAway,
+              minute: minuteDisplay,
+              isLive: isLive
+            };
           }
-
-          // Auto-kickoff: upcoming matches dated today can start
-          if (!m.isLive && m.minute !== 'FT' && m.date === today) {
-            const ticks = (m.ticksScheduled || 0) + 1;
-            // Start after ~30 seconds (6 ticks) or with 15% random chance per tick
-            if (ticks >= 6 || Math.random() < 0.15) {
-              return { ...m, minute: "1'", isLive: true, ticksScheduled: 0 };
-            }
-            return { ...m, ticksScheduled: ticks };
-          }
-
-          return m;
+          return prevActive;
         });
+      }
 
-        return next;
-      });
+      if (type === 'new_event' && event) {
+        const targetMatch = liveMatchesRef.current.find(m => m.dbId === data.matchId);
+        if (targetMatch) {
+          const matchName = `${targetMatch.teamA} vs ${targetMatch.teamB}`;
+          addLog(`⚽ [Incident] ${event.type} - ${event.player} (${event.minute}') - ${event.detail || ''}`);
+        }
+      }
+    });
+
+    return () => {
+      socket.disconnect();
     };
-
-    // Run immediately then on interval
-    tick();
-    const interval = setInterval(tick, TICK_MS);
-    return () => clearInterval(interval);
   }, []);
+
+  // Separate hook to subscribe to rooms as matches get loaded
+  useEffect(() => {
+    if (!socketRef.current) return;
+    liveMatches.forEach((m) => {
+      if (m.dbId) {
+        socketRef.current.emit('join_match', m.dbId);
+      }
+    });
+  }, [liveMatches]);
 
   useEffect(() => {
     const fetchOnChainData = async () => {
@@ -2450,6 +1938,7 @@ export default function App() {
         } catch (e) { }
       } else {
         addLog(`🎉 Transaction confirmed! Match jackpot successfully funded with ${parsedAmount} OKB.`);
+        setJackpot((prev) => prev + parsedAmount);
         setTotalUserVolume((prev) => {
           const next = prev + parsedAmount;
           localStorage.setItem('goalrush_userVolume', next.toString());
@@ -2602,6 +2091,7 @@ export default function App() {
   const handleSelectMatchUI = (match) => {
     setActiveMatch({
       id: match.id,
+      dbId: match.dbId,
       teamA: match.teamA,
       teamB: match.teamB,
       flagA: match.flagA || getTeamFifaCode(match.teamA),

@@ -12,8 +12,42 @@ dotenv.config();
 const port = process.env.PORT || 4000;
 const app = express();
 
+// Custom CORS middleware to allow the client to call REST endpoints
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date(), service: 'goal-rush-backend' });
+});
+
+app.get('/api/live', async (req, res) => {
+  try {
+    const matches = await prisma.match.findMany({
+      where: {
+        status: {
+          in: [MatchStatus.LIVE, MatchStatus.SCHEDULED]
+        }
+      },
+      include: {
+        homeTeam: true,
+        awayTeam: true
+      },
+      orderBy: {
+        startTime: 'asc'
+      }
+    });
+    res.json(matches);
+  } catch (err: any) {
+    console.error('API Error in backend /api/live:', err);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+  }
 });
 
 const httpServer = createServer(app);
@@ -78,6 +112,9 @@ io.on('connection', (socket) => {
 const runPollingJob = async () => {
   try {
     console.log(`[Collector] Starting poll cycle at ${new Date().toISOString()}`);
+    // One-time cleanup of fake mock matches
+    await prisma.match.deleteMany({ where: { sofaId: { lt: 1000 } } });
+    
     const liveMatches = await sofascore.getLiveMatches();
     
     for (const liveMatch of liveMatches) {

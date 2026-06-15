@@ -57,6 +57,7 @@ function mapDatabaseMatches(matches) {
       minute: minuteDisplay,
       isLive: isLive,
       date: dateDisplay,
+      startTime: match.startTime,
       stadium: 'Stadium',
       capacity: 'N/A',
       city: 'City',
@@ -107,6 +108,15 @@ export default async function handler(req, res) {
   try {
     const backendData = await fetchFromBackend();
     if (Array.isArray(backendData) && backendData.length > 0) {
+      // Prioritize international matches
+      const internationalTeams = ['Belgium', 'Egypt', 'Saudi Arabia', 'Uruguay', 'Iran', 'New Zealand', 'Spain', 'Cape Verde', 'France', 'Argentina', 'Netherlands', 'Japan'];
+      backendData.sort((a, b) => {
+        const aIsIntl = internationalTeams.includes(a.homeTeam.name) || internationalTeams.includes(a.awayTeam.name);
+        const bIsIntl = internationalTeams.includes(b.homeTeam.name) || internationalTeams.includes(b.awayTeam.name);
+        if (aIsIntl && !bIsIntl) return -1;
+        if (!aIsIntl && bIsIntl) return 1;
+        return 0;
+      });
       const mapped = mapDatabaseMatches(backendData);
       res.setHeader('X-Cache', 'BACKEND-LIVE');
       return res.status(200).json(mapped);

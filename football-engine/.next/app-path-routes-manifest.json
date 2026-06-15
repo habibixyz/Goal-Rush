@@ -1,0 +1,12 @@
+{
+  "/api/live/route": "/api/live",
+  "/api/match/[id]/route": "/api/match/[id]",
+  "/api/player/[id]/route": "/api/player/[id]",
+  "/api/standings/route": "/api/standings",
+  "/api/team/[id]/route": "/api/team/[id]",
+  "/_not-found/page": "/_not-found",
+  "/insights/page": "/insights",
+  "/page": "/",
+  "/standings/page": "/standings",
+  "/match/[id]/page": "/match/[id]"
+}

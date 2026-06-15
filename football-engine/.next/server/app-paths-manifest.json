@@ -1,0 +1,12 @@
+{
+  "/api/live/route": "app/api/live/route.js",
+  "/api/match/[id]/route": "app/api/match/[id]/route.js",
+  "/api/player/[id]/route": "app/api/player/[id]/route.js",
+  "/api/standings/route": "app/api/standings/route.js",
+  "/api/team/[id]/route": "app/api/team/[id]/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/insights/page": "app/insights/page.js",
+  "/page": "app/page.js",
+  "/standings/page": "app/standings/page.js",
+  "/match/[id]/page": "app/match/[id]/page.js"
+}

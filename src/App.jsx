@@ -489,7 +489,6 @@ const getTeamFifaCode = (name) => {
   return mapping[name?.toLowerCase().trim()] || 'UN';
 };
 
-};
 
 // Helper to get the correct OKX Wallet provider strictly
 const getProvider = () => {
@@ -543,6 +542,7 @@ export default function App() {
 
   const activeMatchRef = useRef(activeMatch);
   const socketRef = useRef(null);
+  const liveMatchesRef = useRef([]);
   const hasInitializedRef = useRef(false);
   const statsCacheRef = useRef({
     "0x32f0647428da1c4dfd8896b11d11c5106eb22355": {
@@ -1087,6 +1087,25 @@ export default function App() {
         const data = await response.json();
         if (Array.isArray(data)) {
           setLiveMatches(data);
+          setActiveMatch(prev => {
+            if (prev.id === 10 && data.length > 0) {
+              const defaultMatch = data.find(m => m.isLive) || data[0];
+              return {
+                ...prev,
+                id: defaultMatch.id,
+                dbId: defaultMatch.dbId,
+                startTime: defaultMatch.startTime,
+                teamA: defaultMatch.teamA,
+                teamB: defaultMatch.teamB,
+                flagA: defaultMatch.flagA || getTeamFifaCode(defaultMatch.teamA),
+                flagB: defaultMatch.flagB || getTeamFifaCode(defaultMatch.teamB),
+                resolved: false,
+                isLive: defaultMatch.isLive !== undefined ? defaultMatch.isLive : true,
+                minute: defaultMatch.minute || "1'"
+              };
+            }
+            return prev;
+          });
         }
       } catch (err) {
         console.warn('Failed to load real-world matches:', err);
@@ -1432,51 +1451,55 @@ export default function App() {
 
         // Fetch selected match info safely
         try {
-          const isRealWorld = typeof currentId === 'string' && currentId.startsWith('api-');
-          if (isRealWorld) {
-            const liveM = liveMatchesRef.current.find(m => m.id === currentId);
-            if (liveM) {
-              const isResolved = liveM.minute === 'FT';
-              const winnerId = liveM.scoreA > liveM.scoreB ? 1 : liveM.scoreB > liveM.scoreA ? 2 : 3;
-              setActiveMatch(prev => {
-                if (prev.id !== currentId) return prev;
-                if (prev.teamA === liveM.teamA && prev.teamB === liveM.teamB && prev.resolved === isResolved && prev.winner === winnerId) {
-                  return prev;
-                }
-                return {
-                  id: currentId,
-                  teamA: liveM.teamA,
-                  teamB: liveM.teamB,
-                  flagA: liveM.flagA,
-                  flagB: liveM.flagB,
-                  resolved: isResolved,
-                  winner: winnerId
-                };
-              });
-              setJackpot(0);
+          // ALWAYS fetch the on-chain active match for jackpot pool and prediction stats
+          const activeIdFromContract = Number(await hookContract.activeMatchId());
+          
+          if (activeIdFromContract > 0) {
+            const matchData = await hookContract.matches(activeIdFromContract);
+            const teamAName = matchData[1] || matchData.teamA || 'Team A';
+            const teamBName = matchData[2] || matchData.teamB || 'Team B';
+            const isResolved = matchData[5] !== undefined ? matchData[5] : matchData.resolved;
+            const winnerId = Number(matchData[6] !== undefined ? matchData[6] : (matchData.winner || 0));
+
+            // Keep the active onchain match ref updated
+            activeOnChainMatchRef.current = {
+              id: activeIdFromContract,
+              teamA: teamAName,
+              teamB: teamBName
+            };
+
+            const totalJackpotWei = matchData[7] || matchData.totalJackpot || 0n;
+            const contractBalance = await rpcProvider.getBalance(hookAddress);
+            const displayJackpot = contractBalance > totalJackpotWei ? contractBalance : totalJackpotWei;
+            setJackpot(Number(ethers.formatEther(displayJackpot)));
+
+            const volA = await hookContract.teamPredictionVolume(activeIdFromContract, 1);
+            const volB = await hookContract.teamPredictionVolume(activeIdFromContract, 2);
+            setTeamAVotes(Number(ethers.formatEther(volA)));
+            setTeamBVotes(Number(ethers.formatEther(volB)));
+
+            try {
+              const grushPool = await hookContract.matchGrushJackpot(activeIdFromContract);
+              const grushVolA = await hookContract.teamGrushPredictionVolume(activeIdFromContract, 1);
+              const grushVolB = await hookContract.teamGrushPredictionVolume(activeIdFromContract, 2);
+              setGrushJackpot(Number(ethers.formatEther(grushPool)));
+              setTeamAGrushVotes(Number(ethers.formatEther(grushVolA)));
+              setTeamBGrushVotes(Number(ethers.formatEther(grushVolB)));
+            } catch (grushErr) {
               setGrushJackpot(0);
-              setTeamAVotes(0);
-              setTeamBVotes(0);
               setTeamAGrushVotes(0);
               setTeamBGrushVotes(0);
             }
-          } else {
-            const matchData = await hookContract.matches(currentId);
-            const onChainId = Number(matchData[0] || matchData.id || 0);
 
-            if (onChainId > 0) {
-              const teamAName = matchData[1] || matchData.teamA || activeMatchRef.current.teamA;
-              const teamBName = matchData[2] || matchData.teamB || activeMatchRef.current.teamB;
-              const isResolved = matchData[5] !== undefined ? matchData[5] : matchData.resolved;
-              const winnerId = Number(matchData[6] !== undefined ? matchData[6] : (matchData.winner || 0));
-
+            // If the UI is currently viewing the on-chain match, sync its resolution state
+            if (currentId === activeIdFromContract) {
               setActiveMatch(prev => {
                 if (prev.id !== currentId) return prev;
-                // Only trigger state updates if the data has actually changed to prevent render loops
                 if (prev.teamA === teamAName && prev.teamB === teamBName && prev.resolved === isResolved && prev.winner === winnerId) {
                   return prev;
                 }
                 return {
+                  ...prev,
                   id: currentId,
                   teamA: teamAName,
                   teamB: teamBName,
@@ -1486,47 +1509,14 @@ export default function App() {
                   winner: winnerId
                 };
               });
-
-              // Keep the active onchain match ref updated in case the selected match ID matches the active ID
-              const activeIdFromContract = Number(await hookContract.activeMatchId());
-              if (currentId === activeIdFromContract) {
-                activeOnChainMatchRef.current = {
-                  id: currentId,
-                  teamA: teamAName,
-                  teamB: teamBName
-                };
-              }
-
-              const totalJackpotWei = matchData[7] || matchData.totalJackpot || 0n;
-              const contractBalance = await rpcProvider.getBalance(hookAddress);
-              const displayJackpot = contractBalance > totalJackpotWei ? contractBalance : totalJackpotWei;
-              setJackpot(Number(ethers.formatEther(displayJackpot)));
-
-              const volA = await hookContract.teamPredictionVolume(currentId, 1);
-              const volB = await hookContract.teamPredictionVolume(currentId, 2);
-              setTeamAVotes(Number(ethers.formatEther(volA)));
-              setTeamBVotes(Number(ethers.formatEther(volB)));
-
-              try {
-                const grushPool = await hookContract.matchGrushJackpot(currentId);
-                const grushVolA = await hookContract.teamGrushPredictionVolume(currentId, 1);
-                const grushVolB = await hookContract.teamGrushPredictionVolume(currentId, 2);
-                setGrushJackpot(Number(ethers.formatEther(grushPool)));
-                setTeamAGrushVotes(Number(ethers.formatEther(grushVolA)));
-                setTeamBGrushVotes(Number(ethers.formatEther(grushVolB)));
-              } catch (grushErr) {
-                setGrushJackpot(0);
-                setTeamAGrushVotes(0);
-                setTeamBGrushVotes(0);
-              }
-            } else {
-              setJackpot(0);
-              setGrushJackpot(0);
-              setTeamAVotes(0);
-              setTeamBVotes(0);
-              setTeamAGrushVotes(0);
-              setTeamBGrushVotes(0);
             }
+          } else {
+            setJackpot(0);
+            setGrushJackpot(0);
+            setTeamAVotes(0);
+            setTeamBVotes(0);
+            setTeamAGrushVotes(0);
+            setTeamBGrushVotes(0);
           }
         } catch (matchErr) {
           console.warn("Failed to fetch match data from hook contract for ID:", currentId, matchErr);
@@ -2092,6 +2082,7 @@ export default function App() {
     setActiveMatch({
       id: match.id,
       dbId: match.dbId,
+      startTime: match.startTime,
       teamA: match.teamA,
       teamB: match.teamB,
       flagA: match.flagA || getTeamFifaCode(match.teamA),
@@ -2818,7 +2809,7 @@ export default function App() {
                       Switch to Live Match ⚽
                     </button>
                   </div>
-                ) : (!activeMatch.isLive && activeMatch.minute !== 'FT') ? (
+                ) : (!activeMatch.isLive && activeMatch.minute !== 'FT' && activeMatch.startTime && (activeMatch.startTime - Date.now() > 24 * 60 * 60 * 1000)) ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
                     <div style={{
                       background: 'rgba(255, 179, 0, 0.04)',
@@ -2827,12 +2818,12 @@ export default function App() {
                       padding: '16px',
                       textAlign: 'center'
                     }}>
-                      <h4 style={{ color: '#ffb300', margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 700 }}>⏳ MATCH NOT STARTED</h4>
+                      <h4 style={{ color: '#ffb300', margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 700 }}>📅 UPCOMING MATCH</h4>
                       <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.85rem', margin: 0 }}>
-                        {activeMatch.teamA} vs {activeMatch.teamB} is scheduled but not live yet.
+                        {activeMatch.teamA} vs {activeMatch.teamB} starts in more than 24 hours.
                       </p>
                       <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem', marginTop: '8px', marginBottom: 0 }}>
-                        Predictions open when the match goes LIVE. Switch to an active match below.
+                        Predictions open 24 hours before kickoff. Switch to an active match below.
                       </p>
                     </div>
                     <button

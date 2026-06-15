@@ -1435,18 +1435,24 @@ export default function App() {
             setTeamAVotes(Number(ethers.formatEther(volA)));
             setTeamBVotes(Number(ethers.formatEther(volB)));
 
+            // Read GRUSH jackpot from token balance of hook (works regardless of matchId)
             try {
-              const grushPool = await hookContract.matchGrushJackpot(activeIdFromContract);
-              const grushVolA = await hookContract.teamGrushPredictionVolume(activeIdFromContract, 1);
-              const grushVolB = await hookContract.teamGrushPredictionVolume(activeIdFromContract, 2);
-              
-              setGrushJackpot(Number(ethers.formatEther(grushPool)));
-              setTeamAGrushVotes(Number(ethers.formatEther(grushVolA)));
-              setTeamBGrushVotes(Number(ethers.formatEther(grushVolB)));
+              const grushAbi = ["function balanceOf(address) view returns (uint256)"];
+              const grushContract = new ethers.Contract(GRUSH_TOKEN_ADDRESS, grushAbi, rpcProvider);
+              const grushBalance = await grushContract.balanceOf(hookAddress);
+              setGrushJackpot(Number(ethers.formatEther(grushBalance)));
+              // Try to also get per-team GRUSH volumes if available
+              try {
+                const grushVolA = await hookContract.teamGrushPredictionVolume(activeIdFromContract, 1);
+                const grushVolB = await hookContract.teamGrushPredictionVolume(activeIdFromContract, 2);
+                setTeamAGrushVotes(Number(ethers.formatEther(grushVolA)));
+                setTeamBGrushVotes(Number(ethers.formatEther(grushVolB)));
+              } catch (_) {
+                setTeamAGrushVotes(0);
+                setTeamBGrushVotes(0);
+              }
             } catch (grushErr) {
               setGrushJackpot(0);
-              setTeamAGrushVotes(0);
-              setTeamBGrushVotes(0);
             }
 
             // If the UI is currently viewing the on-chain match, sync its resolution state
@@ -1565,18 +1571,39 @@ export default function App() {
                   }
                 } else if (addrLower === routerAddress.toLowerCase()) {
                   try {
-                    const parsed = routerContract.interface.parseLog(log);
-                    if (parsed && parsed.name === "PredictionDeposited") {
-                      const user = parsed.args[0];
-                      const amount = parsed.args[2];
-                      getOrCreateUser(user).volume += BigInt(amount);
-                    } else if (parsed && parsed.name === "GrushPredictionDeposited") {
-                      const user = parsed.args[0];
-                      const amount = parsed.args[2];
-                      getOrCreateUser(user).grushVolume += BigInt(amount);
+                    // Parse raw log directly since deployed contract may differ from source
+                    // Topic[0] = event sig, Topic[1] = indexed user address
+                    // data = abi-encoded (amount) or (team, amount) depending on version
+                    if (log.topics.length >= 2) {
+                      const user = ethers.getAddress('0x' + log.topics[1].slice(26));
+                      // Try ABI parse first, fall back to raw decode
+                      let amount = 0n;
+                      let isGrush = false;
+                      try {
+                        const parsed = routerContract.interface.parseLog(log);
+                        if (parsed && parsed.name === 'PredictionDeposited') {
+                          amount = BigInt(parsed.args[2]);
+                        } else if (parsed && parsed.name === 'GrushPredictionDeposited') {
+                          amount = BigInt(parsed.args[2]);
+                          isGrush = true;
+                        }
+                      } catch (_) {
+                        // Raw fallback: last 32 bytes of data = amount
+                        const dataHex = log.data;
+                        if (dataHex && dataHex.length >= 66) {
+                          amount = BigInt('0x' + dataHex.slice(-64));
+                        }
+                      }
+                      if (amount > 0n) {
+                        if (isGrush) {
+                          getOrCreateUser(user).grushVolume += amount;
+                        } else {
+                          getOrCreateUser(user).volume += amount;
+                        }
+                      }
                     }
                   } catch (e) {
-                    // Ignore decoding errors
+                    // Ignore
                   }
                 } else if (addrLower === tokenAddress.toLowerCase()) {
                   try {

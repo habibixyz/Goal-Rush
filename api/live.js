@@ -75,7 +75,7 @@ function fetchFromBackend() {
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'goal-rush-backend-production.up.railway.app',
-      path: '/api/live',
+      path: '/api/matches/live',
       method: 'GET',
       timeout: 3000
     };
@@ -109,7 +109,8 @@ export default async function handler(req, res) {
 
   // Try database/backend first
   try {
-    const backendData = await fetchFromBackend();
+    const responseBody = await fetchFromBackend();
+    const backendData = responseBody.data ? responseBody.data : responseBody;
     if (Array.isArray(backendData) && backendData.length > 0) {
       // Prioritize international matches
       const internationalTeams = ['Belgium', 'Egypt', 'Saudi Arabia', 'Uruguay', 'Iran', 'New Zealand', 'Spain', 'Cape Verde', 'France', 'Argentina', 'Netherlands', 'Japan'];

@@ -514,8 +514,8 @@ const getProvider = () => {
   return null;
 };
 
-const HOOK_ADDRESS = '0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0';
-const ROUTER_ADDRESS = '0xe1Ad1C1Ab7600E6c3Fbaf0c80c3b947B7F901B7F';
+const HOOK_ADDRESS = '0x9bA0a504dbdBbe96300E56D69FCbd5154b10C0c0';
+const ROUTER_ADDRESS = '0xB8332a105f2ea7F53Bd94554F74658Bf767f8D67';
 const GRUSH_TOKEN_ADDRESS = '0x422fe165b2da990d18c6dca944b11dcd61519671';
 
 // Helper to get today/tomorrow date strings dynamically
@@ -551,7 +551,7 @@ export default function App() {
   const statsCacheRef = useRef({});
   const leaderboardScannedRef = useRef(false); // Track if we have done a full historical scan
   const hasInitializedLeaderboardRef = useRef(false); // Track if we started the historical scan
-  const lastFetchedBlockRef = useRef(62494373); // Start from first contract deployment block
+  const lastFetchedBlockRef = useRef(62703412); // Start from first contract deployment block
   const activeOnChainMatchRef = useRef({ id: 1, teamA: 'Canada', teamB: 'Bosnia & Herzegovina' });
 
   useEffect(() => {
@@ -1128,7 +1128,7 @@ export default function App() {
     return parseFloat(localStorage.getItem('goalrush_userVolume') || '0');
   })
   const [onChainStats, setOnChainStats] = useState({});
-  const [scanState, setScanState] = useState({ current: 62494373, total: 62494373, done: false });
+  const [scanState, setScanState] = useState({ current: 62703412, total: 62703412, done: false });
 
 
   const leaderboardData = useMemo(() => {
@@ -1450,7 +1450,7 @@ export default function App() {
               const grushContract = new ethers.Contract(GRUSH_TOKEN_ADDRESS, grushAbi, rpcProvider);
               // Check new Hook first, then old Hook as fallback
               const newHookGrush = await grushContract.balanceOf(hookAddress);
-              const oldHookGrush = await grushContract.balanceOf('0x9bA0a504dbdBbe96300E56D69FCbd5154b10C0c0');
+              const oldHookGrush = await grushContract.balanceOf('0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0');
               const totalGrush = newHookGrush + oldHookGrush;
               setGrushJackpot(Number(ethers.formatEther(totalGrush)));
               try {
@@ -1527,7 +1527,7 @@ export default function App() {
         // Fetch new events starting from last fetched block
         const latestBlock = await rpcProvider.getBlockNumber();
         // Always scan from deployment block so we never miss historical txns
-        const DEPLOY_BLOCK = 62494373;
+        const DEPLOY_BLOCK = 62703412;
         if (!leaderboardScannedRef.current && !hasInitializedLeaderboardRef.current) {
           // Reset cache for a clean full rescan only once on component mount
           statsCacheRef.current = {};
@@ -3337,7 +3337,7 @@ export default function App() {
               }}>
                 <span style={{ fontSize: '1rem' }}>⚡</span>
                 <span style={{ fontWeight: '500' }}>
-                  Syncing on-chain predictions: {Math.min(99, Math.floor(((scanState.current - 62494373) / Math.max(1, scanState.total - 62494373)) * 100))}% complete (indexing blocks {scanState.current.toLocaleString()} of {scanState.total.toLocaleString()})
+                  Syncing on-chain predictions: {Math.min(99, Math.floor(((scanState.current - 62703412) / Math.max(1, scanState.total - 62703412)) * 100))}% complete (indexing blocks {scanState.current.toLocaleString()} of {scanState.total.toLocaleString()})
                 </span>
               </div>
             )}

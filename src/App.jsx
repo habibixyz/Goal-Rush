@@ -545,6 +545,7 @@ export default function App() {
   const liveMatchesRef = useRef([]);
   const hasInitializedRef = useRef(false);
   const statsCacheRef = useRef({});
+  const leaderboardScannedRef = useRef(false); // Track if we have done a full historical scan
   const lastFetchedBlockRef = useRef(62494373); // Start from first contract deployment block
   const activeOnChainMatchRef = useRef({ id: 1, teamA: 'Canada', teamB: 'Bosnia & Herzegovina' });
 
@@ -1481,7 +1482,16 @@ export default function App() {
 
         // Fetch new events starting from last fetched block
         const latestBlock = await rpcProvider.getBlockNumber();
-        const startBlock = lastFetchedBlockRef.current;
+        // Always scan from deployment block so we never miss historical txns
+        const DEPLOY_BLOCK = 62494373;
+        const startBlock = leaderboardScannedRef.current
+          ? lastFetchedBlockRef.current
+          : DEPLOY_BLOCK;
+        if (!leaderboardScannedRef.current) {
+          // Reset cache for a clean full rescan
+          statsCacheRef.current = {};
+          lastFetchedBlockRef.current = DEPLOY_BLOCK;
+        }
 
         if (latestBlock >= startBlock) {
           const chunkSize = 10000;
@@ -1599,6 +1609,10 @@ export default function App() {
               console.warn(`Failed to query chunk ${from} to ${to}:`, chunkErr);
               break; // Stop and resume next time
             }
+          }
+          // Mark full scan as done once we reach latest block
+          if (lastFetchedBlockRef.current > latestBlock) {
+            leaderboardScannedRef.current = true;
           }
         }
 

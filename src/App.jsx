@@ -544,30 +544,8 @@ export default function App() {
   const socketRef = useRef(null);
   const liveMatchesRef = useRef([]);
   const hasInitializedRef = useRef(false);
-  const statsCacheRef = useRef({
-    "0x32f0647428da1c4dfd8896b11d11c5106eb22355": {
-      address: "0x32f0647428da1c4dfd8896b11d11c5106eb22355",
-      goals: 8,
-      volume: 2000000000000000n,
-      grushVolume: 0n,
-      claimed: 0n
-    },
-    "0xd468445c9cde7fe2ba086f881c9192c3040cde8d": {
-      address: "0xd468445c9cde7fe2ba086f881c9192c3040cde8d",
-      goals: 5,
-      volume: 400000000000000n,
-      grushVolume: 41832279356927162000000n,
-      claimed: 0n
-    },
-    "0xa92c842c9cde7fe2ba086f881c9192c3040cde1a": {
-      address: "0xa92c842c9cde7fe2ba086f881c9192c3040cde1a",
-      goals: 3,
-      volume: 0n,
-      grushVolume: 0n,
-      claimed: 0n
-    }
-  });
-  const lastFetchedBlockRef = useRef(62494373); // Catch-up checkpoint block
+  const statsCacheRef = useRef({});
+  const lastFetchedBlockRef = useRef(62494373); // Start from first contract deployment block
   const activeOnChainMatchRef = useRef({ id: 1, teamA: 'Canada', teamB: 'Bosnia & Herzegovina' });
 
   useEffect(() => {
@@ -1444,8 +1422,11 @@ export default function App() {
             };
 
             const totalJackpotWei = matchData[7] || matchData.totalJackpot || 0n;
-            const contractBalance = await rpcProvider.getBalance(hookAddress);
-            const displayJackpot = contractBalance > totalJackpotWei ? contractBalance : totalJackpotWei;
+            // OKB predictions are held by the Router contract - check both
+            const hookBalance = await rpcProvider.getBalance(hookAddress);
+            const routerBalance = await rpcProvider.getBalance(routerAddress);
+            const combinedBalance = hookBalance + routerBalance;
+            const displayJackpot = combinedBalance > totalJackpotWei ? combinedBalance : totalJackpotWei;
             setJackpot(Number(ethers.formatEther(displayJackpot)));
 
             const volA = await hookContract.teamPredictionVolume(activeIdFromContract, 1);

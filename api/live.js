@@ -32,17 +32,23 @@ function mapDatabaseMatches(matches) {
       minuteDisplay = 'FT';
     } else {
       try {
-        const matchDate = new Date(match.startTime);
-        minuteDisplay = matchDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const matchDate = new Date(match.kickoff_utc || match.start_time || match.startTime);
+        if (!isNaN(matchDate.getTime())) {
+          minuteDisplay = matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        } else {
+          minuteDisplay = 'Upcoming';
+        }
       } catch (e) {
         minuteDisplay = 'Upcoming';
       }
     }
 
-    let dateDisplay = 'Today';
+    let dateDisplay = 'TBD';
     try {
-      const matchDate = new Date(match.start_time || match.startTime || Date.now());
-      dateDisplay = matchDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      const matchDate = new Date(match.kickoff_utc || match.start_time || match.startTime);
+      if (!isNaN(matchDate.getTime())) {
+        dateDisplay = matchDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
     } catch (e) {}
 
     const homeName = match.home_team || (match.homeTeam && match.homeTeam.name) || 'Unknown';
@@ -60,7 +66,7 @@ function mapDatabaseMatches(matches) {
       minute: minuteDisplay,
       isLive: isLive,
       date: dateDisplay,
-      startTime: match.start_time || match.startTime,
+      startTime: new Date(match.kickoff_utc || match.start_time || match.startTime || Date.now()).getTime(),
       stadium: 'Stadium',
       capacity: 'N/A',
       city: 'City',

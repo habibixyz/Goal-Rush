@@ -1359,8 +1359,8 @@ export default function App() {
         const hookAddress = HOOK_ADDRESS;
         const routerAddress = ROUTER_ADDRESS;
 
-        // Use drpc which supports 10,000 blocks range per call
-        const rpcProvider = new ethers.JsonRpcProvider("https://xlayer.drpc.org");
+        // Use Sentio which supports 100,000 blocks range per call
+        const rpcProvider = new ethers.JsonRpcProvider("https://xlayer-mainnet.rpc.sentio.xyz");
         const abi = [
           "function activeMatchId() external view returns (uint256)",
           "function matches(uint256) external view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)",
@@ -1550,9 +1550,9 @@ export default function App() {
 
 
         if (latestBlock >= startBlock) {
-          // Fix: DRPC free tier throws "ranges over 10000 blocks are not supported"
-          // We use 500 to be perfectly safe and avoid request timeouts on free tier
-          const chunkSize = 500;
+          // Fix: Sentio supports up to 100,000 block ranges per query.
+          // We use 50,000 to be extremely fast and robust.
+          const chunkSize = 50000;
           let allSuccess = true;
 
           // Process retrieved events and accumulate in statsCache
@@ -1729,7 +1729,7 @@ export default function App() {
       }
 
       try {
-        const rpcProvider = new ethers.JsonRpcProvider("https://xlayer.drpc.org");
+        const rpcProvider = new ethers.JsonRpcProvider("https://xlayer-mainnet.rpc.sentio.xyz");
         const queryAbi = [
           "function predictions(uint256, address) external view returns (uint8 predictedTeam, uint256 okbAmount, uint256 grushAmount, bool okbClaimed, bool grushClaimed)"
         ];

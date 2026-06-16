@@ -2759,70 +2759,94 @@ export default function App() {
                   </div>
                 ) : (activeMatch.resolved || activeMatch.minute === 'FT') ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
-                    <div style={{
-                      background: 'rgba(157, 255, 0, 0.04)',
-                      border: '1px solid rgba(157, 255, 0, 0.25)',
-                      borderRadius: '12px',
-                      padding: '16px',
-                      textAlign: 'center'
-                    }}>
-                      <h4 style={{ color: 'var(--color-primary)', margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 700 }}>🏆 MATCH RESOLVED</h4>
-                      <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.85rem', margin: 0 }}>
-                        <strong>{activeMatch.teamA}</strong> {activeMatch.scoreA ?? '?'} – {activeMatch.scoreB ?? '?'} <strong>{activeMatch.teamB}</strong>
-                      </p>
-                      <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.8rem', marginTop: '6px', marginBottom: 0 }}>
-                        Result: <strong style={{ color: 'var(--color-secondary)' }}>
-                          {activeMatch.winner === 1 ? `${activeMatch.teamA} Wins` : activeMatch.winner === 2 ? `${activeMatch.teamB} Wins` : 'Draw'}
-                        </strong>
-                      </p>
-                      <p style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.72rem', marginTop: '8px', marginBottom: 0 }}>
-                        {typeof activeMatch.id === 'number' 
-                          ? `On-chain Match #${activeMatch.id} · Jackpot: ${jackpot.toFixed(4)} OKB`
-                          : 'This is a local simulation match. On-chain claims require the contract-active match.'
-                        }
-                      </p>
-                    </div>
-                    {typeof activeMatch.id === 'number' && (
-                      <>
-                        {walletConnected ? (
-                          userPrediction ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                              {parseFloat(userPrediction.okbAmount) > 0 && userPrediction.predictedTeam === activeMatch.winner && !userPrediction.okbClaimed && (
-                                <button
-                                  type="button"
-                                  onClick={handleClaimJackpot}
-                                  className="swap-btn"
-                                  style={{ width: '100%', background: 'var(--color-secondary)', color: '#000', fontWeight: 'bold' }}
-                                >
-                                  Claim OKB Jackpot ({userPrediction.okbAmount} OKB Prediction) 💰
-                                </button>
-                              )}
-                              {parseFloat(userPrediction.grushAmount) > 0 && userPrediction.predictedTeam === activeMatch.winner && !userPrediction.grushClaimed && (
-                                <button
-                                  type="button"
-                                  onClick={handleClaimGrushJackpot}
-                                  className="swap-btn"
-                                  style={{ width: '100%', background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
-                                >
-                                  Claim GRUSH Jackpot ({userPrediction.grushAmount} GRUSH Prediction) ⚽
-                                </button>
-                              )}
-                              
-                              {/* Wrong prediction */}
-                              {userPrediction.predictedTeam !== activeMatch.winner && (userPrediction.predictedTeam === 1 || userPrediction.predictedTeam === 2) && (
-                                <div style={{
-                                  color: 'rgba(255, 100, 100, 0.95)',
-                                  fontSize: '0.85rem',
-                                  textAlign: 'center',
-                                  background: 'rgba(255, 50, 50, 0.08)',
-                                  border: '1px solid rgba(255, 50, 50, 0.2)',
-                                  padding: '12px',
-                                  borderRadius: '10px',
-                                  fontWeight: '500'
-                                }}>
-                                  ❌ Sorry, your prediction for {userPrediction.predictedTeam === 1 ? activeMatch.teamA : activeMatch.teamB} was incorrect.
-                                </div>
-                              )}
+                      <div style={{
+                        background: 'rgba(157, 255, 0, 0.04)',
+                        border: '1px solid rgba(157, 255, 0, 0.25)',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        textAlign: 'center'
+                      }}>
+                        <h4 style={{ color: 'var(--color-primary)', margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 700 }}>🏆 MATCH STATUS</h4>
+                        <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.85rem', margin: 0 }}>
+                          <strong>{activeMatch.teamA}</strong> {activeMatch.scoreA ?? '?'} – {activeMatch.scoreB ?? '?'} <strong>{activeMatch.teamB}</strong>
+                        </p>
+                        <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.8rem', marginTop: '6px', marginBottom: 0 }}>
+                          Result: <strong style={{ color: 'var(--color-secondary)' }}>
+                            {!activeMatch.resolved 
+                              ? 'Pending Resolution' 
+                              : activeMatch.winner === 1 
+                                ? `${activeMatch.teamA} Wins` 
+                                : activeMatch.winner === 2 
+                                  ? `${activeMatch.teamB} Wins` 
+                                  : 'Draw'
+                            }
+                          </strong>
+                        </p>
+                        <p style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.72rem', marginTop: '8px', marginBottom: 0 }}>
+                          {isSelectedMatchOnChain 
+                            ? `On-chain Match · Jackpot: ${jackpot.toFixed(4)} OKB`
+                            : 'This is a local simulation match. On-chain claims require the contract-active match.'
+                          }
+                        </p>
+                      </div>
+                      {isSelectedMatchOnChain && (
+                        <>
+                          {walletConnected ? (
+                            userPrediction ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                {/* Match pending resolution on-chain */}
+                                {!activeMatch.resolved && (userPrediction.predictedTeam === 1 || userPrediction.predictedTeam === 2 || userPrediction.predictedTeam === 3) && (
+                                  <div style={{
+                                    color: 'rgba(255, 255, 255, 0.85)',
+                                    fontSize: '0.85rem',
+                                    textAlign: 'center',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                                    padding: '12px',
+                                    borderRadius: '10px',
+                                    fontWeight: '500'
+                                  }}>
+                                    ⏳ Your prediction: <strong>{userPrediction.predictedTeam === 1 ? activeMatch.teamA : userPrediction.predictedTeam === 2 ? activeMatch.teamB : 'Draw'}</strong>. Waiting for match to be resolved on-chain.
+                                  </div>
+                                )}
+
+                                {/* Correct prediction and not claimed yet */}
+                                {activeMatch.resolved && parseFloat(userPrediction.okbAmount) > 0 && userPrediction.predictedTeam === activeMatch.winner && !userPrediction.okbClaimed && (
+                                  <button
+                                    type="button"
+                                    onClick={handleClaimJackpot}
+                                    className="swap-btn"
+                                    style={{ width: '100%', background: 'var(--color-secondary)', color: '#000', fontWeight: 'bold' }}
+                                  >
+                                    Claim OKB Jackpot ({userPrediction.okbAmount} OKB Prediction) 💰
+                                  </button>
+                                )}
+                                {activeMatch.resolved && parseFloat(userPrediction.grushAmount) > 0 && userPrediction.predictedTeam === activeMatch.winner && !userPrediction.grushClaimed && (
+                                  <button
+                                    type="button"
+                                    onClick={handleClaimGrushJackpot}
+                                    className="swap-btn"
+                                    style={{ width: '100%', background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
+                                  >
+                                    Claim GRUSH Jackpot ({userPrediction.grushAmount} GRUSH Prediction) ⚽
+                                  </button>
+                                )}
+                                
+                                {/* Wrong prediction */}
+                                {activeMatch.resolved && userPrediction.predictedTeam !== activeMatch.winner && (
+                                  <div style={{
+                                    color: 'rgba(255, 100, 100, 0.95)',
+                                    fontSize: '0.85rem',
+                                    textAlign: 'center',
+                                    background: 'rgba(255, 50, 50, 0.08)',
+                                    border: '1px solid rgba(255, 50, 50, 0.2)',
+                                    padding: '12px',
+                                    borderRadius: '10px',
+                                    fontWeight: '500'
+                                  }}>
+                                    ❌ Sorry, your prediction for {userPrediction.predictedTeam === 1 ? activeMatch.teamA : userPrediction.predictedTeam === 2 ? activeMatch.teamB : 'Draw'} was incorrect.
+                                  </div>
+                                )}
                               
                               {/* Already claimed states */}
                               {userPrediction.predictedTeam === activeMatch.winner && (

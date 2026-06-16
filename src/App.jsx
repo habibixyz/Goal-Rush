@@ -514,8 +514,8 @@ const getProvider = () => {
   return null;
 };
 
-const HOOK_ADDRESS = '0x9bA0a504dbdBbe96300E56D69FCbd5154b10C0c0';
-const ROUTER_ADDRESS = '0xB8332a105f2ea7F53Bd94554F74658Bf767f8D67';
+const HOOK_ADDRESS = '0x4cb3D9931Dc1b95c4aEF1358503608e3f85340C0';
+const ROUTER_ADDRESS = '0xB7c9d225f7Ad8669fF31cc39D771b3365631110D';
 const GRUSH_TOKEN_ADDRESS = '0x422fe165b2da990d18c6dca944b11dcd61519671';
 
 // Helper to get today/tomorrow date strings dynamically
@@ -532,6 +532,18 @@ const TODAY_LABEL = getTodayLabel();
 const TOMORROW_LABEL = getTomorrowLabel();
 
 export default function App() {
+  const getNumericMatchId = (matchId) => {
+    if (!matchId) return 0n;
+    if (typeof matchId === 'bigint') return matchId;
+    if (typeof matchId === 'number') return BigInt(matchId);
+    const s = String(matchId);
+    if (/^\d+$/.test(s)) return BigInt(s);
+    return BigInt(ethers.id(s));
+  };
+
+  const [onChainActiveId, setOnChainActiveId] = useState(0n);
+  const [isSelectedMatchOnChain, setIsSelectedMatchOnChain] = useState(false);
+
   const [activeMatch, setActiveMatch] = useState({
     id: 10,
     teamA: 'Netherlands',
@@ -566,8 +578,10 @@ export default function App() {
   const [grushJackpot, setGrushJackpot] = useState(0)
   const [teamAVotes, setTeamAVotes] = useState(0) // Argentina volume OKB
   const [teamBVotes, setTeamBVotes] = useState(0) // France volume OKB
+  const [teamDrawVotes, setTeamDrawVotes] = useState(0) // Draw volume OKB
   const [teamAGrushVotes, setTeamAGrushVotes] = useState(0)
   const [teamBGrushVotes, setTeamBGrushVotes] = useState(0)
+  const [teamDrawGrushVotes, setTeamDrawGrushVotes] = useState(0)
   const [activeTab, setActiveTab] = useState('hook') // hook, mock, deploy, readme
   const [showDevPortal, setShowDevPortal] = useState(false)
   const [showWhitepaper, setShowWhitepaper] = useState(false)
@@ -765,15 +779,18 @@ export default function App() {
 
   const renderMatchHubDetails = (m) => {
     const isMainActive = activeMatch.id === m.id;
+    const isActiveOnChain = getNumericMatchId(m.id) === onChainActiveId && onChainActiveId > 0n;
     const stats = getMatchStats(m);
     const lineups = getLineups(m.teamA, m.teamB);
 
-    const displayJackpot = isMainActive ? jackpot : 0;
-    const displayVotesA = isMainActive ? teamAVotes : 0;
-    const displayVotesB = isMainActive ? teamBVotes : 0;
-    const totalVotes = displayVotesA + displayVotesB;
-    const percentA = totalVotes > 0 ? ((displayVotesA / totalVotes) * 100).toFixed(0) : '50';
-    const percentB = totalVotes > 0 ? ((displayVotesB / totalVotes) * 100).toFixed(0) : '50';
+    const displayJackpot = isSelectedMatchOnChain ? jackpot : 0;
+    const displayVotesA = isSelectedMatchOnChain ? teamAVotes : 0;
+    const displayVotesB = isSelectedMatchOnChain ? teamBVotes : 0;
+    const displayVotesDraw = isSelectedMatchOnChain ? teamDrawVotes : 0;
+    const totalVotes = displayVotesA + displayVotesB + displayVotesDraw;
+    const percentA = totalVotes > 0 ? ((displayVotesA / totalVotes) * 100).toFixed(0) : '33';
+    const percentDraw = totalVotes > 0 ? ((displayVotesDraw / totalVotes) * 100).toFixed(0) : '33';
+    const percentB = totalVotes > 0 ? ((displayVotesB / totalVotes) * 100).toFixed(0) : '34';
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -826,7 +843,7 @@ export default function App() {
             <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
               🎯 Prediction Jackpot Pool
             </h4>
-            {isMainActive ? (
+            {isActiveOnChain ? (
               <span style={{ fontSize: '0.65rem', background: 'rgba(157, 255, 0, 0.15)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)', padding: '2px 8px', borderRadius: '4px', fontWeight: 700, textTransform: 'uppercase' }}>
                 Active On-Chain
               </span>
@@ -868,11 +885,13 @@ export default function App() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
               <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{m.teamA} ({percentA}%)</span>
-              <span style={{ fontWeight: 600, color: 'var(--color-secondary)' }}>{m.teamB} ({percentB}%)</span>
+              <span style={{ fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)' }}>Draw ({percentDraw}%)</span>
+              <span style={{ fontWeight: 600, color: '#ff007a' }}>{m.teamB} ({percentB}%)</span>
             </div>
             <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '99px', overflow: 'hidden', display: 'flex' }}>
               <div style={{ width: `${percentA}%`, background: 'var(--color-primary)', height: '100%' }}></div>
-              <div style={{ width: `${percentB}%`, background: 'var(--color-secondary)', height: '100%' }}></div>
+              <div style={{ width: `${percentDraw}%`, background: 'rgba(255, 255, 255, 0.35)', height: '100%' }}></div>
+              <div style={{ width: `${percentB}%`, background: '#ff007a', height: '100%' }}></div>
             </div>
           </div>
 
@@ -1359,8 +1378,9 @@ export default function App() {
         const hookAddress = HOOK_ADDRESS;
         const routerAddress = ROUTER_ADDRESS;
 
-        // Use Sentio which supports 100,000 blocks range per call
-        const rpcProvider = new ethers.JsonRpcProvider("https://xlayer-mainnet.rpc.sentio.xyz");
+        // Use official public RPC for general reads to bypass CORS/adblocker blocks, and Sentio for logs
+        const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
+        const logProvider = new ethers.JsonRpcProvider("https://xlayer-mainnet.rpc.sentio.xyz");
         const abi = [
           "function activeMatchId() external view returns (uint256)",
           "function matches(uint256) external view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)",
@@ -1390,19 +1410,38 @@ export default function App() {
         if (!hasInitializedRef.current) {
           try {
             const activeId = await hookContract.activeMatchId();
-            const actIdNum = Number(activeId);
-            if (actIdNum > 0) {
-              currentId = actIdNum;
+            if (activeId > 0n) {
               hasInitializedRef.current = true;
               try {
-                const actMatchData = await hookContract.matches(actIdNum);
+                const actMatchData = await hookContract.matches(activeId);
                 const actTeamA = actMatchData[1] || actMatchData.teamA || 'Canada';
                 const actTeamB = actMatchData[2] || actMatchData.teamB || 'Bosnia & Herzegovina';
+                
+                // Find a matching match in liveMatches list (by checking getNumericMatchId)
+                const matchedLive = liveMatchesRef.current.find(m => getNumericMatchId(m.id) === activeId);
+                
                 activeOnChainMatchRef.current = {
-                  id: actIdNum,
+                  id: matchedLive ? matchedLive.id : activeId.toString(),
                   teamA: actTeamA,
                   teamB: actTeamB
                 };
+
+                // Auto-select active match if user hasn't selected anything else yet
+                if (activeMatchRef.current.id === 10) {
+                  if (matchedLive) {
+                    handleSelectMatchUI(matchedLive);
+                  } else {
+                    setActiveMatch({
+                      id: activeId.toString(),
+                      teamA: actTeamA,
+                      teamB: actTeamB,
+                      flagA: getTeamFifaCode(actTeamA),
+                      flagB: getTeamFifaCode(actTeamB),
+                      resolved: false,
+                      winner: 0
+                    });
+                  }
+                }
               } catch (e) {
                 console.warn("Failed to fetch details for default active match:", e);
               }
@@ -1412,24 +1451,33 @@ export default function App() {
           }
         }
 
+        const activeIdFromContract = await hookContract.activeMatchId();
+        setOnChainActiveId(activeIdFromContract);
+
+        const numericId = getNumericMatchId(currentId);
+        console.log("[fetchOnChainData] currentId:", currentId, "numericId:", numericId.toString(), "activeIdFromContract:", activeIdFromContract.toString());
+
         // Fetch selected match info safely
         try {
-          // ALWAYS fetch the on-chain active match for jackpot pool and prediction stats
-          const activeIdFromContract = Number(await hookContract.activeMatchId());
-          
-          if (activeIdFromContract > 0) {
-            const matchData = await hookContract.matches(activeIdFromContract);
+          const matchData = await hookContract.matches(numericId);
+          const exists = matchData[0] !== 0n;
+          console.log("[fetchOnChainData] matchData.id:", matchData[0].toString(), "exists:", exists);
+          setIsSelectedMatchOnChain(exists);
+
+          if (exists) {
             const teamAName = matchData[1] || matchData.teamA || 'Team A';
             const teamBName = matchData[2] || matchData.teamB || 'Team B';
             const isResolved = matchData[5] !== undefined ? matchData[5] : matchData.resolved;
             const winnerId = Number(matchData[6] !== undefined ? matchData[6] : (matchData.winner || 0));
 
             // Keep the active onchain match ref updated
-            activeOnChainMatchRef.current = {
-              id: activeIdFromContract,
-              teamA: teamAName,
-              teamB: teamBName
-            };
+            if (numericId === activeIdFromContract) {
+              activeOnChainMatchRef.current = {
+                id: currentId,
+                teamA: teamAName,
+                teamB: teamBName
+              };
+            }
 
             const totalJackpotWei = matchData[7] || matchData.totalJackpot || 0n;
             // OKB predictions are held by the Router contract - check both
@@ -1439,10 +1487,12 @@ export default function App() {
             const displayJackpot = combinedBalance > totalJackpotWei ? combinedBalance : totalJackpotWei;
             setJackpot(Number(ethers.formatEther(displayJackpot)));
 
-            const volA = await hookContract.teamPredictionVolume(activeIdFromContract, 1);
-            const volB = await hookContract.teamPredictionVolume(activeIdFromContract, 2);
+            const volA = await hookContract.teamPredictionVolume(numericId, 1);
+            const volB = await hookContract.teamPredictionVolume(numericId, 2);
+            const volDraw = await hookContract.teamPredictionVolume(numericId, 3);
             setTeamAVotes(Number(ethers.formatEther(volA)));
             setTeamBVotes(Number(ethers.formatEther(volB)));
+            setTeamDrawVotes(Number(ethers.formatEther(volDraw)));
 
             // Read GRUSH jackpot - check both new and old Hook contracts
             try {
@@ -1454,71 +1504,43 @@ export default function App() {
               const totalGrush = newHookGrush + oldHookGrush;
               setGrushJackpot(Number(ethers.formatEther(totalGrush)));
               try {
-                const grushVolA = await hookContract.teamGrushPredictionVolume(activeIdFromContract, 1);
-                const grushVolB = await hookContract.teamGrushPredictionVolume(activeIdFromContract, 2);
+                const grushVolA = await hookContract.teamGrushPredictionVolume(numericId, 1);
+                const grushVolB = await hookContract.teamGrushPredictionVolume(numericId, 2);
+                const grushVolDraw = await hookContract.teamGrushPredictionVolume(numericId, 3);
                 setTeamAGrushVotes(Number(ethers.formatEther(grushVolA)));
                 setTeamBGrushVotes(Number(ethers.formatEther(grushVolB)));
+                setTeamDrawGrushVotes(Number(ethers.formatEther(grushVolDraw)));
               } catch (_) {
                 setTeamAGrushVotes(0);
                 setTeamBGrushVotes(0);
+                setTeamDrawGrushVotes(0);
               }
             } catch (grushErr) {
               setGrushJackpot(0);
             }
 
-            // If the UI is currently viewing the on-chain match, sync its resolution state
-            if (currentId === activeIdFromContract) {
-              setActiveMatch(prev => {
-                if (prev.id !== currentId) return prev;
-                if (prev.teamA === teamAName && prev.teamB === teamBName && prev.resolved === isResolved && prev.winner === winnerId) {
-                  return prev;
-                }
-                return {
-                  ...prev,
-                  id: currentId,
-                  teamA: teamAName,
-                  teamB: teamBName,
-                  flagA: getTeamFifaCode(teamAName),
-                  flagB: getTeamFifaCode(teamBName),
-                  resolved: isResolved,
-                  winner: winnerId
-                };
-              });
-            } else if (typeof currentId === 'number' && currentId > 0) {
-              // If viewing a different on-chain match (e.g. past resolved match), sync its resolution and winner from the blockchain too!
-              try {
-                const selectedMatchData = await hookContract.matches(currentId);
-                const selResolved = selectedMatchData[5] !== undefined ? selectedMatchData[5] : selectedMatchData.resolved;
-                const selWinner = Number(selectedMatchData[6] !== undefined ? selectedMatchData[6] : (selectedMatchData.winner || 0));
-                const selTeamA = selectedMatchData[1] || selectedMatchData.teamA || 'Team A';
-                const selTeamB = selectedMatchData[2] || selectedMatchData.teamB || 'Team B';
-
-                setActiveMatch(prev => {
-                  if (prev.id !== currentId) return prev;
-                  if (prev.resolved === selResolved && prev.winner === selWinner) {
-                    return prev;
-                  }
-                  return {
-                    ...prev,
-                    teamA: selTeamA,
-                    teamB: selTeamB,
-                    flagA: getTeamFifaCode(selTeamA),
-                    flagB: getTeamFifaCode(selTeamB),
-                    resolved: selResolved,
-                    winner: selWinner
-                  };
-                });
-              } catch (e) {
-                console.warn("Failed to fetch past match details for ID:", currentId, e);
+            // Sync resolution state for current match in UI if activeMatch corresponds to this match
+            setActiveMatch(prev => {
+              if (prev.id !== currentId) return prev;
+              if (prev.teamA === teamAName && prev.teamB === teamBName && prev.resolved === isResolved && prev.winner === winnerId) {
+                return prev;
               }
-            }
+              return {
+                ...prev,
+                resolved: isResolved,
+                winner: winnerId
+              };
+            });
           } else {
+            // Match does not exist on contract yet
             setJackpot(0);
             setGrushJackpot(0);
             setTeamAVotes(0);
             setTeamBVotes(0);
+            setTeamDrawVotes(0);
             setTeamAGrushVotes(0);
             setTeamBGrushVotes(0);
+            setTeamDrawGrushVotes(0);
           }
         } catch (matchErr) {
           console.warn("Failed to fetch match data from hook contract for ID:", currentId, matchErr);
@@ -1585,10 +1607,12 @@ export default function App() {
             }
             const to = Math.min(from + chunkSize - 1, latestBlock);
             try {
-              const logs = await rpcProvider.getLogs({
+              const logs = await logProvider.getLogs({
                 address: [
                   hookAddress, 
                   routerAddress, 
+                  '0x9bA0a504dbdBbe96300E56D69FCbd5154b10C0c0',
+                  '0xB8332a105f2ea7F53Bd94554F74658Bf767f8D67',
                   '0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0', 
                   '0xe1Ad1C1Ab7600E6c3Fbaf0c80c3b947B7F901B7F'
                 ],
@@ -1598,7 +1622,9 @@ export default function App() {
 
               logs.forEach(log => {
                 const addrLower = log.address.toLowerCase();
-                if (addrLower === hookAddress.toLowerCase() || addrLower === '0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0'.toLowerCase()) {
+                if (addrLower === hookAddress.toLowerCase() || 
+                    addrLower === '0x9bA0a504dbdBbe96300E56D69FCbd5154b10C0c0'.toLowerCase() ||
+                    addrLower === '0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0'.toLowerCase()) {
                   try {
                     const parsed = hookContract.interface.parseLog(log);
                     if (parsed) {
@@ -1626,7 +1652,9 @@ export default function App() {
                   } catch (e) {
                     // Ignore decoding errors
                   }
-                } else if (addrLower === routerAddress.toLowerCase() || addrLower === '0xe1Ad1C1Ab7600E6c3Fbaf0c80c3b947B7F901B7F'.toLowerCase()) {
+                } else if (addrLower === routerAddress.toLowerCase() || 
+                           addrLower === '0xB8332a105f2ea7F53Bd94554F74658Bf767f8D67'.toLowerCase() ||
+                           addrLower === '0xe1Ad1C1Ab7600E6c3Fbaf0c80c3b947B7F901B7F'.toLowerCase()) {
                   try {
                     // Parse raw log directly since deployed contract may differ from source
                     // Topic[0] = event sig, Topic[1] = indexed user address
@@ -1713,7 +1741,7 @@ export default function App() {
     fetchOnChainData();
     const interval = setInterval(fetchOnChainData, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeMatch.id]);
 
   useEffect(() => {
     const fetchUserPrediction = async () => {
@@ -1722,19 +1750,14 @@ export default function App() {
         return;
       }
       
-      const isRealWorld = typeof activeMatch.id === 'string' && activeMatch.id.startsWith('api-');
-      if (isRealWorld) {
-        setUserPrediction(null);
-        return;
-      }
-
       try {
-        const rpcProvider = new ethers.JsonRpcProvider("https://xlayer-mainnet.rpc.sentio.xyz");
+        const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
         const queryAbi = [
           "function predictions(uint256, address) external view returns (uint8 predictedTeam, uint256 okbAmount, uint256 grushAmount, bool okbClaimed, bool grushClaimed)"
         ];
         const queryContract = new ethers.Contract(HOOK_ADDRESS, queryAbi, rpcProvider);
-        const pred = await queryContract.predictions(activeMatch.id, userAddress);
+        const numericId = getNumericMatchId(activeMatch.id);
+        const pred = await queryContract.predictions(numericId, userAddress);
         
         setUserPrediction({
           predictedTeam: Number(pred[0]),
@@ -1893,8 +1916,8 @@ export default function App() {
 
   const handlePredictionChange = (teamId) => {
     setPrediction(teamId)
-    const selectedTeam = teamId === 1 ? activeMatch.teamA : activeMatch.teamB
-    addLog(`Selected Prediction: ${selectedTeam} ???`)
+    const selectedTeam = teamId === 1 ? activeMatch.teamA : teamId === 2 ? activeMatch.teamB : 'Draw'
+    addLog(`Selected Prediction: ${selectedTeam} ⚽`)
 
     // Ball and player always reset to the middle!
     setBallPos({ x: 50, y: 50 })
@@ -1903,15 +1926,18 @@ export default function App() {
     // Goalkeeper snaps to the predicted goalpost
     if (teamId === 1) {
       setGkPos({ x: 2, y: 50 }) // left goal
-    } else {
+    } else if (teamId === 2) {
       setGkPos({ x: 98, y: 50 }) // right goal
+    } else {
+      setGkPos({ x: 50, y: 25 }) // center
     }
   }
 
   const handleSwapAndStrike = async (e) => {
     e.preventDefault()
-    if (typeof activeMatch.id === 'string' && activeMatch.id.startsWith('api-')) {
-      alert('This match is not active for on-chain predictions. Please select an active World Cup match to place predictions.');
+    console.log("[handleSwapAndStrike] isSelectedMatchOnChain:", isSelectedMatchOnChain, "activeMatch:", activeMatch);
+    if (!isSelectedMatchOnChain) {
+      alert('This match has not been activated on-chain yet. Please activate it first or select an active match.');
       return;
     }
     if (!walletConnected) {
@@ -1946,26 +1972,20 @@ export default function App() {
         addLog(`Approval submitted: ${approveTx.hash.slice(0, 10)}... waiting for confirmation`);
         await approveTx.wait();
 
-        addLog(`[predictWithGRUSH] Recording ${parsedAmount} GRUSH prediction for ${prediction === 1 ? activeMatch.teamA : activeMatch.teamB}...`);
+        const predictionLabel = prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw';
+        addLog(`[predictWithGRUSH] Recording ${parsedAmount} GRUSH prediction for ${predictionLabel}...`);
         tx = await routerContract.predictWithGRUSH(prediction, amountWei);
       } else {
         const routerAbi = [
-          "function predictWithOKB(uint8 predictedTeam) external payable",
-          "function predictAndDeposit() external payable"
+          "function predictWithOKB(uint8 predictedTeam) external payable"
         ];
         const routerContract = new ethers.Contract(ROUTER_ADDRESS, routerAbi, signer);
 
-        addLog(`[predictWithOKB] Recording ${parsedAmount} OKB prediction for ${prediction === 1 ? activeMatch.teamA : activeMatch.teamB}...`);
-        try {
-          tx = await routerContract.predictWithOKB(prediction, {
-            value: ethers.parseEther(swapAmount)
-          });
-        } catch (predictErr) {
-          addLog('[compat] Router does not expose predictWithOKB yet. Falling back to legacy OKB deposit.');
-          tx = await routerContract.predictAndDeposit({
-            value: ethers.parseEther(swapAmount)
-          });
-        }
+        const predictionLabel = prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw';
+        addLog(`[predictWithOKB] Recording ${parsedAmount} OKB prediction for ${predictionLabel}...`);
+        tx = await routerContract.predictWithOKB(prediction, {
+          value: ethers.parseEther(swapAmount)
+        });
       }
 
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
@@ -1975,8 +1995,10 @@ export default function App() {
         addLog(`🎉 Transaction confirmed! Prediction jackpot successfully funded with ${parsedAmount} GRUSH.`);
         if (prediction === 1) {
           setTeamAGrushVotes((prev) => prev + parsedAmount);
-        } else {
+        } else if (prediction === 2) {
           setTeamBGrushVotes((prev) => prev + parsedAmount);
+        } else {
+          setTeamDrawGrushVotes((prev) => prev + parsedAmount);
         }
         setGrushJackpot((prev) => prev + parsedAmount);
         try {
@@ -2025,26 +2047,39 @@ export default function App() {
 
       // 5. Kick the ball (it moves halfway and GK starts to move)
       addLog("⚡ Strike launched! Ball in mid-air...")
-      const targetX = prediction === 1 ? 1 : 99
-      const targetY = 42 + Math.random() * 16 // final ball Y coordinate
+      let targetX, gkTargetX;
+      if (prediction === 1) {
+        targetX = 1;
+        gkTargetX = 2;
+      } else if (prediction === 2) {
+        targetX = 99;
+        gkTargetX = 98;
+      } else {
+        targetX = 50;
+        gkTargetX = 50;
+      }
+      const targetY = prediction === 3 ? 15 + Math.random() * 8 : 42 + Math.random() * 16 // final ball Y coordinate
 
       // Goalkeeper final Y coordinate
       // If Goal, goalkeeper dives far away from the ball. If Save, goalkeeper dives close to the ball.
-      const gkTargetX = prediction === 1 ? 2 : 98
+      let finalGkTargetX = gkTargetX;
+      if (prediction === 3 && isGoalResult) {
+        finalGkTargetX = 50 + (Math.random() > 0.5 ? -25 : 25);
+      }
       const gkTargetY = isGoalResult
         ? targetY + (Math.random() > 0.5 ? -16 : 16)
         : targetY + (Math.random() - 0.5) * 4;
 
       // Mid-point coordinates from the center circle (50, 50)
       setBallPos({ x: (50 + targetX) / 2, y: (50 + targetY) / 2 })
-      setGkPos({ x: gkTargetX, y: (50 + gkTargetY) / 2 })
+      setGkPos({ x: (50 + finalGkTargetX) / 2, y: (50 + gkTargetY) / 2 })
 
       // Dramatic pause at mid-air (slow-mo effect)
       await new Promise(resolve => setTimeout(resolve, 500))
 
       // 6. Impact: Ball reaches the goal, goalkeeper completes the dive
       setBallPos({ x: targetX, y: targetY })
-      setGkPos({ x: gkTargetX, y: gkTargetY })
+      setGkPos({ x: finalGkTargetX, y: gkTargetY })
 
       // Wait for ball to hit target
       await new Promise(resolve => setTimeout(resolve, 300))
@@ -2096,8 +2131,10 @@ export default function App() {
       if (selectedToken === 'OKB') {
         if (prediction === 1) {
           setTeamAVotes((prev) => prev + parsedAmount);
-        } else {
+        } else if (prediction === 2) {
           setTeamBVotes((prev) => prev + parsedAmount);
+        } else {
+          setTeamDrawVotes((prev) => prev + parsedAmount);
         }
       }
 
@@ -2106,7 +2143,7 @@ export default function App() {
         id: Date.now(),
         timestamp: new Date().toLocaleTimeString(),
         match: `${activeMatch.teamA} vs ${activeMatch.teamB}`,
-        prediction: prediction === 1 ? activeMatch.teamA : activeMatch.teamB,
+        prediction: prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw',
         amount: `${parsedAmount} ${selectedToken}`,
         result: isGoal ? 'GOAL ⚽' : 'SAVED ❌'
       }
@@ -2122,8 +2159,10 @@ export default function App() {
         setPlayerPos({ x: 50, y: 56 })
         if (prediction === 1) {
           setGkPos({ x: 2, y: 50 })
-        } else {
+        } else if (prediction === 2) {
           setGkPos({ x: 98, y: 50 })
+        } else {
+          setGkPos({ x: 50, y: 25 })
         }
         setIsStriking(false)
         setShowGoalFlash(false)
@@ -2170,10 +2209,11 @@ export default function App() {
       const hookContract = new ethers.Contract(HOOK_ADDRESS, abi, signer);
       addLog(`[Activate Match] Submitting transaction to activate ${match.teamA} vs ${match.teamB} on-chain...`);
 
-      const tx = await hookContract.createMatch(match.id, match.teamA, match.teamB, 24 * 60 * 60);
+      const numericId = getNumericMatchId(match.id);
+      const tx = await hookContract.createMatch(numericId, match.teamA, match.teamB, 24 * 60 * 60);
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       await tx.wait();
-      addLog(`🎉 Match #${match.id} (${match.teamA} vs ${match.teamB}) successfully activated on-chain!`);
+      addLog(`🎉 Match (${match.teamA} vs ${match.teamB}) successfully activated on-chain!`);
 
       setActiveMatch({
         id: match.id,
@@ -2905,27 +2945,38 @@ export default function App() {
                     {/* Select Team Prediction */}
                     <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                       <div className="swap-label" style={{ marginBottom: '8px' }}>Attach Match Winner Prediction (via hookData)</div>
-                      <div style={{ display: 'flex', gap: '12px' }}>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         <button
                           type="button"
                           onClick={() => handlePredictionChange(1)}
                           className={`btn-secondary ${prediction === 1 ? 'active' : ''}`}
-                          style={{ flex: 1, borderColor: prediction === 1 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
+                          style={{ flex: 1, minWidth: '100px', borderColor: prediction === 1 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
                           disabled={isStriking}
                         >
-                          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                            {activeMatch.teamA} <img src={getFlagUrl(activeMatch.flagA || getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} style={{ width: '16px', height: '11px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                            {activeMatch.teamA} <img src={getFlagUrl(activeMatch.flagA || getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} style={{ width: '14px', height: '10px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handlePredictionChange(3)}
+                          className={`btn-secondary ${prediction === 3 ? 'active' : ''}`}
+                          style={{ flex: 1, minWidth: '80px', borderColor: prediction === 3 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
+                          disabled={isStriking}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                            Draw 🤝
                           </span>
                         </button>
                         <button
                           type="button"
                           onClick={() => handlePredictionChange(2)}
                           className={`btn-secondary ${prediction === 2 ? 'active' : ''}`}
-                          style={{ flex: 1, borderColor: prediction === 2 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
+                          style={{ flex: 1, minWidth: '100px', borderColor: prediction === 2 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
                           disabled={isStriking}
                         >
-                          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                            {activeMatch.teamB} <img src={getFlagUrl(activeMatch.flagB || getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} style={{ width: '16px', height: '11px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                            {activeMatch.teamB} <img src={getFlagUrl(activeMatch.flagB || getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} style={{ width: '14px', height: '10px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
                           </span>
                         </button>
                       </div>
@@ -3029,10 +3080,15 @@ export default function App() {
                 </div>
 
                 {activeRightTab === 'match' && (() => {
-                  const totalVotes = teamAVotes + teamBVotes;
-                  const percentageA = totalVotes > 0 ? ((teamAVotes / totalVotes) * 100).toFixed(0) : '50';
-                  const percentageB = totalVotes > 0 ? ((teamBVotes / totalVotes) * 100).toFixed(0) : '50';
-                  const progressWidth = totalVotes > 0 ? (teamAVotes / totalVotes) * 100 : 50;
+                  const totalVotes = teamAVotes + teamBVotes + teamDrawVotes;
+                  const percentageA = totalVotes > 0 ? ((teamAVotes / totalVotes) * 100).toFixed(0) : '33';
+                  const percentageDraw = totalVotes > 0 ? ((teamDrawVotes / totalVotes) * 100).toFixed(0) : '33';
+                  const percentageB = totalVotes > 0 ? ((teamBVotes / totalVotes) * 100).toFixed(0) : '34';
+
+                  const widthA = totalVotes > 0 ? (teamAVotes / totalVotes) * 100 : 33.3;
+                  const widthDraw = totalVotes > 0 ? (teamDrawVotes / totalVotes) * 100 : 33.3;
+                  const widthB = totalVotes > 0 ? (teamBVotes / totalVotes) * 100 : 33.4;
+
                   return (
                     <>
                       <div className="jackpot-display">
@@ -3057,6 +3113,14 @@ export default function App() {
                           <span className="team-odds">{teamAVotes.toFixed(1)} OKB ({percentageA}%)</span>
                         </div>
 
+                        <div className={`team-row ${prediction === 3 ? 'selected' : ''}`} onClick={() => handlePredictionChange(3)}>
+                          <div className="team-meta">
+                            <span style={{ fontSize: '1.1rem', marginRight: '8px' }}>🤝</span>
+                            <span className="team-name">Draw</span>
+                          </div>
+                          <span className="team-odds">{teamDrawVotes.toFixed(1)} OKB ({percentageDraw}%)</span>
+                        </div>
+
                         <div className={`team-row ${prediction === 2 ? 'selected' : ''}`} onClick={() => handlePredictionChange(2)}>
                           <div className="team-meta">
                             <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} className="team-flag" style={{ width: '20px', height: '14px', borderRadius: '2px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)' }} />
@@ -3065,11 +3129,31 @@ export default function App() {
                           <span className="team-odds">{teamBVotes.toFixed(1)} OKB ({percentageB}%)</span>
                         </div>
 
-                        <div className="odds-progress-wrap">
+                        <div className="odds-progress-wrap" style={{ display: 'flex', height: '8px', borderRadius: '4px' }}>
                           <div
-                            className="odds-progress"
-                            style={{ width: `${progressWidth}%` }}
-                          ></div>
+                            style={{
+                              width: `${widthA}%`,
+                              height: '100%',
+                              background: 'var(--color-primary)',
+                              transition: 'width 0.5s ease'
+                            }}
+                          />
+                          <div
+                            style={{
+                              width: `${widthDraw}%`,
+                              height: '100%',
+                              background: 'rgba(255, 255, 255, 0.35)',
+                              transition: 'width 0.5s ease'
+                            }}
+                          />
+                          <div
+                            style={{
+                              width: `${widthB}%`,
+                              height: '100%',
+                              background: '#ff007a',
+                              transition: 'width 0.5s ease'
+                            }}
+                          />
                         </div>
                       </div>
                       {/* Console Logs */}
@@ -3097,6 +3181,7 @@ export default function App() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       {displayMatches.map((m) => {
                         const isSelected = activeMatch.id === m.id;
+                        const isActiveOnChain = getNumericMatchId(m.id) === onChainActiveId && onChainActiveId > 0n;
                         return (
                           <div
                             key={m.id}
@@ -3200,7 +3285,7 @@ export default function App() {
                                   Upcoming
                                 </span>
                               )}
-                              {isSelected ? (
+                              {isActiveOnChain ? (
                                 <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 700, marginTop: '6px', background: 'rgba(157, 255, 0, 0.12)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
                                   ON-CHAIN
                                 </span>

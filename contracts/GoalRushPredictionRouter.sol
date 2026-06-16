@@ -24,7 +24,7 @@ contract GoalRushPredictionRouter {
 
     function predictWithOKB(uint8 predictedTeam) external payable {
         require(msg.value > 0, "Amount must be greater than 0");
-        require(predictedTeam == 1 || predictedTeam == 2, "Invalid prediction");
+        require(predictedTeam == 1 || predictedTeam == 2 || predictedTeam == 3, "Invalid prediction");
         
         IGoalRushHook(hookAddress).placeOkbPredictionFor{value: msg.value}(msg.sender, predictedTeam);
         
@@ -33,7 +33,7 @@ contract GoalRushPredictionRouter {
 
     function predictWithGRUSH(uint8 predictedTeam, uint256 amount) external {
         require(amount > 0, "Amount must be greater than 0");
-        require(predictedTeam == 1 || predictedTeam == 2, "Invalid prediction");
+        require(predictedTeam == 1 || predictedTeam == 2 || predictedTeam == 3, "Invalid prediction");
 
         require(grushToken.transferFrom(msg.sender, hookAddress, amount), "GRUSH transfer failed");
         IGoalRushHook(hookAddress).placeGrushPredictionFor(msg.sender, predictedTeam, amount);

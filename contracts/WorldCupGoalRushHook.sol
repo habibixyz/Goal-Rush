@@ -215,7 +215,7 @@ contract WorldCupGoalRushHook {
         Match storage targetMatch = matches[_matchId];
         require(targetMatch.id != 0, "Match does not exist");
         require(!targetMatch.resolved, "Match already resolved");
-        require(_winner <= 2, "Invalid winner");
+        require(_winner <= 3, "Invalid winner");
 
         targetMatch.resolved = true;
         targetMatch.winner = _winner;
@@ -243,7 +243,7 @@ contract WorldCupGoalRushHook {
         uint256 jackpotContribution
     ) internal {
         require(matchId > 0, "No active match");
-        require(predictedTeam == 1 || predictedTeam == 2, "Invalid prediction");
+        require(predictedTeam == 1 || predictedTeam == 2 || predictedTeam == 3, "Invalid prediction");
 
         Match storage activeMatch = matches[matchId];
         require(activeMatch.id != 0, "Match does not exist");
@@ -263,7 +263,7 @@ contract WorldCupGoalRushHook {
 
     function _recordGrushPrediction(uint256 matchId, address user, uint8 predictedTeam, uint256 amount) internal {
         require(matchId > 0, "No active match");
-        require(predictedTeam == 1 || predictedTeam == 2, "Invalid prediction");
+        require(predictedTeam == 1 || predictedTeam == 2 || predictedTeam == 3, "Invalid prediction");
 
         Match storage activeMatch = matches[matchId];
         require(activeMatch.id != 0, "Match does not exist");

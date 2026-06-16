@@ -1149,6 +1149,110 @@ export default function App() {
   const [onChainStats, setOnChainStats] = useState({});
   const [scanState, setScanState] = useState({ current: 62494373, total: 62494373, done: false });
 
+  // Past-match claim checker state
+  const [showPastClaimChecker, setShowPastClaimChecker] = useState(false);
+  const [pastMatchInput, setPastMatchInput] = useState('');
+  const [pastClaimResult, setPastClaimResult] = useState(null);
+  const [pastClaimLoading, setPastClaimLoading] = useState(false);
+
+  // Known past matches for quick selection
+  const knownPastMatches = [
+    { label: 'France vs Senegal', matchId: 'espn_760432' },
+    { label: 'Canada vs Bosnia & Herzegovina', matchId: '1' },
+  ];
+
+  const handleCheckPastClaim = async (matchIdInput) => {
+    if (!walletConnected || !userAddress) {
+      alert('Connect your wallet first to check claims.');
+      return;
+    }
+    if (!matchIdInput) return;
+
+    setPastClaimLoading(true);
+    setPastClaimResult(null);
+    try {
+      const rpcProvider = new ethers.JsonRpcProvider('https://rpc.xlayer.tech');
+      const abi = [
+        'function matches(uint256) view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)',
+        'function predictions(uint256, address) view returns (uint8 predictedTeam, uint256 okbAmount, uint256 grushAmount, bool okbClaimed, bool grushClaimed)',
+      ];
+      const hook = new ethers.Contract(HOOK_ADDRESS, abi, rpcProvider);
+      const numericId = getNumericMatchId(matchIdInput);
+      const matchData = await hook.matches(numericId);
+      const exists = matchData[0] !== 0n;
+
+      if (!exists) {
+        setPastClaimResult({ error: `No match found on-chain for ID "${matchIdInput}".` });
+        return;
+      }
+
+      const pred = await hook.predictions(numericId, userAddress);
+      const teamA = matchData[1];
+      const teamB = matchData[2];
+      const resolved = matchData[5];
+      const winner = Number(matchData[6]);
+      const jackpot = ethers.formatEther(matchData[7]);
+      const predictedTeam = Number(pred[0]);
+      const okbAmt = ethers.formatEther(pred[1]);
+      const grushAmt = ethers.formatEther(pred[2]);
+      const okbClaimed = pred[3];
+      const grushClaimed = pred[4];
+
+      setPastClaimResult({
+        matchIdInput,
+        numericId,
+        teamA, teamB, resolved, winner, jackpot,
+        predictedTeam, okbAmount: okbAmt, grushAmount: grushAmt, okbClaimed, grushClaimed,
+        isWinner: resolved && predictedTeam > 0 && predictedTeam === winner,
+        hasPrediction: parseFloat(okbAmt) > 0 || parseFloat(grushAmt) > 0,
+      });
+    } catch (e) {
+      console.error('Past claim check error:', e);
+      setPastClaimResult({ error: `Failed to query contract: ${e.message}` });
+    } finally {
+      setPastClaimLoading(false);
+    }
+  };
+
+  const handleClaimPastOkb = async (numericId) => {
+    try {
+      const rawProvider = getProvider();
+      if (!rawProvider) throw new Error('No wallet provider');
+      const provider = new ethers.BrowserProvider(rawProvider);
+      const signer = await provider.getSigner();
+      const hook = new ethers.Contract(HOOK_ADDRESS, ['function claimJackpot(uint256) external'], signer);
+      addLog(`[claimJackpot] Claiming past match OKB jackpot...`);
+      const tx = await hook.claimJackpot(numericId);
+      await tx.wait();
+      addLog('🎉 OKB Jackpot claimed successfully!');
+      alert('OKB Jackpot claimed!');
+      handleCheckPastClaim(pastClaimResult?.matchIdInput || '');
+    } catch (err) {
+      addLog(`❌ Claim failed: ${err.reason || err.message}`);
+      alert(`Claim failed: ${err.reason || err.message}`);
+    }
+  };
+
+  const handleClaimPastGrush = async (numericId) => {
+    try {
+      const rawProvider = getProvider();
+      if (!rawProvider) throw new Error('No wallet provider');
+      const provider = new ethers.BrowserProvider(rawProvider);
+      const signer = await provider.getSigner();
+      const hook = new ethers.Contract(HOOK_ADDRESS, ['function claimGrushJackpot(uint256) external'], signer);
+      addLog(`[claimGrushJackpot] Claiming past match GRUSH jackpot...`);
+      const tx = await hook.claimGrushJackpot(numericId);
+      await tx.wait();
+      addLog('🎉 GRUSH Jackpot claimed successfully!');
+      alert('GRUSH Jackpot claimed!');
+      handleCheckPastClaim(pastClaimResult?.matchIdInput || '');
+    } catch (err) {
+      addLog(`❌ GRUSH claim failed: ${err.reason || err.message}`);
+      alert(`GRUSH claim failed: ${err.reason || err.message}`);
+    }
+  };
+
+
 
   const leaderboardData = useMemo(() => {
     const merged = { ...onChainStats };
@@ -2184,7 +2288,12 @@ export default function App() {
       teamB: match.teamB,
       flagA: match.flagA || getTeamFifaCode(match.teamA),
       flagB: match.flagB || getTeamFifaCode(match.teamB),
-      resolved: false
+      scoreA: match.scoreA,
+      scoreB: match.scoreB,
+      minute: match.minute,
+      isLive: match.isLive,
+      resolved: match.resolved ?? false,
+      winner: match.winner ?? 0
     });
     setPrediction(1);
     setBallPos({ x: 50, y: 50 })
@@ -2247,9 +2356,10 @@ export default function App() {
         "function claimJackpot(uint256 _matchId) external"
       ];
       const hookContract = new ethers.Contract(HOOK_ADDRESS, abi, signer);
-      addLog(`[claimJackpot] Claiming jackpot shares for Match #${activeMatch.id}...`);
+      const numericMatchId = getNumericMatchId(activeMatch.id);
+      addLog(`[claimJackpot] Claiming jackpot for Match #${activeMatch.id} (on-chain ID: ${numericMatchId.toString()})...`);
 
-      const tx = await hookContract.claimJackpot(activeMatch.id);
+      const tx = await hookContract.claimJackpot(numericMatchId);
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       await tx.wait();
       addLog(`🎉 Jackpot claimed successfully! Shares of the jackpot have been transferred to your wallet.`);
@@ -2275,9 +2385,10 @@ export default function App() {
         "function claimGrushJackpot(uint256 _matchId) external"
       ];
       const hookContract = new ethers.Contract(HOOK_ADDRESS, abi, signer);
-      addLog(`[claimGrushJackpot] Claiming GRUSH jackpot shares for Match #${activeMatch.id}...`);
+      const numericMatchId = getNumericMatchId(activeMatch.id);
+      addLog(`[claimGrushJackpot] Claiming GRUSH jackpot for Match #${activeMatch.id} (on-chain ID: ${numericMatchId.toString()})...`);
 
-      const tx = await hookContract.claimGrushJackpot(activeMatch.id);
+      const tx = await hookContract.claimGrushJackpot(numericMatchId);
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       await tx.wait();
       addLog(`GRUSH jackpot claimed successfully! Token shares have been transferred to your wallet.`);
@@ -2725,6 +2836,215 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* ─── WINNER-ONLY CLAIM PANEL ─────────────────────────────────────
+                    Rules (applies to ALL on-chain matches, now and future):
+                    • Not resolved yet → nothing shown (let them predict / wait)
+                    • Resolved + user won + unclaimed → show Claim button(s)
+                    • Resolved + user won + already claimed → show quiet ✅ badge
+                    • Resolved + user lost → nothing shown (no clutter, no shame)
+                    • No prediction / wallet not connected → nothing shown
+                ─────────────────────────────────────────────────────────────── */}
+                {isSelectedMatchOnChain && walletConnected && userPrediction && activeMatch.resolved && userPrediction.predictedTeam === activeMatch.winner && (
+                  <div style={{
+                    marginTop: '14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px'
+                  }}>
+                    {/* OKB Claim */}
+                    {parseFloat(userPrediction.okbAmount) > 0 && (
+                      userPrediction.okbClaimed ? (
+                        <div style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                          background: 'rgba(157, 255, 0, 0.06)', border: '1px solid rgba(157, 255, 0, 0.2)',
+                          borderRadius: '10px', padding: '10px 14px',
+                          fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-primary)'
+                        }}>
+                          ✅ OKB Jackpot claimed
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          id="claim-okb-jackpot-btn"
+                          onClick={handleClaimJackpot}
+                          className="swap-btn"
+                          style={{
+                            background: 'linear-gradient(135deg, #00e5ff 0%, #9dff00 100%)',
+                            color: '#000', fontWeight: 800, fontSize: '1rem',
+                            boxShadow: '0 0 20px rgba(0, 229, 255, 0.35)',
+                            letterSpacing: '0.3px'
+                          }}
+                        >
+                          💰 Claim OKB Jackpot · {parseFloat(userPrediction.okbAmount).toFixed(4)} OKB
+                        </button>
+                      )
+                    )}
+                    {/* GRUSH Claim */}
+                    {parseFloat(userPrediction.grushAmount) > 0 && (
+                      userPrediction.grushClaimed ? (
+                        <div style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                          background: 'rgba(0, 229, 255, 0.06)', border: '1px solid rgba(0, 229, 255, 0.2)',
+                          borderRadius: '10px', padding: '10px 14px',
+                          fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-secondary)'
+                        }}>
+                          ✅ GRUSH Jackpot claimed
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          id="claim-grush-jackpot-btn"
+                          onClick={handleClaimGrushJackpot}
+                          className="swap-btn"
+                          style={{
+                            background: 'linear-gradient(135deg, #9dff00 0%, #c6ff00 100%)',
+                            color: '#000', fontWeight: 800, fontSize: '1rem',
+                            boxShadow: '0 0 20px rgba(157, 255, 0, 0.35)',
+                            letterSpacing: '0.3px'
+                          }}
+                        >
+                          ⚽ Claim GRUSH Jackpot · {parseFloat(userPrediction.grushAmount).toFixed(0)} GRUSH
+                        </button>
+                      )
+                    )}
+                  </div>
+                )}
+
+
+                {/* ─── CHECK PAST MATCH CLAIMS ─── */}
+                {walletConnected && (
+                  <div style={{ marginTop: '14px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowPastClaimChecker(p => !p)}
+                      style={{
+                        width: '100%', background: 'none', border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '8px', padding: '10px 14px', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        color: 'rgba(255,255,255,0.55)', fontSize: '0.8rem', fontWeight: 600,
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <span>🔍 Check Past Match Claims</span>
+                      <span style={{ transform: showPastClaimChecker ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>▼</span>
+                    </button>
+
+                    {showPastClaimChecker && (
+                      <div style={{
+                        marginTop: '8px', padding: '14px',
+                        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '10px'
+                      }}>
+                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
+                          Select a past match or enter its ID to check your prediction & claim status:
+                        </div>
+
+                        {/* Quick-select past matches */}
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                          {knownPastMatches.map(pm => (
+                            <button
+                              key={pm.matchId}
+                              type="button"
+                              onClick={() => { setPastMatchInput(pm.matchId); handleCheckPastClaim(pm.matchId); }}
+                              className="btn-secondary"
+                              style={{ padding: '4px 10px', fontSize: '0.7rem', cursor: 'pointer', minWidth: 'auto' }}
+                            >
+                              {pm.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Manual ID input */}
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <input
+                            type="text"
+                            value={pastMatchInput}
+                            onChange={e => setPastMatchInput(e.target.value)}
+                            placeholder="Match ID (e.g. espn_760432)"
+                            style={{
+                              flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
+                              borderRadius: '6px', padding: '8px 10px', color: '#fff', fontSize: '0.78rem',
+                              fontFamily: 'var(--font-mono)', outline: 'none'
+                            }}
+                            onKeyDown={e => e.key === 'Enter' && handleCheckPastClaim(pastMatchInput)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleCheckPastClaim(pastMatchInput)}
+                            className="btn-primary"
+                            disabled={pastClaimLoading}
+                            style={{ padding: '8px 14px', fontSize: '0.78rem', minWidth: 'auto' }}
+                          >
+                            {pastClaimLoading ? '...' : 'Check'}
+                          </button>
+                        </div>
+
+                        {/* Result display */}
+                        {pastClaimResult && (
+                          <div style={{
+                            padding: '12px', borderRadius: '8px',
+                            background: pastClaimResult.error ? 'rgba(255,50,50,0.06)' : 'rgba(255,255,255,0.03)',
+                            border: `1px solid ${pastClaimResult.error ? 'rgba(255,50,50,0.2)' : 'rgba(255,255,255,0.1)'}`,
+                            fontSize: '0.82rem'
+                          }}>
+                            {pastClaimResult.error ? (
+                              <div style={{ color: 'rgba(255,100,100,0.9)' }}>{pastClaimResult.error}</div>
+                            ) : (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ color: '#fff', fontWeight: 700 }}>
+                                  {pastClaimResult.teamA} vs {pastClaimResult.teamB}
+                                </div>
+                                <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem' }}>
+                                  Status: {pastClaimResult.resolved
+                                    ? <span style={{ color: 'var(--color-primary)' }}>Resolved · Winner: {pastClaimResult.winner === 1 ? pastClaimResult.teamA : pastClaimResult.winner === 2 ? pastClaimResult.teamB : pastClaimResult.winner === 3 ? 'Draw' : 'None'}</span>
+                                    : <span style={{ color: '#ffb300' }}>Not resolved yet</span>
+                                  }
+                                </div>
+                                <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem' }}>
+                                  Jackpot: {parseFloat(pastClaimResult.jackpot).toFixed(4)} OKB
+                                </div>
+
+                                {!pastClaimResult.hasPrediction ? (
+                                  <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.78rem', fontStyle: 'italic' }}>
+                                    No prediction found from your wallet on this match.
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.78rem' }}>
+                                      Your pick: <strong style={{ color: '#fff' }}>{pastClaimResult.predictedTeam === 1 ? pastClaimResult.teamA : pastClaimResult.predictedTeam === 2 ? pastClaimResult.teamB : 'Draw'}</strong>
+                                      {parseFloat(pastClaimResult.okbAmount) > 0 && ` · ${parseFloat(pastClaimResult.okbAmount).toFixed(4)} OKB`}
+                                      {parseFloat(pastClaimResult.grushAmount) > 0 && ` · ${parseFloat(pastClaimResult.grushAmount).toFixed(0)} GRUSH`}
+                                    </div>
+
+                                    {pastClaimResult.isWinner ? (
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        {parseFloat(pastClaimResult.okbAmount) > 0 && (
+                                          pastClaimResult.okbClaimed
+                                            ? <div style={{ color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.8rem' }}>✅ OKB Jackpot already claimed</div>
+                                            : <button type="button" onClick={() => handleClaimPastOkb(pastClaimResult.numericId)} className="swap-btn" style={{ background: 'linear-gradient(135deg, #00e5ff, #9dff00)', color: '#000', fontWeight: 800, fontSize: '0.9rem' }}>💰 Claim OKB Jackpot</button>
+                                        )}
+                                        {parseFloat(pastClaimResult.grushAmount) > 0 && (
+                                          pastClaimResult.grushClaimed
+                                            ? <div style={{ color: 'var(--color-secondary)', fontWeight: 600, fontSize: '0.8rem' }}>✅ GRUSH Jackpot already claimed</div>
+                                            : <button type="button" onClick={() => handleClaimPastGrush(pastClaimResult.numericId)} className="swap-btn" style={{ background: 'linear-gradient(135deg, #9dff00, #c6ff00)', color: '#000', fontWeight: 800, fontSize: '0.9rem' }}>⚽ Claim GRUSH Jackpot</button>
+                                        )}
+                                      </div>
+                                    ) : pastClaimResult.resolved ? (
+                                      <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem' }}>
+                                        No winning prediction on this match.
+                                      </div>
+                                    ) : null}
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {typeof activeMatch.id === 'string' && activeMatch.id.startsWith('api-') ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
                     <div style={{
@@ -2757,7 +3077,7 @@ export default function App() {
                       Switch to Active Prediction Match ⚽
                     </button>
                   </div>
-                ) : (activeMatch.resolved || activeMatch.minute === 'FT') ? (
+                ) : (activeMatch.resolved || activeMatch.minute === 'FT' || (isSelectedMatchOnChain && activeMatch.resolved)) ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
                       <div style={{
                         background: 'rgba(157, 255, 0, 0.04)',
@@ -2789,131 +3109,8 @@ export default function App() {
                           }
                         </p>
                       </div>
-                      {isSelectedMatchOnChain && (
-                        <>
-                          {walletConnected ? (
-                            userPrediction ? (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                {/* Match pending resolution on-chain */}
-                                {!activeMatch.resolved && (userPrediction.predictedTeam === 1 || userPrediction.predictedTeam === 2 || userPrediction.predictedTeam === 3) && (
-                                  <div style={{
-                                    color: 'rgba(255, 255, 255, 0.85)',
-                                    fontSize: '0.85rem',
-                                    textAlign: 'center',
-                                    background: 'rgba(255, 255, 255, 0.05)',
-                                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                                    padding: '12px',
-                                    borderRadius: '10px',
-                                    fontWeight: '500'
-                                  }}>
-                                    ⏳ Your prediction: <strong>{userPrediction.predictedTeam === 1 ? activeMatch.teamA : userPrediction.predictedTeam === 2 ? activeMatch.teamB : 'Draw'}</strong>. Waiting for match to be resolved on-chain.
-                                  </div>
-                                )}
+                      {/* Claim buttons handled by winner-only panel above */}
 
-                                {/* Correct prediction and not claimed yet */}
-                                {activeMatch.resolved && parseFloat(userPrediction.okbAmount) > 0 && userPrediction.predictedTeam === activeMatch.winner && !userPrediction.okbClaimed && (
-                                  <button
-                                    type="button"
-                                    onClick={handleClaimJackpot}
-                                    className="swap-btn"
-                                    style={{ width: '100%', background: 'var(--color-secondary)', color: '#000', fontWeight: 'bold' }}
-                                  >
-                                    Claim OKB Jackpot ({userPrediction.okbAmount} OKB Prediction) 💰
-                                  </button>
-                                )}
-                                {activeMatch.resolved && parseFloat(userPrediction.grushAmount) > 0 && userPrediction.predictedTeam === activeMatch.winner && !userPrediction.grushClaimed && (
-                                  <button
-                                    type="button"
-                                    onClick={handleClaimGrushJackpot}
-                                    className="swap-btn"
-                                    style={{ width: '100%', background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
-                                  >
-                                    Claim GRUSH Jackpot ({userPrediction.grushAmount} GRUSH Prediction) ⚽
-                                  </button>
-                                )}
-                                
-                                {/* Wrong prediction */}
-                                {activeMatch.resolved && userPrediction.predictedTeam !== activeMatch.winner && (
-                                  <div style={{
-                                    color: 'rgba(255, 100, 100, 0.95)',
-                                    fontSize: '0.85rem',
-                                    textAlign: 'center',
-                                    background: 'rgba(255, 50, 50, 0.08)',
-                                    border: '1px solid rgba(255, 50, 50, 0.2)',
-                                    padding: '12px',
-                                    borderRadius: '10px',
-                                    fontWeight: '500'
-                                  }}>
-                                    ❌ Sorry, your prediction for {userPrediction.predictedTeam === 1 ? activeMatch.teamA : userPrediction.predictedTeam === 2 ? activeMatch.teamB : 'Draw'} was incorrect.
-                                  </div>
-                                )}
-                              
-                              {/* Already claimed states */}
-                              {userPrediction.predictedTeam === activeMatch.winner && (
-                                <>
-                                  {userPrediction.okbClaimed && (
-                                    <div style={{
-                                      color: 'var(--color-primary)',
-                                      fontSize: '0.85rem',
-                                      textAlign: 'center',
-                                      background: 'rgba(157, 255, 0, 0.06)',
-                                      border: '1px solid rgba(157, 255, 0, 0.2)',
-                                      padding: '10px',
-                                      borderRadius: '8px',
-                                      fontWeight: '600'
-                                    }}>
-                                      ✅ OKB Jackpot claimed!
-                                    </div>
-                                  )}
-                                  {userPrediction.grushClaimed && (
-                                    <div style={{
-                                      color: 'var(--color-secondary)',
-                                      fontSize: '0.85rem',
-                                      textAlign: 'center',
-                                      background: 'rgba(0, 229, 255, 0.06)',
-                                      border: '1px solid rgba(0, 229, 255, 0.2)',
-                                      padding: '10px',
-                                      borderRadius: '8px',
-                                      fontWeight: '600'
-                                    }}>
-                                      ✅ GRUSH Jackpot claimed!
-                                    </div>
-                                  )}
-                                </>
-                              )}
-                              
-                              {/* No prediction recorded */}
-                              {parseFloat(userPrediction.okbAmount) === 0 && parseFloat(userPrediction.grushAmount) === 0 && (
-                                <div style={{
-                                  color: 'rgba(255, 255, 255, 0.55)',
-                                  fontSize: '0.85rem',
-                                  textAlign: 'center',
-                                  background: 'rgba(255, 255, 255, 0.04)',
-                                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                                  padding: '12px',
-                                  borderRadius: '10px'
-                                }}>
-                                  ℹ️ No predictions were made on this match from your wallet.
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div style={{ color: 'rgba(255, 255, 255, 0.45)', fontSize: '0.85rem', textAlign: 'center', padding: '8px' }}>
-                              Loading prediction eligibility details...
-                            </div>
-                          )
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={connectWallet}
-                            className="swap-btn"
-                            style={{ width: '100%', background: 'rgba(255, 255, 255, 0.08)', color: '#fff', fontWeight: 'bold' }}
-                          >
-                            Connect Wallet to Check Claims
-                          </button>
-                        )}
-                      </>
-                    )}
                     <button
                       type="button"
                       onClick={() => {

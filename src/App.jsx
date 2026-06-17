@@ -1178,22 +1178,7 @@ export default function App() {
 
         // 3. Clean and inject the live/scheduled FIFA World Cup 2026 matches
         // Filter out duplicates in case backend has them under different statuses
-        const teamPairsToMock = [
-          ['Portugal', 'DR Congo'],
-          ['Portugal', 'Congo DR'],
-          ['England', 'Croatia'],
-          ['Ghana', 'Panama'],
-          ['Uzbekistan', 'Colombia'],
-          ['Czechia', 'South Africa'],
-          ['Switzerland', 'Bosnia and Herzegovina'],
-          ['Canada', 'Qatar'],
-          ['Mexico', 'South Korea'],
-          ['USA', 'Australia'],
-          ['Scotland', 'Morocco'],
-          ['Slovakia', 'Haiti'],
-          ['Turkey', 'Paraguay'],
-          ['Netherlands', 'Serbia']
-        ];
+        const teamPairsToMock = [];
         
         data = data.filter(m => {
           const isMocked = teamPairsToMock.some(pair => 
@@ -1474,9 +1459,7 @@ export default function App() {
             scorersB: []
           }
         ];
-
-        data.push(...mocks);
-
+        // data.push(...mocks);
         setLiveMatches(data);
         setActiveMatch(prev => {
           if (prev.id === 10 && data.length > 0) {
@@ -1509,7 +1492,7 @@ export default function App() {
 
   const [logs, setLogs] = useState([
     'System: GoalRush Hook verified on X Layer. Ready for mainnet deployment.',
-    'System: Active Match #1 - Argentina vs France is accepting predictions.',
+    'System: Active Match is accepting predictions.',
     'System: Current jackpot pool backed by native OKB.'
   ])
 

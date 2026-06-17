@@ -52,6 +52,9 @@ async function init() {
     CREATE INDEX IF NOT EXISTS idx_predictions_wallet ON predictions(wallet);
   `);
 
+  // Purge any stale mock/demo matches from previous testing that are corrupting the UI
+  db.prepare("DELETE FROM matches WHERE id LIKE 'demo_%'").run();
+
   console.log('✅ DB initialized at', DB_PATH);
 }
 

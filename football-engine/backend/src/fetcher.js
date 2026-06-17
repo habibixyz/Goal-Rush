@@ -168,15 +168,7 @@ async function fetchAndStoreMatches() {
     ]);
     const olMatches = []; // OpenLigaDB is German league only, disabled for FIFA feed
 
-    // Guarantee exact hackathon demo matches (Google Search replica)
-    const demoMatches = [
-      { id: 'demo_ned_jpn', home_team: 'Netherlands', away_team: 'Japan', status: 'FINISHED', home_score: 2, away_score: 2, minute: 'FT', kickoff_utc: new Date(Date.now() - 86400000).toISOString(), competition: 'World Cup', source: 'demo' },
-      { id: 'demo_civ_ecu', home_team: 'Ivory Coast', away_team: 'Ecuador', status: 'FINISHED', home_score: 1, away_score: 0, minute: 'FT', kickoff_utc: new Date(Date.now() - 86400000).toISOString(), competition: 'World Cup', source: 'demo' },
-      { id: 'demo_swe_tun', home_team: 'Sweden', away_team: 'Tunisia', status: 'FINISHED', home_score: 5, away_score: 1, minute: 'FT', kickoff_utc: new Date(Date.now() - 86400000).toISOString(), competition: 'World Cup', source: 'demo' },
-      { id: 'demo_fra_sen', home_team: 'France', away_team: 'Senegal', status: 'LIVE', home_score: 1, away_score: 0, minute: "5'", kickoff_utc: new Date(Date.now() - 300000).toISOString(), competition: 'World Cup', source: 'demo' }
-    ];
-
-    const all = [...espnMatches, ...fdMatches, ...olMatches, ...demoMatches];
+    const all = [...espnMatches, ...fdMatches, ...olMatches];
     let saved = 0;
     for (const m of all) {
       try {

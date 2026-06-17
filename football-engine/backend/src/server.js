@@ -5,6 +5,7 @@ const { fetchAndStoreMatches } = require('./fetcher');
 const { resolveFinishedMatches } = require('./resolver');
 const db = require('./db');
 const routes = require('./routes');
+const { runKeeper } = require('./keeper');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -31,6 +32,11 @@ cron.schedule('*/2 * * * *', async () => {
 cron.schedule('*/3 * * * *', async () => {
   console.log('[CRON] Resolving finished matches...');
   await resolveFinishedMatches();
+});
+
+// Run keeper bot to activate matches every 1 minute
+cron.schedule('* * * * *', async () => {
+  await runKeeper();
 });
 
 // ─── Boot ─────────────────────────────────────────────────

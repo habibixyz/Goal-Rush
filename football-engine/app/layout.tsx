@@ -41,8 +41,21 @@ export default function RootLayout({
         </main>
 
         <footer className="border-t border-gray-800/60 bg-gray-900/20 py-8 mt-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
-            © {new Date().getFullYear()} Goal Rush Football Intelligence. Powered by Sofascore API & OpenAI.
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-gray-500 text-sm">
+            <div>
+              © {new Date().getFullYear()} Goal Rush Football Intelligence. Powered by Sofascore API & OpenAI.
+            </div>
+            <a 
+              href="https://gitlab.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:text-emerald-400 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                <path d="M23.955 13.587l-1.342-4.135-2.664-8.189c-.135-.423-.73-.423-.867 0L16.418 9.45H7.582L4.919 1.263C4.783.84 4.185.84 4.05 1.26L1.386 9.449.044 13.587c-.121.375.014.789.331 1.023L12 23.054l11.625-8.443c.318-.235.453-.647.33-1.024z"/>
+              </svg>
+              View on GitLab
+            </a>
           </div>
         </footer>
       </body>

@@ -4645,6 +4645,20 @@ export default function App() {
           >
             <Send size={16} /> Telegram
           </a>
+          <span style={{ color: 'rgba(255,255,255,0.15)' }}>|</span>
+          <a
+            href="https://gitlab.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#fc6d26'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+              <path d="M23.955 13.587l-1.342-4.135-2.664-8.189c-.135-.423-.73-.423-.867 0L16.418 9.45H7.582L4.919 1.263C4.783.84 4.185.84 4.05 1.26L1.386 9.449.044 13.587c-.121.375.014.789.331 1.023L12 23.054l11.625-8.443c.318-.235.453-.647.33-1.024z"/>
+            </svg>
+            GitLab
+          </a>
         </div>
       </footer>
 

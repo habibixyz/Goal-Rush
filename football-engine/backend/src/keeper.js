@@ -20,7 +20,7 @@ function getNumericMatchId(matchId) {
 
 async function runKeeper() {
   try {
-    const pk = process.env.KEEPER_PRIVATE_KEY;
+    const pk = process.env.PRIVATE_KEY || process.env.KEEPER_PRIVATE_KEY;
     if (!pk) {
       // Silently return if no keeper key is configured
       return;

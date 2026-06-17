@@ -1941,15 +1941,34 @@ export default function App() {
         // Fetch selected match info safely
         try {
           const matchData = await hookContract.matches(numericId);
-          const exists = matchData[0] !== 0n;
-          console.log("[fetchOnChainData] matchData.id:", matchData[0].toString(), "exists:", exists);
+          // Consider a match "on-chain" if:
+          // 1. matchData[0] != 0 (it was stored under this exact numericId), OR
+          // 2. The selected match's numericId equals the contract's activeMatchId
+          //    (handles cases where the ID mapping is slightly off but the match IS active)
+          const existsByData = matchData[0] !== 0n;
+          const isActiveMatchSelected = activeIdFromContract > 0n && numericId === activeIdFromContract;
+          const exists = existsByData || isActiveMatchSelected;
+          console.log("[fetchOnChainData] matchData.id:", matchData[0].toString(), "existsByData:", existsByData, "isActiveMatchSelected:", isActiveMatchSelected, "exists:", exists);
           setIsSelectedMatchOnChain(exists);
 
           if (exists) {
-            const teamAName = matchData[1] || matchData.teamA || 'Team A';
-            const teamBName = matchData[2] || matchData.teamB || 'Team B';
-            const isResolved = matchData[5] !== undefined ? matchData[5] : matchData.resolved;
-            const winnerId = Number(matchData[6] !== undefined ? matchData[6] : (matchData.winner || 0));
+            // If we only matched via activeMatchId (not by direct data lookup), re-fetch using activeIdFromContract
+            let effectiveMatchData = matchData;
+            let effectiveNumericId = numericId;
+            if (!existsByData && isActiveMatchSelected) {
+              try {
+                effectiveMatchData = await hookContract.matches(activeIdFromContract);
+                effectiveNumericId = activeIdFromContract;
+                console.log("[fetchOnChainData] Fallback: fetched data via activeIdFromContract:", activeIdFromContract.toString());
+              } catch (fallbackErr) {
+                console.warn("[fetchOnChainData] Fallback fetch by activeIdFromContract failed:", fallbackErr);
+              }
+            }
+
+            const teamAName = effectiveMatchData[1] || effectiveMatchData.teamA || 'Team A';
+            const teamBName = effectiveMatchData[2] || effectiveMatchData.teamB || 'Team B';
+            const isResolved = effectiveMatchData[5] !== undefined ? effectiveMatchData[5] : effectiveMatchData.resolved;
+            const winnerId = Number(effectiveMatchData[6] !== undefined ? effectiveMatchData[6] : (effectiveMatchData.winner || 0));
 
             // Keep the active onchain match ref updated
             if (numericId === activeIdFromContract) {
@@ -1960,7 +1979,7 @@ export default function App() {
               };
             }
 
-            const totalJackpotWei = matchData[7] || matchData.totalJackpot || 0n;
+            const totalJackpotWei = effectiveMatchData[7] || effectiveMatchData.totalJackpot || 0n;
             // OKB predictions are held by the Router contract - check both
             const hookBalance = await rpcProvider.getBalance(hookAddress);
             const routerBalance = await rpcProvider.getBalance(routerAddress);
@@ -1968,9 +1987,9 @@ export default function App() {
             const displayJackpot = combinedBalance > totalJackpotWei ? combinedBalance : totalJackpotWei;
             setJackpot(Number(ethers.formatEther(displayJackpot)));
 
-            const volA = await hookContract.teamPredictionVolume(numericId, 1);
-            const volB = await hookContract.teamPredictionVolume(numericId, 2);
-            const volDraw = await hookContract.teamPredictionVolume(numericId, 3);
+            const volA = await hookContract.teamPredictionVolume(effectiveNumericId, 1);
+            const volB = await hookContract.teamPredictionVolume(effectiveNumericId, 2);
+            const volDraw = await hookContract.teamPredictionVolume(effectiveNumericId, 3);
             setTeamAVotes(Number(ethers.formatEther(volA)));
             setTeamBVotes(Number(ethers.formatEther(volB)));
             setTeamDrawVotes(Number(ethers.formatEther(volDraw)));
@@ -1985,9 +2004,9 @@ export default function App() {
               const totalGrush = newHookGrush + oldHookGrush;
               setGrushJackpot(Number(ethers.formatEther(totalGrush)));
               try {
-                const grushVolA = await hookContract.teamGrushPredictionVolume(numericId, 1);
-                const grushVolB = await hookContract.teamGrushPredictionVolume(numericId, 2);
-                const grushVolDraw = await hookContract.teamGrushPredictionVolume(numericId, 3);
+                const grushVolA = await hookContract.teamGrushPredictionVolume(effectiveNumericId, 1);
+                const grushVolB = await hookContract.teamGrushPredictionVolume(effectiveNumericId, 2);
+                const grushVolDraw = await hookContract.teamGrushPredictionVolume(effectiveNumericId, 3);
                 setTeamAGrushVotes(Number(ethers.formatEther(grushVolA)));
                 setTeamBGrushVotes(Number(ethers.formatEther(grushVolB)));
                 setTeamDrawGrushVotes(Number(ethers.formatEther(grushVolDraw)));

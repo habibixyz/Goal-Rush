@@ -4647,7 +4647,7 @@ export default function App() {
           </a>
           <span style={{ color: 'rgba(255,255,255,0.15)' }}>|</span>
           <a
-            href="https://gitlab.com"
+            href="https://gitlab.com/tanizcoldz/goal-rush"
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}

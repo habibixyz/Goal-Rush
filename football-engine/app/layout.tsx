@@ -46,7 +46,7 @@ export default function RootLayout({
               © {new Date().getFullYear()} Goal Rush Football Intelligence. Powered by Sofascore API & OpenAI.
             </div>
             <a 
-              href="https://gitlab.com" 
+              href="https://gitlab.com/tanizcoldz/goal-rush" 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center gap-2 hover:text-emerald-400 transition-colors"

@@ -123,57 +123,16 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   const sendJson = (data) => {
-    if (Array.isArray(data)) {
-      const hasMatch = data.some(m => 
-        (m.teamA === 'France' && m.teamB === 'Senegal') ||
-        (m.teamA === 'Senegal' && m.teamB === 'France')
-      );
-      if (!hasMatch) {
-        data.unshift({
-          id: "api-france-senegal-live",
-          dbId: "france-senegal-live",
-          teamA: "France",
-          flagA: "FRA",
-          teamB: "Senegal",
-          flagB: "SEN",
-          scoreA: 1,
-          scoreB: 0,
-          minute: "FT",
-          isLive: false,
-          date: "Today",
-          startTime: Date.now() - 300000,
-          stadium: "MetLife Stadium",
-          capacity: "82,500",
-          city: "East Rutherford",
-          referee: "Joel Aguilar",
-          scorersA: [],
-          scorersB: []
-        });
-      }
-    }
     res.status(200).json(data);
   };
 
-  // Try ESPN API first (most reliable, free)
-  try {
-    const espnData = await fetchFromESPN();
-    if (espnData && espnData.events && espnData.events.length > 0) {
-      const mapped = mapESPNFixtures(espnData.events);
-      if (mapped.length > 0) {
-        res.setHeader('X-Cache', 'ESPN-LIVE');
-        return sendJson(mapped);
-      }
-    }
-  } catch (err) {
-    console.warn('Failed to fetch from ESPN API, falling back...', err.message);
-  }
+  let allMatches = [];
 
-  // Try database/backend second
+  // 1. Fetch from database/backend to get ALL matches (including historical ones from yesterday)
   try {
     const responseBody = await fetchFromBackend();
     const backendData = responseBody.data ? responseBody.data : responseBody;
     if (Array.isArray(backendData) && backendData.length > 0) {
-      // Prioritize international matches
       const internationalTeams = ['Belgium', 'Egypt', 'Saudi Arabia', 'Uruguay', 'Iran', 'New Zealand', 'Spain', 'Cape Verde', 'France', 'Argentina', 'Netherlands', 'Japan', 'Senegal'];
       backendData.sort((a, b) => {
         const homeA = a.home_team || (a.homeTeam && a.homeTeam.name) || '';
@@ -187,12 +146,33 @@ export default async function handler(req, res) {
         if (!aIsIntl && bIsIntl) return 1;
         return 0;
       });
-      const mapped = mapDatabaseMatches(backendData);
-      res.setHeader('X-Cache', 'BACKEND-LIVE');
-      return sendJson(mapped);
+      allMatches = mapDatabaseMatches(backendData);
     }
   } catch (err) {
-    console.warn('Failed to fetch live matches from backend, falling back to API Sports:', err.message);
+    console.warn('Failed to fetch live matches from backend:', err.message);
+  }
+
+  // 2. Try ESPN API to get the freshest live matches today
+  try {
+    const espnData = await fetchFromESPN();
+    if (espnData && espnData.events && espnData.events.length > 0) {
+      const espnMapped = mapESPNFixtures(espnData.events);
+      espnMapped.forEach(em => {
+        const idx = allMatches.findIndex(m => m.id === em.id || (m.teamA === em.teamA && m.teamB === em.teamB));
+        if (idx !== -1) {
+          allMatches[idx] = em;
+        } else {
+          allMatches.push(em);
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('Failed to fetch from ESPN API:', err.message);
+  }
+
+  if (allMatches.length > 0) {
+    res.setHeader('X-Cache', 'MERGED-LIVE');
+    return sendJson(allMatches);
   }
 
   const now = Date.now();
@@ -347,17 +327,7 @@ function mapFixtures(fixtures) {
   });
 }
 
-function getTeamFifaCode(name) {
-  const map = {
-    'argentina': 'ARG', 'france': 'FRA', 'netherlands': 'NED', 'japan': 'JPN',
-    'ivory coast': 'CIV', 'ecuador': 'ECU', 'sweden': 'SWE', 'tunisia': 'TUN',
-    'algeria': 'ALG', 'spain': 'ESP', 'cape verde': 'CPV', 'iran': 'IRN',
-    'new zealand': 'NZL', 'saudi arabia': 'KSA', 'uruguay': 'URU', 'belgium': 'BEL',
-    'egypt': 'EGY', 'senegal': 'SEN', 'iraq': 'IRQ', 'norway': 'NOR',
-    'austria': 'AUT', 'jordan': 'JOR'
-  };
-  return map[name?.toLowerCase().trim()] || 'UN';
-}
+
 
 function mapESPNFixtures(events) {
   return events.map(event => {

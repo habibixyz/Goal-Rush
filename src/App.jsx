@@ -1460,10 +1460,17 @@ export default function App() {
           }
         ];
         // data.push(...mocks);
+        data.sort((a, b) => a.startTime - b.startTime);
         setLiveMatches(data);
         setActiveMatch(prev => {
           if (prev.id === 10 && data.length > 0) {
-            const defaultMatch = data.find(m => m.isLive) || data[0];
+            let defaultMatch = data.find(m => m.isLive);
+            if (!defaultMatch) {
+              defaultMatch = data.find(m => !m.isLive && m.minute !== 'FT' && m.status !== 'FINISHED');
+            }
+            if (!defaultMatch) {
+              defaultMatch = data[0];
+            }
             return {
               ...prev,
               id: defaultMatch.id,
@@ -3781,11 +3788,11 @@ export default function App() {
                   tomorrowEnd.setHours(23,59,59,999);
                   const tomorrowEndMs = tomorrowEnd.getTime();
 
-                  const live = liveMatches.filter(m => m.isLive && m.minute !== 'FT');
+                  const live = liveMatches.filter(m => m.isLive && m.minute !== 'FT').sort((a, b) => a.startTime - b.startTime);
                   const upcoming = liveMatches.filter(m => {
                     if (m.isLive || m.minute === 'FT') return false;
                     return m.startTime >= todayStartMs && m.startTime <= tomorrowEndMs;
-                  });
+                  }).sort((a, b) => a.startTime - b.startTime);
                   const displayMatches = [...live, ...upcoming];
 
                   return (

@@ -154,7 +154,21 @@ export default async function handler(req, res) {
     res.status(200).json(data);
   };
 
-  // Try database/backend first
+  // Try ESPN API first (most reliable, free)
+  try {
+    const espnData = await fetchFromESPN();
+    if (espnData && espnData.events && espnData.events.length > 0) {
+      const mapped = mapESPNFixtures(espnData.events);
+      if (mapped.length > 0) {
+        res.setHeader('X-Cache', 'ESPN-LIVE');
+        return sendJson(mapped);
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to fetch from ESPN API, falling back...', err.message);
+  }
+
+  // Try database/backend second
   try {
     const responseBody = await fetchFromBackend();
     const backendData = responseBody.data ? responseBody.data : responseBody;
@@ -330,5 +344,119 @@ function mapFixtures(fixtures) {
       scorersA: [],
       scorersB: []
     };
+  });
+}
+
+function getTeamFifaCode(name) {
+  const map = {
+    'argentina': 'ARG', 'france': 'FRA', 'netherlands': 'NED', 'japan': 'JPN',
+    'ivory coast': 'CIV', 'ecuador': 'ECU', 'sweden': 'SWE', 'tunisia': 'TUN',
+    'algeria': 'ALG', 'spain': 'ESP', 'cape verde': 'CPV', 'iran': 'IRN',
+    'new zealand': 'NZL', 'saudi arabia': 'KSA', 'uruguay': 'URU', 'belgium': 'BEL',
+    'egypt': 'EGY', 'senegal': 'SEN', 'iraq': 'IRQ', 'norway': 'NOR',
+    'austria': 'AUT', 'jordan': 'JOR'
+  };
+  return map[name?.toLowerCase().trim()] || 'UN';
+}
+
+function mapESPNFixtures(events) {
+  return events.map(event => {
+    const comp = event.competitions?.[0];
+    if (!comp) return null;
+
+    const home = comp.competitors?.find(c => c.homeAway === 'home');
+    const away = comp.competitors?.find(c => c.homeAway === 'away');
+    if (!home || !away) return null;
+
+    const statusType = comp.status?.type?.name || 'STATUS_SCHEDULED';
+    const detail = comp.status?.type?.detail || '';
+
+    let status = 'SCHEDULED';
+    if (statusType === 'STATUS_IN_PROGRESS' || statusType.includes('HALF') || statusType.includes('HALFTIME') || statusType.includes('PROGRESS')) {
+      status = 'LIVE';
+    } else if (statusType === 'STATUS_FULL_TIME' || statusType === 'STATUS_FINAL') {
+      status = 'FINISHED';
+    } else if (statusType === 'STATUS_POSTPONED' || statusType === 'STATUS_CANCELED') {
+      status = 'POSTPONED';
+    }
+
+    const isLive = status === 'LIVE';
+    const isCompleted = status === 'FINISHED';
+
+    let minuteDisplay = 'Upcoming';
+    if (isLive) {
+      minuteDisplay = detail.includes("'") ? detail : 'Live';
+    } else if (isCompleted) {
+      minuteDisplay = 'FT';
+    } else {
+      try {
+        const matchDate = new Date(event.date);
+        if (!isNaN(matchDate.getTime())) {
+          minuteDisplay = matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+      } catch (e) {}
+    }
+
+    let dateDisplay = 'Today';
+    try {
+      const matchDate = new Date(event.date);
+      if (!isNaN(matchDate.getTime())) {
+        dateDisplay = matchDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+    } catch (e) {}
+
+    const homeName = home.team.displayName;
+    const awayName = away.team.displayName;
+
+    return {
+      id: `espn_${event.id}`,
+      dbId: `espn_${event.id}`,
+      teamA: homeName,
+      flagA: getTeamFifaCode(homeName),
+      teamB: awayName,
+      flagB: getTeamFifaCode(awayName),
+      scoreA: status !== 'SCHEDULED' ? parseInt(home.score || 0) : 0,
+      scoreB: status !== 'SCHEDULED' ? parseInt(away.score || 0) : 0,
+      minute: minuteDisplay,
+      isLive: isLive,
+      date: dateDisplay,
+      startTime: new Date(event.date).getTime(),
+      stadium: comp.venue?.fullName || 'Stadium',
+      capacity: 'N/A',
+      city: comp.venue?.address?.city || 'City',
+      referee: 'Referee',
+      scorersA: [],
+      scorersB: []
+    };
+  }).filter(Boolean);
+}
+
+function fetchFromESPN() {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'site.api.espn.com',
+      path: '/apis/site/v2/sports/soccer/fifa.world/scoreboard',
+      method: 'GET',
+      timeout: 5000
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(body));
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('ESPN timeout'));
+    });
+    req.end();
   });
 }

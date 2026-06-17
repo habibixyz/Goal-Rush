@@ -1179,9 +1179,8 @@ export default function App() {
         // 3. Clean and inject the live/scheduled FIFA World Cup 2026 matches
         // Filter out duplicates in case backend has them under different statuses
         const teamPairsToMock = [
-          ['France', 'Senegal'],
-          ['Austria', 'Jordan'],
           ['Portugal', 'DR Congo'],
+          ['Portugal', 'Congo DR'],
           ['England', 'Croatia'],
           ['Ghana', 'Panama'],
           ['Uzbekistan', 'Colombia'],
@@ -1214,46 +1213,6 @@ export default function App() {
         };
 
         const mocks = [
-          {
-            id: 'api-france-senegal-live',
-            dbId: 'france-senegal-live',
-            teamA: 'France',
-            flagA: 'FRA',
-            teamB: 'Senegal',
-            flagB: 'SEN',
-            scoreA: 1,
-            scoreB: 0,
-            minute: 'FT',
-            isLive: false,
-            date: getOffsetDateLabel(0),
-            startTime: nowMs - 300000,
-            stadium: 'MetLife Stadium',
-            capacity: '82,500',
-            city: 'East Rutherford',
-            referee: 'Joel Aguilar',
-            scorersA: [],
-            scorersB: []
-          },
-          {
-            id: 'mock_aut_jor',
-            dbId: 'mock_aut_jor',
-            teamA: 'Austria',
-            flagA: 'AUT',
-            teamB: 'Jordan',
-            flagB: 'JOR',
-            scoreA: 1,
-            scoreB: 1,
-            minute: "62'",
-            isLive: true,
-            date: getOffsetDateLabel(0),
-            startTime: nowMs - 3720000,
-            stadium: 'Hard Rock Stadium',
-            capacity: '65,000',
-            city: 'Miami',
-            referee: 'Wilmar Roldan',
-            scorersA: [],
-            scorersB: []
-          },
           {
             id: 'mock_por_cod',
             dbId: 'mock_por_cod',

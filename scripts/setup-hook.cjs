@@ -2,8 +2,8 @@ const { ethers } = require("hardhat");
 
 async function main() {
   const [owner] = await ethers.getSigners();
-  const hookAddress = "0x4cb3D9931Dc1b95c4aEF1358503608e3f85340C0";
-  const routerAddress = "0xB7c9d225f7Ad8669fF31cc39D771b3365631110D";
+  const hookAddress = "0xC907030AeCd8fC81B19678cDD08DCF96cD9380c0";
+  const routerAddress = "0x5Ae40D89c38109764B91eE97F41deE4F1E86b26c";
   const grushTokenAddress = "0x422fe165b2da990d18c6dca944b11dcd61519671";
 
   console.log(`Setting up WorldCupGoalRushHook at: ${hookAddress}`);

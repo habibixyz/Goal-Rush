@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 
 async function main() {
   const [owner] = await ethers.getSigners();
-  const hookAddress = "0x4cb3D9931Dc1b95c4aEF1358503608e3f85340C0";
+  const hookAddress = "0xC907030AeCd8fC81B19678cDD08DCF96cD9380c0";
   
   const abi = [
     "function activeMatchId() external view returns (uint256)",

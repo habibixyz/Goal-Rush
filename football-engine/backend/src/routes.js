@@ -3,6 +3,11 @@ const router = express.Router();
 const db = require('./db');
 const { fetchAndStoreMatches } = require('./fetcher');
 const { resolveMatchManually } = require('./resolver');
+const { runKeeper, activateMatchOnChain } = require('./keeper');
+const { ethers } = require('ethers');
+
+const HOOK_ADDRESS = "0xC907030AeCd8fC81B19678cDD08DCF96cD9380c0";
+const RPC_URL = "https://rpc.xlayer.tech";
 
 // ── GET /api/matches/live ─────────────────────────────────
 router.get('/matches/live', (req, res) => {
@@ -114,6 +119,69 @@ router.get('/stats', (req, res) => {
     const finished = dbRaw.prepare("SELECT COUNT(*) as c FROM matches WHERE status='FINISHED'").get().c;
     const predictions = dbRaw.prepare("SELECT COUNT(*) as c FROM predictions").get().c;
     res.json({ success: true, data: { live, upcoming, finished, predictions } });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// ── POST /api/admin/activate ──────────────────────────────
+// Immediately activate all live matches on-chain (or a specific match by ID)
+router.post('/admin/activate', async (req, res) => {
+  const secret = req.headers['x-admin-secret'];
+  if (secret !== process.env.ADMIN_SECRET) {
+    return res.status(403).json({ success: false, error: 'Unauthorized' });
+  }
+  try {
+    const pk = process.env.PRIVATE_KEY || process.env.KEEPER_PRIVATE_KEY;
+    if (!pk) return res.status(500).json({ success: false, error: 'No PRIVATE_KEY configured on server' });
+
+    const provider = new ethers.JsonRpcProvider(RPC_URL);
+    const wallet = new ethers.Wallet(pk, provider);
+    const abi = [
+      "function matches(uint256) view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)",
+      "function createMatch(uint256 _matchId, string _teamA, string _teamB, uint256 _duration) external"
+    ];
+    const hook = new ethers.Contract(HOOK_ADDRESS, abi, wallet);
+
+    // Get the specific match ID from body or fall back to all live matches
+    let candidates;
+    if (req.body && req.body.match_id) {
+      const m = db.getMatchById(req.body.match_id);
+      if (!m) return res.status(404).json({ success: false, error: 'Match not found in DB' });
+      candidates = [m];
+    } else {
+      candidates = db.getLiveMatches() || [];
+    }
+
+    if (candidates.length === 0) {
+      return res.json({ success: false, message: 'No live matches found in DB to activate' });
+    }
+
+    const results = [];
+    for (const match of candidates) {
+      try {
+        const activated = await activateMatchOnChain(hook, match);
+        results.push({ match: `${match.home_team} vs ${match.away_team}`, id: match.id, activated });
+      } catch (err) {
+        results.push({ match: `${match.home_team} vs ${match.away_team}`, id: match.id, error: err.message });
+      }
+    }
+    res.json({ success: true, results });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// ── POST /api/admin/keeper ────────────────────────────────
+// Manually trigger the keeper run immediately
+router.post('/admin/keeper', async (req, res) => {
+  const secret = req.headers['x-admin-secret'];
+  if (secret !== process.env.ADMIN_SECRET) {
+    return res.status(403).json({ success: false, error: 'Unauthorized' });
+  }
+  try {
+    await runKeeper();
+    res.json({ success: true, message: 'Keeper run triggered' });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }

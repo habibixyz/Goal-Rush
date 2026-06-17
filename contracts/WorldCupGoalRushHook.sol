@@ -251,6 +251,7 @@ contract WorldCupGoalRushHook {
         require(block.timestamp < activeMatch.endTime, "Predictions closed");
 
         Prediction storage pred = predictions[matchId][user];
+        require(pred.predictedTeam == 0 || pred.predictedTeam == predictedTeam, "Cannot change predicted team");
         pred.predictedTeam = predictedTeam;
         pred.okbAmount += volume;
 
@@ -271,6 +272,7 @@ contract WorldCupGoalRushHook {
         require(block.timestamp < activeMatch.endTime, "Predictions closed");
 
         Prediction storage pred = predictions[matchId][user];
+        require(pred.predictedTeam == 0 || pred.predictedTeam == predictedTeam, "Cannot change predicted team");
         pred.predictedTeam = predictedTeam;
         pred.grushAmount += amount;
 

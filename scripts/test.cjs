@@ -76,9 +76,24 @@ async function main() {
 
   // 6. Add a token-backed prediction through the router.
   console.log("\nSwapper 1 predicts Argentina with 100 GRUSH through the router...");
-  await grush.transfer(swapper1.address, ethers.parseEther("100"));
-  await grush.connect(swapper1).approve(await router.getAddress(), ethers.parseEther("100"));
+  await grush.transfer(swapper1.address, ethers.parseEther("1000"));
+  await grush.connect(swapper1).approve(await router.getAddress(), ethers.parseEther("1000"));
   await router.connect(swapper1).predictWithGRUSH(1, ethers.parseEther("100"));
+
+  // 6b. Test restriction of changing predicted team
+  console.log("\nTesting changing team prediction restriction...");
+  try {
+    await router.connect(swapper1).predictWithGRUSH(2, ethers.parseEther("100"));
+    console.error("FAIL: Swapper 1 was able to change team prediction!");
+    process.exit(1);
+  } catch (e) {
+    if (e.message.includes("Cannot change predicted team")) {
+      console.log("PASS: Changing team prediction reverted as expected with: 'Cannot change predicted team'");
+    } else {
+      console.error("FAIL: Swapper 1 reverted but with incorrect reason:", e.message);
+      process.exit(1);
+    }
+  }
 
   // 7. Resolve Match: Argentina wins! (Winner = 1)
   console.log("\nResolving Match #1: Declaring Argentina (1) as Winner...");

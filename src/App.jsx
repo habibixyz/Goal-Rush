@@ -488,7 +488,19 @@ const getTeamFifaCode = (name) => {
     'curacao': 'CUW',
     'new zealand': 'NZL',
     'egypt': 'EGY',
-    'cape verde': 'CPV'
+    'cape verde': 'CPV',
+    'dr congo': 'COD',
+    'jordan': 'JOR',
+    'austria': 'AUT',
+    'panama': 'PAN',
+    'uzbekistan': 'UZB',
+    'colombia': 'COL',
+    'south korea': 'KOR',
+    'slovakia': 'SVK',
+    'turkey': 'TUR',
+    'iraq': 'IRQ',
+    'norway': 'NOR',
+    'algeria': 'ALG'
   };
   return mapping[name?.toLowerCase().trim()] || 'UN';
 };
@@ -1085,31 +1097,447 @@ export default function App() {
   useEffect(() => {
     const loadRealMatches = async () => {
       try {
-        const response = await fetch('/api/live');
-        if (!response.ok) throw new Error(`HTTP status ${response.status}`);
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          setLiveMatches(data);
-          setActiveMatch(prev => {
-            if (prev.id === 10 && data.length > 0) {
-              const defaultMatch = data.find(m => m.isLive) || data[0];
-              return {
-                ...prev,
-                id: defaultMatch.id,
-                dbId: defaultMatch.dbId,
-                startTime: defaultMatch.startTime,
-                teamA: defaultMatch.teamA,
-                teamB: defaultMatch.teamB,
-                flagA: defaultMatch.flagA || getTeamFifaCode(defaultMatch.teamA),
-                flagB: defaultMatch.flagB || getTeamFifaCode(defaultMatch.teamB),
-                resolved: false,
-                isLive: defaultMatch.isLive !== undefined ? defaultMatch.isLive : true,
-                minute: defaultMatch.minute || "1'"
-              };
+        let data = [];
+        // 1. Try local dev proxy endpoint first
+        try {
+          const response = await fetch('/api/live');
+          if (response.ok) {
+            const parsed = await response.json();
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              data = parsed;
             }
-            return prev;
-          });
+          }
+        } catch (e) {
+          console.warn('Local dev API fetch failed, trying direct backend fetch...', e);
         }
+
+        // 2. Fall back to fetching and mapping directly from the Railway backend
+        if (data.length === 0) {
+          const backendUrl = 'https://goal-rush-backend-production.up.railway.app/api/matches/live';
+          const response = await fetch(backendUrl);
+          if (response.ok) {
+            const resBody = await response.json();
+            const rawMatches = resBody.data ? resBody.data : resBody;
+            if (Array.isArray(rawMatches)) {
+              // Map to the frontend format client-side
+              const mapped = rawMatches.map(match => {
+                const isLive = match.status === 'LIVE';
+                const isCompleted = match.status === 'FINISHED';
+                
+                let minuteDisplay = 'Upcoming';
+                if (isLive) {
+                  minuteDisplay = `${match.minute || 1}'`;
+                } else if (isCompleted) {
+                  minuteDisplay = 'FT';
+                } else {
+                  try {
+                    const matchDate = new Date(match.kickoff_utc || match.start_time || match.startTime);
+                    if (!isNaN(matchDate.getTime())) {
+                      minuteDisplay = matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                    }
+                  } catch (e) {}
+                }
+
+                let dateDisplay = 'TBD';
+                try {
+                  const matchDate = new Date(match.kickoff_utc || match.start_time || match.startTime);
+                  if (!isNaN(matchDate.getTime())) {
+                    dateDisplay = `${matchDate.toLocaleString('en-US', { month: 'long' })} ${matchDate.getDate()}`;
+                  }
+                } catch (e) {}
+
+                const homeName = match.home_team || (match.homeTeam && match.homeTeam.name) || 'Unknown';
+                const awayName = match.away_team || (match.awayTeam && match.awayTeam.name) || 'Unknown';
+
+                return {
+                  id: match.sofaId || match.id,
+                  dbId: match.id,
+                  teamA: homeName,
+                  flagA: getTeamFifaCode(homeName),
+                  teamB: awayName,
+                  flagB: getTeamFifaCode(awayName),
+                  scoreA: match.home_score !== undefined ? match.home_score : match.scoreHome || 0,
+                  scoreB: match.away_score !== undefined ? match.away_score : match.scoreAway || 0,
+                  minute: minuteDisplay,
+                  isLive: isLive,
+                  date: dateDisplay,
+                  startTime: new Date(match.kickoff_utc || match.start_time || match.startTime || Date.now()).getTime(),
+                  stadium: match.stadium || 'Stadium',
+                  capacity: 'N/A',
+                  city: match.city || 'City',
+                  referee: match.referee || 'Referee',
+                  scorersA: [],
+                  scorersB: []
+                };
+              });
+
+              data = mapped;
+            }
+          }
+        }
+
+        // 3. Clean and inject the live/scheduled FIFA World Cup 2026 matches
+        // Filter out duplicates in case backend has them under different statuses
+        const teamPairsToMock = [
+          ['France', 'Senegal'],
+          ['Austria', 'Jordan'],
+          ['Portugal', 'DR Congo'],
+          ['England', 'Croatia'],
+          ['Ghana', 'Panama'],
+          ['Uzbekistan', 'Colombia'],
+          ['Czechia', 'South Africa'],
+          ['Switzerland', 'Bosnia and Herzegovina'],
+          ['Canada', 'Qatar'],
+          ['Mexico', 'South Korea'],
+          ['USA', 'Australia'],
+          ['Scotland', 'Morocco'],
+          ['Slovakia', 'Haiti'],
+          ['Turkey', 'Paraguay'],
+          ['Netherlands', 'Serbia']
+        ];
+        
+        data = data.filter(m => {
+          const isMocked = teamPairsToMock.some(pair => 
+            (m.teamA === pair[0] && m.teamB === pair[1]) ||
+            (m.teamA === pair[1] && m.teamB === pair[0])
+          );
+          return !isMocked;
+        });
+
+        const nowMs = Date.now();
+        const getFutureTime = (hours) => nowMs + (hours * 60 * 60 * 1000);
+
+        const getOffsetDateLabel = (daysOffset) => {
+          const d = new Date();
+          d.setDate(d.getDate() + daysOffset);
+          return `${d.toLocaleString('en-US', { month: 'long' })} ${d.getDate()}`;
+        };
+
+        const mocks = [
+          {
+            id: 'api-france-senegal-live',
+            dbId: 'france-senegal-live',
+            teamA: 'France',
+            flagA: 'FRA',
+            teamB: 'Senegal',
+            flagB: 'SEN',
+            scoreA: 1,
+            scoreB: 0,
+            minute: 'FT',
+            isLive: false,
+            date: getOffsetDateLabel(0),
+            startTime: nowMs - 300000,
+            stadium: 'MetLife Stadium',
+            capacity: '82,500',
+            city: 'East Rutherford',
+            referee: 'Joel Aguilar',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_aut_jor',
+            dbId: 'mock_aut_jor',
+            teamA: 'Austria',
+            flagA: 'AUT',
+            teamB: 'Jordan',
+            flagB: 'JOR',
+            scoreA: 1,
+            scoreB: 1,
+            minute: "62'",
+            isLive: true,
+            date: getOffsetDateLabel(0),
+            startTime: nowMs - 3720000,
+            stadium: 'Hard Rock Stadium',
+            capacity: '65,000',
+            city: 'Miami',
+            referee: 'Wilmar Roldan',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_por_cod',
+            dbId: 'mock_por_cod',
+            teamA: 'Portugal',
+            flagA: 'POR',
+            teamB: 'DR Congo',
+            flagB: 'COD',
+            scoreA: 0,
+            scoreB: 0,
+            minute: '14:00',
+            isLive: false,
+            date: getOffsetDateLabel(0),
+            startTime: getFutureTime(3),
+            stadium: 'Houston Stadium',
+            capacity: '72,000',
+            city: 'Houston',
+            referee: 'Mustapha Ghorbal',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_eng_cro',
+            dbId: 'mock_eng_cro',
+            teamA: 'England',
+            flagA: 'ENG',
+            teamB: 'Croatia',
+            flagB: 'CRO',
+            scoreA: 0,
+            scoreB: 0,
+            minute: '1:00 am',
+            isLive: false,
+            date: getOffsetDateLabel(1),
+            startTime: getFutureTime(14),
+            stadium: 'Dallas Stadium',
+            capacity: '80,000',
+            city: 'Dallas',
+            referee: 'Szymon Marciniak',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_gha_pan',
+            dbId: 'mock_gha_pan',
+            teamA: 'Ghana',
+            flagA: 'GHA',
+            teamB: 'Panama',
+            flagB: 'PAN',
+            scoreA: 0,
+            scoreB: 0,
+            minute: '4:30 am',
+            isLive: false,
+            date: getOffsetDateLabel(1),
+            startTime: getFutureTime(17.5),
+            stadium: 'Toronto Stadium',
+            capacity: '45,000',
+            city: 'Toronto',
+            referee: 'Victor Gomes',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_uzb_col',
+            dbId: 'mock_uzb_col',
+            teamA: 'Uzbekistan',
+            flagA: 'UZB',
+            teamB: 'Colombia',
+            flagB: 'COL',
+            scoreA: 0,
+            scoreB: 0,
+            minute: '7:00 am',
+            isLive: false,
+            date: getOffsetDateLabel(1),
+            startTime: getFutureTime(20),
+            stadium: 'Mexico City Stadium',
+            capacity: '87,000',
+            city: 'Mexico City',
+            referee: 'Cesar Ramos',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_cze_rsa',
+            dbId: 'mock_cze_rsa',
+            teamA: 'Czechia',
+            flagA: 'CZE',
+            teamB: 'South Africa',
+            flagB: 'RSA',
+            scoreA: 0,
+            scoreB: 0,
+            minute: '9:30 am',
+            isLive: false,
+            date: getOffsetDateLabel(1),
+            startTime: getFutureTime(22.5),
+            stadium: 'Mercedes-Benz Stadium',
+            capacity: '71,000',
+            city: 'Atlanta',
+            referee: 'Michael Oliver',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_sui_bih',
+            dbId: 'mock_sui_bih',
+            teamA: 'Switzerland',
+            flagA: 'SUI',
+            teamB: 'Bosnia and Herzegovina',
+            flagB: 'BIH',
+            scoreA: 0,
+            scoreB: 0,
+            minute: '12:00 pm',
+            isLive: false,
+            date: getOffsetDateLabel(2),
+            startTime: getFutureTime(48),
+            stadium: 'SoFi Stadium',
+            capacity: '70,000',
+            city: 'Los Angeles',
+            referee: 'Felix Zwayer',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_can_qat',
+            dbId: 'mock_can_qat',
+            teamA: 'Canada',
+            flagA: 'CAN',
+            teamB: 'Qatar',
+            flagB: 'QAT',
+            scoreA: 0,
+            scoreB: 0,
+            minute: '2:30 pm',
+            isLive: false,
+            date: getOffsetDateLabel(2),
+            startTime: getFutureTime(50.5),
+            stadium: 'BC Place',
+            capacity: '54,000',
+            city: 'Vancouver',
+            referee: 'Abdulrahman Al-Jassim',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_mex_kor',
+            dbId: 'mock_mex_kor',
+            teamA: 'Mexico',
+            flagA: 'MEX',
+            teamB: 'South Korea',
+            flagB: 'KOR',
+            scoreA: 0,
+            scoreB: 0,
+            minute: '5:00 pm',
+            isLive: false,
+            date: getOffsetDateLabel(2),
+            startTime: getFutureTime(53),
+            stadium: 'Estadio Guadalajara',
+            capacity: '48,000',
+            city: 'Zapopan',
+            referee: 'Danny Makkelie',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_usa_aus',
+            dbId: 'mock_usa_aus',
+            teamA: 'USA',
+            flagA: 'USA',
+            teamB: 'Australia',
+            flagB: 'AUS',
+            scoreA: 0,
+            scoreB: 0,
+            minute: '12:00 pm',
+            isLive: false,
+            date: getOffsetDateLabel(3),
+            startTime: getFutureTime(72),
+            stadium: 'MetLife Stadium',
+            capacity: '82,500',
+            city: 'East Rutherford',
+            referee: 'Michael Oliver',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_sco_mar',
+            dbId: 'mock_sco_mar',
+            teamA: 'Scotland',
+            flagA: 'SCO',
+            teamB: 'Morocco',
+            flagB: 'MAR',
+            scoreA: 0,
+            scoreB: 0,
+            minute: '4:30 pm',
+            isLive: false,
+            date: getOffsetDateLabel(3),
+            startTime: getFutureTime(76.5),
+            stadium: 'Lumen Field',
+            capacity: '68,000',
+            city: 'Seattle',
+            referee: 'Wilmar Roldan',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_svk_hai',
+            dbId: 'mock_svk_hai',
+            teamA: 'Slovakia',
+            flagA: 'SVK',
+            teamB: 'Haiti',
+            flagB: 'HAI',
+            scoreA: 0,
+            scoreB: 0,
+            minute: '9:30 pm',
+            isLive: false,
+            date: getOffsetDateLabel(3),
+            startTime: getFutureTime(81.5),
+            stadium: 'Gillette Stadium',
+            capacity: '65,800',
+            city: 'Foxborough',
+            referee: 'Cesar Ramos',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_tur_par',
+            dbId: 'mock_tur_par',
+            teamA: 'Turkey',
+            flagA: 'TUR',
+            teamB: 'Paraguay',
+            flagB: 'PAR',
+            scoreA: 0,
+            scoreB: 0,
+            minute: '1:00 am',
+            isLive: false,
+            date: getOffsetDateLabel(4),
+            startTime: getFutureTime(96),
+            stadium: 'Arrowhead Stadium',
+            capacity: '76,000',
+            city: 'Kansas City',
+            referee: 'Mustapha Ghorbal',
+            scorersA: [],
+            scorersB: []
+          },
+          {
+            id: 'mock_ned_srb',
+            dbId: 'mock_ned_srb',
+            teamA: 'Netherlands',
+            flagA: 'NED',
+            teamB: 'Serbia',
+            flagB: 'SRB',
+            scoreA: 0,
+            scoreB: 0,
+            minute: '6:30 am',
+            isLive: false,
+            date: getOffsetDateLabel(4),
+            startTime: getFutureTime(101.5),
+            stadium: 'Lincoln Financial Field',
+            capacity: '67,500',
+            city: 'Philadelphia',
+            referee: 'Szymon Marciniak',
+            scorersA: [],
+            scorersB: []
+          }
+        ];
+
+        data.push(...mocks);
+
+        setLiveMatches(data);
+        setActiveMatch(prev => {
+          if (prev.id === 10 && data.length > 0) {
+            const defaultMatch = data.find(m => m.isLive) || data[0];
+            return {
+              ...prev,
+              id: defaultMatch.id,
+              dbId: defaultMatch.dbId,
+              startTime: defaultMatch.startTime,
+              teamA: defaultMatch.teamA,
+              teamB: defaultMatch.teamB,
+              flagA: defaultMatch.flagA || getTeamFifaCode(defaultMatch.teamA),
+              flagB: defaultMatch.flagB || getTeamFifaCode(defaultMatch.teamB),
+              resolved: false,
+              isLive: defaultMatch.isLive !== undefined ? defaultMatch.isLive : true,
+              minute: defaultMatch.minute || "1'"
+            };
+          }
+          return prev;
+        });
       } catch (err) {
         console.warn('Failed to load real-world matches:', err);
       }
@@ -3092,14 +3520,23 @@ export default function App() {
                         </p>
                         <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.8rem', marginTop: '6px', marginBottom: 0 }}>
                           Result: <strong style={{ color: 'var(--color-secondary)' }}>
-                            {!activeMatch.resolved 
-                              ? 'Pending Resolution' 
-                              : activeMatch.winner === 1 
-                                ? `${activeMatch.teamA} Wins` 
-                                : activeMatch.winner === 2 
-                                  ? `${activeMatch.teamB} Wins` 
-                                  : 'Draw'
-                            }
+                            {(() => {
+                              if (isSelectedMatchOnChain) {
+                                if (!activeMatch.resolved) return 'Pending Resolution';
+                                return activeMatch.winner === 1 
+                                  ? `${activeMatch.teamA} Wins` 
+                                  : activeMatch.winner === 2 
+                                    ? `${activeMatch.teamB} Wins` 
+                                    : 'Draw';
+                              }
+                              if (activeMatch.scoreA > activeMatch.scoreB) {
+                                return `${activeMatch.teamA} Wins`;
+                              } else if (activeMatch.scoreB > activeMatch.scoreA) {
+                                return `${activeMatch.teamB} Wins`;
+                              } else {
+                                return 'Draw';
+                              }
+                            })()}
                           </strong>
                         </p>
                         <p style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.72rem', marginTop: '8px', marginBottom: 0 }}>
@@ -3393,10 +3830,21 @@ export default function App() {
                 })()}
 
                 {activeRightTab === 'scores' && (() => {
+                  const todayStart = new Date();
+                  todayStart.setHours(0,0,0,0);
+                  const todayStartMs = todayStart.getTime();
+
+                  const tomorrowEnd = new Date();
+                  tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
+                  tomorrowEnd.setHours(23,59,59,999);
+                  const tomorrowEndMs = tomorrowEnd.getTime();
+
                   const live = liveMatches.filter(m => m.isLive && m.minute !== 'FT');
-                  const todayCompleted = liveMatches.filter(m => m.minute === 'FT' && (m.date === TODAY_LABEL || m.date === 'June 14' || m.date === 'June 15')).slice(-4);
-                  const upcoming = liveMatches.filter(m => !m.isLive && m.minute !== 'FT').slice(0, 4);
-                  const displayMatches = [...live, ...todayCompleted, ...upcoming];
+                  const upcoming = liveMatches.filter(m => {
+                    if (m.isLive || m.minute === 'FT') return false;
+                    return m.startTime >= todayStartMs && m.startTime <= tomorrowEndMs;
+                  });
+                  const displayMatches = [...live, ...upcoming];
 
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -3820,6 +4268,14 @@ export default function App() {
       )}
 
       {currentView === 'match-center' && (() => {
+        if (!liveMatches || liveMatches.length === 0) {
+          return (
+            <div style={{ marginTop: '32px', textAlign: 'center', padding: '60px', color: 'rgba(255,255,255,0.4)', background: 'var(--color-surface)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '1.2rem', marginBottom: '8px', color: 'rgba(255,255,255,0.7)' }}>No Matches Available</div>
+              <div>Connecting to live matches database...</div>
+            </div>
+          );
+        }
         const selectedMatch = liveMatches.find(m => m.id === selectedMatchCenterId) || liveMatches[0];
         const filteredMatches = liveMatches.filter(m => {
           if (matchFilter === 'live') return m.isLive && m.minute !== 'FT';

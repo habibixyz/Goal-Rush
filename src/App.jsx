@@ -1114,7 +1114,7 @@ export default function App() {
 
         // 2. Fall back to fetching and mapping directly from the Railway backend
         if (data.length === 0) {
-          const backendUrl = 'https://goal-rush-backend-production.up.railway.app/api/matches/live';
+          const backendUrl = 'https://goal-rush-backend-production.up.railway.app/api/matches/all';
           const response = await fetch(backendUrl);
           if (response.ok) {
             const resBody = await response.json();

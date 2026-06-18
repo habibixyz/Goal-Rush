@@ -152,9 +152,16 @@ export default async function handler(req, res) {
     console.warn('Failed to fetch live matches from backend:', err.message);
   }
 
-  // 2. Try ESPN API to get the freshest live matches today
+  // 2. Try ESPN API to get the freshest live matches today and upcoming matches
   try {
-    const espnData = await fetchFromESPN();
+    const d1 = new Date();
+    d1.setDate(d1.getDate() - 1); // Yesterday
+    const startStr = d1.toISOString().split('T')[0].replace(/-/g, '');
+    const d2 = new Date();
+    d2.setDate(d2.getDate() + 2); // Next 2 days
+    const endStr = d2.toISOString().split('T')[0].replace(/-/g, '');
+
+    const espnData = await fetchFromESPN(startStr, endStr);
     if (espnData && espnData.events && espnData.events.length > 0) {
       const espnMapped = mapESPNFixtures(espnData.events);
       espnMapped.forEach(em => {
@@ -171,6 +178,13 @@ export default async function handler(req, res) {
   }
 
   if (allMatches.length > 0) {
+    // Enforce strict chronological sorting (LIVE first, then by start time)
+    allMatches.sort((a, b) => {
+      if (a.isLive && !b.isLive) return -1;
+      if (!a.isLive && b.isLive) return 1;
+      return a.startTime - b.startTime;
+    });
+
     res.setHeader('X-Cache', 'MERGED-LIVE');
     return sendJson(allMatches);
   }
@@ -401,11 +415,15 @@ function mapESPNFixtures(events) {
   }).filter(Boolean);
 }
 
-function fetchFromESPN() {
+function fetchFromESPN(startDate, endDate) {
   return new Promise((resolve, reject) => {
+    let path = '/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+    if (startDate && endDate) {
+      path += `?dates=${startDate}-${endDate}`;
+    }
     const options = {
       hostname: 'site.api.espn.com',
-      path: '/apis/site/v2/sports/soccer/fifa.world/scoreboard',
+      path: path,
       method: 'GET',
       timeout: 5000
     };

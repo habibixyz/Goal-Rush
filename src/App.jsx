@@ -748,23 +748,23 @@ export default function App() {
         {isSelected && <div style={{ position: 'absolute', left: 0, top: '15%', bottom: '15%', width: '3px', background: 'var(--color-primary)', borderRadius: '0 4px 4px 0' }}></div>}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <img src={getFlagUrl(m.flagA)} alt={m.teamA} style={{ width: '18px', height: '12px', objectFit: 'cover', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamA}</span>
-              <span style={{ marginLeft: 'auto', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreA}</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: isSelected ? 'var(--color-primary)' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.teamA}</span>
+              <span style={{ marginLeft: 'auto', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-primary)', width: '24px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{m.scoreA}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <img src={getFlagUrl(m.flagB)} alt={m.teamB} style={{ width: '18px', height: '12px', objectFit: 'cover', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamB}</span>
-              <span style={{ marginLeft: 'auto', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreB}</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: isSelected ? 'var(--color-primary)' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.teamB}</span>
+              <span style={{ marginLeft: 'auto', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-primary)', width: '24px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{m.scoreB}</span>
             </div>
           </div>
 
-          <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', height: '36px', margin: '0 16px' }}></div>
+          <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', height: '36px', margin: '0 16px', flexShrink: 0 }}></div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '70px', textAlign: 'center' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: (m.isLive && m.minute !== 'FT') ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '80px', minWidth: '80px', flexShrink: 0, textAlign: 'center' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: (m.isLive && m.minute !== 'FT') ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)', fontVariantNumeric: 'tabular-nums' }}>
               {m.minute}
             </span>
             {m.isLive && m.minute !== 'FT' ? (
@@ -775,9 +775,9 @@ export default function App() {
             ) : m.minute === 'FT' ? (
               <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: 600, whiteSpace: 'nowrap' }}>
                 {m.scoreA > m.scoreB
-                  ? `${m.teamA} Won`
+                  ? `${m.flagA || m.teamA.slice(0,3).toUpperCase()} Won`
                   : m.scoreB > m.scoreA
-                    ? `${m.teamB} Won`
+                    ? `${m.flagB || m.teamB.slice(0,3).toUpperCase()} Won`
                     : 'Draw'}
               </span>
             ) : (

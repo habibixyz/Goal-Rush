@@ -3,6 +3,7 @@ const cors = require('cors');
 const cron = require('node-cron');
 const { fetchAndStoreMatches } = require('./fetcher');
 const { resolveFinishedMatches } = require('./resolver');
+const { startKeeper } = require('./keeper');
 const db = require('./db');
 const routes = require('./routes');
 
@@ -37,6 +38,10 @@ cron.schedule('*/3 * * * *', async () => {
 async function boot() {
   await db.init();
   await fetchAndStoreMatches(); // immediate first fetch
+
+  // Start on-chain keeper (auto-activates & resolves matches on X Layer)
+  startKeeper(cron);
+
   app.listen(PORT, () => {
     console.log(`✅ GoalRush backend running on port ${PORT}`);
   });

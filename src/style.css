@@ -1410,12 +1410,18 @@ body {
   color: var(--color-primary);
   text-shadow: 0 0 20px rgba(157, 255, 0, 0.2);
   letter-spacing: 4px;
+  font-variant-numeric: tabular-nums;
+  min-width: 140px;
+  text-align: center;
 }
 
 .match-hub-minute {
   font-size: 0.8rem;
   font-weight: 600;
   color: rgba(255,255,255,0.5);
+  font-variant-numeric: tabular-nums;
+  min-width: 80px;
+  text-align: center;
 }
 
 .match-hub-minute.live {

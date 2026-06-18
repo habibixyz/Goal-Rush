@@ -171,7 +171,7 @@ export default async function handler(req, res) {
     d1.setDate(d1.getDate() - 1); // Yesterday
     const startStr = d1.toISOString().split('T')[0].replace(/-/g, '');
     const d2 = new Date();
-    d2.setDate(d2.getDate() + 2); // Next 2 days
+    d2.setDate(d2.getDate() + 7); // Next 7 days
     const endStr = d2.toISOString().split('T')[0].replace(/-/g, '');
 
     const espnData = await fetchFromESPN(startStr, endStr);

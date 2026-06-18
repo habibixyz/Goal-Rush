@@ -1463,31 +1463,36 @@ export default function App() {
         // data.push(...mocks);
         data.sort((a, b) => a.startTime - b.startTime);
         setLiveMatches(data);
-        setActiveMatch(prev => {
-          if (prev.id === 10 && data.length > 0) {
-            let defaultMatch = data.find(m => m.isLive);
-            if (!defaultMatch) {
-              defaultMatch = data.find(m => !m.isLive && m.minute !== 'FT' && m.status !== 'FINISHED');
+
+        let defaultMatch = data.find(m => m.isLive);
+        if (!defaultMatch) {
+          defaultMatch = data.find(m => !m.isLive && m.minute !== 'FT');
+        }
+        if (!defaultMatch && data.length > 0) {
+          defaultMatch = data[0];
+        }
+
+        if (defaultMatch) {
+          setSelectedMatchCenterId(prev => prev === 10 ? defaultMatch.id : prev);
+          setActiveMatch(prev => {
+            if (prev.id === 10) {
+              return {
+                ...prev,
+                id: defaultMatch.id,
+                dbId: defaultMatch.dbId,
+                startTime: defaultMatch.startTime,
+                teamA: defaultMatch.teamA,
+                teamB: defaultMatch.teamB,
+                flagA: defaultMatch.flagA || getTeamFifaCode(defaultMatch.teamA),
+                flagB: defaultMatch.flagB || getTeamFifaCode(defaultMatch.teamB),
+                resolved: false,
+                isLive: defaultMatch.isLive !== undefined ? defaultMatch.isLive : true,
+                minute: defaultMatch.minute || "1'"
+              };
             }
-            if (!defaultMatch) {
-              defaultMatch = data[0];
-            }
-            return {
-              ...prev,
-              id: defaultMatch.id,
-              dbId: defaultMatch.dbId,
-              startTime: defaultMatch.startTime,
-              teamA: defaultMatch.teamA,
-              teamB: defaultMatch.teamB,
-              flagA: defaultMatch.flagA || getTeamFifaCode(defaultMatch.teamA),
-              flagB: defaultMatch.flagB || getTeamFifaCode(defaultMatch.teamB),
-              resolved: false,
-              isLive: defaultMatch.isLive !== undefined ? defaultMatch.isLive : true,
-              minute: defaultMatch.minute || "1'"
-            };
-          }
-          return prev;
-        });
+            return prev;
+          });
+        }
       } catch (err) {
         console.warn('Failed to load real-world matches:', err);
       }
@@ -1916,6 +1921,7 @@ export default function App() {
                 if (activeMatchRef.current.id === 10) {
                   if (matchedLive) {
                     handleSelectMatchUI(matchedLive);
+                    setSelectedMatchCenterId(matchedLive.id);
                   } else {
                     setActiveMatch({
                       id: activeId.toString(),
@@ -1926,6 +1932,7 @@ export default function App() {
                       resolved: false,
                       winner: 0
                     });
+                    setSelectedMatchCenterId(activeId.toString());
                   }
                 }
               } catch (e) {

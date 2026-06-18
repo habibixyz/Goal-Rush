@@ -70,9 +70,22 @@ const ESPN_LEAGUES = [
 
 async function fetchESPN() {
   const results = [];
+  const now = new Date();
+  
+  const fmt = (d) => {
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    return `${y}${m}${day}`;
+  };
+
+  const start = new Date(now); start.setUTCDate(start.getUTCDate() - 1);
+  const end   = new Date(now); end.setUTCDate(end.getUTCDate() + 7);
+  const datesParam = `?dates=${fmt(start)}-${fmt(end)}`;
+
   for (const league of ESPN_LEAGUES) {
     try {
-      const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${league.id}/scoreboard`;
+      const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${league.id}/scoreboard${datesParam}`;
       const { data } = await axios.get(url, { timeout: 8000 });
       const events = data?.events || [];
 

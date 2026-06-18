@@ -1,7 +1,7 @@
 const { ethers } = require("ethers");
 const db = require("./db");
 
-const HOOK_ADDRESS = "0xC907030AeCd8fC81B19678cDD08DCF96cD9380c0";
+const HOOK_ADDRESS = "0x66ef1ac1B70C6248422B9E30BdD498736d4a1A2B";
 const RPC_URL = "https://rpc.xlayer.tech";
 const PREDICTION_DURATION = 9000; // 2.5 hours in seconds
 

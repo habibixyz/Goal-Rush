@@ -353,4 +353,14 @@ contract WorldCupGoalRushHook {
         require(_chance <= 100, "Chance too high");
         goalRushChance = _chance;
     }
+
+    // --- Ownership Transfer ---
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "New owner cannot be zero address");
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+    }
 }

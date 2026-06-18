@@ -1,7 +1,12 @@
-# Environment variables
+# Environment variables — NEVER commit these
 .env
+.env.*
 .env.local
+.env.example
 .env.*.local
+**/.env
+**/.env.*
+**/.env.example
 
 # Dependency directories
 node_modules/

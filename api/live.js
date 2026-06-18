@@ -140,8 +140,14 @@ export default async function handler(req, res) {
     const responseBody = await fetchFromBackend();
     const backendData = responseBody.data ? responseBody.data : responseBody;
     if (Array.isArray(backendData) && backendData.length > 0) {
+      // Filter to only FIFA World Cup matches
+      const worldCupBackendData = backendData.filter(m => 
+        !m.competition || 
+        m.competition.toLowerCase().includes('world cup') || 
+        m.competition.toLowerCase().includes('fifa')
+      );
       const internationalTeams = ['Belgium', 'Egypt', 'Saudi Arabia', 'Uruguay', 'Iran', 'New Zealand', 'Spain', 'Cape Verde', 'France', 'Argentina', 'Netherlands', 'Japan', 'Senegal'];
-      backendData.sort((a, b) => {
+      worldCupBackendData.sort((a, b) => {
         const homeA = a.home_team || (a.homeTeam && a.homeTeam.name) || '';
         const awayA = a.away_team || (a.awayTeam && a.awayTeam.name) || '';
         const homeB = b.home_team || (b.homeTeam && b.homeTeam.name) || '';
@@ -153,7 +159,7 @@ export default async function handler(req, res) {
         if (!aIsIntl && bIsIntl) return 1;
         return 0;
       });
-      allMatches = mapDatabaseMatches(backendData);
+      allMatches = mapDatabaseMatches(worldCupBackendData);
     }
   } catch (err) {
     console.warn('Failed to fetch live matches from backend:', err.message);
@@ -295,18 +301,14 @@ function fetchLiveFromApiSports() {
 }
 
 function mapFixtures(fixtures) {
-  // Popular leagues to filter (World Cup, Champions League, Premier League, La Liga, Serie A, Euro, Copa America, etc.)
-  const majorLeagueIds = [1, 2, 3, 4, 9, 39, 61, 78, 135, 140];
-  
-  // Sort: major leagues first, then others
-  const sorted = [...fixtures].sort((a, b) => {
-    const aIsMajor = majorLeagueIds.includes(a.league.id) ? 1 : 0;
-    const bIsMajor = majorLeagueIds.includes(b.league.id) ? 1 : 0;
-    return bIsMajor - aIsMajor;
-  });
+  // Filter for World Cup matches only (League ID 1 or name containing 'world cup')
+  const worldCupFixtures = fixtures.filter(item => 
+    item.league.id === 1 || 
+    (item.league.name && item.league.name.toLowerCase().includes('world cup'))
+  );
 
   // Take top 25 matches of the day to keep it clean and performant
-  return sorted.slice(0, 25).map(item => {
+  return worldCupFixtures.slice(0, 25).map(item => {
     const isLive = ['1H', '2H', 'HT', 'ET', 'BT', 'P', 'INT'].includes(item.fixture.status.short);
     const isCompleted = ['FT', 'AET', 'PEN'].includes(item.fixture.status.short);
     

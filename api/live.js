@@ -1,5 +1,7 @@
 import https from 'https';
 
+const API_SPORTS_KEY = process.env.APISPORTS_KEY;
+
 let cache = {
   data: null,
   timestamp: 0
@@ -117,10 +119,15 @@ function fetchFromBackend() {
 }
 
 export default async function handler(req, res) {
-  // Add CORS headers so the local app can call it
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   const sendJson = (data) => {
     res.status(200).json(data);
@@ -200,6 +207,9 @@ export default async function handler(req, res) {
   const today = new Date().toISOString().split('T')[0];
 
   try {
+    if (!API_SPORTS_KEY) {
+      throw new Error('API Sports is not configured');
+    }
     const rawData = await fetchFromApiSports(today);
     
     if (!rawData.response || rawData.response.length === 0) {
@@ -224,7 +234,7 @@ export default async function handler(req, res) {
       res.setHeader('X-Cache', 'STALE');
       return sendJson(cache.data);
     }
-    return res.status(500).json({ error: 'Failed to fetch football data', details: error.message });
+    return res.status(503).json({ error: 'Football data is temporarily unavailable' });
   }
 }
 
@@ -235,7 +245,7 @@ function fetchFromApiSports(date) {
       path: `/fixtures?date=${date}`,
       method: 'GET',
       headers: {
-        'x-apisports-key': 'd2864e54e9b7819ef45e280824f783cb'
+        'x-apisports-key': API_SPORTS_KEY
       }
     };
 
@@ -263,7 +273,7 @@ function fetchLiveFromApiSports() {
       path: '/fixtures?live=all',
       method: 'GET',
       headers: {
-        'x-apisports-key': 'd2864e54e9b7819ef45e280824f783cb'
+        'x-apisports-key': API_SPORTS_KEY
       }
     };
 

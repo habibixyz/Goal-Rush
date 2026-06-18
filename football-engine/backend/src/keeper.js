@@ -1,12 +1,12 @@
 const { ethers } = require("ethers");
 const db = require("./db");
 
-const HOOK_ADDRESS = "0x66ef1ac1B70C6248422B9E30BdD498736d4a1A2B";
+const HOOK_ADDRESS = "0xec3CE5C745b0DDaC94387A35bCCF089C11472472";
 const RPC_URL = "https://rpc.xlayer.tech";
 const PREDICTION_DURATION = 9000; // 2.5 hours in seconds
 
-// How many minutes before kickoff to pre-activate a match
-const PRE_ACTIVATE_MINUTES = 30;
+// How many minutes before kickoff to pre-activate a match (30 days)
+const PRE_ACTIVATE_MINUTES = 30 * 24 * 60;
 
 const abi = [
   "function activeMatchId() view returns (uint256)",
@@ -52,7 +52,7 @@ async function runKeeper() {
 
     // Gather candidates: all LIVE matches + upcoming matches starting within PRE_ACTIVATE_MINUTES
     const liveMatches = db.getLiveMatches() || [];
-    const upcomingMatches = db.getUpcomingMatches(1) || []; // next 1 hour
+    const upcomingMatches = db.getUpcomingMatches(30 * 24) || []; // next 30 days
     const nowMs = Date.now();
     const soonMatches = upcomingMatches.filter(m => {
       const kickoffMs = new Date(m.kickoff_utc).getTime();

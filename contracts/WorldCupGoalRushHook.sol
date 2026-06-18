@@ -81,6 +81,11 @@ contract WorldCupGoalRushHook {
     mapping(uint256 => mapping(uint8 => uint256)) public teamPredictionVolume;
     mapping(uint256 => mapping(uint8 => uint256)) public teamGrushPredictionVolume;
     mapping(uint256 => uint256) public matchGrushJackpot;
+    mapping(uint256 => mapping(address => mapping(uint8 => uint256))) public swapPredictionVolume;
+    mapping(uint256 => uint256) public matchOkbClaimedPayout;
+    mapping(uint256 => uint256) public matchOkbClaimedWinnerVolume;
+    uint256 public totalOkbLiability;
+    bool private entered;
 
     // --- Gamified Goal Rush State ---
     uint256 public goalRushChance = 5; // 5% chance
@@ -97,6 +102,7 @@ contract WorldCupGoalRushHook {
     event GrushJackpotClaimed(address indexed user, uint256 indexed matchId, uint256 amount);
     event PredictionRouterUpdated(address indexed router);
     event GrushTokenUpdated(address indexed token);
+    event SwapPredictionObserved(address indexed user, uint256 indexed matchId, uint8 team, uint256 volume);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only Owner");
@@ -108,9 +114,17 @@ contract WorldCupGoalRushHook {
         _;
     }
 
+    modifier nonReentrant() {
+        require(!entered, "Reentrant call");
+        entered = true;
+        _;
+        entered = false;
+    }
+
     constructor(address _poolManager) {
+        require(_poolManager != address(0), "PoolManager cannot be zero");
         poolManager = _poolManager;
-        owner = tx.origin;
+        owner = msg.sender;
     }
 
     // --- Uniswap V4 Callbacks ---
@@ -127,17 +141,20 @@ contract WorldCupGoalRushHook {
     ) external onlyPoolManager returns (bytes4, BeforeSwapDelta memory, uint24) {
         // Parse hookData for World Cup prediction if provided
         // Format: abi.encode(predictedTeamId, swapperAddress)
-        if (hookData.length > 0 && activeMatchId > 0) {
+        if (hookData.length == 64 && activeMatchId > 0) {
             Match storage activeMatch = matches[activeMatchId];
             if (!activeMatch.resolved && block.timestamp < activeMatch.endTime) {
                 (uint8 predictedTeam, address swapper) = abi.decode(hookData, (uint8, address));
-                
-                if (predictedTeam == 1 || predictedTeam == 2) {
+
+                if (swapper != address(0) && (predictedTeam == 1 || predictedTeam == 2 || predictedTeam == 3)) {
                     uint256 swapAmount = params.amountSpecified > 0 
                         ? uint256(params.amountSpecified) 
                         : uint256(-params.amountSpecified);
 
-                    _recordOkbPrediction(activeMatchId, swapper, predictedTeam, swapAmount, swapAmount / 1000);
+                    // Swap volume is informational only. It is not a funded jackpot deposit and
+                    // therefore must never create a claim against other users' deposited OKB.
+                    swapPredictionVolume[activeMatchId][swapper][predictedTeam] += swapAmount;
+                    emit SwapPredictionObserved(swapper, activeMatchId, predictedTeam, swapAmount);
                 }
             }
         }
@@ -170,7 +187,7 @@ contract WorldCupGoalRushHook {
 
         if (randVal < goalRushChance) {
             address swapper = sender;
-            if (hookData.length > 0) {
+            if (hookData.length == 64) {
                 // Decode swapper address from hookData if passed
                 (, swapper) = abi.decode(hookData, (uint8, address));
             }
@@ -211,6 +228,11 @@ contract WorldCupGoalRushHook {
         emit MatchCreated(_matchId, _teamA, _teamB, block.timestamp);
     }
 
+    function setActiveMatchId(uint256 _matchId) external onlyOwner {
+        require(matches[_matchId].id != 0, "Match does not exist");
+        activeMatchId = _matchId;
+    }
+
     function resolveMatch(uint256 _matchId, uint8 _winner) external onlyOwner {
         Match storage targetMatch = matches[_matchId];
         require(targetMatch.id != 0, "Match does not exist");
@@ -220,19 +242,25 @@ contract WorldCupGoalRushHook {
         targetMatch.resolved = true;
         targetMatch.winner = _winner;
 
+        // With no winning deposits there can be no claims, so the match funds become excess.
+        if (teamPredictionVolume[_matchId][_winner] == 0) {
+            totalOkbLiability -= targetMatch.totalJackpot;
+        }
+
         emit MatchResolved(_matchId, _winner, targetMatch.totalJackpot);
     }
 
     // --- User Claim Functions ---
 
-    function placeOkbPredictionFor(address user, uint8 predictedTeam) external payable onlyPredictionRouter {
+    function placeOkbPredictionFor(uint256 _matchId, address user, uint8 predictedTeam) external payable onlyPredictionRouter {
         require(msg.value > 0, "Prediction amount required");
-        _recordOkbPrediction(activeMatchId, user, predictedTeam, msg.value, msg.value);
+        _recordOkbPrediction(_matchId, user, predictedTeam, msg.value, msg.value);
+        totalOkbLiability += msg.value;
     }
 
-    function placeGrushPredictionFor(address user, uint8 predictedTeam, uint256 amount) external onlyPredictionRouter {
+    function placeGrushPredictionFor(uint256 _matchId, address user, uint8 predictedTeam, uint256 amount) external onlyPredictionRouter {
         require(amount > 0, "Prediction amount required");
-        _recordGrushPrediction(activeMatchId, user, predictedTeam, amount);
+        _recordGrushPrediction(_matchId, user, predictedTeam, amount);
     }
 
     function _recordOkbPrediction(
@@ -285,7 +313,7 @@ contract WorldCupGoalRushHook {
     /**
      * @notice Claim native OKB prediction jackpot shares for a resolved match.
      */
-    function claimJackpot(uint256 _matchId) external {
+    function claimJackpot(uint256 _matchId) external nonReentrant {
         Match storage targetMatch = matches[_matchId];
         require(targetMatch.resolved, "Match not resolved yet");
         
@@ -300,13 +328,23 @@ contract WorldCupGoalRushHook {
         require(winnerVolume > 0, "No winning OKB volume");
         uint256 claimAmount = (pred.okbAmount * targetMatch.totalJackpot) / winnerVolume;
 
+        matchOkbClaimedPayout[_matchId] += claimAmount;
+        matchOkbClaimedWinnerVolume[_matchId] += pred.okbAmount;
+        totalOkbLiability -= claimAmount;
+
+        // Release any final integer-division dust after the last winning stake claims.
+        if (matchOkbClaimedWinnerVolume[_matchId] == winnerVolume) {
+            uint256 dust = targetMatch.totalJackpot - matchOkbClaimedPayout[_matchId];
+            totalOkbLiability -= dust;
+        }
+
         (bool success, ) = payable(msg.sender).call{value: claimAmount}("");
         require(success, "Jackpot transfer failed");
 
         emit JackpotClaimed(msg.sender, _matchId, claimAmount);
     }
 
-    function claimGrushJackpot(uint256 _matchId) external {
+    function claimGrushJackpot(uint256 _matchId) external nonReentrant {
         require(address(grushToken) != address(0), "GRUSH token not set");
 
         Match storage targetMatch = matches[_matchId];
@@ -332,17 +370,21 @@ contract WorldCupGoalRushHook {
 
     receive() external payable {}
 
-    function withdraw(uint256 amount) external onlyOwner {
+    function withdraw(uint256 amount) external onlyOwner nonReentrant {
+        require(address(this).balance >= totalOkbLiability, "Contract is underfunded");
+        require(amount <= address(this).balance - totalOkbLiability, "Amount reserved for jackpots");
         (bool success, ) = payable(owner).call{value: amount}("");
         require(success, "Withdraw transfer failed");
     }
 
     function setPredictionRouter(address _router) external onlyOwner {
+        require(_router.code.length > 0, "Router must be a contract");
         predictionRouter = _router;
         emit PredictionRouterUpdated(_router);
     }
 
     function setGrushToken(address _token) external onlyOwner {
+        require(_token.code.length > 0, "Token must be a contract");
         grushToken = IERC20(_token);
         emit GrushTokenUpdated(_token);
     }

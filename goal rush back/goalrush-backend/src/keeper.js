@@ -22,10 +22,10 @@ const https  = require('https');
 const { ethers } = require('ethers');
 
 // ── Configuration (override via Railway env vars) ────────────
-const HOOK_ADDRESS         = process.env.HOOK_ADDRESS   || '0x66ef1ac1B70C6248422B9E30BdD498736d4a1A2B';
+const HOOK_ADDRESS         = process.env.HOOK_ADDRESS   || '0xec3CE5C745b0DDaC94387A35bCCF089C11472472';
 const RPC_URL              = process.env.XLAYER_RPC     || process.env.XLAYER_MAINNET_RPC || 'https://rpc.xlayer.tech';
 const PRIVATE_KEY          = process.env.KEEPER_PRIVATE_KEY || process.env.PRIVATE_KEY;
-const PRE_ACTIVATE_WINDOW  = 5 * 60;   // activate 5 min before kickoff (seconds)
+const PRE_ACTIVATE_WINDOW  = 30 * 24 * 60 * 60;  // activate 30 days before kickoff (seconds)
 const MATCH_DURATION       = 110 * 60; // on-chain match window: 110 minutes
 
 const HOOK_ABI = [

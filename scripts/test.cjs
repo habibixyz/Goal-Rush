@@ -52,9 +52,11 @@ async function main() {
     hookData1
   );
   
-  // Verify Jackpot addition
+  // Swap hookData is informational and must not create an unfunded claim.
   let matchInfo = await hook.matches(matchId);
-  console.log("Jackpot Pool Status:", ethers.formatEther(matchInfo.totalJackpot), "ETH");
+  if (matchInfo.totalJackpot !== 0n) {
+    throw new Error("Unfunded swap volume changed the OKB jackpot");
+  }
 
   // 5. Simulate a Swap by Swapper 2 (Predicting France)
   console.log("\nSimulating Swap 2: Swapper 2 swaps 5 ETH, predicts France (Team 2)...");
@@ -72,7 +74,21 @@ async function main() {
   );
 
   matchInfo = await hook.matches(matchId);
-  console.log("Jackpot Pool Status:", ethers.formatEther(matchInfo.totalJackpot), "ETH");
+  if (matchInfo.totalJackpot !== 0n) {
+    throw new Error("Unfunded swap volume changed the OKB jackpot");
+  }
+
+  console.log("\nFunding predictions through the router...");
+  await router.connect(swapper1).predictWithOKB(1, { value: ethers.parseEther("0.01") });
+  await router.connect(swapper2).predictWithOKB(2, { value: ethers.parseEther("0.005") });
+
+  try {
+    await hook.withdraw(1n);
+    throw new Error("Owner withdrew funds reserved for open jackpot claims");
+  } catch (error) {
+    if (!error.message.includes("Amount reserved for jackpots")) throw error;
+    console.log("PASS: Owner cannot withdraw reserved jackpot funds");
+  }
 
   // 6. Add a token-backed prediction through the router.
   console.log("\nSwapper 1 predicts Argentina with 100 GRUSH through the router...");
@@ -98,13 +114,6 @@ async function main() {
   // 7. Resolve Match: Argentina wins! (Winner = 1)
   console.log("\nResolving Match #1: Declaring Argentina (1) as Winner...");
   await hook.resolveMatch(matchId, 1);
-  
-  // Fund the hook contract so it has balance to pay out the jackpot
-  console.log("\nFunding Hook contract with 1 ETH for jackpot payouts...");
-  await owner.sendTransaction({
-    to: await hook.getAddress(),
-    value: ethers.parseEther("1.0")
-  });
   
   // 8. Claim Winnings for Swapper 1
   console.log("\nClaiming Jackpot share for Swapper 1...");

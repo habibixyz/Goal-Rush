@@ -2,8 +2,9 @@
 pragma solidity ^0.8.24;
 
 interface IGoalRushHook {
-    function placeOkbPredictionFor(address user, uint8 predictedTeam) external payable;
-    function placeGrushPredictionFor(address user, uint8 predictedTeam, uint256 amount) external;
+    function activeMatchId() external view returns (uint256);
+    function placeOkbPredictionFor(uint256 _matchId, address user, uint8 predictedTeam) external payable;
+    function placeGrushPredictionFor(uint256 _matchId, address user, uint8 predictedTeam, uint256 amount) external;
 }
 
 interface IERC20 {
@@ -22,21 +23,21 @@ contract GoalRushPredictionRouter {
         grushToken = IERC20(_grushToken);
     }
 
-    function predictWithOKB(uint8 predictedTeam) external payable {
+    function predictWithOKB(uint256 _matchId, uint8 predictedTeam) external payable {
         require(msg.value > 0, "Amount must be greater than 0");
         require(predictedTeam == 1 || predictedTeam == 2 || predictedTeam == 3, "Invalid prediction");
         
-        IGoalRushHook(hookAddress).placeOkbPredictionFor{value: msg.value}(msg.sender, predictedTeam);
+        IGoalRushHook(hookAddress).placeOkbPredictionFor{value: msg.value}(_matchId, msg.sender, predictedTeam);
         
         emit PredictionDeposited(msg.sender, predictedTeam, msg.value);
     }
 
-    function predictWithGRUSH(uint8 predictedTeam, uint256 amount) external {
+    function predictWithGRUSH(uint256 _matchId, uint8 predictedTeam, uint256 amount) external {
         require(amount > 0, "Amount must be greater than 0");
         require(predictedTeam == 1 || predictedTeam == 2 || predictedTeam == 3, "Invalid prediction");
 
         require(grushToken.transferFrom(msg.sender, hookAddress, amount), "GRUSH transfer failed");
-        IGoalRushHook(hookAddress).placeGrushPredictionFor(msg.sender, predictedTeam, amount);
+        IGoalRushHook(hookAddress).placeGrushPredictionFor(_matchId, msg.sender, predictedTeam, amount);
 
         emit GrushPredictionDeposited(msg.sender, predictedTeam, amount);
     }
@@ -44,7 +45,8 @@ contract GoalRushPredictionRouter {
     // Backward-compatible OKB helper for older UI deployments.
     function predictAndDeposit() external payable {
         require(msg.value > 0, "Amount must be greater than 0");
-        IGoalRushHook(hookAddress).placeOkbPredictionFor{value: msg.value}(msg.sender, 1);
+        uint256 activeId = IGoalRushHook(hookAddress).activeMatchId();
+        IGoalRushHook(hookAddress).placeOkbPredictionFor{value: msg.value}(activeId, msg.sender, 1);
         emit PredictionDeposited(msg.sender, 1, msg.value);
     }
 

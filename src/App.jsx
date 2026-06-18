@@ -4,6 +4,7 @@ import { ethers } from 'ethers'
 import confetti from 'canvas-confetti'
 import goalRushLogo from './assets/logo.png'
 import SoccerBall3D from './components/SoccerBall3D'
+import currentHookSolidityCode from '../contracts/WorldCupGoalRushHook.sol?raw'
 import {
   Coins,
   Terminal as TerminalIcon,
@@ -119,7 +120,7 @@ contract WorldCupGoalRushHook {
 
     constructor(address _poolManager) {
         poolManager = _poolManager;
-        owner = tx.origin;
+        owner = msg.sender;
     }
 
     // --- Uniswap V4 Callbacks ---
@@ -372,7 +373,7 @@ const asciiArtText = `
                                    #00000000000000000000 - HAS-MEM-INJECTOR-283 - BLOCK_CHECKER_TEST...
                               #INDEX-10293882 - BLOCK.NUM - 820388 - BLOCK.WITHDRAW - FEE_REBATE...
                            #beforeSwap() - hookData - prediction[user] - activeMatchId[1] - winner...
-                        #afterSwap() - scoreGoal - penaltyRebate - okbBonus - tx.origin - gasLimit...
+                        #afterSwap() - scoreGoal - penaltyRebate - okbBonus - msg.sender - gasLimit...
                      #Eulr.fun - graduationPool - UniswapV4Pool - XLayerMainnet - 0x360e68faccca...
                    #196 - OKX_Wallet - TradeVolume - $200K_USDT - prizePool - ranking - scoreGoal...
                  #WorldCupGoalRushHook - 0xb4f86ecb09BE... - poolManager...
@@ -412,7 +413,7 @@ const asciiArtText = `
       #CREATE2 - Factory - tx.wait() - successfullyDeployedContract - hardhat...
       #GoalRush - WorldCupUniswapV4Hook - XLayer - hackathon - OKX_Wallet...
       #bondingCurve - capReached - graduate - realTrading - liquidityMoves...
-                        #afterSwap() - scoreGoal - penaltyRebate - okbBonus - tx.origin - gasLimit...
+                        #afterSwap() - scoreGoal - penaltyRebate - okbBonus - msg.sender - gasLimit...
                      #Eulr.fun - graduationPool - UniswapV4Pool - XLayerMainnet - 0x360e68faccca...
                    #196 - OKX_Wallet - TradeVolume - $200K_USDT - prizePool - ranking - scoreGoal...
                  #WorldCupGoalRushHook - 0xb4f86ecb09BE... - poolManager...
@@ -526,8 +527,8 @@ const getProvider = () => {
   return null;
 };
 
-const HOOK_ADDRESS = '0x66ef1ac1B70C6248422B9E30BdD498736d4a1A2B';
-const ROUTER_ADDRESS = '0xC92a2C140e2c5c06f2214D57323c31c5a4eBb672';
+const HOOK_ADDRESS = '0xec3CE5C745b0DDaC94387A35bCCF089C11472472';
+const ROUTER_ADDRESS = '0x0D592b9882c7cc7CA21bc20E482d809885dca90f';
 const GRUSH_TOKEN_ADDRESS = '0x422fe165b2da990d18c6dca944b11dcd61519671';
 
 // Helper to get today/tomorrow date strings dynamically
@@ -1516,6 +1517,10 @@ export default function App() {
   const [userPrediction, setUserPrediction] = useState(null)
 
   const [isStriking, setIsStriking] = useState(false)
+  const [transactionStatus, setTransactionStatus] = useState({
+    tone: 'idle',
+    message: 'No transaction is pending. Review the match, pick, token, and amount before signing.'
+  })
   const [showGoalFlash, setShowGoalFlash] = useState(false)
   const [userScore, setUserScore] = useState(() => {
     return Number(localStorage.getItem('goalrush_userScore') || '0');
@@ -2437,21 +2442,27 @@ export default function App() {
     e.preventDefault()
     console.log("[handleSwapAndStrike] isSelectedMatchOnChain:", isSelectedMatchOnChain, "activeMatch:", activeMatch);
     if (!isSelectedMatchOnChain) {
-      alert('This match has not been activated on-chain yet. Please activate it first or select an active match.');
+      setTransactionStatus({ tone: 'warning', message: 'This match is not active on-chain. Select the contract-active match before continuing.' })
       return;
     }
     if (!walletConnected) {
-      alert('Please connect your wallet first!')
+      setTransactionStatus({ tone: 'warning', message: 'Connect your wallet to review and submit this prediction.' })
+      return
+    }
+
+    if (chainId !== 196) {
+      setTransactionStatus({ tone: 'danger', message: 'Wrong network. Switch your wallet to X Layer Mainnet before signing.' })
       return
     }
 
     const parsedAmount = parseFloat(swapAmount)
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      alert('Please enter a valid swap amount.')
+      setTransactionStatus({ tone: 'danger', message: 'Enter a valid prediction amount greater than zero.' })
       return
     }
 
     setIsStriking(true)
+    setTransactionStatus({ tone: 'pending', message: 'Waiting for your wallet. Verify the destination, amount, and X Layer network before signing.' })
 
     try {
       const rawProvider = getProvider();
@@ -2462,11 +2473,12 @@ export default function App() {
       let tx;
       if (selectedToken === 'GRUSH') {
         const tokenAbi = ["function approve(address spender, uint256 amount) external returns (bool)"];
-        const routerAbi = ["function predictWithGRUSH(uint8 predictedTeam, uint256 amount) external"];
+        const routerAbi = ["function predictWithGRUSH(uint256 matchId, uint8 predictedTeam, uint256 amount) external"];
         const tokenContract = new ethers.Contract(GRUSH_TOKEN_ADDRESS, tokenAbi, signer);
         const routerContract = new ethers.Contract(ROUTER_ADDRESS, routerAbi, signer);
 
         const amountWei = ethers.parseEther(swapAmount);
+        setTransactionStatus({ tone: 'pending', message: `Step 1 of 2: approve exactly ${parsedAmount} GRUSH for the prediction router.` })
         addLog(`[approve] Approving ${parsedAmount} GRUSH for the prediction router...`);
         const approveTx = await tokenContract.approve(ROUTER_ADDRESS, amountWei);
         addLog(`Approval submitted: ${approveTx.hash.slice(0, 10)}... waiting for confirmation`);
@@ -2474,22 +2486,26 @@ export default function App() {
 
         const predictionLabel = prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw';
         addLog(`[predictWithGRUSH] Recording ${parsedAmount} GRUSH prediction for ${predictionLabel}...`);
-        tx = await routerContract.predictWithGRUSH(prediction, amountWei);
+        const numericMatchId = getNumericMatchId(activeMatch.id);
+        tx = await routerContract.predictWithGRUSH(numericMatchId, prediction, amountWei);
       } else {
         const routerAbi = [
-          "function predictWithOKB(uint8 predictedTeam) external payable"
+          "function predictWithOKB(uint256 matchId, uint8 predictedTeam) external payable"
         ];
         const routerContract = new ethers.Contract(ROUTER_ADDRESS, routerAbi, signer);
 
         const predictionLabel = prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw';
         addLog(`[predictWithOKB] Recording ${parsedAmount} OKB prediction for ${predictionLabel}...`);
-        tx = await routerContract.predictWithOKB(prediction, {
+        const numericMatchId = getNumericMatchId(activeMatch.id);
+        tx = await routerContract.predictWithOKB(numericMatchId, prediction, {
           value: ethers.parseEther(swapAmount)
         });
       }
 
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
+      setTransactionStatus({ tone: 'pending', message: `Transaction ${tx.hash.slice(0, 10)}... submitted. Waiting for X Layer confirmation.` })
       await tx.wait();
+      setTransactionStatus({ tone: 'success', message: 'Prediction confirmed on X Layer. The penalty animation is cosmetic and does not change the on-chain result.' })
 
       if (selectedToken === 'GRUSH') {
         addLog(`🎉 Transaction confirmed! Prediction jackpot successfully funded with ${parsedAmount} GRUSH.`);
@@ -2671,6 +2687,11 @@ export default function App() {
     } catch (err) {
       console.error(err);
       addLog(`❌ Transaction failed or rejected: ${err.message || err}`);
+      const rejected = err?.code === 4001 || err?.code === 'ACTION_REJECTED';
+      setTransactionStatus({
+        tone: 'danger',
+        message: rejected ? 'Transaction cancelled in your wallet. No prediction was submitted.' : 'Transaction failed. Verify the network, balance, contract address, and wallet message before retrying.'
+      })
       setIsStriking(false);
     }
   }
@@ -2804,6 +2825,7 @@ export default function App() {
 
   return (
     <div className="app-wrapper">
+      <a className="skip-link" href="#dashboard">Skip to prediction dashboard</a>
       <div className="bg-ambient-glow"></div>
 
       {/* Header / Navbar */}
@@ -2957,8 +2979,18 @@ export default function App() {
                 </div>
               </div>
               <p className="hackathon-desc">
-                GoalRush is a premium sports prediction engine powered by Uniswap V4. Predict winning teams directly via your swaps to claim the match jackpot pool, and score fee rebates.
+                GoalRush is a sports prediction experience on X Layer. Fund a match pick through the prediction router, follow live fixtures, and play a cosmetic penalty challenge after confirmation.
               </p>
+              <div className="security-status-card" role="note" aria-label="Protocol security status">
+                <div className="security-status-icon"><ShieldCheck size={20} /></div>
+                <div>
+                  <strong>Mainnet beta, not audited</strong>
+                  <span>Verify the contract address and transaction amount in your wallet. GoalRush will never ask for a seed phrase or tell you to bypass a wallet warning.</span>
+                </div>
+                <a href={`https://www.okx.com/explorer/xlayer/address/${HOOK_ADDRESS}`} target="_blank" rel="noopener noreferrer">
+                  Verify contract <ExternalLink size={14} />
+                </a>
+              </div>
               <div className="hackathon-actions">
                 <a href="#dashboard" className="btn-primary">
                   <Play size={18} fill="currentColor" /> Try Live Swap
@@ -3021,8 +3053,8 @@ export default function App() {
                   <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>before / afterSwap</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Rebate Odds</div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-secondary)' }}>5% Chance</div>
+                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Goal Event Odds</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-secondary)' }}>5% Event</div>
                 </div>
               </div>
 
@@ -3073,7 +3105,7 @@ export default function App() {
                   GoalRush Pitch Simulator
                 </h3>
                 <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '12px' }}>
-                  Simulate a hook transaction on-chain. Place your prediction to fund the match jackpot pool, play the shootout, and win fee rebates!
+                  Submit a funded prediction through the router, then play the cosmetic shootout while the on-chain result remains verifiable.
                 </p>
               </div>
 
@@ -3611,24 +3643,21 @@ export default function App() {
                     <button
                       type={walletConnected ? "submit" : "button"}
                       className="swap-btn"
-                      disabled={isStriking}
+                      disabled={isStriking || (walletConnected && chainId !== 196)}
                       onClick={!walletConnected ? handleConnectWallet : undefined}
                     >
-                      {isStriking ? 'Simulating Swap & Strike...' : !walletConnected ? 'Connect Wallet to Simulate' : 'Simulate Swap & Penalty Strike!'}
+                      {isStriking ? 'Transaction in progress...' : !walletConnected ? 'Connect Wallet to Continue' : chainId !== 196 ? 'Switch to X Layer Mainnet' : 'Review & Submit Prediction'}
                     </button>
 
-                    <div style={{
-                      background: 'rgba(255, 179, 0, 0.05)',
-                      border: '1px solid rgba(255, 179, 0, 0.2)',
-                      borderRadius: '8px',
-                      padding: '10px 12px',
-                      fontSize: '0.72rem',
-                      color: '#ffb300',
-                      marginTop: '12px',
-                      textAlign: 'left',
-                      lineHeight: '1.45'
-                    }}>
-                      <strong>⚠️ OKX Wallet Warning Notice:</strong> When submitting, OKX Wallet will show a "Suspicious Receiving Address" alert. This is normal and expected because you are interacting directly with the Smart Contract hook. Click <strong>"Continue (Unsafe)"</strong> to complete your shootout simulation.
+                    <div className={`transaction-status ${transactionStatus.tone}`} role="status" aria-live="polite">
+                      <div className="transaction-review-grid">
+                        <span>Match<strong>{activeMatch.teamA} vs {activeMatch.teamB}</strong></span>
+                        <span>Your pick<strong>{prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw'}</strong></span>
+                        <span>Maximum spend<strong>{swapAmount || '0'} {selectedToken} + gas</strong></span>
+                        <span>Network<strong>{chainId === 196 ? 'X Layer Mainnet' : 'Switch required'}</strong></span>
+                      </div>
+                      <p>{transactionStatus.message}</p>
+                      <small>If your wallet marks the transaction suspicious or unsafe, cancel it. Verify the router and hook addresses independently before retrying.</small>
                     </div>
                   </>
                 )}
@@ -4159,7 +4188,7 @@ export default function App() {
                   ⚽ Prediction Jackpot
                 </h4>
                 <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
-                  Whenever you swap, you select your match prediction. The hook intercepts the swap and diverts <strong>0.1% of the swap volume</strong> directly to the match jackpot pool.
+                  Pick a result and fund it with OKB or GRUSH through the prediction router. Only transferred assets count toward the claimable jackpot; observed swap volume is informational.
                 </p>
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
                   <strong>Claim Rules:</strong> Once the match is resolved on-chain, winners pull their winnings proportionally: <code>(Your Swap Volume / Total Winning Team Volume) * Total Jackpot Pool</code>.
@@ -4195,7 +4224,7 @@ export default function App() {
                   ⚡ Goal Rush Rebate
                 </h4>
                 <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5' }}>
-                  Swapping triggers an on-chain penalty strike challenge. The smart contract calculates entropy using block parameters. If you score a goal (5% default rate), the hook immediately rebates 100% of your trading fee (0.01 OKB) back to your wallet.
+                  The hook records a pseudo-random goal event at a configurable rate. The current contract emits an event but does not transfer an automatic fee rebate; the penalty animation is presentation only.
                 </p>
               </div>
 
@@ -4376,7 +4405,7 @@ export default function App() {
                   className="btn-copy"
                   onClick={() => {
                     const textMap = {
-                      hook: hookSolidityCode,
+                      hook: currentHookSolidityCode,
                       mock: mockManagerCode,
                       deploy: deployScriptCode,
                       readme: readmeMarkdown
@@ -4390,7 +4419,7 @@ export default function App() {
 
               <pre className="code-pre">
                 <code>
-                  {activeTab === 'hook' && hookSolidityCode}
+                  {activeTab === 'hook' && currentHookSolidityCode}
                   {activeTab === 'mock' && mockManagerCode}
                   {activeTab === 'deploy' && deployScriptCode}
                   {activeTab === 'readme' && readmeMarkdown}

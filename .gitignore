@@ -37,3 +37,12 @@ pnpm-debug.log*
 *.sw?
 
 .vercel
+
+# Framework output and local runtime state
+.next/
+**/.next/
+logs/
+*.pid
+
+# Keep a redacted configuration template in version control
+!.env.example

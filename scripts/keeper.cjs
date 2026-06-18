@@ -24,11 +24,11 @@ const { ethers } = require('ethers');
 require('dotenv').config();
 
 // ── Configuration ────────────────────────────────────────────
-const HOOK_ADDRESS   = '0x66ef1ac1B70C6248422B9E30BdD498736d4a1A2B';
+const HOOK_ADDRESS   = '0xec3CE5C745b0DDaC94387A35bCCF089C11472472';
 const RPC_URL        = process.env.XLAYER_MAINNET_RPC || 'https://rpc.xlayer.tech';
 const PRIVATE_KEY    = process.env.PRIVATE_KEY;
 const POLL_INTERVAL  = 60_000;          // check every 60 seconds
-const PRE_ACTIVATE_WINDOW = 5 * 60;     // activate 5 minutes before kickoff (seconds)
+const PRE_ACTIVATE_WINDOW = 30 * 24 * 60 * 60;    // activate 30 days before kickoff (seconds)
 const MATCH_DURATION = 110 * 60;        // on-chain match window: 110 minutes
 
 // Minimal ABI — only the functions the keeper needs

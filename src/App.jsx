@@ -527,8 +527,8 @@ const getProvider = () => {
   return null;
 };
 
-const HOOK_ADDRESS = '0xf568f5343116D369a7C7a50E69C7F89B79A65E37';
-const ROUTER_ADDRESS = '0x462F4521ac71E4502E7C7C8856d39823df03913E';
+const HOOK_ADDRESS = '0x700656337a252A004Ca0B170828f4adEaa680288';
+const ROUTER_ADDRESS = '0x8f3e9B45a377cEa9fCeC9509e82EEe237e67ba24';
 const GRUSH_TOKEN_ADDRESS = '0x422fe165b2da990d18c6dca944b11dcd61519671';
 
 // Helper to get today/tomorrow date strings dynamically
@@ -552,6 +552,24 @@ export default function App() {
     const s = String(matchId);
     if (/^\d+$/.test(s)) return BigInt(s);
     return BigInt(ethers.id(s));
+  };
+
+  const parseRevertReason = (err) => {
+    if (!err) return '';
+    if (err.reason) return err.reason;
+    const msg = err.message || String(err);
+    if (msg.includes("Predictions closed")) return "Predictions are closed for this match.";
+    if (msg.includes("Match already resolved")) return "This match has already been resolved.";
+    if (msg.includes("No active match")) return "There is currently no active match.";
+    if (msg.includes("insufficient funds")) return "Insufficient balance in your wallet to cover the transaction value and gas fees.";
+    if (msg.includes("user rejected") || msg.includes("ACTION_REJECTED") || err.code === 4001) return "Transaction cancelled in your wallet.";
+    const matchReason = msg.match(/reverted with reason string ['"]([^'"]+)['"]/);
+    if (matchReason && matchReason[1]) return matchReason[1];
+    const matchRevert = msg.match(/execution reverted:? ([^"\n]+)/);
+    if (matchRevert && matchRevert[1]) return matchRevert[1].trim();
+    const matchGenericRevert = msg.match(/revert:? ([^"\n]+)/i);
+    if (matchGenericRevert && matchGenericRevert[1]) return matchGenericRevert[1].trim();
+    return '';
   };
 
   const [onChainActiveId, setOnChainActiveId] = useState(0n);
@@ -1519,7 +1537,7 @@ export default function App() {
   const [userBalance, setUserBalance] = useState('0.00')
   const [grushBalance, setGrushBalance] = useState('0.00')
   const [chainId, setChainId] = useState(null)
-  const [userPrediction, setUserPrediction] = useState(null)
+  const [userPredictions, setUserPredictions] = useState(null)
 
   const [isStriking, setIsStriking] = useState(false)
   const [transactionStatus, setTransactionStatus] = useState({
@@ -1561,7 +1579,7 @@ export default function App() {
       const rpcProvider = new ethers.JsonRpcProvider('https://rpc.xlayer.tech');
       const abi = [
         'function matches(uint256) view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)',
-        'function predictions(uint256, address) view returns (uint8 predictedTeam, uint256 okbAmount, uint256 grushAmount, bool okbClaimed, bool grushClaimed)',
+        'function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)'
       ];
       const hook = new ethers.Contract(HOOK_ADDRESS, abi, rpcProvider);
       const numericId = getNumericMatchId(matchIdInput);
@@ -1573,17 +1591,39 @@ export default function App() {
         return;
       }
 
-      const pred = await hook.predictions(numericId, userAddress);
+      const [okbAmounts, grushAmounts, okbClaimeds, grushClaimeds] = await hook.getUserPredictions(numericId, userAddress);
       const teamA = matchData[1];
       const teamB = matchData[2];
       const resolved = matchData[5];
       const winner = Number(matchData[6]);
       const jackpot = ethers.formatEther(matchData[7]);
-      const predictedTeam = Number(pred[0]);
-      const okbAmt = ethers.formatEther(pred[1]);
-      const grushAmt = ethers.formatEther(pred[2]);
-      const okbClaimed = pred[3];
-      const grushClaimed = pred[4];
+
+      let predictedTeam = 0;
+      let okbAmt = '0.0';
+      let grushAmt = '0.0';
+      let okbClaimed = false;
+      let grushClaimed = false;
+
+      for (let i = 1; i <= 3; i++) {
+        const oAmt = ethers.formatEther(okbAmounts[i] || 0n);
+        const gAmt = ethers.formatEther(grushAmounts[i] || 0n);
+        if (parseFloat(oAmt) > 0 || parseFloat(gAmt) > 0) {
+          if (resolved && i === winner) {
+            predictedTeam = i;
+            okbAmt = oAmt;
+            grushAmt = gAmt;
+            okbClaimed = okbClaimeds[i];
+            grushClaimed = grushClaimeds[i];
+            break;
+          } else if (predictedTeam === 0) {
+            predictedTeam = i;
+            okbAmt = oAmt;
+            grushAmt = gAmt;
+            okbClaimed = okbClaimeds[i];
+            grushClaimed = grushClaimeds[i];
+          }
+        }
+      }
 
       setPastClaimResult({
         matchIdInput,
@@ -2258,29 +2298,32 @@ export default function App() {
   useEffect(() => {
     const fetchUserPrediction = async () => {
       if (!walletConnected || !userAddress || !activeMatch.id) {
-        setUserPrediction(null);
+        setUserPredictions(null);
         return;
       }
       
       try {
         const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
         const queryAbi = [
-          "function predictions(uint256, address) external view returns (uint8 predictedTeam, uint256 okbAmount, uint256 grushAmount, bool okbClaimed, bool grushClaimed)"
+          "function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)"
         ];
         const queryContract = new ethers.Contract(HOOK_ADDRESS, queryAbi, rpcProvider);
         const numericId = getNumericMatchId(activeMatch.id);
-        const pred = await queryContract.predictions(numericId, userAddress);
+        const [okbAmounts, grushAmounts, okbClaimeds, grushClaimeds] = await queryContract.getUserPredictions(numericId, userAddress);
         
-        setUserPrediction({
-          predictedTeam: Number(pred[0]),
-          okbAmount: ethers.formatEther(pred[1]),
-          grushAmount: ethers.formatEther(pred[2]),
-          okbClaimed: pred[3],
-          grushClaimed: pred[4]
-        });
+        const predsObj = {};
+        for (let i = 1; i <= 3; i++) {
+          predsObj[i] = {
+            okbAmount: ethers.formatEther(okbAmounts[i] || 0n),
+            grushAmount: ethers.formatEther(grushAmounts[i] || 0n),
+            okbClaimed: okbClaimeds[i],
+            grushClaimed: grushClaimeds[i]
+          };
+        }
+        setUserPredictions(predsObj);
       } catch (e) {
         console.warn("Failed to fetch user prediction status:", e);
-        setUserPrediction(null);
+        setUserPredictions(null);
       }
     };
 
@@ -2693,11 +2736,13 @@ export default function App() {
 
     } catch (err) {
       console.error(err);
-      addLog(`❌ Transaction failed or rejected: ${err.message || err}`);
-      const rejected = err?.code === 4001 || err?.code === 'ACTION_REJECTED';
+      const cleanReason = parseRevertReason(err);
+      addLog(`❌ Transaction failed: ${cleanReason || err.message || err}`);
       setTransactionStatus({
         tone: 'danger',
-        message: rejected ? 'Transaction cancelled in your wallet. No prediction was submitted.' : 'Transaction failed. Verify the network, balance, contract address, and wallet message before retrying.'
+        message: cleanReason 
+          ? `Transaction reverted: ${cleanReason}`
+          : 'Transaction failed. Verify the network, balance, contract address, and wallet message before retrying.'
       })
       setIsStriking(false);
     }
@@ -3279,7 +3324,7 @@ export default function App() {
                     • Resolved + user lost → nothing shown (no clutter, no shame)
                     • No prediction / wallet not connected → nothing shown
                 ─────────────────────────────────────────────────────────────── */}
-                {isSelectedMatchOnChain && walletConnected && userPrediction && activeMatch.resolved && userPrediction.predictedTeam === activeMatch.winner && (
+                {isSelectedMatchOnChain && walletConnected && userPredictions && activeMatch.resolved && activeMatch.winner > 0 && (parseFloat(userPredictions[activeMatch.winner]?.okbAmount) > 0 || parseFloat(userPredictions[activeMatch.winner]?.grushAmount) > 0) && (
                   <div style={{
                     marginTop: '14px',
                     display: 'flex',
@@ -3287,8 +3332,8 @@ export default function App() {
                     gap: '10px'
                   }}>
                     {/* OKB Claim */}
-                    {parseFloat(userPrediction.okbAmount) > 0 && (
-                      userPrediction.okbClaimed ? (
+                    {parseFloat(userPredictions[activeMatch.winner]?.okbAmount) > 0 && (
+                      userPredictions[activeMatch.winner]?.okbClaimed ? (
                         <div style={{
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                           background: 'rgba(157, 255, 0, 0.06)', border: '1px solid rgba(157, 255, 0, 0.2)',
@@ -3310,13 +3355,13 @@ export default function App() {
                             letterSpacing: '0.3px'
                           }}
                         >
-                          💰 Claim OKB Jackpot · {parseFloat(userPrediction.okbAmount).toFixed(4)} OKB
+                          💰 Claim OKB Jackpot · {parseFloat(userPredictions[activeMatch.winner]?.okbAmount).toFixed(4)} OKB
                         </button>
                       )
                     )}
                     {/* GRUSH Claim */}
-                    {parseFloat(userPrediction.grushAmount) > 0 && (
-                      userPrediction.grushClaimed ? (
+                    {parseFloat(userPredictions[activeMatch.winner]?.grushAmount) > 0 && (
+                      userPredictions[activeMatch.winner]?.grushClaimed ? (
                         <div style={{
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                           background: 'rgba(0, 229, 255, 0.06)', border: '1px solid rgba(0, 229, 255, 0.2)',
@@ -3338,7 +3383,7 @@ export default function App() {
                             letterSpacing: '0.3px'
                           }}
                         >
-                          ⚽ Claim GRUSH Jackpot · {parseFloat(userPrediction.grushAmount).toFixed(0)} GRUSH
+                          ⚽ Claim GRUSH Jackpot · {parseFloat(userPredictions[activeMatch.winner]?.grushAmount).toFixed(0)} GRUSH
                         </button>
                       )
                     )}
@@ -3618,8 +3663,17 @@ export default function App() {
                           style={{ flex: 1, minWidth: '100px', borderColor: prediction === 1 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
                           disabled={isStriking}
                         >
-                          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
-                            {activeMatch.teamA} <img src={getFlagUrl(activeMatch.flagA || getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} style={{ width: '14px', height: '10px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {activeMatch.teamA} <img src={getFlagUrl(activeMatch.flagA || getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} style={{ width: '14px', height: '10px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                            </span>
+                            {userPredictions && (parseFloat(userPredictions[1]?.okbAmount) > 0 || parseFloat(userPredictions[1]?.grushAmount) > 0) && (
+                              <span style={{ fontSize: '0.7rem', opacity: 0.9, color: 'var(--color-primary)', fontWeight: 600 }}>
+                                Predicted: {parseFloat(userPredictions[1]?.okbAmount) > 0 ? `${parseFloat(userPredictions[1]?.okbAmount).toFixed(3)} OKB` : ''}
+                                {parseFloat(userPredictions[1]?.okbAmount) > 0 && parseFloat(userPredictions[1]?.grushAmount) > 0 ? ' + ' : ''}
+                                {parseFloat(userPredictions[1]?.grushAmount) > 0 ? `${parseFloat(userPredictions[1]?.grushAmount).toFixed(0)} GRUSH` : ''}
+                              </span>
+                            )}
                           </span>
                         </button>
                         <button
@@ -3629,8 +3683,17 @@ export default function App() {
                           style={{ flex: 1, minWidth: '80px', borderColor: prediction === 3 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
                           disabled={isStriking}
                         >
-                          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
-                            Draw 🤝
+                          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              Draw 🤝
+                            </span>
+                            {userPredictions && (parseFloat(userPredictions[3]?.okbAmount) > 0 || parseFloat(userPredictions[3]?.grushAmount) > 0) && (
+                              <span style={{ fontSize: '0.7rem', opacity: 0.9, color: 'var(--color-primary)', fontWeight: 600 }}>
+                                Predicted: {parseFloat(userPredictions[3]?.okbAmount) > 0 ? `${parseFloat(userPredictions[3]?.okbAmount).toFixed(3)} OKB` : ''}
+                                {parseFloat(userPredictions[3]?.okbAmount) > 0 && parseFloat(userPredictions[3]?.grushAmount) > 0 ? ' + ' : ''}
+                                {parseFloat(userPredictions[3]?.grushAmount) > 0 ? `${parseFloat(userPredictions[3]?.grushAmount).toFixed(0)} GRUSH` : ''}
+                              </span>
+                            )}
                           </span>
                         </button>
                         <button
@@ -3640,8 +3703,17 @@ export default function App() {
                           style={{ flex: 1, minWidth: '100px', borderColor: prediction === 2 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
                           disabled={isStriking}
                         >
-                          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
-                            {activeMatch.teamB} <img src={getFlagUrl(activeMatch.flagB || getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} style={{ width: '14px', height: '10px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {activeMatch.teamB} <img src={getFlagUrl(activeMatch.flagB || getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} style={{ width: '14px', height: '10px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                            </span>
+                            {userPredictions && (parseFloat(userPredictions[2]?.okbAmount) > 0 || parseFloat(userPredictions[2]?.grushAmount) > 0) && (
+                              <span style={{ fontSize: '0.7rem', opacity: 0.9, color: 'var(--color-primary)', fontWeight: 600 }}>
+                                Predicted: {parseFloat(userPredictions[2]?.okbAmount) > 0 ? `${parseFloat(userPredictions[2]?.okbAmount).toFixed(3)} OKB` : ''}
+                                {parseFloat(userPredictions[2]?.okbAmount) > 0 && parseFloat(userPredictions[2]?.grushAmount) > 0 ? ' + ' : ''}
+                                {parseFloat(userPredictions[2]?.grushAmount) > 0 ? `${parseFloat(userPredictions[2]?.grushAmount).toFixed(0)} GRUSH` : ''}
+                              </span>
+                            )}
                           </span>
                         </button>
                       </div>

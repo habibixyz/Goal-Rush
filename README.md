@@ -8,8 +8,8 @@ GoalRush is a gamified Uniswap V4 hook custom-built for the OKX X Layer "Hook th
 
 ## 🚀 Active Deployment Addresses (X Layer Mainnet)
 
-* **GoalRush Hook**: `0xf568f5343116D369a7C7a50E69C7F89B79A65E37`
-* **GoalRush Router**: `0x462F4521ac71E4502E7C7C8856d39823df03913E`
+* **GoalRush Hook**: `0x700656337a252A004Ca0B170828f4adEaa680288`
+* **GoalRush Router**: `0x8f3e9B45a377cEa9fCeC9509e82EEe237e67ba24`
 * **GRUSH Token**: `0x422fe165b2da990d18c6dca944b11dcd61519671`
 
 ---

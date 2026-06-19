@@ -6,7 +6,7 @@ const { resolveMatchManually } = require('./resolver');
 const { runKeeper, activateMatchOnChain } = require('./keeper');
 const { ethers } = require('ethers');
 
-const HOOK_ADDRESS = "0xf568f5343116D369a7C7a50E69C7F89B79A65E37";
+const HOOK_ADDRESS = "0x700656337a252A004Ca0B170828f4adEaa680288";
 const RPC_URL = "https://rpc.xlayer.tech";
 
 // ── GET /api/matches/live ─────────────────────────────────

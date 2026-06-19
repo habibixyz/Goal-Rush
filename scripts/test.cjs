@@ -79,8 +79,8 @@ async function main() {
   }
 
   console.log("\nFunding predictions through the router...");
-  await router.connect(swapper1).predictWithOKB(1, { value: ethers.parseEther("0.01") });
-  await router.connect(swapper2).predictWithOKB(2, { value: ethers.parseEther("0.005") });
+  await router.connect(swapper1).predictWithOKB(1, 1, { value: ethers.parseEther("0.01") });
+  await router.connect(swapper2).predictWithOKB(1, 2, { value: ethers.parseEther("0.005") });
 
   try {
     await hook.withdraw(1n);
@@ -94,21 +94,25 @@ async function main() {
   console.log("\nSwapper 1 predicts Argentina with 100 GRUSH through the router...");
   await grush.transfer(swapper1.address, ethers.parseEther("1000"));
   await grush.connect(swapper1).approve(await router.getAddress(), ethers.parseEther("1000"));
-  await router.connect(swapper1).predictWithGRUSH(1, ethers.parseEther("100"));
+  await router.connect(swapper1).predictWithGRUSH(1, 1, ethers.parseEther("100"));
 
-  // 6b. Test restriction of changing predicted team
-  console.log("\nTesting changing team prediction restriction...");
-  try {
-    await router.connect(swapper1).predictWithGRUSH(2, ethers.parseEther("100"));
-    console.error("FAIL: Swapper 1 was able to change team prediction!");
+  // 6b. Test predicting multiple different outcomes
+  console.log("\nTesting predicting multiple different outcomes...");
+  // Predict France (2) with 50 GRUSH for Swapper 1 (who already predicted Team 1)
+  await router.connect(swapper1).predictWithGRUSH(1, 2, ethers.parseEther("50"));
+  
+  // Verify both predictions exist
+  const [okbAmounts, grushAmounts, okbClaimeds, grushClaimeds] = await hook.getUserPredictions(1, swapper1.address);
+  console.log(`Swapper 1 predictions check:`);
+  console.log(`  Team 1 OKB: ${ethers.formatEther(okbAmounts[1])} OKB`);
+  console.log(`  Team 1 GRUSH: ${ethers.formatEther(grushAmounts[1])} GRUSH`);
+  console.log(`  Team 2 GRUSH: ${ethers.formatEther(grushAmounts[2])} GRUSH`);
+  
+  if (grushAmounts[1] === ethers.parseEther("100") && grushAmounts[2] === ethers.parseEther("50")) {
+    console.log("PASS: Multi-outcome predictions registered successfully!");
+  } else {
+    console.error("FAIL: Multi-outcome predictions did not register correctly");
     process.exit(1);
-  } catch (e) {
-    if (e.message.includes("Cannot change predicted team")) {
-      console.log("PASS: Changing team prediction reverted as expected with: 'Cannot change predicted team'");
-    } else {
-      console.error("FAIL: Swapper 1 reverted but with incorrect reason:", e.message);
-      process.exit(1);
-    }
   }
 
   // 7. Resolve Match: Argentina wins! (Winner = 1)

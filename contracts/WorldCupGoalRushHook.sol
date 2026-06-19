@@ -63,7 +63,6 @@ contract WorldCupGoalRushHook {
     }
 
     struct Prediction {
-        uint8 predictedTeam; // 1 = TeamA, 2 = TeamB
         uint256 okbAmount;
         uint256 grushAmount;
         bool okbClaimed;
@@ -75,8 +74,8 @@ contract WorldCupGoalRushHook {
     IERC20 public grushToken;
     uint256 public activeMatchId;
     mapping(uint256 => Match) public matches;
-    // matchId => user => Prediction
-    mapping(uint256 => mapping(address => Prediction)) public predictions;
+    // matchId => user => teamId => Prediction
+    mapping(uint256 => mapping(address => mapping(uint8 => Prediction))) public predictions;
     // matchId => teamId => total prediction volume
     mapping(uint256 => mapping(uint8 => uint256)) public teamPredictionVolume;
     mapping(uint256 => mapping(uint8 => uint256)) public teamGrushPredictionVolume;
@@ -278,9 +277,7 @@ contract WorldCupGoalRushHook {
         require(!activeMatch.resolved, "Match already resolved");
         require(block.timestamp < activeMatch.endTime, "Predictions closed");
 
-        Prediction storage pred = predictions[matchId][user];
-        require(pred.predictedTeam == 0 || pred.predictedTeam == predictedTeam, "Cannot change predicted team");
-        pred.predictedTeam = predictedTeam;
+        Prediction storage pred = predictions[matchId][user][predictedTeam];
         pred.okbAmount += volume;
 
         teamPredictionVolume[matchId][predictedTeam] += volume;
@@ -299,9 +296,7 @@ contract WorldCupGoalRushHook {
         require(!activeMatch.resolved, "Match already resolved");
         require(block.timestamp < activeMatch.endTime, "Predictions closed");
 
-        Prediction storage pred = predictions[matchId][user];
-        require(pred.predictedTeam == 0 || pred.predictedTeam == predictedTeam, "Cannot change predicted team");
-        pred.predictedTeam = predictedTeam;
+        Prediction storage pred = predictions[matchId][user][predictedTeam];
         pred.grushAmount += amount;
 
         teamGrushPredictionVolume[matchId][predictedTeam] += amount;
@@ -317,10 +312,9 @@ contract WorldCupGoalRushHook {
         Match storage targetMatch = matches[_matchId];
         require(targetMatch.resolved, "Match not resolved yet");
         
-        Prediction storage pred = predictions[_matchId][msg.sender];
-        require(pred.okbAmount > 0, "No OKB prediction made");
+        Prediction storage pred = predictions[_matchId][msg.sender][targetMatch.winner];
+        require(pred.okbAmount > 0, "No OKB prediction made for winning team");
         require(!pred.okbClaimed, "OKB jackpot already claimed");
-        require(pred.predictedTeam == targetMatch.winner, "Prediction was incorrect");
 
         pred.okbClaimed = true;
 
@@ -350,10 +344,9 @@ contract WorldCupGoalRushHook {
         Match storage targetMatch = matches[_matchId];
         require(targetMatch.resolved, "Match not resolved yet");
         
-        Prediction storage pred = predictions[_matchId][msg.sender];
-        require(pred.grushAmount > 0, "No GRUSH prediction made");
+        Prediction storage pred = predictions[_matchId][msg.sender][targetMatch.winner];
+        require(pred.grushAmount > 0, "No GRUSH prediction made for winning team");
         require(!pred.grushClaimed, "GRUSH jackpot already claimed");
-        require(pred.predictedTeam == targetMatch.winner, "Prediction was incorrect");
 
         pred.grushClaimed = true;
 
@@ -364,6 +357,24 @@ contract WorldCupGoalRushHook {
         require(grushToken.transfer(msg.sender, claimAmount), "GRUSH transfer failed");
 
         emit GrushJackpotClaimed(msg.sender, _matchId, claimAmount);
+    }
+
+    /**
+     * @notice Get all predictions for a user on a given match.
+     */
+    function getUserPredictions(uint256 _matchId, address _user) external view returns (
+        uint256[4] memory okbAmounts,
+        uint256[4] memory grushAmounts,
+        bool[4] memory okbClaimeds,
+        bool[4] memory grushClaimeds
+    ) {
+        for (uint8 i = 1; i <= 3; i++) {
+            Prediction storage pred = predictions[_matchId][_user][i];
+            okbAmounts[i] = pred.okbAmount;
+            grushAmounts[i] = pred.grushAmount;
+            okbClaimeds[i] = pred.okbClaimed;
+            grushClaimeds[i] = pred.grushClaimed;
+        }
     }
 
     // --- Native OKB Deposits and Admin Management ---

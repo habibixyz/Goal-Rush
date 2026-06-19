@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { io } from 'socket.io-client'
 import { ethers } from 'ethers'
 import confetti from 'canvas-confetti'
@@ -2295,42 +2295,42 @@ export default function App() {
     return () => clearInterval(interval);
   }, [activeMatch.id]);
 
-  useEffect(() => {
-    const fetchUserPrediction = async () => {
-      if (!walletConnected || !userAddress || !activeMatch.id) {
-        setUserPredictions(null);
-        return;
-      }
+  const fetchUserPrediction = useCallback(async () => {
+    if (!walletConnected || !userAddress || !activeMatch.id) {
+      setUserPredictions(null);
+      return;
+    }
+    
+    try {
+      const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
+      const queryAbi = [
+        "function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)"
+      ];
+      const queryContract = new ethers.Contract(HOOK_ADDRESS, queryAbi, rpcProvider);
+      const numericId = getNumericMatchId(activeMatch.id);
+      const [okbAmounts, grushAmounts, okbClaimeds, grushClaimeds] = await queryContract.getUserPredictions(numericId, userAddress);
       
-      try {
-        const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
-        const queryAbi = [
-          "function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)"
-        ];
-        const queryContract = new ethers.Contract(HOOK_ADDRESS, queryAbi, rpcProvider);
-        const numericId = getNumericMatchId(activeMatch.id);
-        const [okbAmounts, grushAmounts, okbClaimeds, grushClaimeds] = await queryContract.getUserPredictions(numericId, userAddress);
-        
-        const predsObj = {};
-        for (let i = 1; i <= 3; i++) {
-          predsObj[i] = {
-            okbAmount: ethers.formatEther(okbAmounts[i] || 0n),
-            grushAmount: ethers.formatEther(grushAmounts[i] || 0n),
-            okbClaimed: okbClaimeds[i],
-            grushClaimed: grushClaimeds[i]
-          };
-        }
-        setUserPredictions(predsObj);
-      } catch (e) {
-        console.warn("Failed to fetch user prediction status:", e);
-        setUserPredictions(null);
+      const predsObj = {};
+      for (let i = 1; i <= 3; i++) {
+        predsObj[i] = {
+          okbAmount: ethers.formatEther(okbAmounts[i] || 0n),
+          grushAmount: ethers.formatEther(grushAmounts[i] || 0n),
+          okbClaimed: okbClaimeds[i],
+          grushClaimed: grushClaimeds[i]
+        };
       }
-    };
+      setUserPredictions(predsObj);
+    } catch (e) {
+      console.warn("Failed to fetch user prediction status:", e);
+      setUserPredictions(null);
+    }
+  }, [walletConnected, userAddress, activeMatch.id]);
 
+  useEffect(() => {
     fetchUserPrediction();
     const interval = setInterval(fetchUserPrediction, 8000);
     return () => clearInterval(interval);
-  }, [walletConnected, userAddress, activeMatch.id]);
+  }, [fetchUserPrediction]);
 
   const handleAccountsChanged = async (accounts) => {
     if (accounts.length > 0) {
@@ -2555,6 +2555,7 @@ export default function App() {
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       setTransactionStatus({ tone: 'pending', message: `Transaction ${tx.hash.slice(0, 10)}... submitted. Waiting for X Layer confirmation.` })
       await tx.wait();
+      fetchUserPrediction();
       setTransactionStatus({ tone: 'success', message: 'Prediction confirmed on X Layer. The penalty animation is cosmetic and does not change the on-chain result.' })
 
       if (selectedToken === 'GRUSH') {
@@ -2831,6 +2832,7 @@ export default function App() {
       const tx = await hookContract.claimJackpot(numericMatchId);
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       await tx.wait();
+      fetchUserPrediction();
       addLog(`🎉 Jackpot claimed successfully! Shares of the jackpot have been transferred to your wallet.`);
       alert("Jackpot claimed successfully!");
     } catch (err) {
@@ -2860,6 +2862,7 @@ export default function App() {
       const tx = await hookContract.claimGrushJackpot(numericMatchId);
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       await tx.wait();
+      fetchUserPrediction();
       addLog(`GRUSH jackpot claimed successfully! Token shares have been transferred to your wallet.`);
       updateGrushBalance(userAddress);
       alert("GRUSH jackpot claimed successfully!");

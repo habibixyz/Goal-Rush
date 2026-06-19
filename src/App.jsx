@@ -2522,17 +2522,26 @@ export default function App() {
 
       let tx;
       if (selectedToken === 'GRUSH') {
-        const tokenAbi = ["function approve(address spender, uint256 amount) external returns (bool)"];
+        const tokenAbi = [
+          "function approve(address spender, uint256 amount) external returns (bool)",
+          "function allowance(address owner, address spender) external view returns (uint256)"
+        ];
         const routerAbi = ["function predictWithGRUSH(uint256 matchId, uint8 predictedTeam, uint256 amount) external"];
         const tokenContract = new ethers.Contract(GRUSH_TOKEN_ADDRESS, tokenAbi, signer);
         const routerContract = new ethers.Contract(ROUTER_ADDRESS, routerAbi, signer);
 
         const amountWei = ethers.parseEther(swapAmount);
-        setTransactionStatus({ tone: 'pending', message: `Step 1 of 2: approve exactly ${parsedAmount} GRUSH for the prediction router.` })
-        addLog(`[approve] Approving ${parsedAmount} GRUSH for the prediction router...`);
-        const approveTx = await tokenContract.approve(ROUTER_ADDRESS, amountWei);
-        addLog(`Approval submitted: ${approveTx.hash.slice(0, 10)}... waiting for confirmation`);
-        await approveTx.wait();
+        const currentAllowance = await tokenContract.allowance(userAddress, ROUTER_ADDRESS);
+
+        if (currentAllowance < amountWei) {
+          setTransactionStatus({ tone: 'pending', message: `Step 1 of 2: approve exactly ${parsedAmount} GRUSH for the prediction router.` })
+          addLog(`[approve] Approving ${parsedAmount} GRUSH for the prediction router...`);
+          const approveTx = await tokenContract.approve(ROUTER_ADDRESS, amountWei);
+          addLog(`Approval submitted: ${approveTx.hash.slice(0, 10)}... waiting for confirmation`);
+          await approveTx.wait();
+        } else {
+          addLog(`[allowance] Existing allowance (${ethers.formatEther(currentAllowance)} GRUSH) is sufficient. Skipping approval transaction!`);
+        }
 
         const predictionLabel = prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw';
         addLog(`[predictWithGRUSH] Recording ${parsedAmount} GRUSH prediction for ${predictionLabel}...`);

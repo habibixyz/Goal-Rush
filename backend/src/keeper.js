@@ -22,11 +22,11 @@ const https  = require('https');
 const { ethers } = require('ethers');
 
 // ── Configuration (override via Railway env vars) ────────────
-const HOOK_ADDRESS         = process.env.HOOK_ADDRESS   || '0xec3CE5C745b0DDaC94387A35bCCF089C11472472';
+const HOOK_ADDRESS         = process.env.HOOK_ADDRESS   || '0xf568f5343116D369a7C7a50E69C7F89B79A65E37';
 const RPC_URL              = process.env.XLAYER_RPC     || process.env.XLAYER_MAINNET_RPC || 'https://rpc.xlayer.tech';
 const PRIVATE_KEY          = process.env.KEEPER_PRIVATE_KEY || process.env.PRIVATE_KEY;
-const PRE_ACTIVATE_WINDOW  = 30 * 24 * 60 * 60;  // activate 30 days before kickoff (seconds)
-const MATCH_DURATION       = 110 * 60; // on-chain match window: 110 minutes
+const PRE_ACTIVATE_WINDOW  = 5 * 60;  // activate 5 minutes before kickoff (seconds)
+const MATCH_DURATION       = 110 * 60; // on-chain match window: 110 minutes (fallback)
 
 const HOOK_ABI = [
   'function createMatch(uint256 _matchId, string _teamA, string _teamB, uint256 _duration) external',
@@ -175,7 +175,8 @@ async function tick() {
           log(`🚀 Activating: ESPN ${espnId} — ${teamA} vs ${teamB}`);
           try {
             const feeData = await provider.getFeeData();
-            const tx = await hook.createMatch(onChainId, teamA, teamB, MATCH_DURATION, {
+            const dynamicDuration = Math.max(110 * 60, (secsUntil || 0) + 110 * 60);
+            const tx = await hook.createMatch(onChainId, teamA, teamB, dynamicDuration, {
               gasPrice: feeData.gasPrice,
               gasLimit: 300_000,
             });

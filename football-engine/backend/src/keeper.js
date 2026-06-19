@@ -1,12 +1,12 @@
 const { ethers } = require("ethers");
 const db = require("./db");
 
-const HOOK_ADDRESS = "0xec3CE5C745b0DDaC94387A35bCCF089C11472472";
+const HOOK_ADDRESS = "0xf568f5343116D369a7C7a50E69C7F89B79A65E37";
 const RPC_URL = "https://rpc.xlayer.tech";
 const PREDICTION_DURATION = 9000; // 2.5 hours in seconds
 
-// How many minutes before kickoff to pre-activate a match (30 days)
-const PRE_ACTIVATE_MINUTES = 30 * 24 * 60;
+// How many minutes before kickoff to pre-activate a match (5 minutes)
+const PRE_ACTIVATE_MINUTES = 5;
 
 const abi = [
   "function activeMatchId() view returns (uint256)",
@@ -32,7 +32,11 @@ async function activateMatchOnChain(hook, match) {
   }
 
   console.log(`[KEEPER] Activating ${match.home_team} vs ${match.away_team} on-chain (ID: ${numericId.toString()})...`);
-  const tx = await hook.createMatch(numericId, match.home_team, match.away_team, PREDICTION_DURATION);
+  const kickoffMs = new Date(match.kickoff_utc).getTime();
+  const secsUntil = Math.max(0, Math.floor((kickoffMs - Date.now()) / 1000));
+  const dynamicDuration = secsUntil + 110 * 60;
+
+  const tx = await hook.createMatch(numericId, match.home_team, match.away_team, dynamicDuration);
   console.log(`[KEEPER] TX submitted: ${tx.hash}`);
   await tx.wait(1);
   console.log(`[KEEPER] ✅ Match activated: ${match.home_team} vs ${match.away_team}`);

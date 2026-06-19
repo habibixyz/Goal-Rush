@@ -4,6 +4,35 @@ GoalRush is a gamified Uniswap V4 hook custom-built for the OKX X Layer "Hook th
 
 ![GoalRush Banner](https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80)
 
+---
+
+## 🚀 Active Deployment Addresses (X Layer Mainnet)
+
+* **GoalRush Hook**: `0xf568f5343116D369a7C7a50E69C7F89B79A65E37`
+* **GoalRush Router**: `0x462F4521ac71E4502E7C7C8856d39823df03913E`
+* **GRUSH Token**: `0x422fe165b2da990d18c6dca944b11dcd61519671`
+
+---
+
+## 🤖 Keeper Bot Management (PM2)
+
+The GoalRush Keeper Bot automates on-chain match activation (5 minutes before kickoff) and resolution (when ESPN scoreboard status changes to full-time). It runs 24/7 in the background via PM2.
+
+### Start Keeper Bot
+```bash
+npx pm2 start ecosystem.config.cjs
+```
+
+### Check Logs
+```bash
+npx pm2 logs goalrush-keeper
+```
+
+### Restart Keeper Bot
+```bash
+npx pm2 restart goalrush-keeper
+```
+
 ## ⚽ Core Innovation
 
 In Uniswap V4, hooks can run arbitrary logic before and after pool transactions. GoalRush utilizes this capability to create two unique mechanisms for World Cup fans:

@@ -52,6 +52,9 @@ async function init() {
     CREATE INDEX IF NOT EXISTS idx_predictions_wallet ON predictions(wallet);
   `);
 
+  // Purge any non-World Cup matches
+  db.prepare("DELETE FROM matches WHERE competition NOT LIKE '%World Cup%'").run();
+
   console.log('✅ DB initialized at', DB_PATH);
 }
 
@@ -76,7 +79,7 @@ function getMatchById(id) {
 }
 
 function getLiveMatches() {
-  return db.prepare("SELECT * FROM matches WHERE status = 'LIVE' AND competition = 'FIFA World Cup' ORDER BY kickoff_utc").all();
+  return db.prepare("SELECT * FROM matches WHERE status = 'LIVE' AND competition LIKE '%World Cup%' ORDER BY kickoff_utc").all();
 }
 
 function getUpcomingMatches(hours = 48) {
@@ -85,7 +88,7 @@ function getUpcomingMatches(hours = 48) {
     WHERE status = 'SCHEDULED'
       AND kickoff_utc >= datetime('now')
       AND kickoff_utc <= datetime('now', '+${hours} hours')
-      AND competition = 'FIFA World Cup'
+      AND competition LIKE '%World Cup%'
     ORDER BY kickoff_utc
   `).all();
 }
@@ -96,7 +99,7 @@ function getFinishedUnresolved() {
     SELECT * FROM matches
     WHERE status = 'FINISHED'
       AND updated_at >= datetime('now', '-2 hours')
-      AND competition = 'FIFA World Cup'
+      AND competition LIKE '%World Cup%'
     ORDER BY kickoff_utc DESC
   `).all();
 }
@@ -104,7 +107,7 @@ function getFinishedUnresolved() {
 function getAllMatches(limit = 100) {
   return db.prepare(`
     SELECT * FROM matches
-    WHERE competition = 'FIFA World Cup'
+    WHERE competition LIKE '%World Cup%'
     ORDER BY kickoff_utc DESC
     LIMIT ?
   `).all(limit);

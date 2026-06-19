@@ -24,12 +24,12 @@ const { ethers } = require('ethers');
 require('dotenv').config();
 
 // ── Configuration ────────────────────────────────────────────
-const HOOK_ADDRESS   = '0xec3CE5C745b0DDaC94387A35bCCF089C11472472';
+const HOOK_ADDRESS   = '0xf568f5343116D369a7C7a50E69C7F89B79A65E37';
 const RPC_URL        = process.env.XLAYER_MAINNET_RPC || 'https://rpc.xlayer.tech';
 const PRIVATE_KEY    = process.env.PRIVATE_KEY;
 const POLL_INTERVAL  = 60_000;          // check every 60 seconds
-const PRE_ACTIVATE_WINDOW = 30 * 24 * 60 * 60;    // activate 30 days before kickoff (seconds)
-const MATCH_DURATION = 110 * 60;        // on-chain match window: 110 minutes
+const PRE_ACTIVATE_WINDOW = 5 * 60;    // activate 5 minutes before kickoff (seconds)
+const MATCH_DURATION = 110 * 60;        // on-chain match window: 110 minutes (fallback)
 
 // Minimal ABI — only the functions the keeper needs
 const HOOK_ABI = [
@@ -166,8 +166,11 @@ async function tick(hook, wallet) {
       if (shouldActivate) {
         log(`🚀 Activating on-chain: "${matchName}" (ESPN ${espnId}) — ${teamA} vs ${teamB}`);
         try {
+          // Calculate dynamic duration so prediction window closes 110 minutes after actual kickoff time
+          const dynamicDuration = Math.max(110 * 60, (secsUntilKickoff || 0) + 110 * 60);
+
           const gasPrice = (await wallet.provider.getFeeData()).gasPrice;
-          const tx = await hook.createMatch(onChainId, teamA, teamB, MATCH_DURATION, {
+          const tx = await hook.createMatch(onChainId, teamA, teamB, dynamicDuration, {
             gasPrice,
             gasLimit: 300_000
           });

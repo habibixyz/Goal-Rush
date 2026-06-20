@@ -15,8 +15,8 @@
 const { ethers } = require('hardhat');
 
 const NEW_OWNER      = '0xAe1B810fFB88855fFD967Dc274D9ba4fadd21990';
-const HOOK_ADDRESS   = '0xC907030AeCd8fC81B19678cDD08DCF96cD9380c0';
-const ROUTER_ADDRESS = '0x5Ae40D89c38109764B91eE97F41deE4F1E86b26c';
+const HOOK_ADDRESS   = '0x700656337a252A004Ca0B170828f4adEaa680288';
+const ROUTER_ADDRESS = '0x8f3e9B45a377cEa9fCeC9509e82EEe237e67ba24';
 
 const TRANSFER_ABI = [
   'function owner() external view returns (address)',

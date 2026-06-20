@@ -65,18 +65,21 @@ function httpGet(url) {
  */
 async function fetchESPN() {
   const now = new Date();
-  const y = now.getUTCFullYear();
-  const m = String(now.getUTCMonth() + 1).padStart(2, '0');
-  const d = String(now.getUTCDate()).padStart(2, '0');
+  const fmt = (d) => {
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    return `${y}${m}${day}`;
+  };
+
+  const yesterday = new Date(now);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
 
   const tomorrow = new Date(now);
   tomorrow.setUTCDate(tomorrow.getUTCDate() + 2);
-  const ty = tomorrow.getUTCFullYear();
-  const tm = String(tomorrow.getUTCMonth() + 1).padStart(2, '0');
-  const td = String(tomorrow.getUTCDate()).padStart(2, '0');
 
-  const start = `${y}${m}${d}`;
-  const end   = `${ty}${tm}${td}`;
+  const start = fmt(yesterday);
+  const end   = fmt(tomorrow);
 
   const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${start}-${end}`;
   const data = await httpGet(url);

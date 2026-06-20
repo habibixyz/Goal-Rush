@@ -25,7 +25,9 @@ import {
   X,
   Plus,
   Twitter,
-  Send
+  Send,
+  Globe,
+  Activity
 } from 'lucide-react'
 
 // Real codebase strings to display in Code Viewer
@@ -3063,7 +3065,7 @@ export default function App() {
           <section className="hackathon-hero-container">
             <div className="hackathon-left">
               <div className="hackathon-title-group">
-                <div style={{
+                <div className="hero-logo-wrapper" style={{
                   display: 'inline-flex',
                   padding: '16px',
                   borderRadius: '24px',
@@ -3128,43 +3130,58 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Quick Stats Grid under description */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', marginTop: '32px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '24px' }}>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Network</div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>OKX X Layer</div>
+              {/* Cyber Info Panel */}
+              <div className="hero-info-grid">
+                <div className="hero-info-card">
+                  <div className="hero-info-card-header">
+                    <Globe size={13} className="hero-info-card-icon" />
+                    <span>NETWORK</span>
+                  </div>
+                  <div className="hero-info-card-value">OKX X Layer</div>
                 </div>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Hook Address</div>
-                  <div
-                    style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-primary)', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                    onClick={() => {
-                      navigator.clipboard.writeText(HOOK_ADDRESS);
-                      alert('Hook address copied to clipboard!');
-                    }}
-                  >
+
+                <div className="hero-info-card clickable" onClick={() => {
+                  navigator.clipboard.writeText(HOOK_ADDRESS);
+                  alert('Hook address copied to clipboard!');
+                }}>
+                  <div className="hero-info-card-header">
+                    <Code size={13} className="hero-info-card-icon" style={{ color: 'var(--color-primary)' }} />
+                    <span>HOOK CONTRACT</span>
+                  </div>
+                  <div className="hero-info-card-value font-mono">
                     {HOOK_ADDRESS.slice(0, 6)}...{HOOK_ADDRESS.slice(-4)}
+                    <Copy size={11} className="copy-hint-icon" />
                   </div>
                 </div>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>GRUSH Token</div>
-                  <div
-                    style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                    onClick={() => {
-                      navigator.clipboard.writeText(GRUSH_TOKEN_ADDRESS);
-                      alert('GRUSH token address copied to clipboard!');
-                    }}
-                  >
+
+                <div className="hero-info-card clickable" onClick={() => {
+                  navigator.clipboard.writeText(GRUSH_TOKEN_ADDRESS);
+                  alert('GRUSH token address copied to clipboard!');
+                }}>
+                  <div className="hero-info-card-header">
+                    <Coins size={13} className="hero-info-card-icon" style={{ color: 'var(--color-secondary)' }} />
+                    <span>GRUSH TOKEN</span>
+                  </div>
+                  <div className="hero-info-card-value font-mono">
                     {GRUSH_TOKEN_ADDRESS.slice(0, 6)}...{GRUSH_TOKEN_ADDRESS.slice(-4)}
+                    <Copy size={11} className="copy-hint-icon" />
                   </div>
                 </div>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Callbacks</div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>before / afterSwap</div>
+
+                <div className="hero-info-card">
+                  <div className="hero-info-card-header">
+                    <Activity size={13} className="hero-info-card-icon" />
+                    <span>CALLBACKS</span>
+                  </div>
+                  <div className="hero-info-card-value">Swap Triggers</div>
                 </div>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Goal Event Odds</div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-secondary)' }}>5% Event</div>
+
+                <div className="hero-info-card">
+                  <div className="hero-info-card-header">
+                    <Flame size={13} className="hero-info-card-icon" style={{ color: 'var(--color-accent)' }} />
+                    <span>GOAL ODDS</span>
+                  </div>
+                  <div className="hero-info-card-value">5% Chance</div>
                 </div>
               </div>
 
@@ -3713,12 +3730,11 @@ export default function App() {
                     {/* Select Team Prediction */}
                     <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                       <div className="swap-label" style={{ marginBottom: '8px' }}>Attach Match Winner Prediction (via hookData)</div>
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <div className="prediction-choice-container">
                         <button
                           type="button"
                           onClick={() => handlePredictionChange(1)}
-                          className={`btn-secondary ${prediction === 1 ? 'active' : ''}`}
-                          style={{ flex: 1, minWidth: '100px', borderColor: prediction === 1 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
+                          className={`prediction-choice-btn ${prediction === 1 ? 'active' : ''}`}
                           disabled={isStriking}
                         >
                           <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
@@ -3737,8 +3753,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => handlePredictionChange(3)}
-                          className={`btn-secondary ${prediction === 3 ? 'active' : ''}`}
-                          style={{ flex: 1, minWidth: '80px', borderColor: prediction === 3 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
+                          className={`prediction-choice-btn ${prediction === 3 ? 'active' : ''}`}
                           disabled={isStriking}
                         >
                           <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
@@ -3757,8 +3772,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => handlePredictionChange(2)}
-                          className={`btn-secondary ${prediction === 2 ? 'active' : ''}`}
-                          style={{ flex: 1, minWidth: '100px', borderColor: prediction === 2 ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}
+                          className={`prediction-choice-btn ${prediction === 2 ? 'active' : ''}`}
                           disabled={isStriking}
                         >
                           <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
@@ -3874,7 +3888,7 @@ export default function App() {
                   </div>
 
                   {/* Quick actions grid */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div className="grush-hub-actions" style={{ display: 'grid', gap: '8px' }}>
                     <button
                       type="button"
                       onClick={handleAddGrushToWallet}
@@ -3899,7 +3913,7 @@ export default function App() {
                     </button>
 
                     <a
-                      href={`https://quickswap.exchange/#/swap?inputCurrency=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&outputCurrency=${GRUSH_TOKEN_ADDRESS}`}
+                      href="https://dapp.quickswap.exchange/swap?type=v4&from=ETH&to=0x422fe165B2Da990d18c6Dca944b11dcD61519671"
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{

@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-  const hookAddress = "0xf568f5343116D369a7C7a50E69C7F89B79A65E37";
+  const hookAddress = "0x700656337a252A004Ca0B170828f4adEaa680288";
   const hook = await ethers.getContractAt([
     "function activeMatchId() external view returns (uint256)",
     "function matches(uint256) external view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)"

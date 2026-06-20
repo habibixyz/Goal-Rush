@@ -1023,7 +1023,7 @@ input:focus-visible {
 .hackathon-actions {
   display: flex;
   gap: 16px;
-  flex-wrap: wrap;
+  align-items: center;
 }
 
 .hackathon-right {
@@ -1852,4 +1852,295 @@ input:focus-visible {
 .nav-btn-link:hover {
   color: var(--color-primary);
   text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+/* Default Quick Actions Layout */
+.grush-hub-actions {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* --- High-Quality Mobile Phone Layout Optimization --- */
+@media (max-width: 600px) {
+  /* Reduce outer page container padding */
+  .app-wrapper {
+    padding: 0 12px;
+  }
+  
+  /* Navbar and logo adjustments */
+  .navbar {
+    padding: 12px 0;
+    gap: 12px;
+  }
+  .navbar-logo {
+    font-size: 1.3rem !important;
+  }
+  .hero-logo-img {
+    max-height: 120px !important;
+  }
+  
+  /* Hero section adjustments */
+  .hackathon-big-title {
+    font-size: 2.8rem !important;
+    letter-spacing: -1px !important;
+  }
+  .hackathon-sub-title {
+    font-size: 1.4rem !important;
+  }
+  .hackathon-desc {
+    font-size: 0.95rem !important;
+    margin-bottom: 24px !important;
+  }
+  .security-status-card {
+    padding: 10px 12px !important;
+    gap: 10px !important;
+    margin-top: 0 !important;
+  }
+  .security-status-card strong {
+    font-size: 0.8rem !important;
+  }
+  .security-status-card span {
+    font-size: 0.7rem !important;
+  }
+  
+  /* Hero actions full-width on mobile */
+  .hackathon-actions {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  .hackathon-actions a,
+  .hackathon-actions button {
+    width: 100% !important;
+    justify-content: center;
+  }
+
+  /* Dashboard Panel Cards Spacing */
+  .card-bezel {
+    padding: 16px !important;
+  }
+  .panel-title {
+    font-size: 1.25rem !important;
+  }
+
+  /* Prediction Choice Buttons */
+  .prediction-choice-container {
+    flex-direction: column !important;
+  }
+  .prediction-choice-container button {
+    width: 100% !important;
+  }
+
+  /* GRUSH Token Hub Card Mobile adjustments */
+  .grush-hub-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Match Center Header and List adjustments */
+  .match-center-header h2 {
+    font-size: 1.8rem !important;
+  }
+  .match-center-header p {
+    font-size: 0.8rem !important;
+  }
+  .match-filter-tabs {
+    gap: 4px !important;
+    padding: 2px !important;
+  }
+  .match-filter-btn {
+    font-size: 0.72rem !important;
+    padding: 5px 2px !important;
+  }
+  
+  /* Match details header on mobile */
+  .match-hub-header {
+    padding: 16px !important;
+  }
+  .match-hub-teams {
+    gap: 10px !important;
+    margin: 12px 0 !important;
+  }
+  .match-hub-team-flag {
+    width: 48px !important;
+    height: 32px !important;
+  }
+  .match-hub-team-name {
+    font-size: 0.9rem !important;
+  }
+  .match-hub-score {
+    font-size: 2rem !important;
+    letter-spacing: 2px !important;
+    min-width: 90px !important;
+  }
+  .match-hub-minute {
+    font-size: 0.72rem !important;
+    min-width: 60px !important;
+  }
+  
+  /* Team rows under tab */
+  .team-row {
+    padding: 8px 10px !important;
+  }
+  .team-name {
+    font-size: 0.85rem !important;
+  }
+  .team-odds {
+    font-size: 0.8rem !important;
+  }
+
+  /* Table padding adjustments for mobile screens */
+  table th, table td {
+    padding: 8px 6px !important;
+    font-size: 0.78rem !important;
+  }
+}
+
+/* Cyber Info Grid Panel styles */
+.hero-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 24px;
+}
+
+.hero-info-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+.hero-info-card.clickable {
+  cursor: pointer;
+}
+
+.hero-info-card.clickable:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.hero-info-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.hero-info-card-icon {
+  opacity: 0.8;
+}
+
+.hero-info-card-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hero-info-card-value.font-mono {
+  font-family: var(--font-mono);
+}
+
+.copy-hint-icon {
+  margin-left: 6px;
+  color: rgba(255, 255, 255, 0.3);
+  transition: color 0.15s;
+}
+
+.hero-info-card.clickable:hover .copy-hint-icon {
+  color: var(--color-primary);
+}
+
+/* Tablet & Mobile Layout Adjustments (max-width: 768px) */
+@media (max-width: 768px) {
+  .logo-wrap {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .hackathon-actions {
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+    align-items: stretch !important;
+  }
+
+  .hackathon-actions a,
+  .hackathon-actions button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+/* Phone Layout Adjustments (max-width: 480px) */
+@media (max-width: 480px) {
+  .hero-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hero-logo-wrapper {
+  margin-right: auto;
+}
+
+@media (max-width: 768px) {
+  .hero-logo-wrapper {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: flex !important;
+    max-width: fit-content;
+  }
+}
+
+/* Prediction choice layout and buttons */
+.prediction-choice-container {
+  display: flex;
+  gap: 8px;
+}
+
+.prediction-choice-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
+  font-weight: 600;
+  font-family: var(--font-display);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 10px 8px;
+  transition: var(--transition-smooth);
+  min-width: 0;
+}
+
+.prediction-choice-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.prediction-choice-btn.active {
+  border-color: var(--color-primary);
+  background: rgba(157, 255, 0, 0.05);
+}
+
+@media (max-width: 600px) {
+  .prediction-choice-container {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .prediction-choice-btn {
+    width: 100%;
+    padding: 12px 16px;
+  }
 }

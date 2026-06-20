@@ -940,19 +940,102 @@ export default function App() {
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              handleSelectMatchUI(m);
-              setCurrentView('dashboard');
-              setTimeout(() => {
-                document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth' });
-              }, 100);
-            }}
-            className="swap-btn"
-            style={{ marginTop: '20px', background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
-          >
-            Predict Match Winner & Play Shootout! ⚽
-          </button>
+          {m.minute === 'FT' ? (() => {
+            if (!walletConnected) {
+              return (
+                <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', fontWeight: 600 }}>
+                  Match Ended ⚽
+                </div>
+              );
+            }
+            
+            if (!centerMatchPredictions) {
+              return (
+                <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
+                  Checking claim eligibility on-chain...
+                </div>
+              );
+            }
+
+            const winnerIndex = centerMatchPredictions.winner;
+            const predOnWinner = centerMatchPredictions[winnerIndex];
+            const okbAmt = parseFloat(predOnWinner?.okbAmount || '0');
+            const grushAmt = parseFloat(predOnWinner?.grushAmount || '0');
+            const hasPredictionOnWinner = okbAmt > 0 || grushAmt > 0;
+
+            if (!hasPredictionOnWinner) {
+              return (
+                <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', fontWeight: 600 }}>
+                  Match Ended ⚽
+                </div>
+              );
+            }
+
+            const okbClaimed = predOnWinner?.okbClaimed;
+            const grushClaimed = predOnWinner?.grushClaimed;
+            const okbNeedClaim = okbAmt > 0 && !okbClaimed;
+            const grushNeedClaim = grushAmt > 0 && !grushClaimed;
+            const hasUnclaimed = okbNeedClaim || grushNeedClaim;
+
+            if (hasUnclaimed) {
+              return (
+                <>
+                  <button
+                    onClick={() => {
+                      handleSelectMatchUI(m);
+                      setCurrentView('dashboard');
+                      setTimeout(() => {
+                        document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth' });
+                      }, 100);
+                    }}
+                    className="swap-btn"
+                    style={{
+                      marginTop: '20px',
+                      background: 'linear-gradient(135deg, #00e5ff 0%, #9dff00 100%)',
+                      color: '#000',
+                      fontWeight: 'bold',
+                      boxShadow: '0 0 15px rgba(157, 255, 0, 0.4)'
+                    }}
+                  >
+                    View Match & Claim Winnings on Dashboard 🏆
+                  </button>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)', marginTop: '8px', textAlign: 'center', lineHeight: '1.4', fontWeight: 600 }}>
+                    🎉 You won! Click above to claim your OKB/GRUSH rewards on the dashboard.
+                  </div>
+                </>
+              );
+            } else {
+              return (
+                <div style={{
+                  marginTop: '20px',
+                  padding: '12px',
+                  background: 'rgba(157, 255, 0, 0.05)',
+                  border: '1px solid rgba(157, 255, 0, 0.25)',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  color: 'var(--color-primary)',
+                  fontSize: '0.85rem',
+                  fontWeight: 700
+                }}>
+                  All Winnings Claimed ✅
+                </div>
+              );
+            }
+          })() : (
+            <button
+              onClick={() => {
+                handleSelectMatchUI(m);
+                setCurrentView('dashboard');
+                setTimeout(() => {
+                  document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
+              className="swap-btn"
+              style={{ marginTop: '20px', background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
+            >
+              Predict Match Winner & Play Shootout! ⚽
+            </button>
+          )}
         </div>
 
         <div className="card-bezel">
@@ -1575,11 +1658,77 @@ export default function App() {
   const [pastClaimResult, setPastClaimResult] = useState(null);
   const [pastClaimLoading, setPastClaimLoading] = useState(false);
 
+  const [centerMatchPredictions, setCenterMatchPredictions] = useState(null);
+
+  useEffect(() => {
+    const fetchCenterPrediction = async () => {
+      if (!walletConnected || !userAddress || !selectedMatchCenterId) {
+        setCenterMatchPredictions(null);
+        return;
+      }
+      try {
+        const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
+        const queryAbi = [
+          "function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)",
+          "function matches(uint256) view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)"
+        ];
+        const queryContract = new ethers.Contract(HOOK_ADDRESS, queryAbi, rpcProvider);
+        const numericId = getNumericMatchId(selectedMatchCenterId);
+        
+        const onChainMatch = await queryContract.matches(numericId);
+        if (onChainMatch[0] === 0n) {
+          setCenterMatchPredictions(null);
+          return;
+        }
+
+        const [okbAmounts, grushAmounts, okbClaimeds, grushClaimeds] = await queryContract.getUserPredictions(numericId, userAddress);
+        
+        const predsObj = {
+          resolved: onChainMatch[5],
+          winner: Number(onChainMatch[6])
+        };
+        for (let i = 1; i <= 3; i++) {
+          predsObj[i] = {
+            okbAmount: ethers.formatEther(okbAmounts[i] || 0n),
+            grushAmount: ethers.formatEther(grushAmounts[i] || 0n),
+            okbClaimed: okbClaimeds[i],
+            grushClaimed: grushClaimeds[i]
+          };
+        }
+        setCenterMatchPredictions(predsObj);
+      } catch (e) {
+        setCenterMatchPredictions(null);
+      }
+    };
+    fetchCenterPrediction();
+    const interval = setInterval(fetchCenterPrediction, 8000);
+    return () => clearInterval(interval);
+  }, [walletConnected, userAddress, selectedMatchCenterId]);
+
   // Known past matches for quick selection
-  const knownPastMatches = [
-    { label: 'France vs Senegal', matchId: 'espn_760432' },
-    { label: 'Canada vs Bosnia & Herzegovina', matchId: '1' },
-  ];
+  const knownPastMatches = useMemo(() => {
+    const list = [];
+    if (Array.isArray(liveMatches)) {
+      liveMatches.forEach(m => {
+        if (m && (m.minute === 'FT' || m.status === 'FINISHED')) {
+          if (!list.some(item => item.matchId === m.id)) {
+            list.push({ label: `${m.teamA} vs ${m.teamB}`, matchId: m.id });
+          }
+        }
+      });
+    }
+    const historical = [
+      { label: 'United States vs Australia', matchId: 'espn_760442' },
+      { label: 'France vs Senegal', matchId: 'espn_760432' },
+      { label: 'Canada vs Bosnia & Herzegovina', matchId: '1' },
+    ];
+    historical.forEach(h => {
+      if (!list.some(item => item.matchId === h.matchId)) {
+        list.push(h);
+      }
+    });
+    return list;
+  }, [liveMatches]);
 
   const handleCheckPastClaim = async (matchIdInput) => {
     if (!walletConnected || !userAddress) {
@@ -3052,9 +3201,28 @@ export default function App() {
               </button>
             </div>
           ) : (
-            <button className="btn-primary" onClick={handleConnectWallet} style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
-              Connect Wallet
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWalletConnected(true);
+                    setUserAddress('0xae1b810ffb88855ffd967dc274d9ba4fadd21990');
+                    setUserBalance('0.1500');
+                    setGrushBalance('500.00');
+                    setChainId(196);
+                    addLog('Simulating wallet: 0xae1b... (Winner prediction)');
+                  }}
+                  className="btn-secondary"
+                  style={{ padding: '8px 12px', fontSize: '0.85rem', borderColor: '#9dff00', color: '#9dff00', background: 'rgba(157, 255, 0, 0.05)', cursor: 'pointer' }}
+                >
+                  Simulate Wallet 🧪
+                </button>
+              )}
+              <button className="btn-primary" onClick={handleConnectWallet} style={{ padding: '8px 16px', fontSize: '0.9rem', cursor: 'pointer' }}>
+                Connect Wallet
+              </button>
+            </div>
           )}
         </div>
       </header>

@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   LogOut,
   X,
+  Plus,
   Twitter,
   Send
 } from 'lucide-react'
@@ -1567,6 +1568,7 @@ export default function App() {
 
   // Past-match claim checker state
   const [showPastClaimChecker, setShowPastClaimChecker] = useState(false);
+  const [caCopied, setCaCopied] = useState(false);
   const [pastMatchInput, setPastMatchInput] = useState('');
   const [pastClaimResult, setPastClaimResult] = useState(null);
   const [pastClaimLoading, setPastClaimLoading] = useState(false);
@@ -2479,6 +2481,39 @@ export default function App() {
   const addLog = (message) => {
     setLogs((prev) => [message, ...prev])
   }
+
+  const handleAddGrushToWallet = async () => {
+    const provider = getProvider();
+    if (!provider) {
+      alert("Please connect your OKX Wallet first!");
+      return;
+    }
+    try {
+      await provider.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20',
+          options: {
+            address: GRUSH_TOKEN_ADDRESS,
+            symbol: 'GRUSH',
+            decimals: 18,
+            image: `${window.location.origin}/logo.png`
+          }
+        }
+      });
+      addLog("GRUSH token registration request sent to OKX Wallet.");
+    } catch (err) {
+      console.error(err);
+      addLog(`Failed to add GRUSH: ${err.message || err}`);
+    }
+  };
+
+  const copyCA = () => {
+    navigator.clipboard.writeText(GRUSH_TOKEN_ADDRESS);
+    setCaCopied(true);
+    setTimeout(() => setCaCopied(false), 2000);
+    addLog(`Copied GRUSH CA: ${GRUSH_TOKEN_ADDRESS}`);
+  };
 
   const handlePredictionChange = (teamId) => {
     setPrediction(teamId)
@@ -3763,6 +3798,131 @@ export default function App() {
                     </div>
                   </>
                 )}
+
+                {/* GRUSH Token Hub Card */}
+                <div style={{
+                  marginTop: '20px',
+                  padding: '14px',
+                  background: 'rgba(157, 255, 0, 0.02)',
+                  border: '1px solid rgba(157, 255, 0, 0.12)',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Coins size={16} style={{ color: 'var(--color-primary)' }} />
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff', letterSpacing: '0.3px' }}>
+                        GRUSH Token Hub
+                      </span>
+                    </div>
+                    <span style={{
+                      fontSize: '0.65rem',
+                      background: 'rgba(157, 255, 0, 0.1)',
+                      color: 'var(--color-primary)',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      fontWeight: 600
+                    }}>
+                      X Layer CA
+                    </span>
+                  </div>
+
+                  {/* Contract Address row */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: 'rgba(0,0,0,0.2)',
+                    borderRadius: '8px',
+                    padding: '8px 10px',
+                    border: '1px solid rgba(255,255,255,0.05)'
+                  }}>
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontFamily: 'var(--font-mono)',
+                      color: 'rgba(255,255,255,0.6)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      maxWidth: '180px'
+                    }}>
+                      {GRUSH_TOKEN_ADDRESS}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={copyCA}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: caCopied ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)',
+                        cursor: 'pointer',
+                        fontSize: '0.72rem',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <Copy size={12} />
+                      {caCopied ? 'Copied!' : 'Copy CA'}
+                    </button>
+                  </div>
+
+                  {/* Quick actions grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={handleAddGrushToWallet}
+                      style={{
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: '#fff',
+                        borderRadius: '8px',
+                        padding: '8px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <Plus size={14} style={{ color: 'var(--color-primary)' }} />
+                      Add to OKX Wallet
+                    </button>
+
+                    <a
+                      href={`https://quickswap.exchange/#/swap?inputCurrency=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&outputCurrency=${GRUSH_TOKEN_ADDRESS}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: '#fff',
+                        borderRadius: '8px',
+                        padding: '8px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        textDecoration: 'none',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <ExternalLink size={14} style={{ color: 'var(--color-secondary)' }} />
+                      Trade on QuickSwap
+                    </a>
+                  </div>
+                </div>
 
                 <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textAlign: 'center', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: '1.4' }}>
                   <span>ℹ️ This simulator runs a test interaction with the V4 hook on-chain to play the shootout and record predictions.</span>

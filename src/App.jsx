@@ -506,6 +506,17 @@ const getTeamFifaCode = (name) => {
   return mapping[name?.toLowerCase().trim()] || 'UN';
 };
 
+const getCleanAbbreviation = (teamName, flagCode) => {
+  if (flagCode && flagCode !== 'UN' && !flagCode.startsWith('http')) {
+    return flagCode;
+  }
+  const code = getTeamFifaCode(teamName);
+  if (code && code !== 'UN') {
+    return code;
+  }
+  return teamName?.slice(0, 3).toUpperCase() || 'UN';
+};
+
 
 // Helper to get the correct OKX Wallet provider strictly
 const getProvider = () => {
@@ -794,9 +805,9 @@ export default function App() {
             ) : m.minute === 'FT' ? (
               <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: 600, whiteSpace: 'nowrap' }}>
                 {m.scoreA > m.scoreB
-                  ? `${m.flagA || m.teamA.slice(0,3).toUpperCase()} Won`
+                  ? `${getCleanAbbreviation(m.teamA, m.flagA)} Won`
                   : m.scoreB > m.scoreA
-                    ? `${m.flagB || m.teamB.slice(0,3).toUpperCase()} Won`
+                    ? `${getCleanAbbreviation(m.teamB, m.flagB)} Won`
                     : 'Draw'}
               </span>
             ) : (

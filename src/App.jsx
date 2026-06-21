@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti'
 import goalRushLogo from './assets/logo.png'
 import SoccerBall3D from './components/SoccerBall3D'
 import currentHookSolidityCode from '../contracts/WorldCupGoalRushHook.sol?raw'
+import collectibleSolidityCode from '../contracts/GoalRushCollectible.sol?raw'
 import {
   Coins,
   Terminal as TerminalIcon,
@@ -631,11 +632,12 @@ export default function App() {
   const [teamAGrushVotes, setTeamAGrushVotes] = useState(0)
   const [teamBGrushVotes, setTeamBGrushVotes] = useState(0)
   const [teamDrawGrushVotes, setTeamDrawGrushVotes] = useState(0)
-  const [activeTab, setActiveTab] = useState('hook') // hook, mock, deploy, readme
-  const [showDevPortal, setShowDevPortal] = useState(false)
-  const [showWhitepaper, setShowWhitepaper] = useState(false)
-  const [showPrivacy, setShowPrivacy] = useState(false)
-  const [showTerms, setShowTerms] = useState(false)
+   const [activeTab, setActiveTab] = useState('collectible') // collectible, hook, mock, deploy
+   const [aboutSubTab, setAboutSubTab] = useState('overview') // overview, whitepaper, contracts, deployment
+   const [showDevPortal, setShowDevPortal] = useState(false)
+   const [showWhitepaper, setShowWhitepaper] = useState(false)
+   const [showPrivacy, setShowPrivacy] = useState(false)
+   const [showTerms, setShowTerms] = useState(false)
   const [activeRightTab, setActiveRightTab] = useState('match') // match or scores
   const [shootoutStatus, setShootoutStatus] = useState('')
   const [currentView, setCurrentView] = useState('dashboard') // dashboard or match-center
@@ -693,15 +695,47 @@ export default function App() {
     const pos = positions[hash % positions.length];
 
     // Compute stats (bounded between 70 and 99)
-    const defi_iq = 75 + (hash % 25);
-    const prediction_power = 72 + ((hash >> 1) % 28);
-    const jackpot_luck = 68 + ((hash >> 2) % 32);
-    const degen_level = 80 + ((hash >> 3) % 20); // Degen level usually higher
-    const swap_speed = 70 + ((hash >> 4) % 30);
-    const x_factor = 75 + ((hash >> 5) % 25);
+    let defi_iq = 75 + (hash % 25);
+    let prediction_power = 72 + ((hash >> 1) % 28);
+    let jackpot_luck = 68 + ((hash >> 2) % 32);
+    let degen_level = 80 + ((hash >> 3) % 20); // Degen level usually higher
+    let swap_speed = 70 + ((hash >> 4) % 30);
+    let x_factor = 75 + ((hash >> 5) % 25);
+
+    // Apply prediction volume stat boosts to reward platform activity!
+    let userVol = Number(totalUserVolume || 0);
+    if (userAddress) {
+      const stats = onChainStats[userAddress.toLowerCase()];
+      if (stats) {
+        try {
+          const okbVol = Number(ethers.formatEther(stats.volume || 0n));
+          const grushVol = Number(ethers.formatEther(stats.grushVolume || 0n));
+          userVol = Math.max(userVol, okbVol + (grushVol * 0.001)); // Scale GRUSH utility
+        } catch (e) {
+          console.error("Error reading volume for stat boost:", e);
+        }
+      }
+    }
+
+    // Apply progressive volume boosts based on active platform volume
+    let volumeBoost = 0;
+    if (userVol >= 5.0) {
+      volumeBoost = 15; // Promotes active power-users directly to Legendary/Diamond
+    } else if (userVol >= 1.0) {
+      volumeBoost = 8;  // Promotes active users to Diamond/Gold
+    } else if (userVol >= 0.1) {
+      volumeBoost = 4;  // Promotes users to Gold/Silver
+    }
+
+    defi_iq = Math.min(99, defi_iq + volumeBoost);
+    prediction_power = Math.min(99, prediction_power + volumeBoost);
+    jackpot_luck = Math.min(99, jackpot_luck + volumeBoost);
+    degen_level = Math.min(99, degen_level + volumeBoost);
+    swap_speed = Math.min(99, swap_speed + volumeBoost);
+    x_factor = Math.min(99, x_factor + volumeBoost);
 
     // Overall rating is average of stats
-    const overall = Math.round((defi_iq + prediction_power + jackpot_luck + degen_level + swap_speed + x_factor) / 6);
+    let overall = Math.round((defi_iq + prediction_power + jackpot_luck + degen_level + swap_speed + x_factor) / 6);
 
     // Card tier/type
     let card_type = 'gold';
@@ -711,9 +745,40 @@ export default function App() {
     else if (overall >= 74) card_type = 'silver';
     else card_type = 'bronze';
 
-    // Fallback if handle contains special keywords -> promote to Legendary!
-    if (cleanName.includes('okx') || cleanName.includes('xlayer') || cleanName.includes('grush') || cleanName.includes('uniswap')) {
+    // List of VIP influencers who automatically get Legendary cards for marketing and virality
+    const vipInfluencers = [
+      'waleswoosh',
+      'chillpill',
+      'vitalik',
+      'elonmusk',
+      'cz_binance',
+      'sandeepnailwal',
+      'cobie',
+      'ansem',
+      'gainzy',
+      'rovercrc'
+    ];
+
+    // Fallback if handle contains special keywords or is a VIP influencer -> promote to Legendary!
+    if (
+      cleanName.includes('okx') || 
+      cleanName.includes('xlayer') || 
+      cleanName.includes('grush') || 
+      cleanName.includes('uniswap') ||
+      vipInfluencers.includes(cleanName)
+    ) {
       card_type = 'legendary';
+    }
+
+    // Boost stats for Legendary cards to make sure they display epic tier values (94-99)
+    if (card_type === 'legendary') {
+      defi_iq = Math.max(defi_iq, 94 + (hash % 6));
+      prediction_power = Math.max(prediction_power, 93 + ((hash >> 1) % 7));
+      jackpot_luck = Math.max(jackpot_luck, 94 + ((hash >> 2) % 6));
+      degen_level = Math.max(degen_level, 95 + ((hash >> 3) % 5));
+      swap_speed = Math.max(swap_speed, 92 + ((hash >> 4) % 8));
+      x_factor = Math.max(x_factor, 95 + ((hash >> 5) % 5));
+      overall = Math.round((defi_iq + prediction_power + jackpot_luck + degen_level + swap_speed + x_factor) / 6);
     }
 
     const flagMap = {
@@ -766,7 +831,7 @@ export default function App() {
     }, 1000);
   };
 
-  const handleMintCardWithGrush = async () => {
+  const handleMintNFT = async (paymentMethod) => {
     if (!walletConnected || !userAddress) {
       alert("Please connect your wallet first!");
       return;
@@ -777,50 +842,102 @@ export default function App() {
     }
     
     setIsMintingCard(true);
-    setMintStatus('Initializing minting transaction...');
-    addLog(`[Mint Card] Initializing minting of ${twitterCard.username}'s card with 10 GRUSH...`);
+    setMintStatus(`Initializing minting via ${paymentMethod}...`);
+    addLog(`[Mint NFT] Minting ${twitterCard.username}'s card using ${paymentMethod}...`);
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
 
-      // 1. Fetch Owner address dynamically from Hook contract
-      let recipientAddress = '0x3C44CdDdB6a900Fa2b585dd299e03d12FA4293BC'; // Fallback owner address
-      try {
-        const hookAbi = ["function owner() view returns (address)"];
-        const hookContract = new ethers.Contract(HOOK_ADDRESS, hookAbi, provider);
-        recipientAddress = await hookContract.owner();
-        addLog(`[Mint Card] Fetched hook owner/treasury address: ${recipientAddress}`);
-      } catch (e) {
-        console.warn('Failed to fetch hook owner dynamically, using fallback:', e);
-      }
-
-      // 2. Setup GRUSH ERC20 contract
-      const tokenAbi = [
-        "function transfer(address recipient, uint256 amount) external returns (bool)",
-        "function balanceOf(address account) external view returns (uint256)"
+      // Collectible NFT Contract Address
+      const nftAddress = '0xd30b894bbD3185737c5D6a276367A4fEDF44de5C';
+      const nftAbi = [
+        "function mintWithOKB(string username, string pos, uint8 overall, uint8 defi_iq, uint8 prediction_power, uint8 jackpot_luck, uint8 degen_level, uint8 swap_speed, uint8 x_factor, string card_type, string uri) external payable returns (uint256)",
+        "function mintWithGrush(string username, string pos, uint8 overall, uint8 defi_iq, uint8 prediction_power, uint8 jackpot_luck, uint8 degen_level, uint8 swap_speed, uint8 x_factor, string card_type, string uri) external returns (uint256)",
+        "function okbMintPrice() external view returns (uint256)",
+        "function grushMintPrice() external view returns (uint256)"
       ];
-      const tokenContract = new ethers.Contract(GRUSH_TOKEN_ADDRESS, tokenAbi, signer);
+      const nftContract = new ethers.Contract(nftAddress, nftAbi, signer);
 
-      // Check balance
-      const balanceWei = await tokenContract.balanceOf(userAddress);
-      const mintFeeWei = ethers.parseEther('10.0'); // 10 GRUSH fee
+      const cardTypeLabel = twitterCard.card_type || 'gold';
+      const cleanUser = twitterCard.username.replace('@', '').trim().toLowerCase();
+      const metadataUri = `https://goal-rush-frontend-production.up.railway.app/api/metadata/${cleanUser}`;
 
-      if (balanceWei < mintFeeWei) {
-        throw new Error("Insufficient GRUSH balance. You need at least 10 GRUSH to mint a card.");
+      let tx;
+
+      if (paymentMethod === 'GRUSH') {
+        const tokenAbi = [
+          "function transferFrom(address from, address to, uint256 value) external returns (bool)",
+          "function balanceOf(address account) external view returns (uint256)",
+          "function approve(address spender, uint256 amount) external returns (bool)",
+          "function allowance(address owner, address spender) external view returns (uint256)"
+        ];
+        const tokenContract = new ethers.Contract(GRUSH_TOKEN_ADDRESS, tokenAbi, signer);
+
+        // Check balance
+        const balanceWei = await tokenContract.balanceOf(userAddress);
+        const mintFeeWei = ethers.parseEther('10.0'); // 10 GRUSH fee
+
+        if (balanceWei < mintFeeWei) {
+          throw new Error("Insufficient GRUSH balance. You need at least 10 GRUSH to mint.");
+        }
+
+        // Check allowance
+        setMintStatus('Checking token allowance...');
+        const allowance = await tokenContract.allowance(userAddress, nftAddress);
+        if (allowance < mintFeeWei) {
+          setMintStatus('Approving 10 GRUSH for the collectible contract...');
+          addLog(`[Mint NFT] Approving GRUSH spend limit for NFT contract...`);
+          const approveTx = await tokenContract.approve(nftAddress, ethers.MaxUint256);
+          await approveTx.wait();
+          addLog(`[Mint NFT] GRUSH approved successfully!`);
+        }
+
+        setMintStatus('Confirming GRUSH Mint Transaction in wallet...');
+        tx = await nftContract.mintWithGrush(
+          twitterCard.username,
+          twitterCard.posAbbr || 'ST',
+          twitterCard.overall,
+          twitterCard.defi_iq,
+          twitterCard.prediction_power,
+          twitterCard.jackpot_luck,
+          twitterCard.degen_level,
+          twitterCard.swap_speed,
+          twitterCard.x_factor,
+          cardTypeLabel,
+          metadataUri
+        );
+      } else {
+        // Mint with OKB
+        const okbPrice = ethers.parseEther('0.002');
+        const balance = await provider.getBalance(userAddress);
+        if (balance < okbPrice) {
+          throw new Error("Insufficient OKB balance (0.002 OKB required).");
+        }
+
+        setMintStatus('Confirming OKB Mint Transaction in wallet...');
+        tx = await nftContract.mintWithOKB(
+          twitterCard.username,
+          twitterCard.posAbbr || 'ST',
+          twitterCard.overall,
+          twitterCard.defi_iq,
+          twitterCard.prediction_power,
+          twitterCard.jackpot_luck,
+          twitterCard.degen_level,
+          twitterCard.swap_speed,
+          twitterCard.x_factor,
+          cardTypeLabel,
+          metadataUri,
+          { value: okbPrice }
+        );
       }
 
-      // 3. Send transfer transaction
-      setMintStatus('Step 1 of 1: Transfer 10 GRUSH to owner...');
-      addLog(`[Mint Card] Sending transaction to transfer 10 GRUSH to ${recipientAddress}...`);
-      const tx = await tokenContract.transfer(recipientAddress, mintFeeWei);
-      addLog(`[Mint Card] Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
-      
-      setMintStatus('Confirming on-chain transaction...');
+      addLog(`[Mint NFT] Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
+      setMintStatus('Waiting for on-chain block confirmation...');
       const receipt = await tx.wait();
-      addLog(`[Mint Card] Transaction confirmed in block ${receipt.blockNumber}!`);
+      addLog(`[Mint NFT] Transaction confirmed in block ${receipt.blockNumber}!`);
 
-      // 4. Save to backend database
+      // Save to backend database
       setMintStatus('Saving card metadata to Wall of Fame...');
       const response = await fetch(`${BACKEND_API_BASE}/cards`, {
         method: 'POST',
@@ -848,19 +965,17 @@ export default function App() {
         throw new Error("Failed to save card metadata to backend database");
       }
 
-      addLog(`[Mint Card] Card saved to database successfully!`);
+      addLog(`[Mint NFT] Card saved to database successfully!`);
       
-      // Update local card state with tx_hash
       const updatedCard = { ...twitterCard, tx_hash: tx.hash };
       setTwitterCard(updatedCard);
-      alert(`Successfully minted your Twitter Football Card on-chain!`);
+      alert(`🎉 Successfully minted your Player Card as a real ERC-721 NFT on X Layer!`);
       
-      // Refresh balance and recent cards list
       updateGrushBalance(userAddress);
       fetchRecentCards();
     } catch (err) {
       console.error(err);
-      addLog(`[Mint Card Error] ${err.message || err}`);
+      addLog(`[Mint NFT Error] ${err.message || err}`);
       alert(`Minting failed: ${err.message || err}`);
     } finally {
       setIsMintingCard(false);
@@ -3811,13 +3926,12 @@ export default function App() {
               </a>
             </li>
             <li>
-              <a
-                href="#about"
-                className="nav-btn-link"
-                onClick={() => setCurrentView('dashboard')}
+              <button
+                onClick={() => setCurrentView('about')}
+                className={`nav-btn ${currentView === 'about' ? 'active' : ''}`}
               >
-                About
-              </a>
+                About & Docs
+              </button>
             </li>
           </ul>
         </nav>
@@ -5493,23 +5607,57 @@ export default function App() {
 
                       {/* Mint NFT button */}
                       {!(viewedCard || twitterCard?.tx_hash) && (
-                        <button
-                          onClick={handleMintCardWithGrush}
-                          disabled={isMintingCard}
-                          className="btn-primary"
-                          style={{ 
-                            padding: '12px', 
-                            borderRadius: '8px', 
-                            fontSize: '0.85rem', 
-                            justifyContent: 'center', 
-                            background: 'var(--color-secondary)',
-                            color: '#000',
-                            border: 'none',
-                            boxShadow: 'var(--shadow-neon-blue)'
-                          }}
-                        >
-                          <Coins size={14} /> {isMintingCard ? 'Minting Card...' : 'Mint Card (10 GRUSH)'}
-                        </button>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+                          <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: '2px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                            MINT PREMIUM TRADABLE ERC-721 NFT
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => handleMintNFT('OKB')}
+                              disabled={isMintingCard}
+                              className="btn-primary"
+                              style={{ 
+                                flex: 1,
+                                padding: '10px', 
+                                borderRadius: '8px', 
+                                fontSize: '0.78rem', 
+                                justifyContent: 'center', 
+                                background: 'var(--color-primary)',
+                                color: '#000',
+                                border: 'none',
+                                fontWeight: 'bold',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {isMintingCard ? 'Minting...' : '0.002 OKB'}
+                            </button>
+                            <button
+                              onClick={() => handleMintNFT('GRUSH')}
+                              disabled={isMintingCard}
+                              className="btn-primary"
+                              style={{ 
+                                flex: 1,
+                                padding: '10px', 
+                                borderRadius: '8px', 
+                                fontSize: '0.78rem', 
+                                justifyContent: 'center', 
+                                background: 'var(--color-secondary)',
+                                color: '#000',
+                                border: 'none',
+                                fontWeight: 'bold',
+                                boxShadow: 'var(--shadow-neon-blue)',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {isMintingCard ? 'Minting...' : '10 GRUSH'}
+                            </button>
+                          </div>
+                          {mintStatus && (
+                            <div style={{ fontSize: '0.7rem', color: 'var(--color-primary)', textAlign: 'center', marginTop: '2px', fontStyle: 'italic' }}>
+                              {mintStatus}
+                            </div>
+                          )}
+                        </div>
                       )}
 
                       {/* TX Link if already minted */}
@@ -5699,96 +5847,6 @@ export default function App() {
             </div>
           </section>
 
-          {/* About & Technical Details Section */}
-          <section id="about" className="card-bezel" style={{ marginBottom: '64px', marginTop: '32px' }}>
-            <h3 className="panel-title">
-              <Award size={20} style={{ color: 'var(--color-primary)' }} />
-              About GoalRush
-            </h3>
-
-            <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6', marginBottom: '24px' }}>
-              GoalRush is a decentralized sports prediction protocol built natively on OKX X Layer. It leverages the cutting-edge capabilities of <strong>Uniswap V4 Hooks</strong> to seamlessly combine yield, sports prediction jackpots, and gamified swap fee rebates directly within decentralized trading pools.
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '32px' }}>
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <h4 style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  ⚽ Prediction Jackpot
-                </h4>
-                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
-                  Pick a result and fund it with OKB or GRUSH through the prediction router. Only transferred assets count toward the claimable jackpot; observed swap volume is informational.
-                </p>
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
-                  <strong>Claim Rules:</strong> Once the match is resolved on-chain, winners pull their winnings proportionally: <code>(Your Swap Volume / Total Winning Team Volume) * Total Jackpot Pool</code>.
-                </div>
-              </div>
-
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <h4 style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  🏆 Boosts & Multipliers
-                </h4>
-                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
-                  Top users with higher <strong>in-game goals scored</strong>, more <strong>GRUSH token holdings</strong>, and larger <strong>prediction volume</strong> receive ecosystem multipliers.
-                </p>
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
-                  <strong>Reward weight:</strong> Your leaderboard status directly boosts your reward share weights in the pools and future drops, rewarding the most active members.
-                </div>
-              </div>
-
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <h4 style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  📡 Live Match Integration
-                </h4>
-                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
-                  Choose from real-world matches in the Live Scores feed. Anyone can select a fixture, and the contract owner can instantiate it directly onto the contract with a single click.
-                </p>
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
-                  <strong>Real-Time Updates:</strong> Live matches load automatically. Simply click any match in the feed to set it as the target prediction match in the swap widget.
-                </div>
-              </div>
-
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <h4 style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  ⚡ Goal Rush Rebate
-                </h4>
-                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5' }}>
-                  The hook records a pseudo-random goal event at a configurable rate. The current contract emits an event but does not transfer an automatic fee rebate; the penalty animation is presentation only.
-                </p>
-              </div>
-
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <h4 style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  🔗 X Layer Integration
-                </h4>
-                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5' }}>
-                  Deployed on OKX X Layer Mainnet, GoalRush utilizes high-speed block confirmation times and ultra-low gas fees. Swappers experience instant transaction feedback on penalty shootouts and minimal fee overhead.
-                </p>
-              </div>
-            </div>
-
-            {/* Developer Sandbox Panel Toggle */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(157, 255, 0, 0.03)', padding: '24px', borderRadius: '12px', border: '1px solid rgba(157, 255, 0, 0.15)' }}>
-              <h4 style={{ fontWeight: 600, fontSize: '1rem', marginBottom: '8px', color: '#fff' }}>Developer Sandbox & Hackathon Panel</h4>
-              <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: '16px', maxWidth: '600px' }}>
-                Are you a hackathon judge or smart contract developer? Inspect the underlying Uniswap V4 Hook Solidity code, CREATE2 deployment scripts, RPC details, and Eulr.fun graduation rules.
-              </p>
-              <button
-                className="btn-primary"
-                onClick={() => setShowDevPortal(!showDevPortal)}
-                style={{
-                  padding: '10px 24px',
-                  fontSize: '0.9rem',
-                  gap: '8px',
-                  backgroundColor: showDevPortal ? 'transparent' : 'var(--color-primary)',
-                  borderColor: 'var(--color-primary)',
-                  color: showDevPortal ? 'var(--color-primary)' : '#000'
-                }}
-              >
-                <Code size={16} />
-                <span>{showDevPortal ? 'Hide Developer Sandbox' : 'Open Developer Sandbox'}</span>
-              </button>
-            </div>
-          </section>
         </>
       )}
 
@@ -5886,164 +5944,372 @@ export default function App() {
         );
       })()}
 
-      {showDevPortal && (
-        <>
-          {/* Smart Contracts & Explorer */}
-          <section id="contracts" className="code-section">
-            <h3 className="panel-title">
-              <Code size={20} style={{ color: 'var(--color-primary)' }} /> Smart Contract Repository
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '20px' }}>
-              Inspect the Solidity hook logic and deploy pipelines prepared for OKX X Layer.
-            </p>
 
-            <div className="tabs-header">
-              <button
-                className={`tab-button ${activeTab === 'hook' ? 'active' : ''}`}
-                onClick={() => setActiveTab('hook')}
-              >
-                WorldCupGoalRushHook.sol
-              </button>
-              <button
-                className={`tab-button ${activeTab === 'mock' ? 'active' : ''}`}
-                onClick={() => setActiveTab('mock')}
-              >
-                MockPoolManager.sol
-              </button>
-              <button
-                className={`tab-button ${activeTab === 'deploy' ? 'active' : ''}`}
-                onClick={() => setActiveTab('deploy')}
-              >
-                deploy.js
-              </button>
-              <button
-                className={`tab-button ${activeTab === 'readme' ? 'active' : ''}`}
-                onClick={() => setActiveTab('readme')}
-              >
-                README.md
-              </button>
+
+      {currentView === 'about' && (
+        <div style={{ marginTop: '32px' }}>
+          <section className="match-center-header" style={{ marginBottom: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '2.5rem' }}>ℹ️</span>
+              <div>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 800, background: 'linear-gradient(135deg, #fff 0%, var(--color-primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>GoalRush Hub</h2>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '4px' }}>Learn about GoalRush Uniswap V4 hook architecture, utility tokens, NFT collectibles, and developer tools.</p>
+              </div>
             </div>
+          </section>
 
-            <div className="code-viewer-container">
-              <div className="code-header">
-                <span className="code-lang">
-                  {activeTab === 'hook' || activeTab === 'mock' ? 'SOLIDITY' : activeTab === 'deploy' ? 'JAVASCRIPT' : 'MARKDOWN'}
-                </span>
-                <button
-                  className="btn-copy"
-                  onClick={() => {
-                    const textMap = {
-                      hook: currentHookSolidityCode,
-                      mock: mockManagerCode,
-                      deploy: deployScriptCode,
-                      readme: readmeMarkdown
-                    }
-                    copyCode(textMap[activeTab])
-                  }}
-                >
-                  <Copy size={12} /> Copy Code
+          {/* Tab Selection */}
+          <div className="match-filter-tabs" style={{ marginBottom: '24px' }}>
+            <button onClick={() => setAboutSubTab('overview')} className={`match-filter-btn ${aboutSubTab === 'overview' ? 'active' : ''}`}>Overview</button>
+            <button onClick={() => setAboutSubTab('whitepaper')} className={`match-filter-btn ${aboutSubTab === 'whitepaper' ? 'active' : ''}`}>Whitepaper</button>
+            <button onClick={() => setAboutSubTab('contracts')} className={`match-filter-btn ${aboutSubTab === 'contracts' ? 'active' : ''}`}>Smart Contracts</button>
+            <button onClick={() => setAboutSubTab('deployment')} className={`match-filter-btn ${aboutSubTab === 'deployment' ? 'active' : ''}`}>Deployment Guide</button>
+          </div>
+
+          {aboutSubTab === 'overview' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <section className="card-bezel" style={{ padding: '24px' }}>
+                <h3 className="panel-title" style={{ marginTop: 0 }}>
+                  <Award size={20} style={{ color: 'var(--color-primary)' }} /> About GoalRush
+                </h3>
+                <p style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', marginBottom: '24px' }}>
+                  GoalRush is a decentralized sports prediction protocol built natively on OKX X Layer. It leverages the cutting-edge capabilities of <strong>Uniswap V4 Hooks</strong> to seamlessly combine yield, sports prediction jackpots, and gamified swap fee rebates directly within decentralized trading pools.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      ⚽ Prediction Jackpot
+                    </h4>
+                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
+                      Pick a result and fund it with OKB or GRUSH through the prediction router. Only transferred assets count toward the claimable jackpot; observed swap volume is informational.
+                    </p>
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
+                      <strong>Claim Rules:</strong> Once the match is resolved on-chain, winners pull their winnings proportionally: <code>(Your Swap Volume / Total Winning Team Volume) * Total Jackpot Pool</code>.
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🏆 Boosts & Multipliers
+                    </h4>
+                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
+                      Top users with higher <strong>in-game goals scored</strong>, more <strong>GRUSH token holdings</strong>, and larger <strong>prediction volume</strong> receive ecosystem multipliers.
+                    </p>
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
+                      <strong>Reward weight:</strong> Your leaderboard status directly boosts your reward share weights in the pools and future drops, rewarding the most active members.
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      📡 Live Match Integration
+                    </h4>
+                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
+                      Choose from real-world matches in the Live Scores feed. Anyone can select a fixture, and the contract owner can instantiate it directly onto the contract with a single click.
+                    </p>
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
+                      <strong>Real-Time Updates:</strong> Live matches load automatically. Simply click any match in the feed to set it as the target prediction match in the swap widget.
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🖼️ ERC-721 Player NFTs
+                    </h4>
+                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
+                      Generate custom holographic player cards using your prediction volume statistics. Mint them as permanent, fully-tradable ERC-721 NFTs on the X Layer blockchain!
+                    </p>
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
+                      <strong>Mint Pricing:</strong> Mint for a small gas fee of 0.002 OKB or spend 10 GRUSH utility tokens. Tradable on the OKX NFT Marketplace.
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      ⚡ Goal Rush Rebate
+                    </h4>
+                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5' }}>
+                      The hook records a pseudo-random goal event at a configurable rate. The current contract emits an event but does not transfer an automatic fee rebate; the penalty shootout is simulation-based.
+                    </p>
+                  </div>
+
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🔗 X Layer Integration
+                    </h4>
+                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5' }}>
+                      Deployed on OKX X Layer Mainnet, GoalRush utilizes high-speed block confirmation times and ultra-low gas fees. Swappers experience instant transaction feedback on penalty shootouts and minimal fee overhead.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {aboutSubTab === 'whitepaper' && (
+            <section className="card-bezel" style={{ padding: '24px' }}>
+              <div className="whitepaper-content" style={{ padding: 0 }}>
+                <div className="whitepaper-section" style={{ textAlign: 'center', marginBottom: '40px' }}>
+                  <h1 style={{ fontFamily: 'var(--font-heading)', color: '#fff', fontSize: '2rem', marginBottom: '8px' }}>GOALRUSH WHITEPAPER</h1>
+                  <p style={{ color: 'var(--color-primary)', fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '2px' }}>
+                    Sports Prediction Engine Powered by Uniswap V4
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '16px', fontSize: '0.8rem', opacity: 0.6 }}>
+                    <span>Published: June 2026</span>
+                    <span>•</span>
+                    <span>Version: 1.0.2</span>
+                    <span>•</span>
+                    <span>Chain: OKX X Layer Mainnet</span>
+                  </div>
+                </div>
+
+                <div className="whitepaper-section">
+                  <h2>1. Executive Summary</h2>
+                  <p>
+                    GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the <strong>OKX X Layer Mainnet</strong>, GoalRush utilizes custom <strong>Uniswap V4 Hooks</strong> to route prediction ticket purchases directly through AMM swap events.
+                  </p>
+                  <p style={{ marginTop: '12px' }}>
+                    By turning trade volumes into prediction tickets and goalie shootout challenges, GoalRush creates a self-sustaining gamified ecosystem. Holders of the <strong>GRUSH</strong> utility token receive structural gameplay advantages (such as penalty strike success boosts) and unique visual profiles within the application, encouraging organic demand and token retention.
+                  </p>
+                </div>
+
+                <div className="whitepaper-section">
+                  <h2>2. Architecture & Uniswap V4 Hook Design</h2>
+                  <p>
+                    GoalRush integrates directly with Uniswap V4's lifecycle callback hooks to trigger off-chain events and on-chain prediction entries. The core of this system is the <code>WorldCupGoalRushHook</code> contract.
+                  </p>
+
+                  <h3>2.1 The beforeSwap Callback</h3>
+                  <p>
+                    When a user initiates a prediction transaction via the dashboard:
+                  </p>
+                  <ul>
+                    <li>The swap parameters and prediction selection (Team A vs Team B) are compiled and sent to the hook.</li>
+                    <li>The <code>beforeSwap</code> callback extracts the prediction payload (e.g. <code>hookData</code>).</li>
+                    <li>The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native OKB sent directly into the <strong>Match Jackpot Pool</strong>.</li>
+                  </ul>
+
+                  <div className="whitepaper-diagram-box" style={{ background: '#000', border: '1px solid rgba(255,255,255,0.05)', padding: '16px', borderRadius: '8px', fontFamily: 'var(--font-mono)', fontSize: '0.78rem', margin: '16px 0', lineHeight: '1.4' }}>
+                    {"User Swap Initiated"} <br />
+                    {"  │"}<br />
+                    {"  ▼"}<br />
+                    {"Uniswap V4 PoolManager"}<br />
+                    {"  │  (calls callback)"}<br />
+                    {"  ▼"}<br />
+                    {"beforeSwap() on Hook Contract"}<br />
+                    {"  │"}<br />
+                    {"  ├──► Decodes prediction (Team A/B)"}<br />
+                    {"  ├──► Increments match prediction volume"}<br />
+                    {"  └──► Locks OKB value in Jackpot Pool"}<br />
+                  </div>
+
+                  <h3>2.2 The afterSwap Callback & Shootout Rebates</h3>
+                  <p>
+                    Following the completion of the swap, the <code>afterSwap</code> callback is executed. This initiates a goalkeeper save/shootout simulation. If the user successfully scores a goal against the automated goalkeeper, they are rewarded with a <strong>Fee Rebate</strong>:
+                  </p>
+                  <ul>
+                    <li><strong>Standard Players:</strong> Have a base 50% probability of scoring a goal.</li>
+                    <li><strong>GRUSH Token Holders:</strong> Holding GRUSH tokens activates the **VIP Shooter Perk**, increasing the success rate to <strong>75%</strong> and applying a custom green glow to their UI.</li>
+                    <li>On a successful score, a rebate payout (simulated from the pool's accumulated hook fees) is emitted back to the swapper.</li>
+                  </ul>
+                </div>
+
+                <div className="whitepaper-section">
+                  <h2>3. Game Mechanics & Jackpot Resolution</h2>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '12px' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <h3 style={{ marginTop: 0 }}>Accumulating the Jackpot</h3>
+                      <p style={{ fontSize: '0.85rem' }}>
+                        Every shootout prediction ticket locks native OKB directly inside the Hook contract. Unlike standard prediction markets with high fee cuts, GoalRush allocates 100% of the user-submitted amount directly into the Match Jackpot Pool, creating massive pools for key matches.
+                      </p>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <h3 style={{ marginTop: 0 }}>Claiming the Pool</h3>
+                      <p style={{ fontSize: '0.85rem' }}>
+                        Once the real-world match is resolved, the oracle updates the winner on-chain. Users who predicted the winning team can call <code>claimJackpot</code>. The contract automatically calculates their proportional share:
+                        <br />
+                        <code style={{ display: 'block', margin: '8px 0', padding: '4px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
+                          Payout = (UserBet * TotalJackpot) / WinnerTotalVolume
+                        </code>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="whitepaper-section">
+                  <h2>4. The GRUSH Utility Token</h2>
+                  <p>
+                    To maximize compliance with hackathon regulations and foster permissionless market listing, the <strong>GRUSH</strong> token was launched on the <strong>Eulr.fun</strong> bonding curve platform.
+                  </p>
+                  <ul>
+                    <li><strong>Contract Address:</strong> <code>0x422fe165b2da990d18c6dca944b11dcd61519671</code></li>
+                    <li><strong>Real-Time Balance Checks:</strong> The dApp performs on-chain queries to verify if the connected wallet holds GRUSH.</li>
+                    <li><strong>VIP Highlights:</strong> Holding any amount of GRUSH applies neon-green aesthetic text shadows to the player's dashboard profile and registers them as a premium member in the prediction logs.</li>
+                  </ul>
+                </div>
+
+                <div className="whitepaper-section" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px' }}>
+                  <h2>5. Security & Verification</h2>
+                  <p>
+                    The GoalRush codebase has undergone a complete security check to ensure transparency and prevent loss of user funds:
+                  </p>
+                  <ol style={{ paddingLeft: '20px' }}>
+                    <li><strong>Strict OKX Wallet Isolation:</strong> Connection is locked to the official OKX wallet to prevent phishing or multi-wallet collisions.</li>
+                    <li><strong>Non-Custodial Design:</strong> The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.</li>
+                    <li><strong>Eulr-fun Bonding Safety:</strong> Real token swaps happen permissionlessly on Euler, shielding the dApp simulator from token vault vulnerabilities.</li>
+                  </ol>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {aboutSubTab === 'contracts' && (
+            <section className="code-section">
+              <h3 className="panel-title" style={{ marginTop: 0 }}>
+                <Code size={20} style={{ color: 'var(--color-primary)' }} /> Smart Contract Repository
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '20px' }}>
+                Inspect the Solidity hook logic, ERC-721 collectible contracts, and deploy pipelines prepared for OKX X Layer.
+              </p>
+
+              <div className="tabs-header" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                <button className={`tab-button ${activeTab === 'collectible' ? 'active' : ''}`} onClick={() => setActiveTab('collectible')}>
+                  GoalRushCollectible.sol
+                </button>
+                <button className={`tab-button ${activeTab === 'hook' ? 'active' : ''}`} onClick={() => setActiveTab('hook')}>
+                  WorldCupGoalRushHook.sol
+                </button>
+                <button className={`tab-button ${activeTab === 'mock' ? 'active' : ''}`} onClick={() => setActiveTab('mock')}>
+                  MockPoolManager.sol
+                </button>
+                <button className={`tab-button ${activeTab === 'deploy' ? 'active' : ''}`} onClick={() => setActiveTab('deploy')}>
+                  deploy.js
                 </button>
               </div>
 
-              <pre className="code-pre">
-                <code>
-                  {activeTab === 'hook' && currentHookSolidityCode}
-                  {activeTab === 'mock' && mockManagerCode}
-                  {activeTab === 'deploy' && deployScriptCode}
-                  {activeTab === 'readme' && readmeMarkdown}
-                </code>
-              </pre>
-            </div>
-          </section>
+              <div className="code-viewer-container">
+                <div className="code-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <span className="code-lang" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>SOLIDITY</span>
+                  <button
+                    className="btn-copy"
+                    onClick={() => {
+                      const textMap = {
+                        collectible: collectibleSolidityCode,
+                        hook: currentHookSolidityCode,
+                        mock: mockManagerCode,
+                        deploy: deployScriptCode
+                      };
+                      copyCode(textMap[activeTab] || '');
+                    }}
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Copy size={12} /> Copy Code
+                  </button>
+                </div>
 
-          {/* Deployment Guide */}
-          <section id="docs" className="card-bezel" style={{ marginBottom: '64px' }}>
-            <h3 className="panel-title">
-              <Cpu size={20} style={{ color: 'var(--color-primary)' }} /> Deploying on X Layer Mainnet
-            </h3>
+                <pre className="code-pre" style={{ margin: 0, padding: '20px', background: '#000', borderRadius: '0 0 12px 12px', overflowX: 'auto', maxHeight: '500px', overflowY: 'auto' }}>
+                  <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: '#00ff66', lineHeight: '1.5' }}>
+                    {activeTab === 'collectible' && collectibleSolidityCode}
+                    {activeTab === 'hook' && currentHookSolidityCode}
+                    {activeTab === 'mock' && mockManagerCode}
+                    {activeTab === 'deploy' && deployScriptCode}
+                  </code>
+                </pre>
+              </div>
+            </section>
+          )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', marginTop: '16px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <div style={{ background: 'var(--color-primary-glow)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: 'var(--color-primary)', fontWeight: 'bold', flexShrink: 0, justifyContent: 'center' }}>1</div>
-                  <div>
-                    <h4 style={{ fontWeight: 600, fontSize: '0.95rem' }}>Compile with Hardhat</h4>
-                    <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Use the Solidity compiler version 0.8.24 or later to ensure compatibility with EVM push/pop logic.</p>
+          {aboutSubTab === 'deployment' && (
+            <section className="card-bezel" style={{ padding: '24px' }}>
+              <h3 className="panel-title" style={{ marginTop: 0 }}>
+                <Cpu size={20} style={{ color: 'var(--color-primary)' }} /> Deploying on X Layer Mainnet
+              </h3>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', marginTop: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ background: 'var(--color-primary-glow)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: 'var(--color-primary)', fontWeight: 'bold', flexShrink: 0, justifyContent: 'center' }}>1</div>
+                    <div>
+                      <h4 style={{ fontWeight: 600, fontSize: '0.95rem' }}>Compile with Hardhat</h4>
+                      <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Use Solidity compiler 0.8.24 and enable viaIR to resolve stack-too-deep errors during metadata compilation.</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ background: 'var(--color-primary-glow)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: 'var(--color-primary)', fontWeight: 'bold', flexShrink: 0, justifyContent: 'center' }}>2</div>
+                    <div>
+                      <h4 style={{ fontWeight: 600, fontSize: '0.95rem' }}>Address Mining</h4>
+                      <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Uniswap V4 hooks require the deployed address to match flag prefixes. Use address mining tools to find the proper salt for CREATE2.</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ background: 'var(--color-primary-glow)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: 'var(--color-primary)', fontWeight: 'bold', flexShrink: 0, justifyContent: 'center' }}>3</div>
+                    <div>
+                      <h4 style={{ fontWeight: 600, fontSize: '0.95rem' }}>Verify on X Layer Explorer</h4>
+                      <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Submit contracts to OKX Link/Explorer for public verification using ABI-encoded initialization parameters.</p>
+                    </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <div style={{ background: 'var(--color-primary-glow)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: 'var(--color-primary)', fontWeight: 'bold', flexShrink: 0, justifyContent: 'center' }}>2</div>
-                  <div>
-                    <h4 style={{ fontWeight: 600, fontSize: '0.95rem' }}>Address Mining</h4>
-                    <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Uniswap V4 hooks require the deployed address to match flag prefixes. Use address mining tools to find the proper salt for CREATE2.</p>
+                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <h4 style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <AlertTriangle size={16} style={{ color: 'var(--color-primary)' }} />
+                    X Layer RPC Information
+                  </h4>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem' }}>
+                    <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>Network Name</span>
+                      <span>X Layer Mainnet</span>
+                    </div>
+                    <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>RPC URL</span>
+                      <span style={{ fontFamily: 'var(--font-mono)' }}>https://rpc.xlayer.tech</span>
+                    </div>
+                    <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>Chain ID</span>
+                      <span style={{ fontFamily: 'var(--font-mono)' }}>196</span>
+                    </div>
+                    <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>Currency Symbol</span>
+                      <span>OKB</span>
+                    </div>
+                    <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>Block Explorer</span>
+                      <span style={{ color: 'var(--color-primary)' }}>https://www.okx.com/explorer/xlayer</span>
+                    </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <div style={{ background: 'var(--color-primary-glow)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: 'var(--color-primary)', fontWeight: 'bold', flexShrink: 0, justifyContent: 'center' }}>3</div>
-                  <div>
-                    <h4 style={{ fontWeight: 600, fontSize: '0.95rem' }}>Verify on X Layer Explorer</h4>
-                    <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Submit contracts to OKX Link/Explorer for public verification using ABI-encoded initialization parameters.</p>
+                <div style={{ background: 'rgba(157, 255, 0, 0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(157, 255, 0, 0.15)' }}>
+                  <h4 style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)' }}>
+                    <Flame size={16} />
+                    Token & NFT Deployment
+                  </h4>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.8rem' }}>
+                    <div>
+                      <strong style={{ color: 'var(--color-secondary)' }}>GoalRushCollectible (ERC-721) NFT</strong>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px' }}>
+                        Deploys a premium tradable NFT allowing user mints for OKB/GRUSH:
+                        <code style={{ display: 'block', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '4px', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>npx hardhat run scripts/deploy-collectible.cjs --network xlayerMainnet</code>
+                      </p>
+                    </div>
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '8px' }}>
+                      <strong style={{ color: 'var(--color-primary)' }}>GoalRushToken (GRUSH) ERC-20</strong>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px' }}>
+                        Create token + bonding curve on Eulr.fun or deploy natively using:
+                        <code style={{ display: 'block', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '4px', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>npx hardhat run scripts/deploy-token.cjs --network xlayerMainnet</code>
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <h4 style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <AlertTriangle size={16} style={{ color: 'var(--color-primary)' }} />
-                  X Layer RPC Information
-                </h4>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem' }}>
-                  <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>Network Name</span>
-                    <span>X Layer Mainnet</span>
-                  </div>
-                  <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>RPC URL</span>
-                    <span style={{ fontFamily: 'var(--font-mono)' }}>https://rpc.xlayer.tech</span>
-                  </div>
-                  <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>Chain ID</span>
-                    <span style={{ fontFamily: 'var(--font-mono)' }}>196</span>
-                  </div>
-                  <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>Currency Symbol</span>
-                    <span>OKB</span>
-                  </div>
-                  <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>Block Explorer</span>
-                    <span style={{ color: 'var(--color-primary)' }}>https://www.okx.com/explorer/xlayer</span>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ background: 'rgba(157, 255, 0, 0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(157, 255, 0, 0.15)' }}>
-                <h4 style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)' }}>
-                  <Flame size={16} />
-                  Token Deployment Choices
-                </h4>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.8rem' }}>
-                  <div>
-                    <strong style={{ color: 'var(--color-secondary)' }}>Option 1: Deploy Token Ourselves (Independent Launch)</strong>
-                    <p style={{ color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px' }}>
-                      Compile and deploy the <code>GoalRushToken.sol</code> contract directly to X Layer Mainnet using Hardhat:
-                      <code style={{ display: 'block', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '4px', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>npx hardhat run scripts/deploy-token.cjs --network xlayer</code>
-                    </p>
-                  </div>
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '8px' }}>
-                    <strong style={{ color: 'var(--color-primary)' }}>Option 2: Launch via Eulr.fun (Bonding Curve)</strong>
-                    <p style={{ color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px' }}>
-                      Create token + bonding curve on Eulr.fun, hit the curve limit to automatically deploy the Uniswap V4 Pool with this hook, and qualify for the $200k prize ranking.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </>
+            </section>
+          )}
+        </div>
       )}
 
       {/* Simulated X / Twitter OAuth login popup modal */}

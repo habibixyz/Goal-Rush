@@ -40,6 +40,13 @@ async function fetchESPN() {
         else if (statusType === 'STATUS_FULL_TIME' || statusType === 'STATUS_FINAL') status = 'FINISHED';
         else if (statusType === 'STATUS_POSTPONED' || statusType === 'STATUS_CANCELED') status = 'POSTPONED';
 
+        // Check if kickoff is within 5 minutes (or has passed) and match is scheduled/in progress on ESPN
+        const kickoffMs = new Date(event.date).getTime();
+        const nowMs = Date.now();
+        if (status === 'SCHEDULED' && kickoffMs - nowMs <= 5 * 60 * 1000) {
+          status = 'LIVE';
+        }
+
         results.push({
           id: `espn_${event.id}`,
           home_team: home.team.displayName,
@@ -83,7 +90,12 @@ async function fetchFootballData() {
     });
 
     for (const m of data.matches || []) {
-      const status = mapFDStatus(m.status);
+      let status = mapFDStatus(m.status);
+      const kickoffMs = new Date(m.utcDate).getTime();
+      const nowMs = Date.now();
+      if (status === 'SCHEDULED' && kickoffMs - nowMs <= 5 * 60 * 1000) {
+        status = 'LIVE';
+      }
       results.push({
         id: `fd_${m.id}`,
         home_team: m.homeTeam.name,

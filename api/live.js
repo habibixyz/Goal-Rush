@@ -414,6 +414,13 @@ function mapESPNFixtures(events) {
       status = 'POSTPONED';
     }
 
+    // Check if kickoff is within 5 minutes (or has passed) and match is scheduled/in progress on ESPN
+    const kickoffMs = new Date(event.date).getTime();
+    const nowMs = Date.now();
+    if (status === 'SCHEDULED' && kickoffMs - nowMs <= 5 * 60 * 1000) {
+      status = 'LIVE';
+    }
+
     const isLive = status === 'LIVE';
     const isCompleted = status === 'FINISHED';
 

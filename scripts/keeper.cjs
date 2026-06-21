@@ -156,7 +156,7 @@ async function tick(hook, wallet) {
 
     // ── ACTIVATION: register match ≤ 5 min before kickoff ────
     const isScheduled = status === 'STATUS_SCHEDULED' || status === 'STATUS_PREGAME';
-    const isLive      = status === 'STATUS_IN_PROGRESS' || status === 'STATUS_HALFTIME';
+    const isLive      = status === 'STATUS_IN_PROGRESS' || status.includes('HALF') || status.includes('HALFTIME') || status.includes('PROGRESS');
     const isFull      = status === 'STATUS_FULL_TIME'   || status === 'STATUS_FINAL' ||
                         status === 'STATUS_FT'           || status === 'STATUS_FINAL_AET';
 

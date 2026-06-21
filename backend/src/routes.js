@@ -119,4 +119,60 @@ router.get('/stats', (req, res) => {
   }
 });
 
+// ── GET /api/cards ────────────────────────────────────────
+router.get('/cards', (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const cards = db.getRecentTwitterCards(limit);
+    res.json({ success: true, data: cards });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// ── POST /api/cards ───────────────────────────────────────
+router.post('/cards', (req, res) => {
+  try {
+    const {
+      wallet,
+      username,
+      avatar_url,
+      position,
+      overall,
+      defi_iq,
+      prediction_power,
+      jackpot_luck,
+      degen_level,
+      swap_speed,
+      x_factor,
+      card_type,
+      tx_hash
+    } = req.body;
+
+    if (!wallet || !username || !position || !overall) {
+      return res.status(400).json({ success: false, error: 'Missing required card fields' });
+    }
+
+    db.saveTwitterCard({
+      wallet,
+      username,
+      avatar_url,
+      position,
+      overall: parseInt(overall),
+      defi_iq: parseInt(defi_iq || 0),
+      prediction_power: parseInt(prediction_power || 0),
+      jackpot_luck: parseInt(jackpot_luck || 0),
+      degen_level: parseInt(degen_level || 0),
+      swap_speed: parseInt(swap_speed || 0),
+      x_factor: parseInt(x_factor || 0),
+      card_type,
+      tx_hash: tx_hash || null
+    });
+
+    res.json({ success: true, message: 'Twitter card saved successfully' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 module.exports = router;

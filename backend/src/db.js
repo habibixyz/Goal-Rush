@@ -46,10 +46,28 @@ async function init() {
       FOREIGN KEY (match_id) REFERENCES matches(id)
     );
 
+    CREATE TABLE IF NOT EXISTS twitter_cards (
+      wallet TEXT PRIMARY KEY,
+      username TEXT NOT NULL,
+      avatar_url TEXT,
+      position TEXT NOT NULL,
+      overall INTEGER NOT NULL,
+      defi_iq INTEGER NOT NULL,
+      prediction_power INTEGER NOT NULL,
+      jackpot_luck INTEGER NOT NULL,
+      degen_level INTEGER NOT NULL,
+      swap_speed INTEGER NOT NULL,
+      x_factor INTEGER NOT NULL,
+      card_type TEXT NOT NULL,
+      tx_hash TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_matches_status ON matches(status);
     CREATE INDEX IF NOT EXISTS idx_matches_kickoff ON matches(kickoff_utc);
     CREATE INDEX IF NOT EXISTS idx_predictions_match ON predictions(match_id);
     CREATE INDEX IF NOT EXISTS idx_predictions_wallet ON predictions(wallet);
+    CREATE INDEX IF NOT EXISTS idx_twitter_cards_created ON twitter_cards(created_at);
   `);
 
   // Purge any non-World Cup matches
@@ -129,6 +147,35 @@ function getPredictionsByWallet(wallet) {
   return db.prepare('SELECT p.*, m.home_team, m.away_team, m.home_score, m.away_score, m.status FROM predictions p JOIN matches m ON p.match_id = m.id WHERE p.wallet = ? ORDER BY p.created_at DESC').all(wallet);
 }
 
+function saveTwitterCard(card) {
+  const stmt = db.prepare(`
+    INSERT INTO twitter_cards (wallet, username, avatar_url, position, overall, defi_iq, prediction_power, jackpot_luck, degen_level, swap_speed, x_factor, card_type, tx_hash, created_at)
+    VALUES (@wallet, @username, @avatar_url, @position, @overall, @defi_iq, @prediction_power, @jackpot_luck, @degen_level, @swap_speed, @x_factor, @card_type, @tx_hash, datetime('now'))
+    ON CONFLICT(wallet) DO UPDATE SET
+      username = excluded.username,
+      avatar_url = excluded.avatar_url,
+      position = excluded.position,
+      overall = excluded.overall,
+      defi_iq = excluded.defi_iq,
+      prediction_power = excluded.prediction_power,
+      jackpot_luck = excluded.jackpot_luck,
+      degen_level = excluded.degen_level,
+      swap_speed = excluded.swap_speed,
+      x_factor = excluded.x_factor,
+      card_type = excluded.card_type,
+      tx_hash = excluded.tx_hash,
+      created_at = datetime('now')
+  `);
+  stmt.run({
+    ...card,
+    wallet: card.wallet.toLowerCase()
+  });
+}
+
+function getRecentTwitterCards(limit = 10) {
+  return db.prepare('SELECT * FROM twitter_cards ORDER BY created_at DESC LIMIT ?').all(limit);
+}
+
 module.exports = {
   init,
   getDb,
@@ -141,4 +188,6 @@ module.exports = {
   savePrediction,
   getPredictionsByMatch,
   getPredictionsByWallet,
+  saveTwitterCard,
+  getRecentTwitterCards,
 };

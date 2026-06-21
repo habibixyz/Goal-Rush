@@ -21,142 +21,131 @@ export default function SoccerBall3D() {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     containerRef.current.appendChild(renderer.domElement);
 
     // --- Lighting ---
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    // Increased ambient light for highly vibrant, bright colors
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    // Strong primary directional light for crisp reflections
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
     dirLight.position.set(5, 5, 4);
     scene.add(dirLight);
 
-    const blueLight = new THREE.PointLight(0x2E3EFE, 3, 10);
-    blueLight.position.set(-3, 2, 2);
-    scene.add(blueLight);
+    // Secondary fill light on the opposite side to balance shadows and maintain color accuracy
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    fillLight.position.set(-5, -5, 2);
+    scene.add(fillLight);
 
-    const orangeLight = new THREE.PointLight(0xFF5C00, 3, 10);
-    orangeLight.position.set(3, -2, 2);
-    scene.add(orangeLight);
+    // --- Real World Cup Ball Texture Mapping ---
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
 
-    // --- Procedural Soccer Ball Texture ---
-    const createBallTexture = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1024;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
+    // 1. Initial State: Draw clean soccer base texture
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 1024, 512);
 
-      // 1. Base White Leather Color
-      ctx.fillStyle = '#f9f9fb';
+    // Initial grid fallback
+    ctx.strokeStyle = '#e4e4e7';
+    ctx.lineWidth = 2;
+    for (let lat = -60; lat <= 60; lat += 30) {
+      const y = ((90 - lat) / 180) * 512;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(1024, y);
+      ctx.stroke();
+    }
+    for (let lon = -180; lon < 180; lon += 60) {
+      const x = ((lon + 180) / 360) * 1024;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, 512);
+      ctx.stroke();
+    }
+
+    const ballTexture = new THREE.CanvasTexture(canvas);
+    ballTexture.colorSpace = THREE.SRGBColorSpace;
+    ballTexture.minFilter = THREE.LinearMipmapLinearFilter;
+    ballTexture.magFilter = THREE.LinearFilter;
+
+    // 2. Load and overlay the actual Adidas World Cup Match Ball texture
+    const img = new Image();
+    img.src = '/worldcup-ball.png';
+    img.onload = () => {
+      // Clear and draw background
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, 1024, 512);
 
-      // 2. Draw Classic Black Pentagons using 12 vertices of Icosahedron mapped to UV
-      ctx.fillStyle = '#1e1e24';
-      ctx.strokeStyle = '#d4d4d8';
-      ctx.lineWidth = 4;
+      // Create a temporary canvas to extract source pixels from the orthographic projection
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = img.width;
+      tempCanvas.height = img.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(img, 0, 0);
 
-      const vertices = [
-        { lat: Math.PI / 2, lon: 0 },
-        { lat: -Math.PI / 2, lon: 0 }
-      ];
-      const latVal = Math.atan(0.5);
-      for (let i = 0; i < 5; i++) {
-        vertices.push({ lat: latVal, lon: (i * 72 * Math.PI) / 180 });
-        vertices.push({ lat: -latVal, lon: ((i * 72 + 36) * Math.PI) / 180 });
+      const srcW = img.width;
+      const srcH = img.height;
+      const imgData = tempCtx.getImageData(0, 0, srcW, srcH);
+      const srcPixels = imgData.data;
+
+      const outData = ctx.createImageData(1024, 512);
+      const dstPixels = outData.data;
+
+      const srcCX = srcW / 2;
+      const srcCY = srcH / 2;
+      const radius = (Math.min(srcW, srcH) / 2) * 0.99; // Slightly scale to fit boundary nicely
+
+      // Pixel-by-pixel mathematical mapping from orthographic sphere picture to equirectangular sphere UV
+      for (let y = 0; y < 512; y++) {
+        const theta = (y / 512) * Math.PI;
+        const sinTheta = Math.sin(theta);
+        const cosTheta = Math.cos(theta);
+        const yVal = cosTheta;
+
+        const yOffset = y * 1024 * 4;
+
+        for (let x = 0; x < 1024; x++) {
+          const phi = (x / 1024) * 2 * Math.PI - Math.PI;
+
+          // Convert spherical coordinates to 3D Cartesian coordinates (Z > 0 is front, Z < 0 is back - mirrored)
+          const xVal = sinTheta * Math.sin(phi);
+          const zVal = sinTheta * Math.cos(phi);
+
+          // Project the 3D unit coordinates back onto the 2D image circle
+          const projX = Math.round(srcCX + xVal * radius);
+          const projY = Math.round(srcCY - yVal * radius);
+
+          const dstIdx = yOffset + x * 4;
+
+          if (projX >= 0 && projX < srcW && projY >= 0 && projY < srcH) {
+            const srcIdx = (projY * srcW + projX) * 4;
+            // Only draw if inside the circular ball boundary (alpha channel check)
+            if (srcPixels[srcIdx + 3] > 10) {
+              dstPixels[dstIdx] = srcPixels[srcIdx];
+              dstPixels[dstIdx + 1] = srcPixels[srcIdx + 1];
+              dstPixels[dstIdx + 2] = srcPixels[srcIdx + 2];
+              dstPixels[dstIdx + 3] = 255;
+              continue;
+            }
+          }
+
+          // Default fallback color (clean white leather)
+          dstPixels[dstIdx] = 255;
+          dstPixels[dstIdx + 1] = 255;
+          dstPixels[dstIdx + 2] = 255;
+          dstPixels[dstIdx + 3] = 255;
+        }
       }
 
-      // Draw pentagonal panels
-      vertices.forEach(v => {
-        let lonNorm = v.lon;
-        if (lonNorm > Math.PI) lonNorm -= 2 * Math.PI;
-        const x = ((lonNorm + Math.PI) / (2 * Math.PI)) * 1024;
-        const y = ((Math.PI / 2 - v.lat) / Math.PI) * 512;
+      ctx.putImageData(outData, 0, 0);
 
-        // Draw a neat solid pentagon
-        ctx.beginPath();
-        for (let j = 0; j < 5; j++) {
-          const angle = (j * 72 * Math.PI) / 180 - Math.PI / 2;
-          const px = x + Math.cos(angle) * 52;
-          const py = y + Math.sin(angle) * 52;
-          if (j === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
-        }
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // Draw wrapping seams for borders
-        if (x < 100) {
-          ctx.beginPath();
-          for (let j = 0; j < 5; j++) {
-            const angle = (j * 72 * Math.PI) / 180 - Math.PI / 2;
-            const px = x + 1024 + Math.cos(angle) * 52;
-            const py = y + Math.sin(angle) * 52;
-            if (j === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-          }
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        } else if (x > 924) {
-          ctx.beginPath();
-          for (let j = 0; j < 5; j++) {
-            const angle = (j * 72 * Math.PI) / 180 - Math.PI / 2;
-            const px = x - 1024 + Math.cos(angle) * 52;
-            const py = y + Math.sin(angle) * 52;
-            if (j === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-          }
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        }
-      });
-
-      // 3. Draw World Cup Elegant Swoops (Royal Blue & Orange & Gold)
-      ctx.lineWidth = 12;
-      ctx.strokeStyle = '#2E3EFE'; // Blue Swoosh
-      ctx.beginPath();
-      ctx.arc(300, 256, 180, 0, Math.PI, false);
-      ctx.stroke();
-
-      ctx.strokeStyle = '#FF5C00'; // Orange Swoosh
-      ctx.beginPath();
-      ctx.arc(724, 256, 180, Math.PI, 2 * Math.PI, false);
-      ctx.stroke();
-
-      // Gold stars/accents
-      ctx.fillStyle = '#FFD700';
-      const drawStar = (cx, cy, spikes, outerRadius, innerRadius) => {
-        let rot = Math.PI / 2 * 3;
-        let x = cx;
-        let y = cy;
-        let step = Math.PI / spikes;
-
-        ctx.beginPath();
-        ctx.moveTo(cx, cy - outerRadius)
-        for (let i = 0; i < spikes; i++) {
-          x = cx + Math.cos(rot) * outerRadius;
-          y = cy + Math.sin(rot) * outerRadius;
-          ctx.lineTo(x, y)
-          rot += step
-
-          x = cx + Math.cos(rot) * innerRadius;
-          y = cy + Math.sin(rot) * innerRadius;
-          ctx.lineTo(x, y)
-          rot += step
-        }
-        ctx.lineTo(cx, cy - outerRadius)
-        ctx.closePath();
-        ctx.fill();
-      }
-      drawStar(512, 100, 5, 20, 10);
-      drawStar(512, 412, 5, 20, 10);
-
-      // 4. Draw Seam lines for the white hex panels
-      ctx.strokeStyle = '#e4e4e7';
+      // Draw subtle real seams overlay on the canvas
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
       ctx.lineWidth = 2;
-      // Latitudinal grid seams
       for (let lat = -60; lat <= 60; lat += 30) {
         const y = ((90 - lat) / 180) * 512;
         ctx.beginPath();
@@ -164,7 +153,6 @@ export default function SoccerBall3D() {
         ctx.lineTo(1024, y);
         ctx.stroke();
       }
-      // Longitudinal grid seams
       for (let lon = -180; lon < 180; lon += 60) {
         const x = ((lon + 180) / 360) * 1024;
         ctx.beginPath();
@@ -173,11 +161,8 @@ export default function SoccerBall3D() {
         ctx.stroke();
       }
 
-      return canvas;
+      ballTexture.needsUpdate = true;
     };
-
-    const ballCanvas = createBallTexture();
-    const ballTexture = new THREE.CanvasTexture(ballCanvas);
 
     // --- 3D World Cup Ball Group ---
     const ballGroup = new THREE.Group();
@@ -186,8 +171,8 @@ export default function SoccerBall3D() {
     const ballGeo = new THREE.SphereGeometry(1.8, 64, 64);
     const ballMat = new THREE.MeshStandardMaterial({
       map: ballTexture,
-      roughness: 0.35,
-      metalness: 0.1
+      roughness: 0.18, // High glossy reflection
+      metalness: 0.05
     });
 
     const ballMesh = new THREE.Mesh(ballGeo, ballMat);

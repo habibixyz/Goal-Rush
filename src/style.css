@@ -2144,3 +2144,750 @@ input:focus-visible {
     padding: 12px 16px;
   }
 }
+
+/* ──────────────────────────────────────────────────────────
+   Twitter Football Cards Styles
+   ────────────────────────────────────────────────────────── */
+.football-card-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.football-card-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0;
+  perspective: 1200px;
+}
+
+.football-card {
+  width: 290px;
+  height: 420px;
+  position: relative;
+  border-radius: 20px;
+  transform-style: preserve-3d;
+  transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.25s ease;
+  overflow: hidden;
+  box-sizing: border-box;
+  color: #fff;
+  user-select: none;
+  cursor: grab;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  background: #111;
+}
+
+.football-card:active {
+  cursor: grabbing;
+}
+
+/* Holographic gloss layer */
+.card-gloss {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  mix-blend-mode: color-dodge;
+  opacity: 0;
+  transition: opacity 0.3s ease, background 0.1s ease;
+}
+
+.football-card:hover .card-gloss {
+  opacity: 1;
+}
+
+/* Card Bezel Inner Shield Border */
+.card-shield-border {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  pointer-events: none;
+  z-index: 2;
+  box-sizing: border-box;
+  background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%);
+}
+
+/* Card Tiers styling */
+.card-tier-gold {
+  background: linear-gradient(135deg, #ffe066 0%, #aa7c11 50%, #ffe680 75%, #ffd700 100%);
+  border: 3px solid #ffcc00;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.2);
+}
+.card-tier-gold .card-shield-border {
+  border-color: rgba(255, 215, 0, 0.35);
+}
+
+.card-tier-silver {
+  background: linear-gradient(135deg, #e0e0eb 0%, #737380 50%, #f0f0f5 75%, #cccccc 100%);
+  border: 3px solid #b3b3cc;
+  box-shadow: 0 0 25px rgba(179, 179, 204, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.2);
+}
+.card-tier-silver .card-shield-border {
+  border-color: rgba(179, 179, 204, 0.4);
+}
+
+.card-tier-bronze {
+  background: linear-gradient(135deg, #cd7f32 0%, #7c4116 50%, #dca370 75%, #a0522d 100%);
+  border: 3px solid #b87333;
+  box-shadow: 0 0 20px rgba(184, 115, 51, 0.2), inset 0 0 12px rgba(255, 255, 255, 0.15);
+}
+.card-tier-bronze .card-shield-border {
+  border-color: rgba(184, 115, 51, 0.35);
+}
+
+.card-tier-diamond {
+  background: linear-gradient(135deg, #00f2fe 0%, #9dff00 35%, #00e5ff 65%, #7000ff 100%);
+  border: 3px solid #00e5ff;
+  box-shadow: 0 0 35px rgba(0, 229, 255, 0.45), inset 0 0 20px rgba(255, 255, 255, 0.35);
+}
+.card-tier-diamond .card-shield-border {
+  border-color: rgba(0, 229, 255, 0.45);
+}
+
+/* Card Content Inner Layout */
+.card-layout {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  z-index: 3;
+  font-family: var(--font-display);
+}
+
+/* Top details row (OVR, Position, Flag) */
+.card-top-left {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.card-ovr {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1px;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.card-pos {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.card-top-flag {
+  width: 22px;
+  height: 14px;
+  object-fit: cover;
+  border-radius: 1px;
+  margin-top: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Avatar Frame */
+.card-avatar-wrap {
+  margin: 15px auto 4px auto;
+  width: 125px;
+  height: 125px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-avatar-shield {
+  width: 100%;
+  height: 100%;
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.4) 100%);
+  padding: 3px;
+  box-sizing: border-box;
+}
+
+.card-avatar {
+  width: 100%;
+  height: 100%;
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  object-fit: cover;
+  background: #111218;
+}
+
+.card-avatar-border {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  border: 1px solid rgba(255,255,255,0.35);
+  pointer-events: none;
+}
+
+/* Player Name Badge */
+.card-player-name {
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  margin: 6px 0;
+  letter-spacing: -0.5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0 10px;
+}
+
+/* Player Stats Panel */
+.card-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 20px;
+  row-gap: 2px;
+  max-width: 180px;
+  margin: 2px auto;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  padding-top: 6px;
+}
+
+.card-stat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+}
+
+.card-stat-val {
+  font-weight: 700;
+  color: #fff;
+}
+
+.card-stat-lbl {
+  color: rgba(255,255,255,0.6);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Card bottom footer */
+.card-logo-row {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 6px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 6px;
+}
+
+.card-footer-logo {
+  height: 18px;
+  opacity: 0.85;
+}
+
+.card-footer-text {
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.4);
+  font-family: var(--font-mono);
+}
+
+/* Minted stamp/badge */
+.card-minted-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--color-primary);
+  color: #000;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 10px rgba(157, 255, 0, 0.4);
+  z-index: 4;
+}
+
+/* Simulated Connect X Modal */
+.oauth-modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.oauth-modal-box {
+  background: #0d0e15;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  width: 420px;
+  padding: 32px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.oauth-modal-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: var(--color-secondary);
+}
+
+.oauth-loading-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.oauth-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.oauth-step.active {
+  color: var(--color-secondary);
+  font-weight: 600;
+}
+
+.oauth-step.done {
+  color: var(--color-primary);
+}
+
+.oauth-step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  transition: all 0.3s ease;
+}
+
+.oauth-step.active .oauth-step-dot {
+  background: var(--color-secondary);
+  box-shadow: 0 0 8px var(--color-secondary);
+}
+
+.oauth-step.done .oauth-step-dot {
+  background: var(--color-primary);
+  box-shadow: 0 0 8px var(--color-primary);
+}
+
+/* Recent Cards Gallery */
+.recent-cards-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 16px;
+  margin-top: 16px;
+}
+
+.gallery-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 6px 0;
+  scrollbar-width: thin;
+}
+
+.gallery-card-badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.gallery-card-badge:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: var(--color-secondary);
+}
+
+.gallery-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.gallery-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.gallery-username {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fff;
+  max-width: 90px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gallery-ovr {
+  font-size: 0.68rem;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+/* ──────────────────────────────────────────────────────────
+   PSA Graded Slab Styles
+   ────────────────────────────────────────────────────────── */
+.psa-slab-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0;
+  perspective: 1200px;
+}
+
+.psa-slab {
+  width: 310px;
+  height: 500px;
+  position: relative;
+  border-radius: 24px;
+  background: rgba(20, 22, 33, 0.85);
+  border: 7px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 0 20px rgba(255, 255, 255, 0.04);
+  transform-style: preserve-3d;
+  transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.25s ease;
+  overflow: hidden;
+  box-sizing: border-box;
+  color: #fff;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 10px;
+  cursor: grab;
+}
+
+.psa-slab:active {
+  cursor: grabbing;
+}
+
+.psa-slab .card-gloss {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 12;
+  mix-blend-mode: color-dodge;
+  opacity: 0;
+  transition: opacity 0.3s ease, background 0.1s ease;
+}
+
+.psa-slab:hover .card-gloss {
+  opacity: 1;
+}
+
+.psa-label {
+  background: #fdfdfd;
+  border: 3px solid #e60000;
+  border-radius: 4px;
+  color: #000;
+  font-family: 'Courier New', Courier, monospace;
+  padding: 6px 8px;
+  height: 85px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  row-gap: 2px;
+  position: relative;
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.1);
+  font-size: 0.75rem;
+  z-index: 5;
+}
+
+.psa-label-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.psa-label-brand {
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: #555;
+  text-transform: uppercase;
+}
+
+.psa-label-username {
+  font-size: 0.78rem;
+  font-weight: bold;
+  color: #000;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.psa-label-pos {
+  font-size: 0.55rem;
+  color: #666;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.psa-label-right {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  border-left: 1px solid rgba(0,0,0,0.15);
+  padding-left: 8px;
+}
+
+.psa-grade-title {
+  font-size: 0.52rem;
+  color: #e60000;
+  font-weight: 900;
+}
+
+.psa-grade-score {
+  font-size: 1.4rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #000;
+}
+
+.psa-grade-ovr {
+  font-size: 0.55rem;
+  font-weight: bold;
+  color: #444;
+}
+
+.psa-label-bottom {
+  grid-column: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  padding-top: 4px;
+  margin-top: 2px;
+}
+
+.psa-barcode {
+  display: flex;
+  align-items: flex-end;
+  height: 11px;
+  gap: 1px;
+  opacity: 0.85;
+}
+
+.psa-barcode span {
+  background: #000;
+  display: inline-block;
+  height: 100%;
+}
+
+.psa-barcode span.b-thin { width: 1px; }
+.psa-barcode span.b-med { width: 2px; }
+.psa-barcode span.b-thick { width: 3px; }
+
+.psa-cert-num {
+  font-size: 0.6rem;
+  color: #000;
+  font-weight: bold;
+}
+
+.psa-label-logo {
+  font-size: 0.62rem;
+  font-weight: bold;
+  color: #e60000;
+  border: 1px solid #e60000;
+  padding: 0 3px;
+  border-radius: 2px;
+  line-height: 1.2;
+}
+
+.psa-divider {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+  margin-bottom: 2px;
+}
+
+/* Adjust nested card size to fit inside PSA slab */
+.psa-slab .football-card {
+  width: 100%;
+  height: 360px;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+  border: none;
+  margin: 0;
+}
+
+/* Legendary Rarity Tier Styles */
+.card-tier-legendary {
+  background: linear-gradient(135deg, #ff007f 0%, #ff00ff 25%, #7f00ff 50%, #00ffff 75%, #00ff00 100%);
+  background-size: 200% 200%;
+  border: 3px solid #ff00ff;
+  box-shadow: 0 0 35px rgba(255, 0, 255, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.4);
+  animation: holo-shimmer 8s linear infinite;
+}
+.card-tier-legendary .card-shield-border {
+  border-color: rgba(255, 0, 255, 0.55);
+}
+
+@keyframes holo-shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Mobile Responsiveness for PSA Slab Layout */
+@media (max-width: 600px) {
+  .psa-slab {
+    width: 280px;
+    height: 460px;
+    padding: 10px;
+    gap: 8px;
+    border-width: 5px;
+    border-radius: 18px;
+  }
+  .psa-label {
+    height: 78px;
+    padding: 4px 6px;
+    font-size: 0.68rem;
+  }
+  .psa-label-username {
+    font-size: 0.7rem;
+  }
+  .psa-label-pos {
+    font-size: 0.5rem;
+  }
+  .psa-grade-score {
+    font-size: 1.2rem;
+  }
+  .psa-slab .football-card {
+    height: 330px;
+  }
+  .card-ovr {
+    font-size: 1.6rem;
+  }
+  .card-pos {
+    font-size: 0.7rem;
+  }
+  .card-avatar-wrap {
+    width: 105px;
+    height: 105px;
+    margin-top: 8px;
+  }
+  .card-stats-grid {
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .card-stat-val {
+    font-size: 0.85rem;
+  }
+  .card-playstyle-badge {
+    font-size: 0.55rem;
+    padding: 2px 6px;
+    margin-top: 2px;
+  }
+}
+
+/* FUT-style Card Geometric Shine Overlay & stats divider */
+.football-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    repeating-linear-gradient(60deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 12px),
+    radial-gradient(circle at 50% 30%, rgba(255,255,255,0.06) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Playstyle Badge */
+.card-playstyle-badge {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #ffcc00; /* FIFA style gold label */
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 204, 0, 0.25);
+  border-radius: 4px;
+  padding: 3px 8px;
+  margin: 4px auto 0 auto;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3.5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  z-index: 5;
+}
+.card-playstyle-badge span {
+  font-size: 0.75rem;
+}
+
+/* Stats Separator styling (Web layout) */
+.card-stats-grid {
+  position: relative;
+}
+.card-stats-grid::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 50%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(-50%);
+}
+

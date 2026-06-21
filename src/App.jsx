@@ -27,7 +27,8 @@ import {
   Twitter,
   Send,
   Globe,
-  Activity
+  Activity,
+  Download
 } from 'lucide-react'
 
 // Real codebase strings to display in Code Viewer
@@ -544,6 +545,9 @@ const getProvider = () => {
 const HOOK_ADDRESS = '0x700656337a252A004Ca0B170828f4adEaa680288';
 const ROUTER_ADDRESS = '0x8f3e9B45a377cEa9fCeC9509e82EEe237e67ba24';
 const GRUSH_TOKEN_ADDRESS = '0x422fe165b2da990d18c6dca944b11dcd61519671';
+const BACKEND_API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3001/api'
+  : 'https://goal-rush-backend-production.up.railway.app/api';
 
 // Helper to get today/tomorrow date strings dynamically
 const getTodayLabel = () => {
@@ -638,6 +642,690 @@ export default function App() {
   const [selectedMatchCenterId, setSelectedMatchCenterId] = useState(10)
   const [matchFilter, setMatchFilter] = useState('all')
   const [matchCenterSubTab, setMatchCenterSubTab] = useState('lineup')
+
+  // Twitter Card states
+  const [twitterUsername, setTwitterUsername] = useState('')
+  const [isConnectingTwitter, setIsConnectingTwitter] = useState(false)
+  const [authPopupStep, setAuthPopupStep] = useState(0)
+  const [twitterCard, setTwitterCard] = useState(null)
+  const [recentCards, setRecentCards] = useState([])
+  const [isMintingCard, setIsMintingCard] = useState(false)
+  const [mintStatus, setMintStatus] = useState('')
+  const [viewedCard, setViewedCard] = useState(null) // For viewing other users' cards from gallery
+
+  const fetchRecentCards = useCallback(async () => {
+    try {
+      const response = await fetch(`${BACKEND_API_BASE}/cards?limit=10`);
+      if (response.ok) {
+        const body = await response.json();
+        if (body.success && Array.isArray(body.data)) {
+          setRecentCards(body.data);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch recent Twitter cards:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRecentCards();
+  }, [fetchRecentCards]);
+
+  const generateStatsFromUsername = (username) => {
+    const cleanName = username.replace('@', '').trim().toLowerCase();
+    if (!cleanName) return null;
+
+    // Simple hash algorithm
+    let hash = 0;
+    for (let i = 0; i < cleanName.length; i++) {
+      hash = cleanName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    hash = Math.abs(hash);
+
+    // Positions mapping
+    const positions = ['ST', 'CM', 'CB', 'GK'];
+    const positionLabels = {
+      ST: 'Yield Striker',
+      CM: 'Liquidity Midfielder',
+      CB: 'Slippage Defender',
+      GK: 'MEV Goalkeeper'
+    };
+    const pos = positions[hash % positions.length];
+
+    // Compute stats (bounded between 70 and 99)
+    const defi_iq = 75 + (hash % 25);
+    const prediction_power = 72 + ((hash >> 1) % 28);
+    const jackpot_luck = 68 + ((hash >> 2) % 32);
+    const degen_level = 80 + ((hash >> 3) % 20); // Degen level usually higher
+    const swap_speed = 70 + ((hash >> 4) % 30);
+    const x_factor = 75 + ((hash >> 5) % 25);
+
+    // Overall rating is average of stats
+    const overall = Math.round((defi_iq + prediction_power + jackpot_luck + degen_level + swap_speed + x_factor) / 6);
+
+    // Card tier/type
+    let card_type = 'gold';
+    if (overall >= 94 || (hash % 20 === 0)) card_type = 'legendary';
+    else if (overall >= 88) card_type = 'diamond';
+    else if (overall >= 80) card_type = 'gold';
+    else if (overall >= 74) card_type = 'silver';
+    else card_type = 'bronze';
+
+    // Fallback if handle contains special keywords -> promote to Legendary!
+    if (cleanName.includes('okx') || cleanName.includes('xlayer') || cleanName.includes('grush') || cleanName.includes('uniswap')) {
+      card_type = 'legendary';
+    }
+
+    const flagMap = {
+      st: 'ARG',
+      cm: 'POR',
+      cb: 'GER',
+      gk: 'ESP'
+    };
+
+    return {
+      username: username.startsWith('@') ? username : `@${username}`,
+      avatar_url: `https://unavatar.io/x/${cleanName}`,
+      position: `${positionLabels[pos]} (${pos})`,
+      posAbbr: pos,
+      overall,
+      defi_iq,
+      prediction_power,
+      jackpot_luck,
+      degen_level,
+      swap_speed,
+      x_factor,
+      card_type,
+      flagCode: flagMap[pos.toLowerCase()] || 'UN'
+    };
+  };
+
+  const handleConnectTwitter = () => {
+    if (!twitterUsername.trim()) {
+      alert('Please enter a Twitter handle!');
+      return;
+    }
+    setIsConnectingTwitter(true);
+    setAuthPopupStep(1);
+
+    setTimeout(() => {
+      setAuthPopupStep(2);
+      setTimeout(() => {
+        setAuthPopupStep(3);
+        setTimeout(() => {
+          setAuthPopupStep(4);
+          setTimeout(() => {
+            setIsConnectingTwitter(false);
+            const card = generateStatsFromUsername(twitterUsername);
+            setTwitterCard(card);
+            setViewedCard(null);
+            addLog(`[Connect X] Generated custom football card for ${card.username} (Rating: ${card.overall} OVR, Position: ${card.position})`);
+          }, 1000);
+        }, 1000);
+      }, 1000);
+    }, 1000);
+  };
+
+  const handleMintCardWithGrush = async () => {
+    if (!walletConnected || !userAddress) {
+      alert("Please connect your wallet first!");
+      return;
+    }
+    if (!twitterCard) {
+      alert("Please generate a Twitter card first!");
+      return;
+    }
+    
+    setIsMintingCard(true);
+    setMintStatus('Initializing minting transaction...');
+    addLog(`[Mint Card] Initializing minting of ${twitterCard.username}'s card with 10 GRUSH...`);
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // 1. Fetch Owner address dynamically from Hook contract
+      let recipientAddress = '0x3C44CdDdB6a900Fa2b585dd299e03d12FA4293BC'; // Fallback owner address
+      try {
+        const hookAbi = ["function owner() view returns (address)"];
+        const hookContract = new ethers.Contract(HOOK_ADDRESS, hookAbi, provider);
+        recipientAddress = await hookContract.owner();
+        addLog(`[Mint Card] Fetched hook owner/treasury address: ${recipientAddress}`);
+      } catch (e) {
+        console.warn('Failed to fetch hook owner dynamically, using fallback:', e);
+      }
+
+      // 2. Setup GRUSH ERC20 contract
+      const tokenAbi = [
+        "function transfer(address recipient, uint256 amount) external returns (bool)",
+        "function balanceOf(address account) external view returns (uint256)"
+      ];
+      const tokenContract = new ethers.Contract(GRUSH_TOKEN_ADDRESS, tokenAbi, signer);
+
+      // Check balance
+      const balanceWei = await tokenContract.balanceOf(userAddress);
+      const mintFeeWei = ethers.parseEther('10.0'); // 10 GRUSH fee
+
+      if (balanceWei < mintFeeWei) {
+        throw new Error("Insufficient GRUSH balance. You need at least 10 GRUSH to mint a card.");
+      }
+
+      // 3. Send transfer transaction
+      setMintStatus('Step 1 of 1: Transfer 10 GRUSH to owner...');
+      addLog(`[Mint Card] Sending transaction to transfer 10 GRUSH to ${recipientAddress}...`);
+      const tx = await tokenContract.transfer(recipientAddress, mintFeeWei);
+      addLog(`[Mint Card] Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
+      
+      setMintStatus('Confirming on-chain transaction...');
+      const receipt = await tx.wait();
+      addLog(`[Mint Card] Transaction confirmed in block ${receipt.blockNumber}!`);
+
+      // 4. Save to backend database
+      setMintStatus('Saving card metadata to Wall of Fame...');
+      const response = await fetch(`${BACKEND_API_BASE}/cards`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          wallet: userAddress,
+          username: twitterCard.username,
+          avatar_url: twitterCard.avatar_url,
+          position: twitterCard.position,
+          overall: twitterCard.overall,
+          defi_iq: twitterCard.defi_iq,
+          prediction_power: twitterCard.prediction_power,
+          jackpot_luck: twitterCard.jackpot_luck,
+          degen_level: twitterCard.degen_level,
+          swap_speed: twitterCard.swap_speed,
+          x_factor: twitterCard.x_factor,
+          card_type: twitterCard.card_type,
+          tx_hash: tx.hash
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save card metadata to backend database");
+      }
+
+      addLog(`[Mint Card] Card saved to database successfully!`);
+      
+      // Update local card state with tx_hash
+      const updatedCard = { ...twitterCard, tx_hash: tx.hash };
+      setTwitterCard(updatedCard);
+      alert(`Successfully minted your Twitter Football Card on-chain!`);
+      
+      // Refresh balance and recent cards list
+      updateGrushBalance(userAddress);
+      fetchRecentCards();
+    } catch (err) {
+      console.error(err);
+      addLog(`[Mint Card Error] ${err.message || err}`);
+      alert(`Minting failed: ${err.message || err}`);
+    } finally {
+      setIsMintingCard(false);
+      setMintStatus('');
+    }
+  };
+
+  const handleDownloadCard = () => {
+    const cardData = viewedCard || twitterCard;
+    if (!cardData) return;
+    const cleanUser = cardData.username.replace('@', '').toUpperCase();
+
+    // Create a temporary high-res canvas (fits 600x960 PSA slab)
+    const canvas = document.createElement('canvas');
+    canvas.width = 600;
+    canvas.height = 960;
+    const ctx = canvas.getContext('2d');
+
+    // Load avatar and flag images with CORS enabled
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = cardData.avatar_url;
+
+    const flagImg = new Image();
+    flagImg.crossOrigin = 'anonymous';
+    flagImg.src = getFlagUrl(cardData.flagCode);
+
+    const renderCard = () => {
+      // 0. Deterministic cert number & grade details
+      let certHash = 0;
+      for (let i = 0; i < cleanUser.length; i++) {
+        certHash = cleanUser.charCodeAt(i) + ((certHash << 5) - certHash);
+      }
+      const certNumber = Math.abs(certHash).toString().substring(0, 8).padEnd(8, '0');
+
+      let gradeTitle = 'GEM MT';
+      let gradeScore = '10';
+      if (cardData.overall >= 93) {
+        gradeTitle = 'GEM MT';
+        gradeScore = '10';
+      } else if (cardData.overall >= 86) {
+        gradeTitle = 'MINT';
+        gradeScore = '9';
+      } else if (cardData.overall >= 78) {
+        gradeTitle = 'NM-MT';
+        gradeScore = '8';
+      } else {
+        gradeTitle = 'EX-MT';
+        gradeScore = '6';
+      }
+
+      // Helper for rounded rectangle clipping / paths
+      const drawRoundRect = (x, y, w, h, r) => {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+      };
+
+      // 1. Draw outer PSA Acrylic Slab background
+      ctx.fillStyle = '#141621';
+      drawRoundRect(0, 0, canvas.width, canvas.height, 48);
+      ctx.fill();
+
+      // Inner slab glassy look
+      let slabGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      slabGrad.addColorStop(0, 'rgba(255, 255, 255, 0.05)');
+      slabGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.01)');
+      slabGrad.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+      ctx.fillStyle = slabGrad;
+      drawRoundRect(0, 0, canvas.width, canvas.height, 48);
+      ctx.fill();
+
+      // Outer Acrylic border
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 14;
+      drawRoundRect(7, 7, canvas.width - 14, canvas.height - 14, 41);
+      ctx.stroke();
+
+      // 2. Draw Top PSA Label area
+      const labelX = 24;
+      const labelY = 24;
+      const labelW = canvas.width - 48;
+      const labelH = 150;
+
+      // Label background (White)
+      ctx.fillStyle = '#fdfdfd';
+      ctx.fillRect(labelX, labelY, labelW, labelH);
+
+      // Red PSA border outline
+      ctx.strokeStyle = '#e60000';
+      ctx.lineWidth = 5;
+      ctx.strokeRect(labelX + 2.5, labelY + 2.5, labelW - 5, labelH - 5);
+
+      // Text drawing helpers for label
+      ctx.fillStyle = '#000';
+      ctx.font = '900 13px Courier, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('2026 GOALRUSH DEGENS', labelX + 16, labelY + 30);
+
+      ctx.font = 'bold 20px Courier, monospace';
+      ctx.fillText(`@${cleanUser}`, labelX + 16, labelY + 62);
+
+      ctx.font = 'bold 11px Courier, monospace';
+      ctx.fillStyle = '#555';
+      ctx.fillText(cardData.position.toUpperCase(), labelX + 16, labelY + 86);
+
+      // Right Column (Grade details)
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#e60000';
+      ctx.font = '900 11px Courier, monospace';
+      ctx.fillText(gradeTitle, labelX + labelW - 16, labelY + 30);
+
+      ctx.fillStyle = '#000';
+      ctx.font = '900 48px Courier, monospace';
+      ctx.fillText(gradeScore, labelX + labelW - 16, labelY + 75);
+
+      ctx.font = 'bold 12px Courier, monospace';
+      ctx.fillStyle = '#444';
+      ctx.fillText(`OVR: ${cardData.overall}`, labelX + labelW - 16, labelY + 98);
+
+      // Label divider
+      ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(labelX + 12, labelY + 110);
+      ctx.lineTo(labelX + labelW - 12, labelY + 110);
+      ctx.stroke();
+
+      // Bottom Barcode & Cert number
+      // Draw simulated barcode
+      const barX = labelX + 16;
+      const barY = labelY + 120;
+      let currX = barX;
+      certNumber.split('').forEach((char, index) => {
+        const val = parseInt(char) || 0;
+        const w = val % 3 === 0 ? 2 : val % 3 === 1 ? 4 : 6;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(currX, barY, w, 18);
+        currX += w + 2;
+      });
+      ctx.fillRect(currX, barY, 2, 18);
+      ctx.fillRect(currX + 4, barY, 4, 18);
+
+      // Cert text
+      ctx.fillStyle = '#000';
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 11px Courier, monospace';
+      ctx.fillText(certNumber, labelX + labelW / 2 + 10, labelY + 134);
+
+      // Brand Logo tag
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#e60000';
+      ctx.font = 'bold 12px Courier, monospace';
+      const logoText = 'GRUSH';
+      const logoW = ctx.measureText(logoText).width;
+      ctx.fillText(logoText, labelX + labelW - 16, labelY + 134);
+      // Border box around logo
+      ctx.strokeStyle = '#e60000';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(labelX + labelW - 22 - logoW, labelY + 120, logoW + 12, 18);
+
+      // 3. Draw Compartment Spacer Divider
+      ctx.fillStyle = 'rgba(255,255,255,0.03)';
+      ctx.fillRect(24, 188, canvas.width - 48, 8);
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(24, 188, canvas.width - 48, 8);
+
+      // 4. Draw Inner Trading Card (Lower compartment)
+      const cardX = 24;
+      const cardY = 210;
+      const cardW = canvas.width - 48;
+      const cardH = 726;
+
+      ctx.save();
+      // Clip to inner card boundary
+      drawRoundRect(cardX, cardY, cardW, cardH, 20);
+      ctx.clip();
+
+      // Card Background Gradient
+      let grad = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+      let borderColor = '#fff';
+      if (cardData.card_type === 'legendary') {
+        grad.addColorStop(0, '#ff007f');
+        grad.addColorStop(0.25, '#ff00ff');
+        grad.addColorStop(0.5, '#7f00ff');
+        grad.addColorStop(0.75, '#00ffff');
+        grad.addColorStop(1, '#00ff00');
+        borderColor = '#ff00ff';
+      } else if (cardData.card_type === 'diamond') {
+        grad.addColorStop(0, '#00f2fe');
+        grad.addColorStop(0.35, '#9dff00');
+        grad.addColorStop(0.65, '#00e5ff');
+        grad.addColorStop(1, '#7000ff');
+        borderColor = '#00e5ff';
+      } else if (cardData.card_type === 'gold') {
+        grad.addColorStop(0, '#ffe066');
+        grad.addColorStop(0.5, '#aa7c11');
+        grad.addColorStop(1, '#ffd700');
+        borderColor = '#ffcc00';
+      } else if (cardData.card_type === 'silver') {
+        grad.addColorStop(0, '#e0e0eb');
+        grad.addColorStop(0.5, '#737380');
+        grad.addColorStop(1, '#cccccc');
+        borderColor = '#b3b3cc';
+      } else {
+        grad.addColorStop(0, '#cd7f32');
+        grad.addColorStop(0.5, '#7c4116');
+        grad.addColorStop(1, '#a0522d');
+        borderColor = '#b87333';
+      }
+
+      ctx.fillStyle = grad;
+      ctx.fillRect(cardX, cardY, cardW, cardH);
+
+      // Inner Dark Shield Cover Overlay
+      ctx.fillStyle = 'rgba(10, 11, 16, 0.88)';
+      ctx.beginPath();
+      ctx.moveTo(cardX + 16, cardY + 16);
+      ctx.lineTo(cardX + cardW - 16, cardY + 16);
+      ctx.lineTo(cardX + cardW - 16, cardY + cardH - 16);
+      ctx.lineTo(cardX + 16, cardY + cardH - 16);
+      ctx.closePath();
+      ctx.fill();
+
+      // Inner boundary shield border line
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(cardX + 16, cardY + 16, cardW - 32, cardH - 32);
+
+      // Draw OVR and Pos (Top Left of Inner Card)
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'left';
+      ctx.font = 'bold 76px sans-serif';
+      ctx.fillText(cardData.overall.toString(), cardX + 40, cardY + 110);
+      
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.font = 'bold 24px sans-serif';
+      const posOnly = cardData.position.substring(cardData.position.indexOf('(') + 1, cardData.position.indexOf(')'));
+      ctx.fillText(posOnly || 'CM', cardX + 40, cardY + 155);
+
+      // Draw Flag on Canvas
+      if (flagImg.complete && flagImg.naturalWidth > 0) {
+        ctx.drawImage(flagImg, cardX + 40, cardY + 175, 45, 28);
+      } else {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText(cardData.flagCode || 'UN', cardX + 40, cardY + 195);
+      }
+
+      ctx.font = '32px sans-serif';
+      const emojiIcon = posOnly === 'ST' ? '⚽' : posOnly === 'CM' ? '💎' : posOnly === 'CB' ? '🛡️' : '🧤';
+      ctx.fillText(emojiIcon, cardX + 40, cardY + 240);
+
+      // Draw Avatar clipped inside a polygon
+      const drawAvatarPolygon = (x, y, size) => {
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const angle = (i * Math.PI) / 3 - Math.PI / 2;
+          ctx.lineTo(x + size * Math.cos(angle), y + size * Math.sin(angle));
+        }
+        ctx.closePath();
+      };
+
+      ctx.save();
+      const avX = cardX + cardW / 2 + 30;
+      const avY = cardY + 175;
+      const avSize = 105;
+      
+      drawAvatarPolygon(avX, avY, avSize);
+      ctx.clip();
+
+      try {
+        ctx.drawImage(img, avX - avSize, avY - avSize, avSize * 2, avSize * 2);
+      } catch (err) {
+        ctx.fillStyle = '#222';
+        ctx.fillRect(avX - avSize, avY - avSize, avSize * 2, avSize * 2);
+        ctx.fillStyle = borderColor;
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 80px sans-serif';
+        ctx.fillText('⚽', avX, avY + 20);
+      }
+      ctx.restore();
+
+      // Draw Avatar Shield Border
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      drawAvatarPolygon(avX, avY, avSize);
+      ctx.stroke();
+
+      // Draw Player Name Banner
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 32px sans-serif';
+      ctx.fillText(cardData.username.toUpperCase(), cardX + cardW / 2, cardY + 345);
+
+      // Draw Position text name
+      ctx.fillStyle = borderColor;
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(cardData.position, cardX + cardW / 2, cardY + 378);
+
+      // Underline divider
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cardX + 60, cardY + 410);
+      ctx.lineTo(cardX + cardW - 60, cardY + 410);
+      ctx.stroke();
+
+      // Stats Grid drawing
+      const drawStat = (lbl, val, x, y) => {
+        ctx.textAlign = 'left';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.font = '21px monospace';
+        ctx.fillText(lbl, x, y);
+
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 23px monospace';
+        ctx.fillText(val.toString(), x + 140, y);
+      };
+
+      const startY = cardY + 455;
+      const stepY = 48;
+      const col1X = cardX + 60;
+      const col2X = cardX + cardW / 2 + 20;
+
+      // Col 1
+      drawStat('DFI', cardData.defi_iq, col1X, startY);
+      drawStat('PRD', cardData.prediction_power, col1X, startY + stepY);
+      drawStat('LUK', cardData.jackpot_luck, col1X, startY + stepY * 2);
+
+      // Col 2
+      drawStat('DGN', cardData.degen_level, col2X, startY);
+      drawStat('SPD', cardData.swap_speed, col2X, startY + stepY);
+      drawStat('XFC', cardData.x_factor, col2X, startY + stepY * 2);
+
+      // Draw vertical separator line between stat columns
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cardX + cardW / 2, startY - 10);
+      ctx.lineTo(cardX + cardW / 2, startY + stepY * 2 + 10);
+      ctx.stroke();
+
+      // Draw Playstyle label on Canvas
+      const playstyleName = posOnly === 'ST' ? 'ARBITRAGE HUNTER' :
+                            posOnly === 'CM' ? 'LIQUIDITY CATALYST' :
+                            posOnly === 'CB' ? 'SLIPPAGE SHADOW' :
+                            'MEV GUARDIAN';
+      ctx.fillStyle = '#ffcc00'; // FUT style gold text
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText(`⚡ PLAYSTYLE: ${playstyleName}`, cardX + cardW / 2, cardY + 580);
+
+      // Footer divider
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.beginPath();
+      ctx.moveTo(cardX + 60, cardY + 610);
+      ctx.lineTo(cardX + cardW - 60, cardY + 610);
+      ctx.stroke();
+
+      // Footer brand details
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.textAlign = 'center';
+      ctx.font = '15px monospace';
+      ctx.fillText('GOALRUSH DEGEN PLATFORM • X LAYER', cardX + cardW / 2, cardY + 645);
+      
+      if (cardData.tx_hash) {
+        ctx.fillStyle = '#9dff00';
+        ctx.font = 'bold 12px monospace';
+        ctx.fillText(`MINTED NFT: ${cardData.tx_hash.substring(0, 16)}...`, cardX + cardW / 2, cardY + 675);
+      }
+
+      ctx.restore(); // restore from clipping
+
+      // Convert to image download
+      try {
+        const url = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.download = `goalrush_card_${cleanUser.toLowerCase()}_psa.png`;
+        a.href = url;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        addLog(`[Download] Downloaded PSA-graded card for ${cardData.username} successfully!`);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to download image. CORS restrictions may apply.");
+      }
+    };
+
+    let loadedCount = 0;
+    const totalToLoad = 2;
+    let rendered = false;
+
+    const tryRender = () => {
+      if (rendered) return;
+      rendered = true;
+      renderCard();
+    };
+
+    const handleLoaded = () => {
+      loadedCount++;
+      if (loadedCount >= totalToLoad) {
+        tryRender();
+      }
+    };
+
+    img.onload = handleLoaded;
+    img.onerror = () => {
+      console.warn("Avatar failed to load with CORS, rendering fallback card");
+      handleLoaded();
+    };
+
+    flagImg.onload = handleLoaded;
+    flagImg.onerror = () => {
+      console.warn("Flag failed to load with CORS, rendering fallback card");
+      handleLoaded();
+    };
+
+    setTimeout(() => {
+      tryRender();
+    }, 4000);
+  };
+
+  // Card mouse movement for 3D tilt effect
+  const handleCardMouseMove = (e) => {
+    const card = e.currentTarget;
+    const box = card.getBoundingClientRect();
+    const x = e.clientX - box.left - box.width / 2;
+    const y = e.clientY - box.top - box.height / 2;
+    
+    // Tilt angle (max 15 degrees)
+    const rotateX = -(y / (box.height / 2)) * 12;
+    const rotateY = (x / (box.width / 2)) * 12;
+    
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.03, 1.03, 1.03)`;
+    
+    // Position gloss overlay relative to mouse cursor
+    const gloss = card.querySelector('.card-gloss');
+    if (gloss) {
+      const glossX = ((e.clientX - box.left) / box.width) * 100;
+      const glossY = ((e.clientY - box.top) / box.height) * 100;
+      gloss.style.background = `radial-gradient(circle 180px at ${glossX}% ${glossY}%, rgba(255, 255, 255, 0.35), transparent)`;
+    }
+  };
+
+  const handleCardMouseLeave = (e) => {
+    const card = e.currentTarget;
+    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+    const gloss = card.querySelector('.card-gloss');
+    if (gloss) {
+      gloss.style.background = 'transparent';
+    }
+  };
 
   const getMatchStats = (m) => {
     const seed = m.id;
@@ -4508,6 +5196,402 @@ export default function App() {
                   </div>
                 )}
               </div>
+
+              {/* Crypto Twitter Football Cards */}
+              <div className="card-bezel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <h3 className="panel-title">
+                    <Award size={20} style={{ color: 'var(--color-secondary)' }} />
+                    Crypto Twitter Cards
+                  </h3>
+                  <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '12px' }}>
+                    Generate your custom football card using your X (Twitter) handle and mint it as a GoalRush collectible!
+                  </p>
+                </div>
+
+                <div className="football-card-section">
+                  {!(twitterCard || viewedCard) ? (
+                    /* Skeleton / Blank Preview State */
+                    <div className="psa-slab-container">
+                      <div className="psa-slab" style={{ opacity: 0.65, cursor: 'default' }}>
+                        <div className="card-gloss"></div>
+                        
+                        {/* PSA Label */}
+                        <div className="psa-label">
+                          <div className="psa-label-left">
+                            <div className="psa-label-brand">2026 GOALRUSH DEGENS</div>
+                            <div className="psa-label-username">@TWITTER_HANDLE</div>
+                            <div className="psa-label-pos">POSITION - ROLE</div>
+                          </div>
+                          <div className="psa-label-right">
+                            <div className="psa-grade-title">GEM MT</div>
+                            <div className="psa-grade-score">10</div>
+                            <div className="psa-grade-ovr">OVR: --</div>
+                          </div>
+                          <div className="psa-label-bottom">
+                            <div className="psa-barcode">
+                              <span className="b-thin"></span><span className="b-thick"></span><span className="b-med"></span>
+                              <span className="b-thin"></span><span className="b-thick"></span><span className="b-thin"></span>
+                              <span className="b-med"></span><span className="b-thick"></span><span className="b-med"></span>
+                              <span className="b-thin"></span>
+                            </div>
+                            <span className="psa-cert-num">00000000</span>
+                            <div className="psa-label-logo">GRUSH</div>
+                          </div>
+                        </div>
+
+                        <div className="psa-divider"></div>
+
+                        {/* Football Card Inside */}
+                        <div className="football-card card-tier-gold">
+                          <div className="card-shield-border"></div>
+                          <div className="card-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
+                            <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>⚽</div>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.6)' }}>NO CARD CONNECTED</span>
+                            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: '6px', padding: '0 10px' }}>
+                              Input handle below to generate PSA-graded collectible.
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Active Card View State */
+                    <div className="psa-slab-container">
+                      {(() => {
+                        const currentCard = viewedCard || twitterCard;
+                        const cleanUser = currentCard.username.replace('@', '').toUpperCase();
+                        
+                        // Deterministic cert number
+                        let certHash = 0;
+                        for (let i = 0; i < cleanUser.length; i++) {
+                          certHash = cleanUser.charCodeAt(i) + ((certHash << 5) - certHash);
+                        }
+                        const certNumber = Math.abs(certHash).toString().substring(0, 8).padEnd(8, '0');
+                        
+                        // Grade text depending on OVR
+                        let gradeTitle = 'GEM MT';
+                        let gradeScore = '10';
+                        if (currentCard.overall >= 93) {
+                          gradeTitle = 'GEM MT';
+                          gradeScore = '10';
+                        } else if (currentCard.overall >= 86) {
+                          gradeTitle = 'MINT';
+                          gradeScore = '9';
+                        } else if (currentCard.overall >= 78) {
+                          gradeTitle = 'NM-MT';
+                          gradeScore = '8';
+                        } else {
+                          gradeTitle = 'EX-MT';
+                          gradeScore = '6';
+                        }
+
+                        return (
+                          <div 
+                            className="psa-slab"
+                            onMouseMove={handleCardMouseMove}
+                            onMouseLeave={handleCardMouseLeave}
+                          >
+                            <div className="card-gloss"></div>
+
+                            {/* PSA Label */}
+                            <div className="psa-label">
+                              <div className="psa-label-left">
+                                <div className="psa-label-brand">2026 GOALRUSH DEGENS</div>
+                                <div className="psa-label-username">@{cleanUser}</div>
+                                <div className="psa-label-pos">{currentCard.position}</div>
+                              </div>
+                              <div className="psa-label-right">
+                                <div className="psa-grade-title">{gradeTitle}</div>
+                                <div className="psa-grade-score">{gradeScore}</div>
+                                <div className="psa-grade-ovr">OVR: {currentCard.overall}</div>
+                              </div>
+                              <div className="psa-label-bottom">
+                                <div className="psa-barcode">
+                                  {certNumber.split('').map((char, idx) => {
+                                    const val = parseInt(char) || 0;
+                                    const thickness = val % 3 === 0 ? 'b-thin' : val % 3 === 1 ? 'b-med' : 'b-thick';
+                                    return <span key={idx} className={thickness}></span>;
+                                  })}
+                                  <span className="b-thin"></span>
+                                  <span className="b-med"></span>
+                                </div>
+                                <span className="psa-cert-num">{certNumber}</span>
+                                <div className="psa-label-logo">GRUSH</div>
+                              </div>
+                            </div>
+
+                            <div className="psa-divider"></div>
+
+                            {/* Inner Football Card */}
+                            <div className={`football-card card-tier-${currentCard.card_type}`}>
+                              <div className="card-shield-border"></div>
+                              
+                              {currentCard.tx_hash && (
+                                <div className="card-minted-badge">MINTED</div>
+                              )}
+
+                              <div className="card-layout">
+                                {/* Top Stats */}
+                                <div className="card-top-left">
+                                  <div className="card-ovr">{currentCard.overall}</div>
+                                  <div className="card-pos">{currentCard.posAbbr}</div>
+                                  <img 
+                                    className="card-top-flag" 
+                                    src={getFlagUrl(currentCard.flagCode)} 
+                                    alt={currentCard.flagCode} 
+                                    style={{ width: '22px', height: '14px', objectFit: 'cover', borderRadius: '1.5px', marginTop: '3px', border: '1px solid rgba(255,255,255,0.2)' }}
+                                  />
+                                  <span style={{ fontSize: '0.9rem', marginTop: '3px' }}>
+                                    {currentCard.posAbbr === 'ST' ? '⚽' : currentCard.posAbbr === 'CM' ? '💎' : currentCard.posAbbr === 'CB' ? '🛡️' : '🧤'}
+                                  </span>
+                                </div>
+
+                                {/* Avatar */}
+                                <div className="card-avatar-wrap">
+                                  <div className="card-avatar-shield">
+                                    <img 
+                                      className="card-avatar" 
+                                      src={currentCard.avatar_url} 
+                                      alt={currentCard.username} 
+                                      onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = 'https://unavatar.io/placeholder.png';
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="card-avatar-border"></div>
+                                </div>
+
+                                {/* Player Name */}
+                                <div className="card-player-name">{currentCard.username}</div>
+
+                                {/* Stats Panel */}
+                                <div className="card-stats-grid">
+                                  <div className="card-stat-item">
+                                    <span className="card-stat-lbl">DFI</span>
+                                    <span className="card-stat-val">{currentCard.defi_iq}</span>
+                                  </div>
+                                  <div className="card-stat-item">
+                                    <span className="card-stat-lbl">DGN</span>
+                                    <span className="card-stat-val">{currentCard.degen_level}</span>
+                                  </div>
+                                  <div className="card-stat-item">
+                                    <span className="card-stat-lbl">PRD</span>
+                                    <span className="card-stat-val">{currentCard.prediction_power}</span>
+                                  </div>
+                                  <div className="card-stat-item">
+                                    <span className="card-stat-lbl">SPD</span>
+                                    <span className="card-stat-val">{currentCard.swap_speed}</span>
+                                  </div>
+                                  <div className="card-stat-item">
+                                    <span className="card-stat-lbl">LUK</span>
+                                    <span className="card-stat-val">{currentCard.jackpot_luck}</span>
+                                  </div>
+                                  <div className="card-stat-item">
+                                    <span className="card-stat-lbl">XFC</span>
+                                    <span className="card-stat-val">{currentCard.x_factor}</span>
+                                  </div>
+                                </div>
+
+                                <div className="card-playstyle-badge">
+                                  <span>⚡</span> PLAYSTYLE: {
+                                    currentCard.posAbbr === 'ST' ? 'ARBITRAGE HUNTER' :
+                                    currentCard.posAbbr === 'CM' ? 'LIQUIDITY CATALYST' :
+                                    currentCard.posAbbr === 'CB' ? 'SLIPPAGE SHADOW' :
+                                    'MEV GUARDIAN'
+                                  }
+                                </div>
+
+                                {/* Footer */}
+                                <div className="card-logo-row">
+                                  <span className="card-footer-text">GOALRUSH collectible</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {/* Mint Status Notification */}
+                  {mintStatus && (
+                    <div style={{
+                      padding: '10px',
+                      background: 'rgba(0, 229, 255, 0.05)',
+                      border: '1px solid rgba(0, 229, 255, 0.15)',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      color: 'var(--color-secondary)',
+                      textAlign: 'center',
+                      fontFamily: 'var(--font-mono)'
+                    }}>
+                      <div className="badge-dot" style={{ display: 'inline-block', marginRight: '6px', background: 'var(--color-secondary)', boxShadow: '0 0 6px var(--color-secondary)' }}></div>
+                      {mintStatus}
+                    </div>
+                  )}
+
+                  {/* Input Form Controls */}
+                  {!(twitterCard) ? (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <span style={{ position: 'absolute', left: '12px', color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-mono)' }}>@</span>
+                        <input
+                          type="text"
+                          placeholder="twitter_handle"
+                          value={twitterUsername}
+                          onChange={(e) => setTwitterUsername(e.target.value.replace('@', ''))}
+                          style={{
+                            width: '100%',
+                            background: 'rgba(255,255,255,0.03)',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '8px',
+                            padding: '10px 12px 10px 28px',
+                            color: '#fff',
+                            fontSize: '0.9rem',
+                            outline: 'none',
+                            fontFamily: 'var(--font-mono)'
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleConnectTwitter();
+                          }}
+                        />
+                      </div>
+                      <button
+                        onClick={handleConnectTwitter}
+                        className="btn-primary"
+                        style={{ padding: '10px 16px', borderRadius: '8px', fontSize: '0.85rem' }}
+                      >
+                        <Twitter size={14} /> Connect X
+                      </button>
+                    </div>
+                  ) : (
+                    /* Connected Action Buttons */
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={handleDownloadCard}
+                          className="btn-secondary"
+                          style={{ flex: 1, padding: '10px', borderRadius: '8px', fontSize: '0.8rem', justifyContent: 'center' }}
+                        >
+                          <Download size={14} /> Download Card
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            const cardData = viewedCard || twitterCard;
+                            const shareText = `Check out my customized @GoalRush holographic football card! OVR: ${cardData.overall} | DeFi IQ: ${cardData.defi_iq} | Degen Level: ${cardData.degen_level}! Generate yours with GRUSH at goalrush.fun ⚽🏆`;
+                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, '_blank');
+                          }}
+                          className="btn-secondary"
+                          style={{ flex: 1, padding: '10px', borderRadius: '8px', fontSize: '0.8rem', justifyContent: 'center' }}
+                        >
+                          <Twitter size={14} /> Share on X
+                        </button>
+                      </div>
+
+                      {/* Mint NFT button */}
+                      {!(viewedCard || twitterCard?.tx_hash) && (
+                        <button
+                          onClick={handleMintCardWithGrush}
+                          disabled={isMintingCard}
+                          className="btn-primary"
+                          style={{ 
+                            padding: '12px', 
+                            borderRadius: '8px', 
+                            fontSize: '0.85rem', 
+                            justifyContent: 'center', 
+                            background: 'var(--color-secondary)',
+                            color: '#000',
+                            border: 'none',
+                            boxShadow: 'var(--shadow-neon-blue)'
+                          }}
+                        >
+                          <Coins size={14} /> {isMintingCard ? 'Minting Card...' : 'Mint Card (10 GRUSH)'}
+                        </button>
+                      )}
+
+                      {/* TX Link if already minted */}
+                      {(viewedCard?.tx_hash || twitterCard?.tx_hash) && (
+                        <a
+                          href={`https://www.okx.com/explorer/xlayer/tx/${(viewedCard || twitterCard).tx_hash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            color: 'var(--color-primary)',
+                            fontSize: '0.78rem',
+                            textDecoration: 'none',
+                            background: 'rgba(157,255,0,0.05)',
+                            border: '1px dashed var(--color-primary)',
+                            borderRadius: '8px',
+                            padding: '8px',
+                            textAlign: 'center',
+                            fontWeight: '600'
+                          }}
+                        >
+                          <CheckCircle size={12} /> View Mint Transaction <ExternalLink size={10} />
+                        </a>
+                      )}
+
+                      {/* Disconnect / Back button */}
+                      <button
+                        onClick={() => {
+                          if (viewedCard) {
+                            setViewedCard(null);
+                          } else {
+                            setTwitterCard(null);
+                            setTwitterUsername('');
+                          }
+                        }}
+                        className="btn-secondary"
+                        style={{ padding: '8px', borderRadius: '8px', fontSize: '0.75rem', justifyContent: 'center', border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.4)' }}
+                      >
+                        {viewedCard ? '← Back to My Card' : 'Disconnect Account'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Wall of Fame / Recent Minters */}
+                  {recentCards.length > 0 && (
+                    <div className="recent-cards-gallery">
+                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Wall of Degens
+                      </span>
+                      <div className="gallery-scroll">
+                        {recentCards.map((card, idx) => (
+                          <div 
+                            key={card.wallet + idx} 
+                            className="gallery-card-badge"
+                            onClick={() => {
+                              setViewedCard(card);
+                              addLog(`[Connect X] Viewing minted card for ${card.username} (${card.overall} OVR)`);
+                            }}
+                          >
+                            <img 
+                              className="gallery-avatar" 
+                              src={card.avatar_url} 
+                              alt={card.username}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'https://unavatar.io/placeholder.png';
+                              }}
+                            />
+                            <div className="gallery-info">
+                              <span className="gallery-username">{card.username}</span>
+                              <span className="gallery-ovr">{card.overall} OVR • {card.position.split(' ')[0]}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </section>
 
@@ -4960,6 +6044,56 @@ export default function App() {
             </div>
           </section>
         </>
+      )}
+
+      {/* Simulated X / Twitter OAuth login popup modal */}
+      {isConnectingTwitter && (
+        <div className="oauth-modal-backdrop">
+          <div className="oauth-modal-box">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Twitter size={20} style={{ color: 'var(--color-secondary)' }} />
+                <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Authorize GoalRush</span>
+              </div>
+              <button 
+                onClick={() => setIsConnectingTwitter(false)}
+                style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            
+            <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.6)', lineHeight: '1.4', marginBottom: '16px' }}>
+              GoalRush is requesting permission to access your public profile picture and read public engagement metrics. No write permissions requested.
+            </p>
+
+            <div className="oauth-loading-steps">
+              <div className={`oauth-step ${authPopupStep === 1 ? 'active' : authPopupStep > 1 ? 'done' : ''}`}>
+                <div className="oauth-step-dot"></div>
+                <span>Step 1: Connecting X.com secure API...</span>
+              </div>
+              <div className={`oauth-step ${authPopupStep === 2 ? 'active' : authPopupStep > 2 ? 'done' : ''}`}>
+                <div className="oauth-step-dot"></div>
+                <span>Step 2: Resolving Twitter handle @{twitterUsername}...</span>
+              </div>
+              <div className={`oauth-step ${authPopupStep === 3 ? 'active' : authPopupStep > 3 ? 'done' : ''}`}>
+                <div className="oauth-step-dot"></div>
+                <span>Step 3: Fetching avatar from unavatar.io CDN...</span>
+              </div>
+              <div className={`oauth-step ${authPopupStep === 4 ? 'active' : authPopupStep > 4 ? 'done' : ''}`}>
+                <div className="oauth-step-dot"></div>
+                <span>Step 4: Compiling card metadata and stats...</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0', alignItems: 'center' }}>
+              <div className="badge-dot" style={{ animation: 'spin-slow 2s linear infinite', marginRight: '8px' }}></div>
+              <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)' }}>
+                {authPopupStep === 4 ? 'Finalizing holographic layout...' : 'Processing connection request...'}
+              </span>
+            </div>
+          </div>
+        </div>
       )}
 
       {showWhitepaper && (

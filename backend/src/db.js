@@ -73,6 +73,50 @@ async function init() {
   // Purge any non-World Cup matches
   db.prepare("DELETE FROM matches WHERE competition NOT LIKE '%World Cup%'").run();
 
+  // Create news table schema
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS news (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL UNIQUE,
+      summary TEXT NOT NULL,
+      content TEXT NOT NULL,
+      category TEXT NOT NULL,         -- 'Match Report' | 'Team News' | 'GoalRush Update'
+      image_url TEXT,
+      source TEXT DEFAULT 'GoalRush News',
+      url TEXT,                       -- Source website link
+      published_at TEXT DEFAULT (datetime('now')),
+      likes INTEGER DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_news_published ON news(published_at);
+  `);
+
+  // Seed news if empty
+  const newsCount = db.prepare("SELECT COUNT(*) as count FROM news").get().count;
+  if (newsCount === 0) {
+    const initialNews = [
+      {
+        title: "Lionel Messi Declares Argentina Prepared for Knockout Battles",
+        summary: "Following a stunning group-stage recovery, Argentina's captain emphasizes teamwork and focus ahead of the upcoming matches.",
+        content: "In a press conference from the team's training camp in New Jersey, Lionel Messi expressed confidence in Argentina's squad. 'We had a slow start, but the team has found its rhythm. Every match now is a final, and we are fully prepared to defend our title,' Messi stated. Argentina is scheduled to face Sweden in a highly anticipated match later this week.",
+        category: "Team News",
+        image_url: "/news-action.png",
+        source: "FIFA Media",
+        url: "https://www.fifa.com/world-cup/news/messi-argentina-ready",
+        published_at: "2026-06-19T14:00:00Z"
+      }
+    ];
+
+    const insertNews = db.prepare(`
+      INSERT OR IGNORE INTO news (title, summary, content, category, image_url, source, url, published_at)
+      VALUES (@title, @summary, @content, @category, @image_url, @source, @url, @published_at)
+    `);
+
+    for (const item of initialNews) {
+      insertNews.run(item);
+    }
+    console.log("🌱 Seeded initial World Cup and GoalRush news articles.");
+  }
+
   console.log('✅ DB initialized at', DB_PATH);
 }
 
@@ -176,6 +220,34 @@ function getRecentTwitterCards(limit = 10) {
   return db.prepare('SELECT * FROM twitter_cards ORDER BY created_at DESC LIMIT ?').all(limit);
 }
 
+// ─── News helpers ─────────────────────────────────────────
+function saveNewsArticle(article) {
+  const stmt = db.prepare(`
+    INSERT INTO news (title, summary, content, category, image_url, source, url, published_at)
+    VALUES (@title, @summary, @content, @category, @image_url, @source, @url, @published_at)
+    ON CONFLICT(title) DO UPDATE SET
+      summary = excluded.summary,
+      content = excluded.content,
+      category = excluded.category,
+      image_url = COALESCE(excluded.image_url, news.image_url),
+      source = excluded.source,
+      url = excluded.url,
+      published_at = excluded.published_at
+  `);
+  return stmt.run(article);
+}
+
+function getNewsArticles(limit = 10, category = null) {
+  if (category && category !== 'All') {
+    return db.prepare('SELECT * FROM news WHERE category = ? ORDER BY published_at DESC LIMIT ?').all(category, limit);
+  }
+  return db.prepare('SELECT * FROM news ORDER BY published_at DESC LIMIT ?').all(limit);
+}
+
+function likeNewsArticle(id) {
+  return db.prepare('UPDATE news SET likes = likes + 1 WHERE id = ?').run(id);
+}
+
 module.exports = {
   init,
   getDb,
@@ -190,4 +262,7 @@ module.exports = {
   getPredictionsByWallet,
   saveTwitterCard,
   getRecentTwitterCards,
+  saveNewsArticle,
+  getNewsArticles,
+  likeNewsArticle,
 };

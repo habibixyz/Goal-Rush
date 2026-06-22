@@ -9,6 +9,7 @@
  */
 
 const axios = require('axios');
+const { CheerioCrawler } = require('crawlee');
 const db = require('./db');
 
 // ─── ESPN Public API (completely free, no key) ────────────
@@ -167,10 +168,151 @@ async function fetchAndStoreMatches() {
       }
     }
     console.log(`[FETCH] Saved ${saved} matches (ESPN:${espnMatches.length} [incl. FIFA/WC/CL/Nations] FD:${fdMatches.length} OL:${olMatches.length})`);
+    
     return all;
   } catch (err) {
     console.error('[FETCH] Fatal:', err.message);
     return [];
+  }
+}
+
+// ─── ESPN Soccer RSS News Fetcher ─────────────────────────
+async function fetchWorldCupNews() {
+  try {
+    const articlesFound = [];
+    const initialUrls = ['https://www.skysports.com/football/news'];
+
+    // Also fetch ESPN RSS news links
+    try {
+      const axios = require('axios');
+      const cheerio = require('cheerio');
+      const rssRes = await axios.get('https://www.espn.in/espn/rss/soccer/news', { timeout: 5000 });
+      const $rss = cheerio.load(rssRes.data, { xmlMode: true });
+      $rss('item').slice(0, 15).each((_, el) => {
+        let link = $rss(el).find('link').text().trim();
+        if (link) {
+          if (link.startsWith('http://')) link = link.replace('http://', 'https://');
+          if (link.startsWith('https://www.espn.com/') || link.startsWith('https://www.espn.in/')) {
+            initialUrls.push(link);
+          }
+        }
+      });
+    } catch (rssErr) {
+      console.error('[CRAWLER] Failed to fetch ESPN RSS:', rssErr.message);
+    }
+
+    const crawler = new CheerioCrawler({
+      maxConcurrency: 3,
+      maxRequestsPerCrawl: 25,
+      requestHandlerTimeoutSecs: 10,
+
+      async requestHandler({ $, request, enqueueLinks }) {
+        const urlString = request.url;
+
+        // SSRF protection & domain lock
+        const allowedDomains = [
+          'https://www.skysports.com/',
+          'https://www.espn.com/',
+          'https://www.espn.in/'
+        ];
+        const isAllowed = allowedDomains.some(d => urlString.startsWith(d));
+        if (!isAllowed) {
+          console.warn('[CRAWLER] Ignored non-whitelisted target URL:', urlString);
+          return;
+        }
+
+        // If it is the Sky Sports index page, enqueue article links
+        if (urlString === 'https://www.skysports.com/football/news') {
+          await enqueueLinks({
+            selector: 'a',
+            baseUrl: 'https://www.skysports.com',
+            globs: ['https://www.skysports.com/football/news/**'],
+          });
+          return;
+        }
+
+        // Parse article details depending on platform
+        let titleText = '';
+        let leadText = '';
+        const paragraphs = [];
+
+        if (urlString.includes('skysports.com')) {
+          titleText = $('.sdc-article-header__title').text().trim() || $('.article__title').text().trim() || $('h1').first().text().trim();
+          leadText = $('.sdc-article-header__sub-title').text().trim() || $('.article__sub-title').text().trim() || $('.article__body p').first().text().trim();
+          
+          $('.sdc-article-body p').each((_, el) => {
+            const text = $(el).text().trim();
+            if (text) paragraphs.push(text);
+          });
+        } else if (urlString.includes('espn.com') || urlString.includes('espn.in')) {
+          titleText = $('.article-header h1').text().trim() || $('h1.article-header').text().trim() || $('h1').first().text().trim();
+          leadText = $('.article-body p').first().text().trim() || $('.article-copy p').first().text().trim();
+          
+          $('.article-body p, .article-copy p').each((_, el) => {
+            const text = $(el).text().trim();
+            if (text) paragraphs.push(text);
+          });
+        }
+
+        const contentText = paragraphs.join('\n\n') || leadText;
+        if (!titleText || !leadText) return;
+
+        // Clean & sanitize inputs (prevent XSS, remove Copy of prefixes)
+        const sanitize = (str) => {
+          return str
+            .replace(/<[^>]*>/g, '') 
+            .replace(/^(copy of\s*)+/i, '') 
+            .trim();
+        };
+
+        const cleanTitle = sanitize(titleText);
+        const cleanSummary = sanitize(leadText);
+        const cleanContent = sanitize(contentText).slice(0, 2000); 
+
+        // Determine category (Match Report vs Team News)
+        const category = (cleanTitle.toLowerCase().includes('report') || cleanTitle.toLowerCase().includes('draw') || cleanTitle.toLowerCase().includes('vs') || cleanTitle.toLowerCase().includes('beat') || cleanTitle.toLowerCase().includes('win'))
+          ? 'Match Report'
+          : 'Team News';
+
+        const scrapedImg = $('meta[property="og:image"]').attr('content') || $('meta[name="twitter:image"]').attr('content') || '';
+        const imageUrl = (scrapedImg.startsWith('https://') && !scrapedImg.includes('<script'))
+          ? scrapedImg
+          : '/news-brand-logo.png';
+
+        const source = urlString.includes('espn.com') || urlString.includes('espn.in') ? 'ESPN Soccer' : 'Sky Sports';
+
+        articlesFound.push({
+          title: cleanTitle,
+          summary: cleanSummary,
+          content: cleanContent,
+          category,
+          image_url: imageUrl,
+          source,
+          url: urlString,
+          published_at: new Date().toISOString()
+        });
+      },
+
+      failedRequestHandler({ request, error }) {
+        console.error(`[CRAWLER] Request failed for ${request.url}:`, error.message);
+      }
+    });
+
+    console.log('[CRAWLER] Starting news crawler for Sky Sports & ESPN.in...');
+    await crawler.run(initialUrls);
+    
+    let added = 0;
+    for (const art of articlesFound) {
+      try {
+        db.saveNewsArticle(art);
+        added++;
+      } catch (e) {
+        // Safe to ignore duplicate titles due to UNIQUE constraint
+      }
+    }
+    console.log(`[NEWS SCRAPE] Crawlee completed. Saved ${added} new football articles.`);
+  } catch (err) {
+    console.error('[NEWS SCRAPE] Crawlee fatal error:', err.message);
   }
 }
 
@@ -184,4 +326,7 @@ function futureISO(days) {
   return d.toISOString().slice(0, 10);
 }
 
-module.exports = { fetchAndStoreMatches };
+module.exports = {
+  fetchAndStoreMatches,
+  fetchWorldCupNews
+};

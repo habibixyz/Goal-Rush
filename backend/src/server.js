@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const cron = require('node-cron');
-const { fetchAndStoreMatches } = require('./fetcher');
+const { fetchAndStoreMatches, fetchWorldCupNews } = require('./fetcher');
 const { resolveFinishedMatches } = require('./resolver');
 const { startKeeper } = require('./keeper');
 const db = require('./db');
@@ -34,10 +34,17 @@ cron.schedule('*/3 * * * *', async () => {
   await resolveFinishedMatches();
 });
 
+// Fetch latest news from Sky Sports and ESPN every 10 minutes
+cron.schedule('*/10 * * * *', async () => {
+  console.log('[CRON] Auto-syncing news from sports platforms...');
+  await fetchWorldCupNews();
+});
+
 // ─── Boot ─────────────────────────────────────────────────
 async function boot() {
   await db.init();
   await fetchAndStoreMatches(); // immediate first fetch
+  await fetchWorldCupNews();    // immediate first news crawl
 
   // Start on-chain keeper (auto-activates & resolves matches on X Layer)
   startKeeper(cron);

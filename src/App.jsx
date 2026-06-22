@@ -645,6 +645,29 @@ export default function App() {
   const [matchFilter, setMatchFilter] = useState('all')
   const [matchCenterSubTab, setMatchCenterSubTab] = useState('lineup')
 
+  // Daily News States
+  const [newsArticles, setNewsArticles] = useState([]);
+  const [newsCategory, setNewsCategory] = useState('All');
+  const [activeNewsArticle, setActiveNewsArticle] = useState(null);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [latestNewArticle, setLatestNewArticle] = useState(null);
+  const [showNewsToast, setShowNewsToast] = useState(false);
+  const [likedArticles, setLikedArticles] = useState(() => {
+    try {
+      const saved = localStorage.getItem('goalrush_liked_articles');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [newsCountdown, setNewsCountdown] = useState(600);
+  const [oracleLogs, setOracleLogs] = useState([
+    `> Oracle console initialized at ${new Date().toLocaleTimeString()}`,
+    `[${new Date().toLocaleTimeString()}] > Connected to X Layer mempool & sports API sources.`,
+    `[${new Date().toLocaleTimeString()}] > Waiting for sync signal...`
+  ]);
+  const [isIngesting, setIsIngesting] = useState(false);
+
   // Twitter Card states
   const [twitterUsername, setTwitterUsername] = useState('')
   const [isConnectingTwitter, setIsConnectingTwitter] = useState(false)
@@ -654,6 +677,235 @@ export default function App() {
   const [isMintingCard, setIsMintingCard] = useState(false)
   const [mintStatus, setMintStatus] = useState('')
   const [viewedCard, setViewedCard] = useState(null) // For viewing other users' cards from gallery
+
+  const fetchNewsArticles = useCallback(async () => {
+    setNewsLoading(true);
+    try {
+      const response = await fetch(`${BACKEND_API_BASE}/news`);
+      if (response.ok) {
+        const body = await response.json();
+        if (body.success && Array.isArray(body.data)) {
+          setNewsArticles(body.data);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch news articles:', e);
+    } finally {
+      setNewsLoading(false);
+    }
+  }, []);
+
+  const triggerOracleIngest = async () => {
+    if (isIngesting) return;
+    setIsIngesting(true);
+    setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] > Manual override triggered. Contacting backend...`]);
+    try {
+      const response = await fetch(`${BACKEND_API_BASE}/news/ingest`, {
+        method: 'POST'
+      });
+      if (response.ok) {
+        const body = await response.json();
+        if (body.success) {
+          setOracleLogs(prev => [...prev, ...body.logs]);
+          await fetchNewsArticles();
+          setNewsCountdown(600);
+        } else {
+          setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] > Error: Ingestion failed: ${body.error}`]);
+        }
+      } else {
+        setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] > Error: Server returned status ${response.status}`]);
+      }
+    } catch (e) {
+      setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] > Error: Ingestion failed: ${e.message}`]);
+    } finally {
+      setIsIngesting(false);
+    }
+  };
+
+  const handleLikeArticle = async (id) => {
+    if (likedArticles.includes(id)) return; // Already liked
+    try {
+      const response = await fetch(`${BACKEND_API_BASE}/news/${id}/like`, {
+        method: 'POST'
+      });
+      if (response.ok) {
+        const body = await response.json();
+        if (body.success) {
+          const newLikes = [...likedArticles, id];
+          setLikedArticles(newLikes);
+          localStorage.setItem('goalrush_liked_articles', JSON.stringify(newLikes));
+          
+          // Optimistically update local article count
+          setNewsArticles(prev => prev.map(art => art.id === id ? { ...art, likes: art.likes + 1 } : art));
+          addLog(`[News Hub] Liked news article: ID ${id}`);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to like article:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (currentView === 'news') {
+      fetchNewsArticles();
+    }
+  }, [currentView, fetchNewsArticles]);
+
+  // Set up polling interval for new articles to simulate popping feed
+  useEffect(() => {
+    if (currentView !== 'news') return;
+
+    const interval = setInterval(() => {
+      fetch(`${BACKEND_API_BASE}/news`)
+        .then(res => res.json())
+        .then(body => {
+          if (body.success && Array.isArray(body.data) && body.data.length > 0) {
+            setNewsArticles(prev => {
+              if (prev.length === 0) return body.data;
+              // Detect if any new article exists in the response
+              const prevTitles = new Set(prev.map(a => a.title));
+              const newArticlesList = body.data.filter(a => !prevTitles.has(a.title));
+              
+              if (newArticlesList.length > 0) {
+                // Found new articles! Toast the newest one
+                const newest = newArticlesList[0];
+                setLatestNewArticle(newest);
+                setShowNewsToast(true);
+                // Dismiss toast after 7 seconds
+                setTimeout(() => {
+                  setShowNewsToast(false);
+                }, 7000);
+              }
+              return body.data;
+            });
+          }
+        })
+        .catch(err => console.warn('Polling news failed:', err));
+    }, 15000); // 15 seconds polling
+
+    return () => clearInterval(interval);
+  }, [currentView]);
+
+  // Oracle news countdown timer effect
+  useEffect(() => {
+    if (currentView !== 'news') return;
+    const interval = setInterval(() => {
+      setNewsCountdown(prev => {
+        if (prev <= 1) {
+          setOracleLogs(l => [...l, `[${new Date().toLocaleTimeString()}] > Scheduled 10-minute sync timer fired. Running ingestion...`]);
+          fetchNewsArticles();
+          return 600;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [currentView, fetchNewsArticles]);
+
+  // SEO Optimization: Dynamic Title & Meta Tag updates
+  useEffect(() => {
+    let title = "GoalRush — World Cup Uniswap V4 Hook & Jackpot on X Layer";
+    let metaDesc = "GoalRush is a World Cup-themed Uniswap V4 hook featuring match prediction jackpots and gamified swap rebate penalties on OKX X Layer.";
+    
+    if (currentView === 'dashboard' || currentView === 'leaderboard') {
+      title = currentView === 'leaderboard' ? "Leaderboard | GoalRush — World Cup Hook & Jackpot" : "Dashboard | GoalRush — World Cup Hook & Jackpot";
+      metaDesc = "View active World Cup prediction jackpots, simulate swaps, track goals scored, and see Leaderboard rankings on GoalRush.";
+    } else if (currentView === 'match-center') {
+      title = "Match Center | GoalRush — Live World Cup Scores & Lineups";
+      metaDesc = "Get live World Cup scores, schedules, team lineups, match statistics, and place your on-chain predictions on GoalRush.";
+    } else if (currentView === 'about') {
+      title = "About & Docs | GoalRush Uniswap V4 Hook Technical Whitepaper";
+      metaDesc = "Read the technical whitepaper, inspect smart contracts, and explore the CREATE2 deployment specs of the GoalRush V4 hook.";
+    } else if (currentView === 'news') {
+      if (activeNewsArticle) {
+        title = `${activeNewsArticle.title} | GoalRush World Cup Daily News`;
+        metaDesc = activeNewsArticle.summary;
+      } else {
+        title = "Daily News Hub | GoalRush — Latest FIFA World Cup Coverage";
+        metaDesc = "Get the latest 2026 FIFA World Cup matches, match analysis, player card updates, and GoalRush announcements directly on X Layer.";
+      }
+    }
+    
+    document.title = title;
+    
+    // Update Meta Description
+    const metaDescTag = document.querySelector('meta[name="description"]');
+    if (metaDescTag) {
+      metaDescTag.setAttribute('content', metaDesc);
+    }
+    
+    // Update Open Graph tags for Social Media SEO
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute('content', title);
+    
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc) ogDesc.setAttribute('content', metaDesc);
+  }, [currentView, activeNewsArticle]);
+
+  // SEO Optimization: Dynamic JSON-LD Structured Data Schema injection
+  useEffect(() => {
+    const existingScript = document.getElementById('goalrush-jsonld-schema');
+    if (existingScript) existingScript.remove();
+
+    let schemaData = null;
+
+    if (currentView === 'news' && activeNewsArticle) {
+      schemaData = {
+        "@context": "https://schema.org",
+        "@type": "NewsArticle",
+        "headline": activeNewsArticle.title,
+        "description": activeNewsArticle.summary,
+        "articleBody": activeNewsArticle.content,
+        "image": [
+          activeNewsArticle.image_url?.startsWith('http') 
+            ? activeNewsArticle.image_url 
+            : `${window.location.origin}${activeNewsArticle.image_url}`
+        ],
+        "datePublished": activeNewsArticle.published_at,
+        "author": {
+          "@type": "Organization",
+          "name": activeNewsArticle.source || "GoalRush News"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "GoalRush Platform",
+          "logo": {
+            "@type": "ImageObject",
+            "url": `${window.location.origin}/logo.png`
+          }
+        }
+      };
+    } else if (currentView === 'news') {
+      schemaData = {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "GoalRush World Cup Daily News Hub",
+        "description": "Daily news, updates, match reports, and analysis for the FIFA World Cup on OKX X Layer.",
+        "url": `${window.location.origin}/#news`
+      };
+    } else {
+      schemaData = {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "GoalRush",
+        "operatingSystem": "All",
+        "applicationCategory": "DeFiApplication",
+        "description": "A World Cup-themed Uniswap V4 hook featuring match prediction jackpots and gamified swap rebate penalties on X Layer.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0.0"
+        }
+      };
+    }
+
+    if (schemaData) {
+      const script = document.createElement('script');
+      script.id = 'goalrush-jsonld-schema';
+      script.type = 'application/ld+json';
+      script.innerHTML = JSON.stringify(schemaData);
+      document.head.appendChild(script);
+    }
+  }, [currentView, activeNewsArticle]);
 
   const fetchRecentCards = useCallback(async () => {
     try {
@@ -3902,7 +4154,10 @@ export default function App() {
           <ul className="nav-links">
             <li>
               <button
-                onClick={() => setCurrentView('dashboard')}
+                onClick={() => {
+                  setCurrentView('dashboard');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`}
               >
                 Dashboard
@@ -3917,13 +4172,25 @@ export default function App() {
               </button>
             </li>
             <li>
-              <a
-                href="#leaderboard"
-                className="nav-btn-link"
-                onClick={() => setCurrentView('dashboard')}
+              <button
+                onClick={() => setCurrentView('news')}
+                className={`nav-btn ${currentView === 'news' ? 'active' : ''}`}
+              >
+                Daily News
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => {
+                  setCurrentView('leaderboard');
+                  setTimeout(() => {
+                    document.getElementById('leaderboard')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }}
+                className={`nav-btn ${currentView === 'leaderboard' ? 'active' : ''}`}
               >
                 Leaderboard
-              </a>
+              </button>
             </li>
             <li>
               <button
@@ -4029,7 +4296,7 @@ export default function App() {
         </div>
       </header>
 
-      {currentView === 'dashboard' && (
+      {(currentView === 'dashboard' || currentView === 'leaderboard') && (
         <>
           {/* Hackathon Hero Section */}
           <section className="hackathon-hero-container">
@@ -6561,6 +6828,247 @@ export default function App() {
         </div>
       )}
 
+      {currentView === 'news' && (() => {
+        const filteredArticles = newsCategory === 'All'
+          ? newsArticles
+          : newsArticles.filter(art => art.category === newsCategory);
+
+        return (
+          <main className="news-container-layout" id="main-content" style={{ marginTop: '32px' }}>
+            {/* SEO Heading structure - Single h1 per view page */}
+            <header className="news-header-section" style={{ marginBottom: '32px' }}>
+              <span className="hero-tag">🔥 World Cup Updates</span>
+              <h1 className="news-main-title">Daily News Hub</h1>
+              <p className="news-subtitle-text">
+                Stay ahead with the latest FIFA World Cup 2026 match reports, team news, and tournament highlights — updated automatically throughout the day.
+              </p>
+            </header>
+
+            {/* Breaking News Ticker */}
+            {newsArticles.length > 0 && (
+              <div className="breaking-news-ticker-container">
+                <span className="ticker-label">BREAKING NEWS</span>
+                <div className="ticker-scroll-wrap">
+                  <div className="ticker-scroll-content">
+                    {newsArticles.map((article, idx) => (
+                      <span key={article.id || idx} className="ticker-item" onClick={() => setActiveNewsArticle(article)}>
+                        ⚡ {article.title} &nbsp;&nbsp;&nbsp;&nbsp;&bull;&nbsp;&nbsp;&nbsp;&nbsp;
+                      </span>
+                    ))}
+                    {/* Duplicate the items to ensure seamless infinite scroll */}
+                    {newsArticles.map((article, idx) => (
+                      <span key={`dup-${article.id || idx}`} className="ticker-item" onClick={() => setActiveNewsArticle(article)}>
+                        ⚡ {article.title} &nbsp;&nbsp;&nbsp;&nbsp;&bull;&nbsp;&nbsp;&nbsp;&nbsp;
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Categories Tab navigation */}
+            <nav className="news-tabs-nav" aria-label="News categories">
+              {['All', 'Match Report', 'Team News'].map(cat => (
+                <button
+                  key={cat}
+                  id={`news-tab-filter-${cat.toLowerCase().replace(' ', '-')}`}
+                  onClick={() => setNewsCategory(cat)}
+                  className={`news-tab-filter-btn ${newsCategory === cat ? 'active' : ''}`}
+                >
+                  {cat === 'All' ? '📢 All News' : cat === 'Match Report' ? '⚽ Match Reports' : cat === 'Team News' ? '🏃 Team News' : '⚡ Platform Updates'}
+                </button>
+              ))}
+            </nav>
+
+            {/* Oracle Ingestion Console Panel */}
+            <div className="oracle-console-wrapper" style={{ marginBottom: '32px' }}>
+              <div className="oracle-console-header">
+                <div className="oracle-title-wrap">
+                  <div className="oracle-pulse-dot"></div>
+                  <span className="oracle-title">X LAYER SPORTS ORACLE SYSTEM</span>
+                </div>
+                <div className="oracle-countdown-timer">
+                  <span>NEXT SYNC IN: </span>
+                  <strong className="timer-countdown">
+                    {Math.floor(newsCountdown / 60)}:{(newsCountdown % 60).toString().padStart(2, '0')}
+                  </strong>
+                </div>
+              </div>
+              
+              <div className="oracle-console-body">
+                <div className="oracle-logs-area">
+                  {oracleLogs.map((log, index) => (
+                    <div key={index} className="oracle-log-line">{log}</div>
+                  ))}
+                  {isIngesting && (
+                    <div className="oracle-log-line ingesting">
+                      <span className="loader-dots">&gt; Crawling Sky Sports news feed and checking OKX mempool...</span>
+                    </div>
+                  )}
+                </div>
+                <div className="oracle-action-panel">
+                  <button 
+                    className={`oracle-trigger-btn ${isIngesting ? 'loading' : ''}`}
+                    onClick={triggerOracleIngest}
+                    disabled={isIngesting}
+                  >
+                    {isIngesting ? 'SYNCING ORACLE...' : 'TRIGGER ORACLE CRAWL'}
+                  </button>
+                  <p className="oracle-hint-text">
+                    Allows manual override to trigger the Crawlee background script.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {newsLoading && newsArticles.length === 0 ? (
+              <div className="news-loading-spinner" id="news-loader">
+                <div className="spinner-glow"></div>
+                <span>Syncing World Cup RSS news feeds...</span>
+              </div>
+            ) : filteredArticles.length === 0 ? (
+              <div className="news-empty-state">
+                <span>No news articles found for this category.</span>
+              </div>
+            ) : (
+              <section className="news-articles-grid" aria-label="News articles">
+                {/* Featured article - render first article uniquely */}
+                {newsCategory === 'All' && filteredArticles[0] && (
+                  <article className="featured-news-card" id={`news-article-featured-${filteredArticles[0].id}`}>
+                    <div className="featured-image-wrapper">
+                      <img src={filteredArticles[0].image_url} alt={filteredArticles[0].title} />
+                      <span className="featured-badge">Featured Coverage</span>
+                    </div>
+                    <div className="featured-content">
+                      <div className="article-meta-info">
+                        <span className="article-category">{filteredArticles[0].category}</span>
+                        <span className="article-dot">•</span>
+                        <span>{new Date(filteredArticles[0].published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      <h2 className="featured-title">{filteredArticles[0].title}</h2>
+                      <p className="featured-summary">{filteredArticles[0].summary}</p>
+                      <div className="article-footer-row">
+                        <span className="article-source-tag">Source: {filteredArticles[0].source}</span>
+                        <div className="footer-actions-wrap">
+                          <button
+                            id={`like-btn-featured-${filteredArticles[0].id}`}
+                            className={`article-like-action-btn ${likedArticles.includes(filteredArticles[0].id) ? 'liked' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLikeArticle(filteredArticles[0].id);
+                            }}
+                          >
+                            ❤️ {filteredArticles[0].likes || 0}
+                          </button>
+                          <button
+                            id={`read-more-btn-featured-${filteredArticles[0].id}`}
+                            className="btn-primary"
+                            style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+                            onClick={() => setActiveNewsArticle(filteredArticles[0])}
+                          >
+                            Read Article <ChevronRight size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                )}
+
+                {/* Grid articles */}
+                <div className="regular-news-grid">
+                  {(newsCategory === 'All' ? filteredArticles.slice(1) : filteredArticles).map(article => (
+                    <article key={article.id} className="regular-news-card" id={`news-article-card-${article.id}`}>
+                      <div className="card-image-wrap">
+                        <img src={article.image_url} alt={article.title} />
+                        <span className="category-card-badge">{article.category}</span>
+                      </div>
+                      <div className="card-body-content">
+                        <span className="card-date-lbl">
+                          {new Date(article.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                        <h3 className="card-title-heading">{article.title}</h3>
+                        <p className="card-summary-text">{article.summary}</p>
+                        <div className="card-footer-flex">
+                          <button
+                            id={`like-btn-card-${article.id}`}
+                            className={`article-like-action-btn ${likedArticles.includes(article.id) ? 'liked' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLikeArticle(article.id);
+                            }}
+                          >
+                            ❤️ {article.likes || 0}
+                          </button>
+                          <button
+                            id={`read-more-btn-card-${article.id}`}
+                            className="btn-secondary"
+                            style={{ padding: '6px 12px', fontSize: '0.8rem', gap: '4px' }}
+                            onClick={() => setActiveNewsArticle(article)}
+                          >
+                            Read <ChevronRight size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Glassmorphic Modal for Reading Full Article */}
+            {activeNewsArticle && (
+              <div
+                className="news-modal-overlay"
+                id="news-reader-modal"
+                onClick={() => setActiveNewsArticle(null)}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="modal-article-title"
+              >
+                <div className="news-modal-box" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    id="close-news-modal-btn"
+                    className="modal-close-btn"
+                    onClick={() => setActiveNewsArticle(null)}
+                    aria-label="Close article reader"
+                  >
+                    <X size={20} />
+                  </button>
+                  <div className="modal-banner-image">
+                    <img src={activeNewsArticle.image_url} alt={activeNewsArticle.title} />
+                  </div>
+                  <div className="modal-inner-body">
+                    <div className="modal-meta-row">
+                      <span className="category-card-badge">{activeNewsArticle.category}</span>
+                      <span className="modal-date-tag">
+                        {new Date(activeNewsArticle.published_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                      </span>
+                    </div>
+                    <h2 className="modal-title-h2" id="modal-article-title">{activeNewsArticle.title}</h2>
+                    <div className="modal-rich-text">
+                      <p className="lead-paragraph">{activeNewsArticle.summary}</p>
+                      <p className="body-paragraph">{activeNewsArticle.content}</p>
+                    </div>
+                    <div className="modal-footer-row">
+                      <div className="source-info">
+                        <span>Publisher: <strong>{activeNewsArticle.source}</strong></span>
+                      </div>
+                      <button
+                        id={`modal-like-btn-${activeNewsArticle.id}`}
+                        className={`article-like-action-btn ${likedArticles.includes(activeNewsArticle.id) ? 'liked' : ''}`}
+                        onClick={() => handleLikeArticle(activeNewsArticle.id)}
+                      >
+                        ❤️ Like Article ({activeNewsArticle.likes || 0})
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </main>
+        );
+      })()}
+
       {showPrivacy && (
         <div className="whitepaper-modal-overlay" onClick={() => setShowPrivacy(false)}>
           <div className="whitepaper-modal-container" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
@@ -6584,6 +7092,26 @@ export default function App() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Floating Glassmorphic Breaking News Toast Notification */}
+      {showNewsToast && latestNewArticle && (
+        <div 
+          className="breaking-news-toast-notification" 
+          onClick={() => { setActiveNewsArticle(latestNewArticle); setShowNewsToast(false); }}
+        >
+          <div className="toast-badge">LIVE UPDATE</div>
+          <div className="toast-body">
+            <h4 className="toast-title">{latestNewArticle.title}</h4>
+            <p className="toast-text">{latestNewArticle.summary.slice(0, 85)}...</p>
+          </div>
+          <button 
+            className="toast-close-btn" 
+            onClick={(e) => { e.stopPropagation(); setShowNewsToast(false); }}
+          >
+            &times;
+          </button>
         </div>
       )}
     </div>

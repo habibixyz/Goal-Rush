@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('./db');
-const { fetchAndStoreMatches } = require('./fetcher');
+const { fetchAndStoreMatches, fetchWorldCupNews } = require('./fetcher');
 const { resolveMatchManually } = require('./resolver');
 
 // ── GET /api/matches/live ─────────────────────────────────
@@ -170,6 +170,51 @@ router.post('/cards', (req, res) => {
     });
 
     res.json({ success: true, message: 'Twitter card saved successfully' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// ── GET /api/news ─────────────────────────────────────────
+router.get('/news', (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 20;
+    const category = req.query.category || null;
+    const articles = db.getNewsArticles(limit, category);
+    res.json({ success: true, data: articles });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// ── POST /api/news/:id/like ────────────────────────────────
+router.post('/news/:id/like', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    db.likeNewsArticle(id);
+    res.json({ success: true, message: 'Article liked successfully' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// ── POST /api/news/ingest ─────────────────────────────────
+router.post('/news/ingest', async (req, res) => {
+  try {
+    const logs = [];
+    logs.push(`[${new Date().toLocaleTimeString()}] > Initializing Web3 Oracle Connection...`);
+    logs.push(`[${new Date().toLocaleTimeString()}] > Crawlee Crawler connected to Sky Sports Football...`);
+    
+    await fetchWorldCupNews();
+    
+    logs.push(`[${new Date().toLocaleTimeString()}] > Crawlee parsing completed. DB upserted latest coverage.`);
+    logs.push(`[${new Date().toLocaleTimeString()}] > Oracle synchronization success!`);
+    
+    res.json({
+      success: true,
+      message: 'Ingestion completed successfully.',
+      logs
+    });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }

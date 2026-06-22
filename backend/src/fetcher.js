@@ -13,6 +13,23 @@ const path = require('path');
 const { CheerioCrawler } = require('crawlee');
 const db = require('./db');
 
+// Intercept child_process.spawn to mock 'ps' calls and prevent crashes on environments without procps/ps
+const cp = require('child_process');
+const originalSpawn = cp.spawn;
+cp.spawn = function(command, args, options) {
+  if (command === 'ps') {
+    const { Readable } = require('stream');
+    const mockProcess = new (require('events').EventEmitter)();
+    mockProcess.stdout = Readable.from(['100000\n']); // Mock RSS memory size
+    mockProcess.stderr = Readable.from([]);
+    setTimeout(() => {
+      mockProcess.emit('close', 0);
+    }, 20);
+    return mockProcess;
+  }
+  return originalSpawn.apply(this, arguments);
+};
+
 // ─── ESPN Public API (completely free, no key) ────────────
 const ESPN_LEAGUES = [
   { id: 'fifa.world',       name: 'FIFA World Cup' }

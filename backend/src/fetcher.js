@@ -9,6 +9,7 @@
  */
 
 const axios = require('axios');
+const path = require('path');
 const { CheerioCrawler } = require('crawlee');
 const db = require('./db');
 
@@ -178,6 +179,10 @@ async function fetchAndStoreMatches() {
 
 // ─── ESPN Soccer RSS News Fetcher ─────────────────────────
 async function fetchWorldCupNews() {
+  const uniqueStorageDir = path.join(__dirname, `../data/crawlee_storage_${Date.now()}`);
+  // Set the storage directory env var for Crawlee
+  process.env.CRAWLEE_STORAGE_DIR = uniqueStorageDir;
+
   try {
     const articlesFound = [];
     const initialUrls = ['https://www.skysports.com/football/news'];
@@ -313,6 +318,16 @@ async function fetchWorldCupNews() {
     console.log(`[NEWS SCRAPE] Crawlee completed. Saved ${added} new football articles.`);
   } catch (err) {
     console.error('[NEWS SCRAPE] Crawlee fatal error:', err.message);
+  } finally {
+    // Cleanup temporary storage to prevent disk space leaks and clear cache for next runs
+    try {
+      const fs = require('fs');
+      if (fs.existsSync(uniqueStorageDir)) {
+        fs.rmSync(uniqueStorageDir, { recursive: true, force: true });
+      }
+    } catch (cleanupErr) {
+      console.error('[CRAWLER] Failed to clean up temp storage:', cleanupErr.message);
+    }
   }
 }
 

@@ -4207,30 +4207,30 @@ export default function App() {
             chainId === 196 ? (
               <div className="badge-xlayer" style={{ color: 'var(--color-primary)' }}>
                 <span className="badge-dot" style={{ backgroundColor: 'var(--color-primary)', boxShadow: '0 0 8px var(--color-primary)' }}></span>
-                X Layer Mainnet
+                <span className="badge-text">X Layer Mainnet</span>
               </div>
             ) : chainId === 195 ? (
               <div className="badge-xlayer" style={{ color: '#ffcc00' }}>
                 <span className="badge-dot" style={{ backgroundColor: '#ffcc00', boxShadow: '0 0 8px #ffcc00' }}></span>
-                X Layer Testnet
+                <span className="badge-text">X Layer Testnet</span>
               </div>
             ) : (
               <button className="badge-xlayer" onClick={handleSwitchNetwork} style={{ cursor: 'pointer', background: 'rgba(255, 51, 68, 0.1)', borderColor: '#ff3344', color: '#ff3344' }}>
                 <AlertTriangle size={12} />
-                Switch to X Layer
+                <span className="badge-text">Switch Network</span>
               </button>
             )
           ) : (
             <div className="badge-xlayer">
               <span className="badge-dot" style={{ backgroundColor: '#666' }}></span>
-              Not Connected
+              <span className="badge-text">Not Connected</span>
             </div>
           )}
 
           {walletConnected ? (
             <div className="wallet-connected-wrapper">
               <div
-                className={`btn-secondary ${parseFloat(grushBalance.replace(/,/g, '')) > 0 ? 'text-glow-green' : ''}`}
+                className="btn-secondary text-glow-green"
                 style={{
                   padding: '8px 16px',
                   fontSize: '0.9rem',
@@ -4238,19 +4238,20 @@ export default function App() {
                   alignItems: 'center',
                   gap: '8px',
                   cursor: 'default',
-                  borderColor: parseFloat(grushBalance.replace(/,/g, '')) > 0 ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.08)',
-                  background: parseFloat(grushBalance.replace(/,/g, '')) > 0 ? 'rgba(157, 255, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)'
+                  borderColor: 'var(--color-primary)',
+                  background: 'rgba(157, 255, 0, 0.05)'
                 }}
               >
                 <User size={14} />
-                <span>
-                  {userAddress.slice(0, 6)}...{userAddress.slice(-4)} ({userBalance} OKB
-                  {parseFloat(grushBalance.replace(/,/g, '')) > 0 && ` | ⚽ ${grushBalance} GRUSH`}
-                  )
+                <span className="wallet-text-full">
+                  Connected: {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
+                </span>
+                <span className="wallet-text-compact">
+                  {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
                 </span>
               </div>
               <button
-                className="btn-secondary"
+                className="btn-secondary btn-disconnect"
                 onClick={handleDisconnectWallet}
                 style={{
                   padding: '8px 12px',
@@ -4266,7 +4267,7 @@ export default function App() {
                 }}
               >
                 <LogOut size={14} />
-                <span>Disconnect</span>
+                <span className="btn-disconnect-text">Disconnect</span>
               </button>
             </div>
           ) : (

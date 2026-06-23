@@ -43,14 +43,16 @@ cron.schedule('*/10 * * * *', async () => {
 // ─── Boot ─────────────────────────────────────────────────
 async function boot() {
   await db.init();
-  await fetchAndStoreMatches(); // immediate first fetch
-  await fetchWorldCupNews();    // immediate first news crawl
 
   // Start on-chain keeper (auto-activates & resolves matches on X Layer)
   startKeeper(cron);
 
   app.listen(PORT, () => {
     console.log(`✅ GoalRush backend running on port ${PORT}`);
+    
+    // Run fetches asynchronously in the background so boot is not blocked
+    fetchAndStoreMatches().catch(err => console.error('[BOOT FETCH MATCHES ERR]', err.message));
+    fetchWorldCupNews().catch(err => console.error('[BOOT FETCH NEWS ERR]', err.message));
   });
 }
 

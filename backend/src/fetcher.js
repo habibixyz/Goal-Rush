@@ -10,7 +10,7 @@
 
 const axios = require('axios');
 const path = require('path');
-const { CheerioCrawler } = require('crawlee');
+const { CheerioCrawler } = require('@crawlee/cheerio');
 const db = require('./db');
 
 // Intercept child_process.spawn to mock 'ps' calls and prevent crashes on environments without procps/ps

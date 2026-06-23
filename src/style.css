@@ -27,11 +27,15 @@
   padding: 0;
 }
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 body {
   background-color: var(--color-bg);
   color: #f3f4f6;
   font-family: var(--font-body);
-  overflow-x: hidden;
   line-height: 1.5;
 }
 
@@ -143,6 +147,13 @@ input:focus-visible {
   padding: 24px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   font-family: var(--font-display);
+  gap: clamp(16px, 2.5vw, 32px); /* ensure logo, nav, and actions never touch or kiss */
+}
+
+.navbar nav {
+  display: flex;
+  align-items: center;
+  min-width: max-content; /* prevent the nav container from collapsing and causing overlap */
 }
 
 .logo-wrap {
@@ -163,12 +174,19 @@ input:focus-visible {
   background: linear-gradient(135deg, #ffffff 0%, var(--color-secondary) 50%, var(--color-primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  white-space: nowrap; /* prevent logo text wrapping */
 }
 
 .nav-links {
   display: flex;
-  gap: 32px;
+  align-items: center;
+  gap: clamp(12px, 2vw, 32px);
   list-style: none;
+}
+
+.nav-links li {
+  display: flex;
+  align-items: center;
 }
 
 .nav-links a,
@@ -187,6 +205,7 @@ input:focus-visible {
   border-radius: 4px;
   display: inline-flex;
   align-items: center;
+  white-space: nowrap; /* prevent text wrapping on navigation items */
 }
 
 .nav-links a:hover,
@@ -209,6 +228,7 @@ input:focus-visible {
   border-radius: 99px;
   font-size: 0.85rem;
   font-weight: 600;
+  white-space: nowrap; /* prevent network badge text wrapping */
 }
 
 .badge-dot {
@@ -1152,6 +1172,26 @@ input:focus-visible {
   gap: 8px;
 }
 
+.wallet-connected-wrapper > div {
+  white-space: nowrap; /* prevent wallet details card wrapping */
+}
+
+.wallet-text-compact {
+  display: none;
+}
+
+.wallet-text-full {
+  display: inline;
+}
+
+.badge-text {
+  display: inline;
+}
+
+.btn-disconnect-text {
+  display: inline;
+}
+
 @media (max-width: 768px) {
   .navbar {
     flex-direction: column;
@@ -1159,11 +1199,24 @@ input:focus-visible {
     padding: 16px 0;
     align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .navbar nav {
+    min-width: auto;
+    width: 100%;
+    justify-content: center;
   }
   
   .nav-links {
-    gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 16px;
     margin: 8px 0;
+    padding: 0;
+    width: 100%;
   }
   
   .nav-actions {
@@ -4151,6 +4204,14 @@ input:focus-visible {
     align-items: stretch;
     gap: 16px;
     padding: 16px 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  
+  .navbar nav {
+    width: 100%;
+    overflow: hidden; /* clip any subpixel horizontal overflow of scrolling links */
   }
   
   .logo-wrap {
@@ -4163,10 +4224,8 @@ input:focus-visible {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     gap: 8px;
-    padding: 4px 8px 12px;
-    margin: 0 -24px;
-    padding-left: 24px;
-    padding-right: 24px;
+    padding: 4px 16px 12px;
+    margin: 0 -16px; /* align scrolling container with screen padding */
     scrollbar-width: none;
   }
   
@@ -4205,17 +4264,18 @@ input:focus-visible {
     width: 100%;
     flex-direction: column;
     gap: 12px;
-    align-items: stretch;
+    align-items: center;
   }
   
   .badge-xlayer {
     justify-content: center;
     width: 100%;
+    max-width: 280px;
   }
   
   .wallet-connected-wrapper {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
     width: 100%;
     gap: 8px;
   }
@@ -4224,6 +4284,7 @@ input:focus-visible {
   .wallet-connected-wrapper > button {
     width: 100%;
     justify-content: center;
+    max-width: 280px;
   }
   
   .nav-actions > div {
@@ -4251,4 +4312,69 @@ input:focus-visible {
     align-items: center !important;
   }
 }
+
+/* Intermediate Desktop Optimizations to prevent Header Congestion */
+@media (min-width: 769px) and (max-width: 1250px) {
+  .navbar {
+    padding: 16px 0;
+  }
+  
+  .nav-links {
+    gap: 8px; /* tighter spacing to prevent overflowing the layout */
+  }
+  
+  .nav-btn, .nav-btn-link {
+    font-size: 0.85rem;
+    padding: 4px 6px;
+  }
+  
+  .logo-text {
+    font-size: 1.3rem;
+  }
+  
+  .nav-actions {
+    gap: 8px;
+  }
+  
+  .badge-xlayer {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+  
+  .wallet-connected-wrapper {
+    gap: 6px;
+  }
+  
+  .wallet-connected-wrapper > div,
+  .wallet-connected-wrapper > button {
+    padding: 6px 10px !important;
+    font-size: 0.8rem !important;
+  }
+}
+
+/* Compact headers between 769px and 1100px to ensure nothing overlaps or overflows */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .badge-text {
+    display: none !important;
+  }
+  
+  .btn-disconnect-text {
+    display: none !important;
+  }
+  
+  .wallet-text-full {
+    display: none !important;
+  }
+  
+  .wallet-text-compact {
+    display: inline !important;
+  }
+  
+  .btn-disconnect {
+    padding: 6px 8px !important;
+    gap: 0 !important;
+  }
+}
+
+
 

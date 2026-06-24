@@ -83,7 +83,7 @@ function mapDatabaseMatches(matches) {
       try {
         const matchDate = new Date(match.kickoff_utc || match.start_time || match.startTime);
         if (!isNaN(matchDate.getTime())) {
-          minuteDisplay = matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+          minuteDisplay = matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/New_York' }) + ' ET';
         } else {
           minuteDisplay = 'Upcoming';
         }
@@ -96,7 +96,7 @@ function mapDatabaseMatches(matches) {
     try {
       const matchDate = new Date(match.kickoff_utc || match.start_time || match.startTime);
       if (!isNaN(matchDate.getTime())) {
-        dateDisplay = matchDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        dateDisplay = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' }).format(matchDate);
       }
     } catch (e) {}
 
@@ -358,7 +358,7 @@ function mapFixtures(fixtures) {
     } else if (item.fixture.status.short === 'NS') {
       try {
         const matchDate = new Date(item.fixture.date);
-        minuteDisplay = matchDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        minuteDisplay = matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/New_York' }) + ' ET';
       } catch (e) {
         minuteDisplay = 'Upcoming';
       }
@@ -367,7 +367,7 @@ function mapFixtures(fixtures) {
     let dateDisplay = 'Today';
     try {
       const matchDate = new Date(item.fixture.date);
-      dateDisplay = matchDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      dateDisplay = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' }).format(matchDate);
     } catch (e) {}
 
     return {
@@ -433,7 +433,7 @@ function mapESPNFixtures(events) {
       try {
         const matchDate = new Date(event.date);
         if (!isNaN(matchDate.getTime())) {
-          minuteDisplay = matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+          minuteDisplay = matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/New_York' }) + ' ET';
         }
       } catch (e) {}
     }
@@ -442,7 +442,7 @@ function mapESPNFixtures(events) {
     try {
       const matchDate = new Date(event.date);
       if (!isNaN(matchDate.getTime())) {
-        dateDisplay = matchDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        dateDisplay = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' }).format(matchDate);
       }
     } catch (e) {}
 

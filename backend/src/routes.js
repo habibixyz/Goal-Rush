@@ -202,13 +202,13 @@ router.post('/news/:id/like', (req, res) => {
 router.post('/news/ingest', async (req, res) => {
   try {
     const logs = [];
-    logs.push(`[${new Date().toLocaleTimeString()}] > Initializing Web3 Oracle Connection...`);
-    logs.push(`[${new Date().toLocaleTimeString()}] > Crawlee Crawler connected to Sky Sports Football...`);
+    logs.push(`[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Initializing Web3 Oracle Connection...`);
+    logs.push(`[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Crawlee Crawler connected to Sky Sports Football...`);
     
     await fetchWorldCupNews();
     
-    logs.push(`[${new Date().toLocaleTimeString()}] > Crawlee parsing completed. DB upserted latest coverage.`);
-    logs.push(`[${new Date().toLocaleTimeString()}] > Oracle synchronization success!`);
+    logs.push(`[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Crawlee parsing completed. DB upserted latest coverage.`);
+    logs.push(`[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Oracle synchronization success!`);
     
     res.json({
       success: true,

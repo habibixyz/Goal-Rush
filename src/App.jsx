@@ -553,13 +553,30 @@ const BACKEND_API_BASE = window.location.hostname === 'localhost' || window.loca
 // Helper to get today/tomorrow date strings dynamically
 const getTodayLabel = () => {
   const d = new Date();
-  return `${d.toLocaleString('en-US', { month: 'long' })} ${d.getDate()}`;
+  return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'America/New_York' }).format(d);
 };
 const getTomorrowLabel = () => {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return `${d.toLocaleString('en-US', { month: 'long' })} ${d.getDate()}`;
+  const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'America/New_York' }).format(d);
 };
+
+const formatLocalTime = (timestamp) => {
+  if (!timestamp) return 'Upcoming';
+  const d = new Date(timestamp);
+  if (isNaN(d.getTime())) return 'Upcoming';
+  const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  const tzParts = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(d);
+  const tzName = tzParts.find(p => p.type === 'timeZoneName')?.value || '';
+  return `${timeStr} ${tzName}`.trim();
+};
+
+const formatLocalDate = (timestamp) => {
+  if (!timestamp) return 'TBD';
+  const d = new Date(timestamp);
+  if (isNaN(d.getTime())) return 'TBD';
+  return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(d);
+};
+
 const TODAY_LABEL = getTodayLabel();
 const TOMORROW_LABEL = getTomorrowLabel();
 
@@ -662,9 +679,9 @@ export default function App() {
   });
   const [newsCountdown, setNewsCountdown] = useState(600);
   const [oracleLogs, setOracleLogs] = useState([
-    `> Oracle console initialized at ${new Date().toLocaleTimeString()}`,
-    `[${new Date().toLocaleTimeString()}] > Connected to X Layer mempool & sports API sources.`,
-    `[${new Date().toLocaleTimeString()}] > Waiting for sync signal...`
+    `> Oracle console initialized at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET`,
+    `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Connected to X Layer mempool & sports API sources.`,
+    `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Waiting for sync signal...`
   ]);
   const [isIngesting, setIsIngesting] = useState(false);
 
@@ -698,7 +715,7 @@ export default function App() {
   const triggerOracleIngest = async () => {
     if (isIngesting) return;
     setIsIngesting(true);
-    setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] > Manual override triggered. Contacting backend...`]);
+    setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Manual override triggered. Contacting backend...`]);
     try {
       const response = await fetch(`${BACKEND_API_BASE}/news/ingest`, {
         method: 'POST'
@@ -710,13 +727,13 @@ export default function App() {
           await fetchNewsArticles();
           setNewsCountdown(600);
         } else {
-          setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] > Error: Ingestion failed: ${body.error}`]);
+          setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Error: Ingestion failed: ${body.error}`]);
         }
       } else {
-        setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] > Error: Server returned status ${response.status}`]);
+        setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Error: Server returned status ${response.status}`]);
       }
     } catch (e) {
-      setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] > Error: Ingestion failed: ${e.message}`]);
+      setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Error: Ingestion failed: ${e.message}`]);
     } finally {
       setIsIngesting(false);
     }
@@ -792,7 +809,7 @@ export default function App() {
     const interval = setInterval(() => {
       setNewsCountdown(prev => {
         if (prev <= 1) {
-          setOracleLogs(l => [...l, `[${new Date().toLocaleTimeString()}] > Scheduled 10-minute sync timer fired. Running ingestion...`]);
+          setOracleLogs(l => [...l, `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Scheduled 10-minute sync timer fired. Running ingestion...`]);
           fetchNewsArticles();
           return 600;
         }
@@ -1853,7 +1870,7 @@ export default function App() {
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '80px', minWidth: '80px', flexShrink: 0, textAlign: 'center' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: (m.isLive && m.minute !== 'FT') ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)', fontVariantNumeric: 'tabular-nums' }}>
-              {m.minute}
+              {m.isLive || m.minute === 'FT' ? m.minute : formatLocalTime(m.startTime)}
             </span>
             {m.isLive && m.minute !== 'FT' ? (
               <span style={{ fontSize: '0.6rem', color: '#ff3344', fontWeight: 700, marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -1896,7 +1913,7 @@ export default function App() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div className="match-hub-header">
           <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
-            {m.date} • {m.stadium.split(',')[0]}
+            {formatLocalDate(m.startTime)} • {m.stadium.split(',')[0]}
           </div>
 
           <div className="match-hub-teams">
@@ -2304,7 +2321,7 @@ export default function App() {
                   try {
                     const matchDate = new Date(match.kickoff_utc || match.start_time || match.startTime);
                     if (!isNaN(matchDate.getTime())) {
-                      minuteDisplay = matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                      minuteDisplay = matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/New_York' }) + ' ET';
                     }
                   } catch (e) {}
                 }
@@ -2313,7 +2330,7 @@ export default function App() {
                 try {
                   const matchDate = new Date(match.kickoff_utc || match.start_time || match.startTime);
                   if (!isNaN(matchDate.getTime())) {
-                    dateDisplay = `${matchDate.toLocaleString('en-US', { month: 'long' })} ${matchDate.getDate()}`;
+                    dateDisplay = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'America/New_York' }).format(matchDate);
                   }
                 } catch (e) {}
 
@@ -2363,9 +2380,8 @@ export default function App() {
         const getFutureTime = (hours) => nowMs + (hours * 60 * 60 * 1000);
 
         const getOffsetDateLabel = (daysOffset) => {
-          const d = new Date();
-          d.setDate(d.getDate() + daysOffset);
-          return `${d.toLocaleString('en-US', { month: 'long' })} ${d.getDate()}`;
+          const d = new Date(Date.now() + daysOffset * 24 * 60 * 60 * 1000);
+          return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'America/New_York' }).format(d);
         };
 
         const mocks = [
@@ -3969,7 +3985,7 @@ export default function App() {
       // Add to prediction history
       const newHistoryEntry = {
         id: Date.now(),
-        timestamp: new Date().toLocaleTimeString(),
+        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/New_York' }) + ' ET',
         match: `${activeMatch.teamA} vs ${activeMatch.teamB}`,
         prediction: prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw',
         amount: `${parsedAmount} ${selectedToken}`,
@@ -5415,7 +5431,7 @@ export default function App() {
 
                             <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '16px', marginLeft: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '80px' }}>
                               <span style={{ fontSize: '0.8rem', fontWeight: 600, color: (m.isLive && m.minute !== 'FT') ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)' }}>
-                                {m.minute}
+                                {m.isLive || m.minute === 'FT' ? m.minute : formatLocalTime(m.startTime)}
                               </span>
                               {m.isLive && m.minute !== 'FT' ? (
                                 <span
@@ -6944,7 +6960,7 @@ export default function App() {
                       <div className="article-meta-info">
                         <span className="article-category">{filteredArticles[0].category}</span>
                         <span className="article-dot">•</span>
-                        <span>{new Date(filteredArticles[0].published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        <span>{new Date(filteredArticles[0].published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' })} ET</span>
                       </div>
                       <h2 className="featured-title">{filteredArticles[0].title}</h2>
                       <p className="featured-summary">{filteredArticles[0].summary}</p>
@@ -6985,7 +7001,7 @@ export default function App() {
                       </div>
                       <div className="card-body-content">
                         <span className="card-date-lbl">
-                          {new Date(article.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          {new Date(article.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' })}
                         </span>
                         <h3 className="card-title-heading">{article.title}</h3>
                         <p className="card-summary-text">{article.summary}</p>
@@ -7042,7 +7058,7 @@ export default function App() {
                     <div className="modal-meta-row">
                       <span className="category-card-badge">{activeNewsArticle.category}</span>
                       <span className="modal-date-tag">
-                        {new Date(activeNewsArticle.published_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        {new Date(activeNewsArticle.published_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' })}
                       </span>
                     </div>
                     <h2 className="modal-title-h2" id="modal-article-title">{activeNewsArticle.title}</h2>

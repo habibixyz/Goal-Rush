@@ -143,11 +143,47 @@ router.get('/metadata/:username', (req, res) => {
       return res.status(404).json({ error: 'Card not found' });
     }
 
+    // Generate a simple but aesthetic SVG representing the player card
+    const svgString = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#1a1c29" />
+          <stop offset="100%" stop-color="#0f1015" />
+        </linearGradient>
+        <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${card.card_type === 'legendary' ? '#ffaa00' : card.card_type === 'diamond' ? '#00e5ff' : '#ffd700'}" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#bg)" rx="20" />
+      <rect width="100%" height="100%" fill="url(#glow)" rx="20" />
+      <rect x="10" y="10" width="380" height="580" fill="none" stroke="${card.card_type === 'legendary' ? '#ffaa00' : '#ffd700'}" stroke-width="4" rx="15" />
+      
+      <text x="50" y="100" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="#ffffff">${card.overall}</text>
+      <text x="50" y="140" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="${card.card_type === 'legendary' ? '#ffaa00' : '#ffd700'}">${card.position}</text>
+      
+      <circle cx="200" cy="250" r="80" fill="#2a2d3d" stroke="${card.card_type === 'legendary' ? '#ffaa00' : '#ffd700'}" stroke-width="4"/>
+      
+      <text x="200" y="400" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#ffffff" text-anchor="middle">${card.username}</text>
+      
+      <text x="70" y="460" font-family="Arial, sans-serif" font-size="20" fill="#aaaaaa">DeFi IQ: <tspan fill="#ffffff" font-weight="bold">${card.defi_iq}</tspan></text>
+      <text x="230" y="460" font-family="Arial, sans-serif" font-size="20" fill="#aaaaaa">Degen: <tspan fill="#ffffff" font-weight="bold">${card.degen_level}</tspan></text>
+      
+      <text x="70" y="500" font-family="Arial, sans-serif" font-size="20" fill="#aaaaaa">Predict: <tspan fill="#ffffff" font-weight="bold">${card.prediction_power}</tspan></text>
+      <text x="230" y="500" font-family="Arial, sans-serif" font-size="20" fill="#aaaaaa">Speed: <tspan fill="#ffffff" font-weight="bold">${card.swap_speed}</tspan></text>
+      
+      <text x="200" y="560" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="${card.card_type === 'legendary' ? '#ffaa00' : '#ffd700'}" text-anchor="middle">${card.card_type.toUpperCase()}</text>
+    </svg>`;
+
+    const base64Svg = Buffer.from(svgString).toString('base64');
+    const imageUri = `data:image/svg+xml;base64,${base64Svg}`;
+
     // Return ERC-721 metadata standard JSON
     const metadata = {
       name: `GoalRush Player: ${card.username}`,
       description: `Official GoalRush Degen World Cup Collectible for ${card.username}. Position: ${card.position}. OVR: ${card.overall}.`,
-      image: card.avatar_url,
+      image: imageUri,
       attributes: [
         { trait_type: 'Position', value: card.position },
         { trait_type: 'Overall', value: card.overall },

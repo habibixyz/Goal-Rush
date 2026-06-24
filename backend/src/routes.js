@@ -130,6 +130,43 @@ router.get('/cards', (req, res) => {
   }
 });
 
+// ── GET /api/metadata/:username ───────────────────────────
+router.get('/metadata/:username', (req, res) => {
+  try {
+    const username = req.params.username;
+    
+    // We need a specific DB query to find the card by username
+    const dbRaw = db.getDb();
+    const card = dbRaw.prepare('SELECT * FROM twitter_cards WHERE LOWER(username) = LOWER(?) COLLATE NOCASE OR LOWER(username) = LOWER(?) COLLATE NOCASE').get(username, '@' + username);
+    
+    if (!card) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+
+    // Return ERC-721 metadata standard JSON
+    const metadata = {
+      name: `GoalRush Player: ${card.username}`,
+      description: `Official GoalRush Degen World Cup Collectible for ${card.username}. Position: ${card.position}. OVR: ${card.overall}.`,
+      image: card.avatar_url,
+      attributes: [
+        { trait_type: 'Position', value: card.position },
+        { trait_type: 'Overall', value: card.overall },
+        { trait_type: 'DeFi IQ', value: card.defi_iq },
+        { trait_type: 'Prediction Power', value: card.prediction_power },
+        { trait_type: 'Jackpot Luck', value: card.jackpot_luck },
+        { trait_type: 'Degen Level', value: card.degen_level },
+        { trait_type: 'Swap Speed', value: card.swap_speed },
+        { trait_type: 'X-Factor', value: card.x_factor },
+        { trait_type: 'Card Type', value: card.card_type }
+      ]
+    };
+
+    res.json(metadata);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── POST /api/cards ───────────────────────────────────────
 router.post('/cards', (req, res) => {
   try {

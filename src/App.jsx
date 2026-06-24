@@ -1130,7 +1130,8 @@ export default function App() {
 
       const cardTypeLabel = twitterCard.card_type || 'gold';
       const cleanUser = twitterCard.username.replace('@', '').trim().toLowerCase();
-      const metadataUri = `https://goal-rush-frontend-production.up.railway.app/api/metadata/${cleanUser}`;
+      // Point directly to backend for future mints, bypassing frontend proxy
+      const metadataUri = `https://goal-rush-backend-production.up.railway.app/api/metadata/${cleanUser}`;
 
       let tx;
 
@@ -2729,6 +2730,13 @@ export default function App() {
   const [pastClaimResult, setPastClaimResult] = useState(null);
   const [pastClaimLoading, setPastClaimLoading] = useState(false);
 
+  // Swap Widget state
+  const [swapAmountOKB, setSwapAmountOKB] = useState('');
+  const [estimatedGrush, setEstimatedGrush] = useState('0.00');
+  const [isQuoting, setIsQuoting] = useState(false);
+  const [isSwapping, setIsSwapping] = useState(false);
+  const [swapStatus, setSwapStatus] = useState({ tone: 'idle', message: '' });
+
   const [centerMatchPredictions, setCenterMatchPredictions] = useState(null);
 
   useEffect(() => {
@@ -3735,6 +3743,172 @@ export default function App() {
     setCaCopied(true);
     setTimeout(() => setCaCopied(false), 2000);
     addLog(`Copied GRUSH CA: ${GRUSH_TOKEN_ADDRESS}`);
+  };
+
+  // === Uniswap V4 Pool Constants (GRUSH graduated from bonding curve) ===
+  const V4_POOL_KEY = {
+    currency0: '0x0000000000000000000000000000000000000000', // native OKB
+    currency1: GRUSH_TOKEN_ADDRESS,
+    fee: 3000,
+    tickSpacing: 60,
+    hooks: '0x026198469007ad6a9ffa9e161b7a2d6dce542088'
+  };
+  const UNIVERSAL_ROUTER = '0x8b844f885672f333bc0042cb669255f93a4c1e6b';
+  const POOL_MANAGER = '0x360e68faccca8ca495c1b759fd9eee466db9fb32';
+
+  const fetchSwapQuote = async (val) => {
+    if (!val || isNaN(val) || parseFloat(val) <= 0) {
+      setEstimatedGrush('0.00');
+      return;
+    }
+    setIsQuoting(true);
+    try {
+      const provider = new ethers.JsonRpcProvider('https://rpc.xlayer.tech');
+      const pm = new ethers.Contract(POOL_MANAGER, [
+        "function extsload(bytes32 slot) external view returns (bytes32)"
+      ], provider);
+
+      // Compute poolId from PoolKey
+      const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+      const poolId = ethers.keccak256(abiCoder.encode(
+        ["address", "address", "uint24", "int24", "address"],
+        [V4_POOL_KEY.currency0, V4_POOL_KEY.currency1, V4_POOL_KEY.fee, V4_POOL_KEY.tickSpacing, V4_POOL_KEY.hooks]
+      ));
+
+      // Read slot0 from PoolManager storage (mapping slot index 6)
+      const slot0Key = ethers.keccak256(abiCoder.encode(["bytes32", "uint256"], [poolId, 6n]));
+      const slot0Data = await pm.extsload(slot0Key);
+
+      // Parse sqrtPriceX96 (last 160 bits = 40 hex chars)
+      const dataHex = slot0Data.slice(2);
+      const sqrtPriceX96 = BigInt("0x" + dataHex.slice(64 - 40));
+
+      // Price = (sqrtPriceX96 / 2^96)^2; amountOut = amountIn * price
+      const amountIn = ethers.parseEther(val);
+      const Q96 = 2n ** 96n;
+      const amountOut = (amountIn * sqrtPriceX96 * sqrtPriceX96) / (Q96 * Q96);
+
+      // Apply 0.3% fee estimate
+      const amountOutAfterFee = (amountOut * 997n) / 1000n;
+      const formatted = ethers.formatEther(amountOutAfterFee);
+      setEstimatedGrush(parseFloat(formatted).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      setSwapStatus({ tone: 'idle', message: '' });
+    } catch (e) {
+      console.error("Quoting failed:", e);
+      setEstimatedGrush('0.00');
+      setSwapStatus({ tone: 'error', message: 'Could not fetch V4 pool quote.' });
+    } finally {
+      setIsQuoting(false);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchSwapQuote(swapAmountOKB);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [swapAmountOKB]);
+
+  const executeSwap = async (e) => {
+    if (e) e.preventDefault();
+    if (!walletConnected || !userAddress) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+    if (!swapAmountOKB || isNaN(swapAmountOKB) || parseFloat(swapAmountOKB) <= 0) {
+      alert("Please enter a valid OKB amount.");
+      return;
+    }
+    
+    setIsSwapping(true);
+    setSwapStatus({ tone: 'progress', message: 'Initiating V4 swap via Universal Router...' });
+    
+    try {
+      const provider = getProvider();
+      if (!provider) throw new Error("No wallet provider detected.");
+      
+      const web3Provider = new ethers.BrowserProvider(provider);
+      const signer = await web3Provider.getSigner();
+      const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+      
+      const amountIn = ethers.parseEther(swapAmountOKB);
+      const parsedGrushQuote = parseFloat(estimatedGrush.replace(/,/g, ''));
+      const minAmountOut = isNaN(parsedGrushQuote) || parsedGrushQuote <= 0 
+        ? 0n 
+        : ethers.parseEther((parsedGrushQuote * 0.95).toFixed(6)); // 5% slippage
+
+      // V4 Action constants
+      const SWAP_EXACT_IN_SINGLE = 0x06;
+      const SETTLE_ALL = 0x0c;
+      const TAKE_ALL = 0x0f;
+      const V4_SWAP_CMD = 0x10;
+
+      // 1. Encode ExactInputSingleParams
+      const swapParams = abiCoder.encode(
+        ["tuple(tuple(address,address,uint24,int24,address),bool,uint128,uint128,bytes)"],
+        [[
+          [V4_POOL_KEY.currency0, V4_POOL_KEY.currency1, V4_POOL_KEY.fee, V4_POOL_KEY.tickSpacing, V4_POOL_KEY.hooks],
+          true, // zeroForOne: OKB → GRUSH
+          amountIn,
+          minAmountOut,
+          "0x" // empty hookData
+        ]]
+      );
+
+      // 2. Encode SETTLE_ALL params: (currency, maxAmount)
+      const settleParams = abiCoder.encode(
+        ["address", "uint128"],
+        [V4_POOL_KEY.currency0, amountIn]
+      );
+
+      // 3. Encode TAKE_ALL params: (currency, minAmount)
+      const takeParams = abiCoder.encode(
+        ["address", "uint128"],
+        [V4_POOL_KEY.currency1, minAmountOut]
+      );
+
+      // 4. Encode actions bytes
+      const actions = ethers.concat([
+        new Uint8Array([SWAP_EXACT_IN_SINGLE]),
+        new Uint8Array([SETTLE_ALL]),
+        new Uint8Array([TAKE_ALL])
+      ]);
+
+      // 5. Encode the V4_SWAP input
+      const v4SwapInput = abiCoder.encode(
+        ["bytes", "bytes[]"],
+        [actions, [swapParams, settleParams, takeParams]]
+      );
+
+      // 6. Build and execute via Universal Router
+      const deadline = Math.floor(Date.now() / 1000) + 1200; // 20 min
+      const routerContract = new ethers.Contract(UNIVERSAL_ROUTER, [
+        "function execute(bytes calldata commands, bytes[] calldata inputs, uint256 deadline) external payable"
+      ], signer);
+
+      const tx = await routerContract.execute(
+        new Uint8Array([V4_SWAP_CMD]),
+        [v4SwapInput],
+        deadline,
+        { value: amountIn }
+      );
+      
+      setSwapStatus({ tone: 'progress', message: `Transaction submitted! Hash: ${tx.hash.substring(0, 10)}... waiting for confirmation...` });
+      
+      await tx.wait(1);
+      
+      setSwapStatus({ tone: 'success', message: `Successfully bought GRUSH via Uniswap V4! Transaction confirmed.` });
+      addLog(`Bought GRUSH with ${swapAmountOKB} OKB via Uniswap V4 pool.`);
+      
+      updateBalance(userAddress);
+      updateGrushBalance(userAddress);
+    } catch (e) {
+      console.error("Swap failed:", e);
+      setSwapStatus({ tone: 'error', message: `Swap failed: ${e.reason || e.message || e}` });
+    } finally {
+      setIsSwapping(false);
+    }
   };
 
   const handlePredictionChange = (teamId) => {
@@ -5141,8 +5315,103 @@ export default function App() {
                     </button>
                   </div>
 
+                  {/* On-Chain Swap Widget */}
+                  <div style={{
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderRadius: '8px',
+                    padding: '10px',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px'
+                  }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      ⚡ Quick Swap OKB for GRUSH
+                    </div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      {/* You Pay OKB */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>You Pay (OKB)</span>
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', padding: '4px 8px' }}>
+                          <input
+                            type="text"
+                            placeholder="0.0"
+                            value={swapAmountOKB}
+                            onChange={(e) => setSwapAmountOKB(e.target.value)}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#fff',
+                              fontSize: '0.8rem',
+                              fontFamily: 'var(--font-mono)',
+                              width: '100%',
+                              outline: 'none'
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* You Receive GRUSH */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>You Receive (Est)</span>
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', padding: '4px 8px', height: '28px' }}>
+                          <span style={{
+                            color: isQuoting ? 'var(--color-primary)' : '#fff',
+                            fontSize: '0.8rem',
+                            fontFamily: 'var(--font-mono)',
+                            width: '100%',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {isQuoting ? 'Quoting...' : `${estimatedGrush} GRUSH`}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={!walletConnected ? handleConnectWallet : executeSwap}
+                      disabled={walletConnected && (isSwapping || isQuoting || !swapAmountOKB || parseFloat(swapAmountOKB) <= 0 || chainId !== 196)}
+                      style={{
+                        background: 'linear-gradient(135deg, var(--color-primary) 0%, #7dbf00 100%)',
+                        border: 'none',
+                        color: '#000',
+                        fontWeight: 700,
+                        borderRadius: '6px',
+                        padding: '8px',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s',
+                        opacity: (walletConnected && (isSwapping || isQuoting || !swapAmountOKB || parseFloat(swapAmountOKB) <= 0 || chainId !== 196)) ? 0.6 : 1
+                      }}
+                    >
+                      {isSwapping ? 'Swapping...' : !walletConnected ? 'Connect Wallet' : chainId !== 196 ? 'Switch to X Layer' : 'Buy GRUSH'}
+                    </button>
+
+                    {swapStatus.message && (
+                      <div style={{
+                        fontSize: '0.65rem',
+                        color: swapStatus.tone === 'error' ? '#ff4d4d' : swapStatus.tone === 'success' ? 'var(--color-primary)' : 'var(--color-secondary)',
+                        background: 'rgba(0,0,0,0.2)',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        border: swapStatus.tone === 'error' ? '1px solid rgba(255,77,77,0.1)' : '1px solid rgba(157, 255, 0, 0.1)',
+                        lineHeight: '1.3'
+                      }}>
+                        {swapStatus.message}
+                      </div>
+                    )}
+                  </div>
+
                   {/* Quick actions grid */}
-                  <div className="grush-hub-actions" style={{ display: 'grid', gap: '8px' }}>
+                  <div className="grush-hub-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                     <button
                       type="button"
                       onClick={handleAddGrushToWallet}

@@ -131,16 +131,56 @@ router.get('/cards', (req, res) => {
 });
 
 // ── GET /api/metadata/:username ───────────────────────────
-router.get('/metadata/:username', (req, res) => {
+router.get('/metadata/:username', async (req, res) => {
   try {
     const username = req.params.username;
     
     // We need a specific DB query to find the card by username
     const dbRaw = db.getDb();
-    const card = dbRaw.prepare('SELECT * FROM twitter_cards WHERE LOWER(username) = LOWER(?) COLLATE NOCASE OR LOWER(username) = LOWER(?) COLLATE NOCASE').get(username, '@' + username);
+    let card = dbRaw.prepare('SELECT * FROM twitter_cards WHERE LOWER(username) = LOWER(?) COLLATE NOCASE OR LOWER(username) = LOWER(?) COLLATE NOCASE').get(username, '@' + username);
     
     if (!card) {
-      return res.status(404).json({ error: 'Card not found' });
+      console.log(`Card ${username} not found in local DB. Querying blockchain fallback...`);
+      // Fallback: Query the blockchain directly if DB was reset
+      const { ethers } = require('ethers');
+      const provider = new ethers.JsonRpcProvider('https://xlayerrpc.okx.com');
+      const nftAddress = '0xd30b894bbD3185737c5D6a276367A4fEDF44de5C';
+      const nftAbi = [
+        "function nextTokenId() view returns (uint256)",
+        "function getCard(uint256 tokenId) view returns (tuple(string username, string pos, uint8 overall, uint8 defi_iq, uint8 prediction_power, uint8 jackpot_luck, uint8 degen_level, uint8 swap_speed, uint8 x_factor, string card_type, uint256 mintTime))"
+      ];
+      const contract = new ethers.Contract(nftAddress, nftAbi, provider);
+      
+      const nextId = await contract.nextTokenId();
+      for (let i = 1n; i < nextId; i++) {
+        try {
+          const onchainCard = await contract.getCard(i);
+          const cleanOnchainUser = onchainCard.username.replace('@', '').toLowerCase();
+          const cleanSearchUser = username.replace('@', '').toLowerCase();
+          
+          if (cleanOnchainUser === cleanSearchUser) {
+            card = {
+              username: onchainCard.username,
+              position: onchainCard.pos,
+              overall: Number(onchainCard.overall),
+              defi_iq: Number(onchainCard.defi_iq),
+              prediction_power: Number(onchainCard.prediction_power),
+              jackpot_luck: Number(onchainCard.jackpot_luck),
+              degen_level: Number(onchainCard.degen_level),
+              swap_speed: Number(onchainCard.swap_speed),
+              x_factor: Number(onchainCard.x_factor),
+              card_type: onchainCard.card_type
+            };
+            break;
+          }
+        } catch (err) {
+          continue;
+        }
+      }
+      
+      if (!card) {
+        return res.status(404).json({ error: 'Card not found on-chain or in database' });
+      }
     }
 
     // Generate a simple but aesthetic SVG representing the player card

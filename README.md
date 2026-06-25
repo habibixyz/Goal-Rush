@@ -33,6 +33,25 @@ npx pm2 logs goalrush-keeper
 npx pm2 restart goalrush-keeper
 ```
 
+## 🧠 Autonomous Open AGI Prediction Agent (Sentient Grant)
+
+GoalRush acts as the execution sandbox for an **Autonomous Open AGI Agent** built to interact safely with decentralized prediction markets. The agent is built to demonstrate a "Hard Boundary" security architecture, proving that open-source models (like Llama-3) can securely operate on-chain without exposing private keys to prompt-injection vulnerabilities.
+
+### How the AGI Agent Works
+1. **Data Ingestion:** The agent wakes up every 10 minutes and reads the latest live football news and match schedules from the backend database.
+2. **Open Model Reasoning:** It securely queries an open-source LLM (e.g., Llama-3 via Groq) with the news data and requests a strict single-digit prediction (`1`, `2`, or `3`).
+3. **Hard Boundary Execution:** The Node.js execution layer enforces hardcoded betting limits (e.g., `0.0001 OKB`) and strictly parses the AI's output. The AI *never* sees the wallet private key or constructs the transaction payload, making it cryptographically immune to wallet-draining prompt injections.
+4. **Auto-Compounding:** The agent autonomously monitors the blockchain for resolved matches it previously bet on. If it won, it automatically executes a `claimJackpot` transaction to pull the winnings back into its wallet, acting as a fully closed-loop financial agent.
+
+**To run the AGI Agent locally:**
+```bash
+# Ensure GROQ_API_KEY and PRIVATE_KEY are set in your .env
+node backend/src/goalrush-ai-agent.cjs
+```
+*(Note: The agent is automatically spawned by PM2 or Railway when starting the backend server).*
+
+---
+
 ## ⚽ Core Innovation
 
 In Uniswap V4, hooks can run arbitrary logic before and after pool transactions. GoalRush utilizes this capability to create two unique mechanisms for World Cup fans:

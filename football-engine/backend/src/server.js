@@ -6,12 +6,16 @@ const { resolveFinishedMatches } = require('./resolver');
 const db = require('./db');
 const routes = require('./routes');
 const { runKeeper } = require('./keeper');
+const { updateAccessPassPrice } = require('./price-keeper');
+
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors({ origin: '*' }));
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // ─── Routes ───────────────────────────────────────────────
 app.use('/api', routes);
@@ -37,6 +41,12 @@ cron.schedule('*/3 * * * *', async () => {
 // Run keeper bot to activate matches every 1 minute
 cron.schedule('* * * * *', async () => {
   await runKeeper();
+});
+
+// Update AccessPass mint price every 10 minutes to keep it at ~$10
+cron.schedule('*/10 * * * *', async () => {
+  console.log('[CRON] Updating AccessPass mint price...');
+  await updateAccessPassPrice();
 });
 
 // ─── Boot ─────────────────────────────────────────────────

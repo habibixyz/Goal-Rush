@@ -5,7 +5,7 @@ import confetti from 'canvas-confetti'
 import goalRushLogo from './assets/logo.png'
 import SoccerBall3D from './components/SoccerBall3D'
 import currentHookSolidityCode from '../contracts/WorldCupGoalRushHook.sol?raw'
-import collectibleSolidityCode from '../contracts/GoalRushCollectible.sol?raw'
+import collectibleSolidityCode from '../contracts/AccessPass.sol?raw'
 import {
   Coins,
   Terminal as TerminalIcon,
@@ -581,6 +581,7 @@ const formatLocalDate = (timestamp) => {
 
 const TODAY_LABEL = getTodayLabel();
 const TOMORROW_LABEL = getTomorrowLabel();
+const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
 
 export default function App() {
   const getNumericMatchId = (matchId) => {
@@ -696,6 +697,9 @@ export default function App() {
   const [recentCards, setRecentCards] = useState([])
   const [isMintingCard, setIsMintingCard] = useState(false)
   const [mintStatus, setMintStatus] = useState('')
+  const [accessPassSupply, setAccessPassSupply] = useState('0');
+  const ACCESS_PASS_ADDRESS = '0x953a03161A2e4be8E5e8405B74a254B336cdBe97'; // UPDATE ME AFTER DEPLOYMENT
+  const [grushPriceUsd, setGrushPriceUsd] = useState(null);
   const [viewedCard, setViewedCard] = useState(null) // For viewing other users' cards from gallery
 
   const fetchNewsArticles = useCallback(async () => {
@@ -926,6 +930,40 @@ export default function App() {
       document.head.appendChild(script);
     }
   }, [currentView, activeNewsArticle]);
+
+  const fetchAccessPassSupply = useCallback(async () => {
+    try {
+      if (!window.ethereum && !rpcProvider) return;
+      const provider = window.ethereum ? new ethers.BrowserProvider(window.ethereum) : rpcProvider;
+      if (ACCESS_PASS_ADDRESS !== '0x0000000000000000000000000000000000000000') {
+        const accessPassAbi = ["function totalSupply() external view returns (uint256)"];
+        const contract = new ethers.Contract(ACCESS_PASS_ADDRESS, accessPassAbi, provider);
+        const supply = await contract.totalSupply();
+        setAccessPassSupply(supply.toString());
+      }
+    } catch (e) {
+      console.warn("Failed to fetch access pass supply", e);
+    }
+  }, [rpcProvider]);
+
+  const fetchGrushPrice = useCallback(async () => {
+    try {
+      const res = await fetch('https://api.geckoterminal.com/api/v2/networks/x-layer/pools/0xd639d7f0dc532caec7e31703281519f9e59a027a93ab71df3257ef9454fbef4f');
+      if (res.ok) {
+        const json = await res.json();
+        const price = parseFloat(json?.data?.attributes?.base_token_price_usd);
+        if (price && price > 0) setGrushPriceUsd(price);
+      }
+    } catch (e) {
+      console.warn('Failed to fetch GRUSH price:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchGrushPrice();
+    const interval = setInterval(fetchGrushPrice, 60000);
+    return () => clearInterval(interval);
+  }, [fetchGrushPrice]);
 
   const fetchRecentCards = useCallback(async () => {
     try {
@@ -1250,6 +1288,65 @@ export default function App() {
       console.error(err);
       addLog(`[Mint NFT Error] ${err.message || err}`);
       alert(`Minting failed: ${err.message || err}`);
+    } finally {
+      setIsMintingCard(false);
+      setMintStatus('');
+    }
+  };
+
+  const handleMintAccessPass = async () => {
+    if (!walletConnected || !userAddress) {
+      handleConnectWallet();
+      return;
+    }
+    setIsMintingCard(true);
+    setMintStatus('Initializing Access Pass mint...');
+    try {
+      const provider = new ethers.BrowserProvider(getProvider());
+      const signer = await provider.getSigner();
+
+      const tokenAbi = [
+        "function approve(address spender, uint256 amount) external returns (bool)",
+        "function allowance(address owner, address spender) external view returns (uint256)",
+        "function balanceOf(address account) external view returns (uint256)"
+      ];
+      const tokenContract = new ethers.Contract(GRUSH_TOKEN_ADDRESS, tokenAbi, signer);
+
+      const passAbi = ["function mint() external", "function mintPrice() external view returns (uint256)"];
+      const passContract = new ethers.Contract(ACCESS_PASS_ADDRESS, passAbi, signer);
+
+      setMintStatus('Reading mint price from contract...');
+      const mintFee = await passContract.mintPrice();
+      const mintFeeFormatted = parseFloat(ethers.formatEther(mintFee)).toLocaleString();
+
+      const balance = await tokenContract.balanceOf(userAddress);
+      if (balance < mintFee) {
+        throw new Error(`Insufficient GRUSH balance. You need ${mintFeeFormatted} GRUSH ($10) to mint an Access Pass.`);
+      }
+
+      setMintStatus('Checking GRUSH allowance...');
+      const allowance = await tokenContract.allowance(userAddress, ACCESS_PASS_ADDRESS);
+      if (allowance < mintFee) {
+        setMintStatus(`Approving ${mintFeeFormatted} $GRUSH for Access Pass...`);
+        const approveTx = await tokenContract.approve(ACCESS_PASS_ADDRESS, mintFee);
+        await approveTx.wait();
+      }
+
+      setMintStatus('Confirm mint transaction in your wallet...');
+      const tx = await passContract.mint();
+      setMintStatus('Waiting for on-chain confirmation...');
+      await tx.wait();
+
+      addLog(`[Access Pass] Successfully minted! TX: ${tx.hash.slice(0, 14)}...`);
+      alert('🎉 Successfully minted your GoalRush VIP Access Pass!');
+      updateGrushBalance(userAddress);
+    } catch (err) {
+      console.error(err);
+      const reason = parseRevertReason(err);
+      addLog(`[Access Pass Error] ${reason || err.message || err}`);
+      if (reason !== "Transaction cancelled in your wallet.") {
+        alert(`Mint failed: ${reason || err.message || err}`);
+      }
     } finally {
       setIsMintingCard(false);
       setMintStatus('');
@@ -5789,226 +5886,50 @@ export default function App() {
                 )}
               </div>
 
-              {/* Crypto Twitter Football Cards */}
+              {/* VIP Access Pass */}
               <div className="card-bezel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
-                  <h3 className="panel-title">
-                    <Award size={20} style={{ color: 'var(--color-secondary)' }} />
-                    Crypto Twitter Cards
+                  <h3 className="panel-title" style={{ color: 'var(--color-primary)', textShadow: '0 0 10px rgba(157,255,0,0.3)' }}>
+                    <Award size={20} />
+                    GoalRush Access Pass
                   </h3>
-                  <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '12px' }}>
-                    Generate your custom football card using your X (Twitter) handle and mint it as a GoalRush collectible!
+                  <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginBottom: '8px', lineHeight: '1.4' }}>
+                    Guarantees exclusive gated access to VIP prediction pools and zero-fee token swaps.
                   </p>
                 </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px', position: 'relative' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(circle at center, rgba(157,255,0,0.2) 0%, transparent 70%)', filter: 'blur(20px)', zIndex: 0 }}></div>
+                  <img 
+                    src="/access-pass.png" 
+                    alt="GoalRush Access Pass" 
+                    style={{ 
+                      width: '100%', 
+                      maxWidth: '300px', 
+                      borderRadius: '16px', 
+                      boxShadow: '0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(157,255,0,0.15)', 
+                      border: '1px solid rgba(157,255,0,0.3)',
+                      zIndex: 1,
+                      position: 'relative'
+                    }} 
+                  />
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(0,0,0,0.4)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px' }}>Supply</span>
+                    <span style={{ fontSize: '1.15rem', fontWeight: 'bold', color: '#fff' }}>{accessPassSupply} / 1000</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px' }}>Mint Price</span>
+                    <span style={{ fontSize: '1.15rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>$10</span>
+                    <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }}>
+                      {grushPriceUsd ? `≈ ${Math.ceil(10 / grushPriceUsd).toLocaleString()} $GRUSH` : 'Loading price...'}
+                    </span>
+                  </div>
+                </div>
 
-                <div className="football-card-section">
-                  {!(twitterCard || viewedCard) ? (
-                    /* Skeleton / Blank Preview State */
-                    <div className="psa-slab-container">
-                      <div className="psa-slab" style={{ opacity: 0.65, cursor: 'default' }}>
-                        <div className="card-gloss"></div>
-                        
-                        {/* PSA Label */}
-                        <div className="psa-label">
-                          <div className="psa-label-left">
-                            <div className="psa-label-brand">2026 GOALRUSH DEGENS</div>
-                            <div className="psa-label-username">@TWITTER_HANDLE</div>
-                            <div className="psa-label-pos">POSITION - ROLE</div>
-                          </div>
-                          <div className="psa-label-right">
-                            <div className="psa-grade-title">GEM MT</div>
-                            <div className="psa-grade-score">10</div>
-                            <div className="psa-grade-ovr">OVR: --</div>
-                          </div>
-                          <div className="psa-label-bottom">
-                            <div className="psa-barcode">
-                              <span className="b-thin"></span><span className="b-thick"></span><span className="b-med"></span>
-                              <span className="b-thin"></span><span className="b-thick"></span><span className="b-thin"></span>
-                              <span className="b-med"></span><span className="b-thick"></span><span className="b-med"></span>
-                              <span className="b-thin"></span>
-                            </div>
-                            <span className="psa-cert-num">00000000</span>
-                            <div className="psa-label-logo">GRUSH</div>
-                          </div>
-                        </div>
-
-                        <div className="psa-divider"></div>
-
-                        {/* Football Card Inside */}
-                        <div className="football-card card-tier-gold">
-                          <div className="card-shield-border"></div>
-                          <div className="card-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
-                            <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>⚽</div>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.6)' }}>NO CARD CONNECTED</span>
-                            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: '6px', padding: '0 10px' }}>
-                              Input handle below to generate PSA-graded collectible.
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    /* Active Card View State */
-                    <div className="psa-slab-container">
-                      {(() => {
-                        const currentCard = viewedCard || twitterCard;
-                        const cleanUser = currentCard.username.replace('@', '').toUpperCase();
-                        
-                        // Deterministic cert number
-                        let certHash = 0;
-                        for (let i = 0; i < cleanUser.length; i++) {
-                          certHash = cleanUser.charCodeAt(i) + ((certHash << 5) - certHash);
-                        }
-                        const certNumber = Math.abs(certHash).toString().substring(0, 8).padEnd(8, '0');
-                        
-                        // Grade text depending on OVR
-                        let gradeTitle = 'GEM MT';
-                        let gradeScore = '10';
-                        if (currentCard.overall >= 93) {
-                          gradeTitle = 'GEM MT';
-                          gradeScore = '10';
-                        } else if (currentCard.overall >= 86) {
-                          gradeTitle = 'MINT';
-                          gradeScore = '9';
-                        } else if (currentCard.overall >= 78) {
-                          gradeTitle = 'NM-MT';
-                          gradeScore = '8';
-                        } else {
-                          gradeTitle = 'EX-MT';
-                          gradeScore = '6';
-                        }
-
-                        return (
-                          <div 
-                            className="psa-slab"
-                            onMouseMove={handleCardMouseMove}
-                            onMouseLeave={handleCardMouseLeave}
-                          >
-                            <div className="card-gloss"></div>
-
-                            {/* PSA Label */}
-                            <div className="psa-label">
-                              <div className="psa-label-left">
-                                <div className="psa-label-brand">2026 GOALRUSH DEGENS</div>
-                                <div className="psa-label-username">@{cleanUser}</div>
-                                <div className="psa-label-pos">{currentCard.position}</div>
-                              </div>
-                              <div className="psa-label-right">
-                                <div className="psa-grade-title">{gradeTitle}</div>
-                                <div className="psa-grade-score">{gradeScore}</div>
-                                <div className="psa-grade-ovr">OVR: {currentCard.overall}</div>
-                              </div>
-                              <div className="psa-label-bottom">
-                                <div className="psa-barcode">
-                                  {certNumber.split('').map((char, idx) => {
-                                    const val = parseInt(char) || 0;
-                                    const thickness = val % 3 === 0 ? 'b-thin' : val % 3 === 1 ? 'b-med' : 'b-thick';
-                                    return <span key={idx} className={thickness}></span>;
-                                  })}
-                                  <span className="b-thin"></span>
-                                  <span className="b-med"></span>
-                                </div>
-                                <span className="psa-cert-num">{certNumber}</span>
-                                <div className="psa-label-logo">GRUSH</div>
-                              </div>
-                            </div>
-
-                            <div className="psa-divider"></div>
-
-                            {/* Inner Football Card */}
-                            <div className={`football-card card-tier-${currentCard.card_type}`}>
-                              <div className="card-shield-border"></div>
-                              
-                              {currentCard.tx_hash && (
-                                <div className="card-minted-badge">MINTED</div>
-                              )}
-
-                              <div className="card-layout">
-                                {/* Top Stats */}
-                                <div className="card-top-left">
-                                  <div className="card-ovr">{currentCard.overall}</div>
-                                  <div className="card-pos">{currentCard.posAbbr}</div>
-                                  <img 
-                                    className="card-top-flag" 
-                                    src={getFlagUrl(currentCard.flagCode)} 
-                                    alt={currentCard.flagCode} 
-                                    style={{ width: '22px', height: '14px', objectFit: 'cover', borderRadius: '1.5px', marginTop: '3px', border: '1px solid rgba(255,255,255,0.2)' }}
-                                  />
-                                  <span style={{ fontSize: '0.9rem', marginTop: '3px' }}>
-                                    {currentCard.posAbbr === 'ST' ? '⚽' : currentCard.posAbbr === 'CM' ? '💎' : currentCard.posAbbr === 'CB' ? '🛡️' : '🧤'}
-                                  </span>
-                                </div>
-
-                                {/* Avatar */}
-                                <div className="card-avatar-wrap">
-                                  <div className="card-avatar-shield">
-                                    <img 
-                                      className="card-avatar" 
-                                      src={currentCard.avatar_url} 
-                                      alt={currentCard.username} 
-                                      onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src = 'https://unavatar.io/placeholder.png';
-                                      }}
-                                    />
-                                  </div>
-                                  <div className="card-avatar-border"></div>
-                                </div>
-
-                                {/* Player Name */}
-                                <div className="card-player-name">{currentCard.username}</div>
-
-                                {/* Stats Panel */}
-                                <div className="card-stats-grid">
-                                  <div className="card-stat-item">
-                                    <span className="card-stat-lbl">DFI</span>
-                                    <span className="card-stat-val">{currentCard.defi_iq}</span>
-                                  </div>
-                                  <div className="card-stat-item">
-                                    <span className="card-stat-lbl">DGN</span>
-                                    <span className="card-stat-val">{currentCard.degen_level}</span>
-                                  </div>
-                                  <div className="card-stat-item">
-                                    <span className="card-stat-lbl">PRD</span>
-                                    <span className="card-stat-val">{currentCard.prediction_power}</span>
-                                  </div>
-                                  <div className="card-stat-item">
-                                    <span className="card-stat-lbl">SPD</span>
-                                    <span className="card-stat-val">{currentCard.swap_speed}</span>
-                                  </div>
-                                  <div className="card-stat-item">
-                                    <span className="card-stat-lbl">LUK</span>
-                                    <span className="card-stat-val">{currentCard.jackpot_luck}</span>
-                                  </div>
-                                  <div className="card-stat-item">
-                                    <span className="card-stat-lbl">XFC</span>
-                                    <span className="card-stat-val">{currentCard.x_factor}</span>
-                                  </div>
-                                </div>
-
-                                <div className="card-playstyle-badge">
-                                  <span>⚡</span> PLAYSTYLE: {
-                                    currentCard.posAbbr === 'ST' ? 'ARBITRAGE HUNTER' :
-                                    currentCard.posAbbr === 'CM' ? 'LIQUIDITY CATALYST' :
-                                    currentCard.posAbbr === 'CB' ? 'SLIPPAGE SHADOW' :
-                                    'MEV GUARDIAN'
-                                  }
-                                </div>
-
-                          
-                                {/* Footer */}
-                                <div className="card-logo-row">
-                                  <span className="card-footer-text">GOALRUSH collectible</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  {/* Mint Status Notification */}
+                {/* Mint Status Notification */}
                   {mintStatus && (
                     <div style={{
                       padding: '10px',
@@ -6024,200 +5945,24 @@ export default function App() {
                       {mintStatus}
                     </div>
                   )}
-
-                  {/* Input Form Controls */}
-                  {!(twitterCard) ? (
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
-                        <span style={{ position: 'absolute', left: '12px', color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-mono)' }}>@</span>
-                        <input
-                          type="text"
-                          placeholder="twitter_handle"
-                          value={twitterUsername}
-                          onChange={(e) => setTwitterUsername(e.target.value.replace('@', ''))}
-                          style={{
-                            width: '100%',
-                            background: 'rgba(255,255,255,0.03)',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            borderRadius: '8px',
-                            padding: '10px 12px 10px 28px',
-                            color: '#fff',
-                            fontSize: '0.9rem',
-                            outline: 'none',
-                            fontFamily: 'var(--font-mono)'
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleConnectTwitter();
-                          }}
-                        />
-                      </div>
-                      <button
-                        onClick={handleConnectTwitter}
-                        className="btn-primary"
-                        style={{ padding: '10px 16px', borderRadius: '8px', fontSize: '0.85rem' }}
-                      >
-                        <Twitter size={14} /> Connect X
-                      </button>
-                    </div>
-                  ) : (
-                    /* Connected Action Buttons */
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                          onClick={handleDownloadCard}
-                          className="btn-secondary"
-                          style={{ flex: 1, padding: '10px', borderRadius: '8px', fontSize: '0.8rem', justifyContent: 'center' }}
-                        >
-                          <Download size={14} /> Download Card
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            const cardData = viewedCard || twitterCard;
-                            const shareText = `Check out my customized @GoalRush holographic football card! OVR: ${cardData.overall} | DeFi IQ: ${cardData.defi_iq} | Degen Level: ${cardData.degen_level}! Generate yours with GRUSH at goalrush.fun ⚽🏆`;
-                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, '_blank');
-                          }}
-                          className="btn-secondary"
-                          style={{ flex: 1, padding: '10px', borderRadius: '8px', fontSize: '0.8rem', justifyContent: 'center' }}
-                        >
-                          <Twitter size={14} /> Share on X
-                        </button>
-                      </div>
-
-                      {/* Mint NFT button */}
-                      {!(viewedCard || twitterCard?.tx_hash) && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-                          <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: '2px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-                            MINT PREMIUM TRADABLE ERC-721 NFT
-                          </div>
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            <button
-                              onClick={() => handleMintNFT('OKB')}
-                              disabled={isMintingCard}
-                              className="btn-primary"
-                              style={{ 
-                                flex: 1,
-                                padding: '10px', 
-                                borderRadius: '8px', 
-                                fontSize: '0.78rem', 
-                                justifyContent: 'center', 
-                                background: 'var(--color-primary)',
-                                color: '#000',
-                                border: 'none',
-                                fontWeight: 'bold',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              {isMintingCard ? 'Minting...' : '0.002 OKB'}
-                            </button>
-                            <button
-                              onClick={() => handleMintNFT('GRUSH')}
-                              disabled={isMintingCard}
-                              className="btn-primary"
-                              style={{ 
-                                flex: 1,
-                                padding: '10px', 
-                                borderRadius: '8px', 
-                                fontSize: '0.78rem', 
-                                justifyContent: 'center', 
-                                background: 'var(--color-secondary)',
-                                color: '#000',
-                                border: 'none',
-                                fontWeight: 'bold',
-                                boxShadow: 'var(--shadow-neon-blue)',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              {isMintingCard ? 'Minting...' : '10 GRUSH'}
-                            </button>
-                          </div>
-                          {mintStatus && (
-                            <div style={{ fontSize: '0.7rem', color: 'var(--color-primary)', textAlign: 'center', marginTop: '2px', fontStyle: 'italic' }}>
-                              {mintStatus}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* TX Link if already minted */}
-                      {(viewedCard?.tx_hash || twitterCard?.tx_hash) && (
-                        <a
-                          href={`https://www.okx.com/explorer/xlayer/tx/${(viewedCard || twitterCard).tx_hash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '6px',
-                            color: 'var(--color-primary)',
-                            fontSize: '0.78rem',
-                            textDecoration: 'none',
-                            background: 'rgba(157,255,0,0.05)',
-                            border: '1px dashed var(--color-primary)',
-                            borderRadius: '8px',
-                            padding: '8px',
-                            textAlign: 'center',
-                            fontWeight: '600'
-                          }}
-                        >
-                          <CheckCircle size={12} /> View Mint Transaction <ExternalLink size={10} />
-                        </a>
-                      )}
-
-                      {/* Disconnect / Back button */}
-                      <button
-                        onClick={() => {
-                          if (viewedCard) {
-                            setViewedCard(null);
-                          } else {
-                            setTwitterCard(null);
-                            setTwitterUsername('');
-                          }
-                        }}
-                        className="btn-secondary"
-                        style={{ padding: '8px', borderRadius: '8px', fontSize: '0.75rem', justifyContent: 'center', border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.4)' }}
-                      >
-                        {viewedCard ? '← Back to My Card' : 'Disconnect Account'}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Wall of Fame / Recent Minters */}
-                  {recentCards.length > 0 && (
-                    <div className="recent-cards-gallery">
-                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Wall of Degens
-                      </span>
-                      <div className="gallery-scroll">
-                        {recentCards.map((card, idx) => (
-                          <div 
-                            key={card.wallet + idx} 
-                            className="gallery-card-badge"
-                            onClick={() => {
-                              setViewedCard(card);
-                              addLog(`[Connect X] Viewing minted card for ${card.username} (${card.overall} OVR)`);
-                            }}
-                          >
-                            <img 
-                              className="gallery-avatar" 
-                              src={card.avatar_url} 
-                              alt={card.username}
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = 'https://unavatar.io/placeholder.png';
-                              }}
-                            />
-                            <div className="gallery-info">
-                              <span className="gallery-username">{card.username}</span>
-                              <span className="gallery-ovr">{card.overall} OVR • {card.position.split(' ')[0]}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <button 
+                  className="btn-primary" 
+                  style={{ 
+                    padding: '16px', 
+                    fontSize: '1.1rem', 
+                    fontWeight: '800', 
+                    borderRadius: '12px', 
+                    marginTop: '4px',
+                    boxShadow: '0 0 20px rgba(157,255,0,0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                  onClick={handleMintAccessPass} disabled={isMintingCard}
+                >
+                  <Award size={18} fill="currentColor" /> {isMintingCard ? 'Minting...' : walletConnected ? 'Mint Access Pass' : 'Connect to Mint'}
+                </button>
               </div>
             </div>
           </section>
@@ -6629,7 +6374,7 @@ export default function App() {
 
               <div className="tabs-header" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
                 <button className={`tab-button ${activeTab === 'collectible' ? 'active' : ''}`} onClick={() => setActiveTab('collectible')}>
-                  GoalRushCollectible.sol
+                  AccessPass.sol
                 </button>
                 <button className={`tab-button ${activeTab === 'hook' ? 'active' : ''}`} onClick={() => setActiveTab('hook')}>
                   WorldCupGoalRushHook.sol

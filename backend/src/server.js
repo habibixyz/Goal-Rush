@@ -47,6 +47,9 @@ async function boot() {
   // Start on-chain keeper (auto-activates & resolves matches on X Layer)
   startKeeper(cron);
 
+  // Start the GoalRush Open AGI Agent
+  require('./goalrush-ai-agent.cjs');
+
   app.listen(PORT, () => {
     console.log(`✅ GoalRush backend running on port ${PORT}`);
     

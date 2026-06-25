@@ -24,12 +24,14 @@ import {
   AlertTriangle,
   LogOut,
   X,
+  Menu,
   Plus,
   Twitter,
   Send,
   Globe,
   Activity,
-  Download
+  Download,
+  Home
 } from 'lucide-react'
 
 // Real codebase strings to display in Code Viewer
@@ -657,7 +659,8 @@ export default function App() {
    const [showTerms, setShowTerms] = useState(false)
   const [activeRightTab, setActiveRightTab] = useState('match') // match or scores
   const [shootoutStatus, setShootoutStatus] = useState('')
-  const [currentView, setCurrentView] = useState('dashboard') // dashboard or match-center
+  const [currentView, setCurrentView] = useState('dashboard')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // dashboard or match-center
   const [selectedMatchCenterId, setSelectedMatchCenterId] = useState(10)
   const [matchFilter, setMatchFilter] = useState('all')
   const [matchCenterSubTab, setMatchCenterSubTab] = useState('lineup')
@@ -4329,161 +4332,185 @@ export default function App() {
     alert('Code copied to clipboard!')
   }
 
+  const renderNavLinks = (isSidebar = false) => (
+    <ul className={isSidebar ? "sidebar-nav-links" : "nav-links"}>
+      <li>
+        <button
+          onClick={() => {
+            setCurrentView('dashboard');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (isSidebar) setIsMobileMenuOpen(false);
+          }}
+          className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`}
+        >
+          Dashboard
+        </button>
+      </li>
+      <li>
+        <button
+          onClick={() => {
+            setCurrentView('match-center');
+            if (isSidebar) setIsMobileMenuOpen(false);
+          }}
+          className={`nav-btn ${currentView === 'match-center' ? 'active' : ''}`}
+        >
+          Match Center
+        </button>
+      </li>
+      <li>
+        <button
+          onClick={() => {
+            setCurrentView('news');
+            if (isSidebar) setIsMobileMenuOpen(false);
+          }}
+          className={`nav-btn ${currentView === 'news' ? 'active' : ''}`}
+        >
+          Daily News
+        </button>
+      </li>
+      <li>
+        <button
+          onClick={() => {
+            setCurrentView('leaderboard');
+            setTimeout(() => {
+              document.getElementById('leaderboard')?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+            if (isSidebar) setIsMobileMenuOpen(false);
+          }}
+          className={`nav-btn ${currentView === 'leaderboard' ? 'active' : ''}`}
+        >
+          Leaderboard
+        </button>
+      </li>
+      <li>
+        <button
+          onClick={() => {
+            setCurrentView('about');
+            if (isSidebar) setIsMobileMenuOpen(false);
+          }}
+          className={`nav-btn ${currentView === 'about' ? 'active' : ''}`}
+        >
+          About & Docs
+        </button>
+      </li>
+    </ul>
+  );
+
+  const renderWalletActions = (isSidebar = false) => (
+    <div className={isSidebar ? "sidebar-wallet-actions" : "nav-actions"}>
+      {chainId !== null ? (
+        chainId === 196 ? (
+          <div className="badge-xlayer" style={{ color: 'var(--color-primary)' }}>
+            <span className="badge-dot" style={{ backgroundColor: 'var(--color-primary)', boxShadow: '0 0 8px var(--color-primary)' }}></span>
+            <span className="badge-text">X Layer Mainnet</span>
+          </div>
+        ) : chainId === 195 ? (
+          <div className="badge-xlayer" style={{ color: '#ffcc00' }}>
+            <span className="badge-dot" style={{ backgroundColor: '#ffcc00', boxShadow: '0 0 8px #ffcc00' }}></span>
+            <span className="badge-text">X Layer Testnet</span>
+          </div>
+        ) : (
+          <button className="badge-xlayer" onClick={() => { handleSwitchNetwork(); if (isSidebar) setIsMobileMenuOpen(false); }} style={{ cursor: 'pointer', background: 'rgba(255, 51, 68, 0.1)', borderColor: '#ff3344', color: '#ff3344' }}>
+            <AlertTriangle size={12} />
+            <span className="badge-text">Switch Network</span>
+          </button>
+        )
+      ) : (
+        <div className="badge-xlayer">
+          <span className="badge-dot" style={{ backgroundColor: '#666' }}></span>
+          <span className="badge-text">Not Connected</span>
+        </div>
+      )}
+
+      {walletConnected ? (
+        <div className="wallet-connected-wrapper" style={isSidebar ? { flexDirection: 'column', width: '100%', gap: '8px' } : {}}>
+          <div
+            className="btn-secondary text-glow-green"
+            style={{
+              padding: '8px 16px',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'default',
+              borderColor: 'var(--color-primary)',
+              background: 'rgba(157, 255, 0, 0.05)',
+              width: isSidebar ? '100%' : 'auto'
+            }}
+          >
+            <User size={14} />
+            <span className="wallet-text-full">
+              Connected: {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
+            </span>
+            <span className="wallet-text-compact">
+              {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
+            </span>
+          </div>
+          <button
+            className="btn-secondary btn-disconnect"
+            onClick={() => { handleDisconnectWallet(); if (isSidebar) setIsMobileMenuOpen(false); }}
+            style={{
+              padding: '8px 12px',
+              fontSize: '0.9rem',
+              color: 'var(--color-danger)',
+              borderColor: 'rgba(255, 51, 68, 0.2)',
+              background: 'rgba(255, 51, 68, 0.05)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: isSidebar ? 'center' : 'flex-start',
+              gap: '6px',
+              cursor: 'pointer',
+              transition: 'var(--transition-smooth)',
+              width: isSidebar ? '100%' : 'auto'
+            }}
+          >
+            <LogOut size={14} />
+            <span className="btn-disconnect-text">Disconnect</span>
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: '8px', flexDirection: isSidebar ? 'column' : 'row', width: isSidebar ? '100%' : 'auto', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+            <button
+              type="button"
+              onClick={() => {
+                setWalletConnected(true);
+                setUserAddress('0xae1b810ffb88855ffd967dc274d9ba4fadd21990');
+                setUserBalance('0.1500');
+                setGrushBalance('500.00');
+                setChainId(196);
+                addLog('Simulating wallet: 0xae1b... (Winner prediction)');
+                if (isSidebar) setIsMobileMenuOpen(false);
+              }}
+              className="btn-secondary"
+              style={{ padding: '8px 12px', fontSize: '0.85rem', borderColor: '#9dff00', color: '#9dff00', background: 'rgba(157, 255, 0, 0.05)', cursor: 'pointer', width: isSidebar ? '100%' : 'auto', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              Simulate Wallet 🧪
+            </button>
+          )}
+          <button className="btn-primary" onClick={() => { handleConnectWallet(); if (isSidebar) setIsMobileMenuOpen(false); }} style={{ padding: '8px 16px', fontSize: '0.9rem', cursor: 'pointer', width: isSidebar ? '100%' : 'auto', justifyContent: 'center', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
+            Connect Wallet
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="app-wrapper">
       <a className="skip-link" href="#dashboard">Skip to prediction dashboard</a>
       <div className="bg-ambient-glow"></div>
-
       {/* Header / Navbar */}
       <header className="navbar">
         <div className="logo-wrap">
           <span className="logo-icon">⚽</span>
           <h1 className="logo-text">GoalRush</h1>
         </div>
-        <nav>
-          <ul className="nav-links">
-            <li>
-              <button
-                onClick={() => {
-                  setCurrentView('dashboard');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`}
-              >
-                Dashboard
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => setCurrentView('match-center')}
-                className={`nav-btn ${currentView === 'match-center' ? 'active' : ''}`}
-              >
-                Match Center
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => setCurrentView('news')}
-                className={`nav-btn ${currentView === 'news' ? 'active' : ''}`}
-              >
-                Daily News
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => {
-                  setCurrentView('leaderboard');
-                  setTimeout(() => {
-                    document.getElementById('leaderboard')?.scrollIntoView({ behavior: 'smooth' });
-                  }, 100);
-                }}
-                className={`nav-btn ${currentView === 'leaderboard' ? 'active' : ''}`}
-              >
-                Leaderboard
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => setCurrentView('about')}
-                className={`nav-btn ${currentView === 'about' ? 'active' : ''}`}
-              >
-                About & Docs
-              </button>
-            </li>
-          </ul>
+        <nav className="desktop-nav">
+          {renderNavLinks(false)}
         </nav>
-        <div className="nav-actions">
-          {chainId !== null ? (
-            chainId === 196 ? (
-              <div className="badge-xlayer" style={{ color: 'var(--color-primary)' }}>
-                <span className="badge-dot" style={{ backgroundColor: 'var(--color-primary)', boxShadow: '0 0 8px var(--color-primary)' }}></span>
-                <span className="badge-text">X Layer Mainnet</span>
-              </div>
-            ) : chainId === 195 ? (
-              <div className="badge-xlayer" style={{ color: '#ffcc00' }}>
-                <span className="badge-dot" style={{ backgroundColor: '#ffcc00', boxShadow: '0 0 8px #ffcc00' }}></span>
-                <span className="badge-text">X Layer Testnet</span>
-              </div>
-            ) : (
-              <button className="badge-xlayer" onClick={handleSwitchNetwork} style={{ cursor: 'pointer', background: 'rgba(255, 51, 68, 0.1)', borderColor: '#ff3344', color: '#ff3344' }}>
-                <AlertTriangle size={12} />
-                <span className="badge-text">Switch Network</span>
-              </button>
-            )
-          ) : (
-            <div className="badge-xlayer">
-              <span className="badge-dot" style={{ backgroundColor: '#666' }}></span>
-              <span className="badge-text">Not Connected</span>
-            </div>
-          )}
-
-          {walletConnected ? (
-            <div className="wallet-connected-wrapper">
-              <div
-                className="btn-secondary text-glow-green"
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '0.9rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  cursor: 'default',
-                  borderColor: 'var(--color-primary)',
-                  background: 'rgba(157, 255, 0, 0.05)'
-                }}
-              >
-                <User size={14} />
-                <span className="wallet-text-full">
-                  Connected: {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
-                </span>
-                <span className="wallet-text-compact">
-                  {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
-                </span>
-              </div>
-              <button
-                className="btn-secondary btn-disconnect"
-                onClick={handleDisconnectWallet}
-                style={{
-                  padding: '8px 12px',
-                  fontSize: '0.9rem',
-                  color: 'var(--color-danger)',
-                  borderColor: 'rgba(255, 51, 68, 0.2)',
-                  background: 'rgba(255, 51, 68, 0.05)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  cursor: 'pointer',
-                  transition: 'var(--transition-smooth)'
-                }}
-              >
-                <LogOut size={14} />
-                <span className="btn-disconnect-text">Disconnect</span>
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setWalletConnected(true);
-                    setUserAddress('0xae1b810ffb88855ffd967dc274d9ba4fadd21990');
-                    setUserBalance('0.1500');
-                    setGrushBalance('500.00');
-                    setChainId(196);
-                    addLog('Simulating wallet: 0xae1b... (Winner prediction)');
-                  }}
-                  className="btn-secondary"
-                  style={{ padding: '8px 12px', fontSize: '0.85rem', borderColor: '#9dff00', color: '#9dff00', background: 'rgba(157, 255, 0, 0.05)', cursor: 'pointer' }}
-                >
-                  Simulate Wallet 🧪
-                </button>
-              )}
-              <button className="btn-primary" onClick={handleConnectWallet} style={{ padding: '8px 16px', fontSize: '0.9rem', cursor: 'pointer' }}>
-                Connect Wallet
-              </button>
-            </div>
-          )}
+        <div className="mobile-wallet-nav">
+          {renderWalletActions(false)}
         </div>
       </header>
 
@@ -4491,150 +4518,79 @@ export default function App() {
         <>
           {/* Hackathon Hero Section */}
           <section className="hackathon-hero-container">
-            <div className="hackathon-left">
-              <div className="hackathon-title-group">
-                <div className="hero-logo-wrapper" style={{
-                  display: 'inline-flex',
-                  padding: '16px',
-                  borderRadius: '24px',
-                  background: '#000000',
-                  border: '1px solid rgba(157, 255, 0, 0.2)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), 0 0 15px rgba(157, 255, 0, 0.08)',
-                  marginBottom: '24px',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}>
-                  <img
-                    src="/logo.png?v=2"
-                    alt="Goal Rush Logo"
-                    className="hero-logo-img"
-                    style={{
-                      maxHeight: '180px',
-                      width: 'auto',
-                      display: 'block',
-                      mixBlendMode: 'screen',
-                      filter: 'contrast(1.6) brightness(0.9) saturate(1.2)'
-                    }}
-                  />
-                </div>
-              </div>
-              <p className="hackathon-desc">
-                GoalRush is a sports prediction experience on X Layer. Fund a match pick through the prediction router, follow live fixtures, and play a cosmetic penalty challenge after confirmation.
-              </p>
-              <div className="security-status-card" role="note" aria-label="Protocol security status">
-                <div className="security-status-icon"><ShieldCheck size={20} /></div>
-                <div>
-                  <strong>Mainnet beta, not audited</strong>
-                  <span>Verify the contract address and transaction amount in your wallet. GoalRush will never ask for a seed phrase or tell you to bypass a wallet warning.</span>
-                </div>
-                <a href={`https://www.okx.com/explorer/xlayer/address/${HOOK_ADDRESS}`} target="_blank" rel="noopener noreferrer">
-                  Verify contract <ExternalLink size={14} />
-                </a>
-              </div>
-              <div className="hackathon-actions">
-                <a href="#dashboard" className="btn-primary">
-                  <Play size={18} fill="currentColor" /> Try Live Swap
-                </a>
-                <a
-                  href="https://eulr.fun/token/0x422fe165b2da990d18c6dca944b11dcd61519671"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-secondary"
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', borderColor: 'rgba(0, 229, 255, 0.4)' }}
-                >
-                  📈 Trade GRUSH on Eulr
-                </a>
-                <button
-                  className="btn-secondary"
-                  onClick={() => {
-                    setShowDevPortal(true);
-                    setTimeout(() => {
-                      document.getElementById('contracts')?.scrollIntoView({ behavior: 'smooth' });
-                    }, 100);
+            <div className="hackathon-left" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '24px', paddingRight: '20px', paddingLeft: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+                <img
+                  src="/logo.png?v=2"
+                  alt="Goal Rush Logo"
+                  style={{
+                    height: '84px',
+                    width: 'auto',
+                    display: 'block',
+                    mixBlendMode: 'screen',
+                    filter: 'drop-shadow(0 0 12px rgba(157, 255, 0, 0.4)) contrast(1.2)'
                   }}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                />
+                <h1 style={{ 
+                  fontSize: 'clamp(3rem, 6vw, 5rem)', 
+                  fontWeight: 900, 
+                  margin: 0, 
+                  lineHeight: 1, 
+                  letterSpacing: '-1.5px',
+                  color: '#ffffff',
+                  textShadow: '0 0 20px rgba(157, 255, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.5)'
+                }}>
+                  GoalRush
+                </h1>
+              </div>
+              
+              <p className="hackathon-desc" style={{ 
+                fontSize: '1.25rem', 
+                lineHeight: '1.6', 
+                color: 'rgba(255, 255, 255, 0.8)', 
+                maxWidth: '620px', 
+                margin: 0,
+                fontWeight: 400
+              }}>
+                The premier decentralized sports prediction experience on <strong style={{color: '#fff'}}>OKX X Layer</strong>. Fund a match pick through the prediction router, follow live fixtures, and play a cosmetic penalty challenge after confirmation.
+              </p>
+              
+              <div className="security-status-card desktop-security-card" role="note" aria-label="Protocol security status" style={{ maxWidth: '620px', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div className="security-status-icon" style={{ background: 'rgba(157, 255, 0, 0.1)', flexShrink: 0 }}><ShieldCheck size={24} style={{ color: 'var(--color-primary)' }} /></div>
+                <div style={{ flex: 1 }}>
+                  <strong style={{ fontSize: '1rem', color: '#fff', letterSpacing: '0.5px' }}>Mainnet Beta &middot; Contract Verified</strong>
+                  <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginTop: '4px', lineHeight: '1.4' }}>Verify the contract address and transaction amount in your wallet. GoalRush will never ask for a seed phrase or tell you to bypass a wallet warning.</span>
+                </div>
+                <a href={`https://www.okx.com/explorer/xlayer/address/${HOOK_ADDRESS}`} target="_blank" rel="noopener noreferrer" style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', fontWeight: 600, color: 'var(--color-secondary)', flexShrink: 0, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                  View Source <ExternalLink size={14} style={{ marginLeft: '6px' }} />
+                </a>
+              </div>
+              
+              
+              <div className="hackathon-actions" style={{ marginTop: '8px' }}>
+                <button
+                  onClick={() => {
+                    document.getElementById('grush-token-hub')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="btn-primary"
+                  style={{ 
+                    border: 'none', 
+                    cursor: 'pointer', 
+                    padding: '16px 32px', 
+                    fontSize: '1.15rem', 
+                    fontWeight: 800, 
+                    borderRadius: '16px',
+                    boxShadow: '0 0 30px rgba(157, 255, 0, 0.3)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                 >
-                  <Code size={18} /> View Hook Contract
+                  <Play size={20} fill="currentColor" /> Buy GRUSH Token
                 </button>
               </div>
-
-              {/* Cyber Info Panel */}
-              <div className="hero-info-grid">
-                <div className="hero-info-card">
-                  <div className="hero-info-card-header">
-                    <Globe size={13} className="hero-info-card-icon" />
-                    <span>NETWORK</span>
-                  </div>
-                  <div className="hero-info-card-value">OKX X Layer</div>
-                </div>
-
-                <div className="hero-info-card clickable" onClick={() => {
-                  navigator.clipboard.writeText(HOOK_ADDRESS);
-                  alert('Hook address copied to clipboard!');
-                }}>
-                  <div className="hero-info-card-header">
-                    <Code size={13} className="hero-info-card-icon" style={{ color: 'var(--color-primary)' }} />
-                    <span>HOOK CONTRACT</span>
-                  </div>
-                  <div className="hero-info-card-value font-mono">
-                    {HOOK_ADDRESS.slice(0, 6)}...{HOOK_ADDRESS.slice(-4)}
-                    <Copy size={11} className="copy-hint-icon" />
-                  </div>
-                </div>
-
-                <div className="hero-info-card clickable" onClick={() => {
-                  navigator.clipboard.writeText(GRUSH_TOKEN_ADDRESS);
-                  alert('GRUSH token address copied to clipboard!');
-                }}>
-                  <div className="hero-info-card-header">
-                    <Coins size={13} className="hero-info-card-icon" style={{ color: 'var(--color-secondary)' }} />
-                    <span>GRUSH TOKEN</span>
-                  </div>
-                  <div className="hero-info-card-value font-mono">
-                    {GRUSH_TOKEN_ADDRESS.slice(0, 6)}...{GRUSH_TOKEN_ADDRESS.slice(-4)}
-                    <Copy size={11} className="copy-hint-icon" />
-                  </div>
-                </div>
-
-                <div className="hero-info-card">
-                  <div className="hero-info-card-header">
-                    <Activity size={13} className="hero-info-card-icon" />
-                    <span>CALLBACKS</span>
-                  </div>
-                  <div className="hero-info-card-value">Swap Triggers</div>
-                </div>
-
-                <div className="hero-info-card">
-                  <div className="hero-info-card-header">
-                    <Flame size={13} className="hero-info-card-icon" style={{ color: 'var(--color-accent)' }} />
-                    <span>GOAL ODDS</span>
-                  </div>
-                  <div className="hero-info-card-value">5% Chance</div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Community:</span>
-                <a
-                  href="https://x.com/goalrushdotfun"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-secondary"
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', fontSize: '0.8rem', borderColor: 'rgba(255,255,255,0.15)', cursor: 'pointer', borderRadius: '8px' }}
-                >
-                  <Twitter size={14} /> Twitter / X
-                </a>
-                <a
-                  href="https://t.me/+qwzA9MrSA3I2OTk9"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-secondary"
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', fontSize: '0.8rem', borderColor: 'rgba(255,255,255,0.15)', cursor: 'pointer', borderRadius: '8px' }}
-                >
-                  <Send size={14} /> Telegram
-                </a>
-              </div>
             </div>
+
 
             {/* Cyber-Matrix Right Column */}
             <div className="hackathon-right">
@@ -5242,7 +5198,7 @@ export default function App() {
                 )}
 
                 {/* GRUSH Token Hub Card */}
-                <div style={{
+                <div id="grush-token-hub" style={{
                   marginTop: '20px',
                   padding: '14px',
                   background: 'rgba(157, 255, 0, 0.02)',
@@ -5411,7 +5367,7 @@ export default function App() {
                   </div>
 
                   {/* Quick actions grid */}
-                  <div className="grush-hub-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div className="grush-hub-actions" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
                     <button
                       type="button"
                       onClick={handleAddGrushToWallet}
@@ -5434,38 +5390,7 @@ export default function App() {
                       <Plus size={14} style={{ color: 'var(--color-primary)' }} />
                       Add to OKX Wallet
                     </button>
-
-                    <a
-                      href="https://dapp.quickswap.exchange/swap?type=v4&from=ETH&to=0x422fe165B2Da990d18c6Dca944b11dcD61519671"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        color: '#fff',
-                        borderRadius: '8px',
-                        padding: '8px',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        textDecoration: 'none',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <ExternalLink size={14} style={{ color: 'var(--color-secondary)' }} />
-                      Trade on QuickSwap
-                    </a>
                   </div>
-                </div>
-
-                <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', textAlign: 'center', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: '1.4' }}>
-                  <span>ℹ️ This simulator runs a test interaction with the V4 hook on-chain to play the shootout and record predictions.</span>
-                  <a href="https://eulr.fun/token/0x422fe165b2da990d18c6dca944b11dcd61519671" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-secondary)', textDecoration: 'underline', fontWeight: 600 }}>
-                    To buy or sell real GRUSH, trade on Eulr.fun →
-                  </a>
                 </div>
               </form>
             </div>
@@ -6070,6 +5995,7 @@ export default function App() {
                                   }
                                 </div>
 
+                          
                                 {/* Footer */}
                                 <div className="card-logo-row">
                                   <span className="card-footer-text">GOALRUSH collectible</span>
@@ -6327,78 +6253,53 @@ export default function App() {
               </div>
             )}
 
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
-                    <th style={{ padding: '12px' }}>Rank</th>
-                    <th style={{ padding: '12px' }}>Swapper Address</th>
-                    <th style={{ padding: '12px' }}>Goals Scored</th>
-                    <th style={{ padding: '12px' }}>Total Trade Volume</th>
-                    <th style={{ padding: '12px' }}>Winnings Claimed</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaderboardData.length > 0 ? (
-                    leaderboardData.map((row, idx) => {
-                      const isCurrentUser = walletConnected && userAddress && row.address.toLowerCase() === userAddress.toLowerCase();
-                      return (
-                        <tr
-                          key={row.address}
-                          style={{
-                            borderBottom: '1px solid rgba(255,255,255,0.04)',
-                            background: isCurrentUser ? 'rgba(157, 255, 0, 0.05)' : 'transparent'
-                          }}
-                        >
-                          <td style={{
-                            padding: '12px',
-                            fontWeight: 'bold',
-                            color: isCurrentUser
-                              ? 'var(--color-primary)'
-                              : idx === 0
-                                ? 'var(--color-primary)'
-                                : idx === 1
-                                  ? '#c0c0c0'
-                                  : idx === 2
-                                    ? '#cd7f32'
-                                    : 'rgba(255,255,255,0.6)'
-                          }}>
-                            {isCurrentUser ? 'MY' : `#${idx + 1}`}
-                          </td>
-                          <td style={{ padding: '12px', fontFamily: 'var(--font-mono)' }}>
-                            {row.address.slice(0, 8)}...{row.address.slice(-6)}
-                          </td>
-                          <td style={{ padding: '12px' }}>{row.goals} Goals</td>
-                          <td style={{ padding: '12px' }}>
-                            <div style={{ fontWeight: '500' }}>{row.volume.toFixed(4)} OKB</div>
-                            {row.grushVolume > 0 && (
-                              <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)', marginTop: '2px', fontWeight: 'bold' }}>
-                                ⚽ {row.grushVolume.toLocaleString(undefined, { maximumFractionDigits: 0 })} GRUSH
-                              </div>
-                            )}
-                          </td>
-                          <td style={{ padding: '12px' }}>
-                             <div style={{ fontWeight: '500', color: 'var(--color-primary)' }}>{row.claimed.toFixed(4)} OKB</div>
-                             {row.grushClaimed > 0 && (
-                               <div style={{ fontSize: '0.75rem', color: 'var(--color-secondary)', marginTop: '2px', fontWeight: 'bold' }}>
-                                 ⚽ {row.grushClaimed.toLocaleString(undefined, { maximumFractionDigits: 0 })} GRUSH
-                               </div>
-                             )}
-                           </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan="5" style={{ padding: '32px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
-                        No active swappers recorded yet. Swap & predict to become the first on the board!
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
+            <div className="leaderboard-compact-list">
+                {leaderboardData.length > 0 ? (
+                  leaderboardData.map((row, idx) => {
+                    const isCurrentUser = walletConnected && userAddress && row.address.toLowerCase() === userAddress.toLowerCase();
+                    const rankColor = idx === 0 ? 'var(--color-primary)' : idx === 1 ? '#c0c0c0' : idx === 2 ? '#cd7f32' : 'rgba(255,255,255,0.4)';
+                    // Generate a deterministic hex color from the address
+                    const avatarColor1 = `#${row.address.slice(2, 8)}`;
+                    const avatarColor2 = `#${row.address.slice(-6)}`;
+                    
+                    return (
+                      <div key={row.address} className={`leaderboard-compact-row ${isCurrentUser ? 'is-current-user' : ''}`}>
+                        <div className="compact-rank" style={{ color: rankColor }}>
+                          {idx + 1}
+                        </div>
+                        <div className="compact-user-info">
+                          <div className="compact-avatar" style={{ background: `linear-gradient(135deg, ${avatarColor1}, ${avatarColor2})` }}></div>
+                          <div className="compact-address">
+                            {row.address.slice(0, 6)}...{row.address.slice(-4)}
+                            {isCurrentUser && <span className="compact-badge-my">MY</span>}
+                          </div>
+                        </div>
+                        
+                        <div className="compact-stats">
+                          <div className="stat-col hide-mobile">
+                            <span className="compact-stat-primary" style={{ color: 'var(--color-secondary)', whiteSpace: 'nowrap' }}>{row.claimed.toFixed(4)} OKB <span className="desktop-only-text" style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.4)'}}>CLAIMED</span></span>
+                            {row.grushClaimed > 0 && <span className="compact-stat-secondary" style={{whiteSpace: 'nowrap'}}>⚽ {row.grushClaimed.toLocaleString()} GRUSH <span className="desktop-only-text" style={{fontSize:'0.6rem'}}>CLAIMED</span></span>}
+                          </div>
+                          <div className="stat-col">
+                            <span className="compact-stat-primary" style={{ color: 'var(--color-primary)', whiteSpace: 'nowrap' }}>{row.volume.toFixed(4)} OKB <span className="desktop-only-text" style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.4)'}}>VOL</span></span>
+                            {row.grushVolume > 0 && <span className="compact-stat-secondary" style={{whiteSpace: 'nowrap'}}>⚽ {row.grushVolume.toLocaleString()} GRUSH <span className="desktop-only-text" style={{fontSize:'0.6rem'}}>VOL</span></span>}
+                          </div>
+                          <div className="stat-col stat-col-right">
+                            <span className="compact-stat-primary" style={{ color: '#fff', fontSize: '1.1rem', whiteSpace: 'nowrap', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                               {row.goals} <span style={{fontSize:'0.75rem',color:'rgba(255,255,255,0.5)'}}>Goals</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="leaderboard-empty">
+                    No active swappers recorded yet. Swap & predict to become the first on the board!
+                  </div>
+                )}
+              </div>
+            </section>
 
         </>
       )}
@@ -7039,6 +6940,54 @@ export default function App() {
         </div>
       )}
 
+
+      {/* Protocol Info Bar */}
+      {currentView === 'dashboard' && (
+      <section className="bottom-info-bar" style={{ padding: '0 32px 32px 32px', maxWidth: '1200px', margin: '0 auto' }}>
+
+
+              {/* Cyber Info Panel */}
+              <div className="hero-info-grid">
+                <div className="hero-info-card">
+                  <div className="hero-info-card-header">
+                    <Globe size={13} className="hero-info-card-icon" />
+                    <span>NETWORK</span>
+                  </div>
+                  <div className="hero-info-card-value">OKX X Layer</div>
+                </div>
+
+                <div className="hero-info-card clickable" onClick={() => {
+                  navigator.clipboard.writeText(HOOK_ADDRESS);
+                  alert('Hook address copied to clipboard!');
+                }} style={{ borderColor: 'rgba(157, 255, 0, 0.4)', background: 'rgba(157, 255, 0, 0.03)' }}>
+                  <div className="hero-info-card-header">
+                    <Code size={13} className="hero-info-card-icon" style={{ color: 'var(--color-primary)' }} />
+                    <span style={{ color: 'var(--color-primary)' }}>HOOK CONTRACT</span>
+                  </div>
+                  <div className="hero-info-card-value font-mono">
+                    {HOOK_ADDRESS.slice(0, 6)}...{HOOK_ADDRESS.slice(-4)}
+                    <Copy size={11} className="copy-hint-icon" />
+                  </div>
+                </div>
+
+                <div className="hero-info-card">
+                  <div className="hero-info-card-header">
+                    <Activity size={13} className="hero-info-card-icon" />
+                    <span>CALLBACKS</span>
+                  </div>
+                  <div className="hero-info-card-value">Swap Triggers</div>
+                </div>
+
+                <div className="hero-info-card">
+                  <div className="hero-info-card-header">
+                    <Flame size={13} className="hero-info-card-icon" style={{ color: 'var(--color-accent)' }} />
+                    <span>GOAL ODDS</span>
+                  </div>
+                  <div className="hero-info-card-value">5% Chance</div>
+                </div>
+              </div>      </section>
+      )}
+
       {/* Footer */}
       <footer className="app-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', flexWrap: 'wrap', gap: '16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -7400,6 +7349,31 @@ export default function App() {
           </button>
         </div>
       )}
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="mobile-bottom-nav">
+        <button className={`bottom-nav-item ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => { setCurrentView('dashboard'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+          <Home size={20} />
+          <span>Home</span>
+        </button>
+        <button className={`bottom-nav-item ${currentView === 'match-center' ? 'active' : ''}`} onClick={() => { setCurrentView('match-center'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+          <Activity size={20} />
+          <span>Matches</span>
+        </button>
+        <button className={`bottom-nav-item ${currentView === 'news' ? 'active' : ''}`} onClick={() => setCurrentView('news')}>
+          <Globe size={20} />
+          <span>News</span>
+        </button>
+        <button className={`bottom-nav-item ${currentView === 'leaderboard' ? 'active' : ''}`} onClick={() => { setCurrentView('leaderboard'); setTimeout(() => document.getElementById('leaderboard')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>
+          <Award size={20} />
+          <span>Ranks</span>
+        </button>
+        <button className={`bottom-nav-item ${currentView === 'about' ? 'active' : ''}`} onClick={() => setCurrentView('about')}>
+          <HelpCircle size={20} />
+          <span>About</span>
+        </button>
+      </nav>
     </div>
   )
 }
+

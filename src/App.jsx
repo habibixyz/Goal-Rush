@@ -6241,6 +6241,18 @@ export default function App() {
                       Deployed on OKX X Layer Mainnet, GoalRush utilizes high-speed block confirmation times and ultra-low gas fees. Swappers experience instant transaction feedback on penalty shootouts and minimal fee overhead.
                     </p>
                   </div>
+
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(157, 255, 0, 0.3)' }}>
+                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🧠 Autonomous AGI Agent
+                    </h4>
+                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
+                      GoalRush is the premier execution sandbox for Open AGI. A decentralized Llama-3 agent actively monitors live sports news, predicts outcomes, and trades autonomously on our smart contracts.
+                    </p>
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
+                      <strong>Security:</strong> Protected by a Hard Boundary Architecture, preventing prompt-injection wallet hacks.
+                    </div>
+                  </div>
                 </div>
               </section>
             </div>
@@ -6349,7 +6361,17 @@ export default function App() {
                 </div>
 
                 <div className="whitepaper-section" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px' }}>
-                  <h2>5. Security & Verification</h2>
+                  <h2>5. Open AGI Execution Layer</h2>
+                  <p>
+                    GoalRush operates as a secure execution sandbox for an Autonomous Open AGI Agent. Integrating open-source LLMs (like Llama-3) with decentralized finance presents significant prompt-injection security risks. GoalRush mitigates this using a <strong>Hard Boundary Execution Architecture</strong>.
+                  </p>
+                  <p style={{ marginTop: '12px' }}>
+                    The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded OKB transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.
+                  </p>
+                </div>
+
+                <div className="whitepaper-section" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px' }}>
+                  <h2>6. Security & Verification</h2>
                   <p>
                     The GoalRush codebase has undergone a complete security check to ensure transparency and prevent loss of user funds:
                   </p>
@@ -6670,7 +6692,17 @@ export default function App() {
               </div>
 
               <div className="whitepaper-section" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px' }}>
-                <h2>5. Security & Verification</h2>
+                <h2>5. Open AGI Execution Layer</h2>
+                <p>
+                  GoalRush operates as a secure execution sandbox for an Autonomous Open AGI Agent. Integrating open-source LLMs (like Llama-3) with decentralized finance presents significant prompt-injection security risks. GoalRush mitigates this using a <strong>Hard Boundary Execution Architecture</strong>.
+                </p>
+                <p style={{ marginTop: '12px' }}>
+                  The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded OKB transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.
+                </p>
+              </div>
+
+              <div className="whitepaper-section" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px' }}>
+                <h2>6. Security & Verification</h2>
                 <p>
                   The GoalRush codebase has undergone a complete security check to ensure transparency and prevent loss of user funds:
                 </p>

@@ -1,5 +1,7 @@
 # GoalRush — World Cup Uniswap V4 Hook & Jackpot on X Layer
 
+**🌐 Live Demo:** [goalrush.fun](https://goalrush.fun)
+
 GoalRush is a gamified Uniswap V4 hook custom-built for the OKX X Layer "Hook the World Cup" Hackathon. It bridges the thrill of World Cup match predictions and penalty shootouts directly into decentralized exchange operations.
 
 ![GoalRush Banner](https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80)

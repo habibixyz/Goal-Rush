@@ -684,8 +684,7 @@ export default function App() {
   const [newsCountdown, setNewsCountdown] = useState(600);
   const [oracleLogs, setOracleLogs] = useState([
     `> Oracle console initialized at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET`,
-    `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Connected to X Layer mempool & sports API sources.`,
-    `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Waiting for sync signal...`
+    `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Connected to X Layer mempool & Sentient AGI Swarm.`
   ]);
   const [isIngesting, setIsIngesting] = useState(false);
 
@@ -774,6 +773,29 @@ export default function App() {
       fetchNewsArticles();
     }
   }, [currentView, fetchNewsArticles]);
+
+  // Sync Sentient Swarm Agent Logs
+  useEffect(() => {
+    if (currentView !== 'news') return;
+    
+    const fetchLogs = async () => {
+      try {
+        const res = await fetch(`${BACKEND_API_BASE}/agent/logs`);
+        if (res.ok) {
+          const body = await res.json();
+          if (body.success && body.logs && body.logs.length > 0) {
+            setOracleLogs(body.logs);
+          }
+        }
+      } catch (e) {
+        // Silent catch for polling
+      }
+    };
+
+    fetchLogs(); // initial fetch
+    const interval = setInterval(fetchLogs, 3000); // poll every 3s
+    return () => clearInterval(interval);
+  }, [currentView]);
 
   // Set up polling interval for new articles to simulate popping feed
   useEffect(() => {

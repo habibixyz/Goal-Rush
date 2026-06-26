@@ -35,17 +35,18 @@ npx pm2 logs goalrush-keeper
 npx pm2 restart goalrush-keeper
 ```
 
-## 🧠 Autonomous Open AGI Prediction Agent (Sentient Grant)
+## 🧠 Autonomous Multi-Agent Consensus Swarm (Sentient Grant Edition)
 
-GoalRush acts as the execution sandbox for an **Autonomous Open AGI Agent** built to interact safely with decentralized prediction markets. The agent is built to demonstrate a "Hard Boundary" security architecture, proving that open-source models (like Llama-3) can securely operate on-chain without exposing private keys to prompt-injection vulnerabilities.
+GoalRush acts as the execution sandbox for an **Autonomous Multi-Agent Consensus Swarm** built to interact safely with decentralized prediction markets. The agent showcases a "Hard Boundary" security architecture and a "Mixture of Agents" consensus model, proving that open-source LLMs can securely operate on-chain without exposing private keys to prompt-injection vulnerabilities.
 
-### How the AGI Agent Works
-1. **Data Ingestion:** The agent wakes up every 10 minutes and reads the latest live football news and match schedules from the backend database.
-2. **Open Model Reasoning:** It securely queries an open-source LLM (e.g., Llama-3 via Groq) with the news data and requests a strict single-digit prediction (`1`, `2`, or `3`).
-3. **Hard Boundary Execution:** The Node.js execution layer enforces hardcoded betting limits (e.g., `0.0001 OKB`) and strictly parses the AI's output. The AI *never* sees the wallet private key or constructs the transaction payload, making it cryptographically immune to wallet-draining prompt injections.
-4. **Auto-Compounding:** The agent autonomously monitors the blockchain for resolved matches it previously bet on. If it won, it automatically executes a `claimJackpot` transaction to pull the winnings back into its wallet, acting as a fully closed-loop financial agent.
+### How the Sentient Swarm Agent Works
+1. **Data Ingestion:** The Executive Agent wakes up every 10 minutes and reads the latest live football news and match schedules from the backend database.
+2. **Multi-Agent Consensus:** It securely queries **three independent open-source models** simultaneously (e.g., Llama-3, Mixtral, and Llama-3-70b via Groq) with the news data.
+3. **Reasoning Verification:** Each model acts as an independent analyst and outputs strict JSON containing a prediction (`1`, `2`, or `3`) and a 1-sentence analytical `reasoning`.
+4. **Hard Boundary Execution:** The Executive Agent tallies the votes. It enforces hardcoded betting limits (e.g., `0.0001 OKB`) and strictly parses the JSON output. A transaction is *only* submitted if a 2/3 majority consensus is reached. The AI *never* sees the wallet private key or constructs the transaction payload, making it cryptographically immune to wallet-draining prompt injections.
+5. **Live Oracle Terminal:** The frontend features an "X LAYER SPORTS ORACLE SYSTEM" that streams the Swarm's internal logs in real-time, allowing humans to watch the AI models debate and execute trades live.
 
-**To run the AGI Agent locally:**
+**To run the Swarm Agent locally:**
 ```bash
 # Ensure GROQ_API_KEY and PRIVATE_KEY are set in your .env
 node backend/src/goalrush-ai-agent.cjs

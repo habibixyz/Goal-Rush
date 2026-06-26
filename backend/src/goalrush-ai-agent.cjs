@@ -38,12 +38,19 @@ const HOOK_ABI = [
 
 
 // ─── HELPER FUNCTIONS ────────────────────────────────────────────────────────
+const agentLogBuffer = [];
+const MAX_LOGS = 50;
 
 function log(msg) {
-  console.log(`[AI-AGENT | ${new Date().toISOString()}] ${msg}`);
+  const line = `[AI-AGENT | ${new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York' })} ET] ${msg}`;
+  console.log(line);
+  agentLogBuffer.push(line);
+  if (agentLogBuffer.length > MAX_LOGS) {
+    agentLogBuffer.shift();
+  }
 }
 
-async function askOpenAIModel(prompt) {
+async function askOpenAIModel(prompt, modelName) {
   if (!GROQ_API_KEY) {
     throw new Error("GROQ_API_KEY is missing from .env");
   }
@@ -55,18 +62,19 @@ async function askOpenAIModel(prompt) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "llama-3.1-8b-instant", // Fast, open-source model
+      model: modelName,
+      response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
-          content: "You are an expert sports data analyst AI. You read news and upcoming match details. You MUST respond with ONLY a single digit: 1 (if you predict the Home team will win), 2 (if you predict the Away team will win), or 3 (if you predict a Draw). Do not output any other text, reasoning, or characters. Just the number."
+          content: "You are an expert sports data analyst AI part of a Consensus Swarm. You MUST respond with ONLY a valid JSON object containing exactly two keys: 'prediction' (Number: 1 for Home, 2 for Away, 3 for Draw) and 'reasoning' (String: a 1-sentence tactical explanation)."
         },
         {
           role: "user",
           content: prompt
         }
       ],
-      temperature: 0.2, // Low temperature for deterministic predictions
+      temperature: 0.2,
     })
   });
 
@@ -78,11 +86,14 @@ async function askOpenAIModel(prompt) {
   const data = await response.json();
   const answer = data.choices[0].message.content.trim();
   
-  // STRICT PARSING: Only accept exactly "1", "2", or "3".
-  if (answer === "1" || answer === "2" || answer === "3") {
-    return parseInt(answer, 10);
-  } else {
-    throw new Error(`AI returned invalid format: "${answer}". Expected 1, 2, or 3.`);
+  try {
+    const parsed = JSON.parse(answer);
+    if (![1, 2, 3].includes(parsed.prediction)) {
+       throw new Error("Invalid prediction number");
+    }
+    return parsed;
+  } catch (e) {
+    throw new Error(`AI returned invalid JSON: "${answer}"`);
   }
 }
 
@@ -113,8 +124,8 @@ async function runAgent() {
 
     // ─── AUTO-CLAIM LOOP ───────────────────────────────────────────────────
     const fs = require('fs');
-    const stateFile = path.join(__dirname, '../../data/agent-state.json');
-    const claimedFile = path.join(__dirname, '../../data/agent-claimed.json');
+    const stateFile = path.join(__dirname, '../data/agent-state.json');
+    const claimedFile = path.join(__dirname, '../data/agent-claimed.json');
     
     let predictedMatches = [];
     if (fs.existsSync(stateFile)) {
@@ -188,10 +199,8 @@ async function runAgent() {
       return;
     }
 
-    // 4. Fetch Match Data from Local Database
-    // Note: matchId in our DB might be "espn_xxx". The on-chain ID is the keccak hash.
-    // For simplicity, we just fetch the most recent 'LIVE' or 'SCHEDULED' match that fits.
-    // Or we just get the latest news to feed the AI.
+    // 4. Fetch Match Data from Local Database for Context
+    // We already know the exact teams from activeMatchId via hook.matches(id)
     log(`Active Match ID detected on-chain: ${activeMatchId}`);
     
     // Fetch latest news to give the AI context
@@ -206,53 +215,76 @@ async function runAgent() {
       newsContext += `- ${article.title}: ${article.summary}\\n`;
     });
 
-    // We don't know the exact teams from activeMatchId easily without querying hook.matches(id),
-    // but we can ask the AI based on the general news context what the strongest bet is,
-    // or we fetch upcoming matches.
-    const upcomingMatches = db.getUpcomingMatches(24);
-    const liveMatches = db.getLiveMatches();
-    const candidateMatch = liveMatches.length > 0 ? liveMatches[0] : (upcomingMatches.length > 0 ? upcomingMatches[0] : null);
-
-    if (!candidateMatch) {
-      log("Could not find match context in DB. Skipping.");
-      return;
-    }
+    const teamA = matchDetails.teamA;
+    const teamB = matchDetails.teamB;
 
     const prompt = `
 ${newsContext}
 
 UPCOMING MATCH:
-Home Team: ${candidateMatch.home_team}
-Away Team: ${candidateMatch.away_team}
-Status: ${candidateMatch.status}
+Home Team: ${teamA}
+Away Team: ${teamB}
+Status: LIVE
 
-Based on the news and teams, who is more likely to win?
-Remember, ONLY output:
-1 for ${candidateMatch.home_team}
-2 for ${candidateMatch.away_team}
-3 for Draw
+Analyze the match based on the news and return a JSON object with your prediction (1 for ${teamA}, 2 for ${teamB}, 3 for Draw) and your reasoning.
 `;
 
-    log(`Sending context to Llama-3 (Groq)...`);
+    log(`> Initiating Multi-Agent Consensus Swarm for match ${activeMatchId}...`);
     
-    // 5. Ask the AI Model
-    const prediction = await askOpenAIModel(prompt);
+    // 5. Ask the AI Swarm
+    const models = ['llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'llama3-70b-8192'];
+    const votes = [];
     
-    const teamString = prediction === 1 ? candidateMatch.home_team : (prediction === 2 ? candidateMatch.away_team : "Draw");
-    log(`🧠 AI Prediction: ${prediction} (${teamString})`);
+    for (const model of models) {
+      try {
+        log(`> [${model}] Analyzing match data...`);
+        const result = await askOpenAIModel(prompt, model);
+        const teamString = result.prediction === 1 ? teamA : (result.prediction === 2 ? teamB : "Draw");
+        log(`> [${model}] Predicts: ${teamString} (Reason: ${result.reasoning})`);
+        votes.push(result.prediction);
+      } catch (err) {
+        log(`> [${model}] Failed to analyze: ${err.message}`);
+      }
+    }
+
+    if (votes.length < 2) {
+      log(`> ⚠️ Swarm failed to reach quorum (Need at least 2 successful votes). Skipping.`);
+      return;
+    }
+
+    // Tally votes
+    const tally = { 1: 0, 2: 0, 3: 0 };
+    votes.forEach(v => tally[v]++);
+    
+    let consensusPrediction = null;
+    let maxVotes = 0;
+    for (const [pred, count] of Object.entries(tally)) {
+      if (count >= 2) { // Need at least 2 out of 3
+        consensusPrediction = parseInt(pred, 10);
+        maxVotes = count;
+      }
+    }
+
+    if (!consensusPrediction) {
+      log(`> ⚖️ Swarm split (No majority). Executive Agent aborting transaction to preserve funds.`);
+      return;
+    }
+
+    const consensusString = consensusPrediction === 1 ? teamA : (consensusPrediction === 2 ? teamB : "Draw");
+    log(`> 🧠 Executive Agent Consensus Reached: ${consensusString} (${maxVotes}/${votes.length} votes)`);
 
     // 6. Execute Transaction (Strict Limit Applied)
     const amountWei = ethers.parseEther(MAX_PREDICTION_AMOUNT_OKB);
     log(`Submitting transaction to router... Amount: ${MAX_PREDICTION_AMOUNT_OKB} OKB`);
     
-    const tx = await router.predictWithOKB(activeMatchId, prediction, {
+    const tx = await router.predictWithOKB(activeMatchId, consensusPrediction, {
       value: amountWei,
       gasLimit: 300000
     });
 
-    log(`✅ Transaction submitted! Hash: ${tx.hash}`);
+    log(`> ✅ Executive Tx submitted! Hash: ${tx.hash}`);
     await tx.wait(1);
-    log(`🎯 Prediction locked on-chain successfully.`);
+    log(`> 🎯 Prediction locked on-chain successfully.`);
 
     // Mark as predicted
     predictedMatches.push(activeMatchId);
@@ -265,11 +297,15 @@ Remember, ONLY output:
 
 // ─── START AGENT ─────────────────────────────────────────────────────────────
 
-log("Starting GoalRush AGI Agent...");
-log(`Hardcoded betting limit: ${MAX_PREDICTION_AMOUNT_OKB} OKB`);
+log("> Booting GoalRush Sentient Swarm Agent...");
+log(`> Hard Boundary execution limit: ${MAX_PREDICTION_AMOUNT_OKB} OKB`);
 
 // Run immediately once
 runAgent();
 
 // Then run on interval
 setInterval(runAgent, POLL_INTERVAL_MS);
+
+module.exports = {
+  getAgentLogs: () => agentLogBuffer
+};

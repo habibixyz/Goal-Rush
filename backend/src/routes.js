@@ -333,4 +333,14 @@ router.post('/news/ingest', async (req, res) => {
   }
 });
 
+// ── GET /api/agent/logs ───────────────────────────────────
+router.get('/agent/logs', (req, res) => {
+  try {
+    const agent = require('./goalrush-ai-agent.cjs');
+    res.json({ success: true, logs: agent.getAgentLogs() });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 module.exports = router;

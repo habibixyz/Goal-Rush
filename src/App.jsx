@@ -6390,6 +6390,9 @@ export default function App() {
                   <p style={{ marginTop: '12px' }}>
                     The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded OKB transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.
                   </p>
+                  <p style={{ marginTop: '12px' }}>
+                    <strong>Event-Driven Stealth Operation:</strong> The agent operates entirely behind the scenes without exposing its logs to the frontend UI. Rather than inefficiently polling for updates, the swarm is purely event-driven: it wakes up precisely when a match is activated on-chain to place its prediction, and triggers instantly when a match is resolved to autonomously claim its jackpot winnings.
+                  </p>
                 </div>
 
                 <div className="whitepaper-section" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px' }}>
@@ -6721,6 +6724,9 @@ export default function App() {
                 <p style={{ marginTop: '12px' }}>
                   The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded OKB transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.
                 </p>
+                <p style={{ marginTop: '12px' }}>
+                  <strong>Event-Driven Stealth Operation:</strong> The agent operates entirely behind the scenes without exposing its logs to the frontend UI. Rather than inefficiently polling for updates, the swarm is purely event-driven: it wakes up precisely when a match is activated on-chain to place its prediction, and triggers instantly when a match is resolved to autonomously claim its jackpot winnings.
+                </p>
               </div>
 
               <div className="whitepaper-section" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px' }}>
@@ -6914,46 +6920,6 @@ export default function App() {
               ))}
             </nav>
 
-            {/* Oracle Ingestion Console Panel */}
-            <div className="oracle-console-wrapper" style={{ marginBottom: '32px' }}>
-              <div className="oracle-console-header">
-                <div className="oracle-title-wrap">
-                  <div className="oracle-pulse-dot"></div>
-                  <span className="oracle-title">X LAYER SPORTS ORACLE SYSTEM</span>
-                </div>
-                <div className="oracle-countdown-timer">
-                  <span>NEXT SYNC IN: </span>
-                  <strong className="timer-countdown">
-                    {Math.floor(newsCountdown / 60)}:{(newsCountdown % 60).toString().padStart(2, '0')}
-                  </strong>
-                </div>
-              </div>
-              
-              <div className="oracle-console-body">
-                <div className="oracle-logs-area">
-                  {oracleLogs.map((log, index) => (
-                    <div key={index} className="oracle-log-line">{log}</div>
-                  ))}
-                  {isIngesting && (
-                    <div className="oracle-log-line ingesting">
-                      <span className="loader-dots">&gt; Crawling Sky Sports news feed and checking OKX mempool...</span>
-                    </div>
-                  )}
-                </div>
-                <div className="oracle-action-panel">
-                  <button 
-                    className={`oracle-trigger-btn ${isIngesting ? 'loading' : ''}`}
-                    onClick={triggerOracleIngest}
-                    disabled={isIngesting}
-                  >
-                    {isIngesting ? 'SYNCING ORACLE...' : 'TRIGGER ORACLE CRAWL'}
-                  </button>
-                  <p className="oracle-hint-text">
-                    Allows manual override to trigger the Crawlee background script.
-                  </p>
-                </div>
-              </div>
-            </div>
 
             {newsLoading && newsArticles.length === 0 ? (
               <div className="news-loading-spinner" id="news-loader">

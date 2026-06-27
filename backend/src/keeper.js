@@ -230,6 +230,11 @@ async function tick() {
           await tx.wait(1);
           log(`   ✅ Resolved!`);
           resolvedIds.add(idStr);
+
+          // Wake up the Swarm Agent to check if it won and claim jackpots
+          const agent = require('./goalrush-ai-agent.cjs');
+          log(`   🤖 Triggering Swarm Agent for post-match claims...`);
+          setTimeout(() => { agent.runAgent().catch(err => log(`Agent claim error: ${err.message}`)); }, 3000);
         } catch (err) {
           if (err.message?.includes('already resolved')) {
             log(`   ℹ️  Already resolved`);

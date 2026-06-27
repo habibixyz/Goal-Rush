@@ -300,11 +300,11 @@ Analyze the match based on the news and return a JSON object with your predictio
 log("> Booting GoalRush Sentient Swarm Agent...");
 log(`> Hard Boundary execution limit: ${MAX_PREDICTION_AMOUNT_OKB} OKB`);
 
-// Run immediately once
+// Run immediately once to process any pending claims on startup
 runAgent();
 
-// Then run on interval
-setInterval(runAgent, POLL_INTERVAL_MS);
+// Note: Agent is no longer running on an interval. 
+// It is triggered by keeper.js upon match activation and match resolution.
 
 module.exports = {
   getAgentLogs: () => agentLogBuffer,

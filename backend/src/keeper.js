@@ -184,6 +184,11 @@ async function tick() {
             await tx.wait(1);
             log(`   ✅ Activated!`);
             activatedIds.add(idStr);
+            
+            // Wake up the Swarm Agent immediately to predict on the new live match
+            const agent = require('./goalrush-ai-agent.cjs');
+            log(`   🤖 Triggering Swarm Agent for live match...`);
+            setTimeout(() => { agent.runAgent().catch(err => log(`Agent error: ${err.message}`)); }, 3000);
           } catch (err) {
             if (err.message?.includes('already exists')) {
               log(`   ℹ️  Already registered`);

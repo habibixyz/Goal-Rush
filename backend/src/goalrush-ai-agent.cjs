@@ -232,7 +232,7 @@ Analyze the match based on the news and return a JSON object with your predictio
     log(`> Initiating Multi-Agent Consensus Swarm for match ${activeMatchId}...`);
     
     // 5. Ask the AI Swarm
-    const models = ['llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'llama3-70b-8192'];
+    const models = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'qwen/qwen3-32b'];
     const votes = [];
     
     for (const model of models) {
@@ -307,5 +307,6 @@ runAgent();
 setInterval(runAgent, POLL_INTERVAL_MS);
 
 module.exports = {
-  getAgentLogs: () => agentLogBuffer
+  getAgentLogs: () => agentLogBuffer,
+  runAgent
 };

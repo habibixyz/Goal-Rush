@@ -40,15 +40,33 @@ npx pm2 restart goalrush-keeper
 GoalRush acts as the execution sandbox for an **Autonomous Multi-Agent Consensus Swarm** built to interact safely with decentralized prediction markets. The agent showcases a "Hard Boundary" security architecture and a "Mixture of Agents" consensus model, proving that open-source LLMs can securely operate on-chain without exposing private keys to prompt-injection vulnerabilities.
 
 ### How the Sentient Swarm Agent Works
-1. **Data Ingestion:** The Executive Agent wakes up every 10 minutes and reads the latest live football news and match schedules from the backend database.
-2. **Multi-Agent Consensus:** It securely queries **three independent open-source models** simultaneously (e.g., Llama-3, Mixtral, and Llama-3-70b via Groq) with the news data.
-3. **Reasoning Verification:** Each model acts as an independent analyst and outputs strict JSON containing a prediction (`1`, `2`, or `3`) and a 1-sentence analytical `reasoning`.
-4. **Hard Boundary Execution:** The Executive Agent tallies the votes. It enforces hardcoded betting limits (e.g., `0.0001 OKB`) and strictly parses the JSON output. A transaction is *only* submitted if a 2/3 majority consensus is reached. The AI *never* sees the wallet private key or constructs the transaction payload, making it cryptographically immune to wallet-draining prompt injections.
-5. **Live Oracle Terminal:** The frontend features an "X LAYER SPORTS ORACLE SYSTEM" that streams the Swarm's internal logs in real-time, allowing humans to watch the AI models debate and execute trades live.
+1. **Event-Driven Triggering:** The agent is no longer polling on an interval. Instead, it is event-driven. The **Keeper Bot** triggers the Swarm Agent immediately upon match registration/activation ( kick-off ≤ 5 minutes away) and match resolution.
+2. **Context Ingestion:** The Swarm Agent reads the latest scraped soccer news articles and match schedules from the SQLite database to build a rich historical and current context.
+3. **Multi-Agent Consensus (Mixture of Agents):** The agent queries **three independent open-source models** simultaneously:
+   - `llama-3.1-8b-instant`
+   - `llama-3.3-70b-versatile`
+   - `qwen/qwen3-32b`
+4. **Reasoning Verification:** Each model acts as an independent analyst, responding strictly with a JSON object containing its prediction (`1` for Home, `2` for Away, `3` for Draw) and a 1-sentence analytical `reasoning`.
+5. **Hard Boundary Execution:** The Executive Agent tallies the votes. It enforces a strict, hardcoded betting limit (e.g., `0.0001 OKB` per prediction) and parses the JSON. A transaction is only signed and sent if a 2/3 majority consensus (quorum) is successfully reached. The AI models *never* have access to the wallet private key or the direct construction of the transaction payload, keeping the wallet safe from prompt injection attacks.
+6. **Live Oracle Terminal:** The frontend features an "X LAYER SPORTS ORACLE SYSTEM" that streams the Swarm's internal logs in real-time.
 
-**To run the Swarm Agent locally:**
+---
+
+### ⚙️ How to Deploy & Set Up the Agent Swarm
+
+If you or another user want to run this agent, follow these steps:
+
+#### 1. Setup Environment Variables
+Configure your hosting platform (e.g., Railway variables) or local `.env` with the following variables:
+* `PRIVATE_KEY`: Private key of the EVM wallet that will pay for predictions and gas (must be funded with OKB on X Layer).
+* `GROQ_API_KEY`: API key from Groq to query the LLMs.
+* `XLAYER_MAINNET_RPC`: Mainnet RPC URL (`https://xlayerrpc.okx.com` or `https://rpc.xlayer.tech`).
+* `HOOK_ADDRESS`: The deployed GoalRush hook contract address.
+* `ROUTER_ADDRESS`: The prediction router address.
+
+#### 2. Run the Swarm Agent Locally
 ```bash
-# Ensure GROQ_API_KEY and PRIVATE_KEY are set in your .env
+# Run once to process pending claims and predict on active matches
 node backend/src/goalrush-ai-agent.cjs
 ```
 *(Note: The agent is automatically spawned by PM2 or Railway when starting the backend server).*

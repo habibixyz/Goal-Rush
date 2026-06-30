@@ -155,8 +155,8 @@ async function tick() {
 
     const isScheduled = status === 'STATUS_SCHEDULED' || status === 'STATUS_PREGAME';
     const isLive      = status === 'STATUS_IN_PROGRESS' || status.includes('HALF') || status.includes('HALFTIME') || status.includes('PROGRESS');
-    const isFull      = status === 'STATUS_FULL_TIME'   || status === 'STATUS_FINAL' ||
-                        status === 'STATUS_FT'           || status === 'STATUS_FINAL_AET';
+    const isFull      = status === 'STATUS_FULL_TIME'   || status.startsWith('STATUS_FINAL') ||
+                        status === 'STATUS_FT';
 
     // ── Activation ───────────────────────────────────────────
     if ((isScheduled || isLive) && !activatedIds.has(idStr)) {

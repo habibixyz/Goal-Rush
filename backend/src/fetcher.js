@@ -69,7 +69,7 @@ async function fetchESPN() {
 
         let status = 'SCHEDULED';
         if (statusType === 'STATUS_IN_PROGRESS' || statusType.includes('HALF') || statusType.includes('HALFTIME') || statusType.includes('PROGRESS')) status = 'LIVE';
-        else if (statusType === 'STATUS_FULL_TIME' || statusType === 'STATUS_FINAL') status = 'FINISHED';
+        else if (statusType === 'STATUS_FULL_TIME' || statusType.startsWith('STATUS_FINAL') || statusType === 'STATUS_FT') status = 'FINISHED';
         else if (statusType === 'STATUS_POSTPONED' || statusType === 'STATUS_CANCELED') status = 'POSTPONED';
 
         // Check if kickoff is within 5 minutes (or has passed) and match is scheduled/in progress on ESPN

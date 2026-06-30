@@ -701,6 +701,80 @@ export default function App() {
   const [grushPriceUsd, setGrushPriceUsd] = useState(null);
   const [viewedCard, setViewedCard] = useState(null) // For viewing other users' cards from gallery
 
+  // OKX.AI Hub state variables
+  const [evaluatorStaked, setEvaluatorStaked] = useState(100)
+  const [evaluatorAccuracy, setEvaluatorAccuracy] = useState(94)
+  const [evaluatorBounties, setEvaluatorBounties] = useState(0)
+  const [evaluatorSlashed, setEvaluatorSlashed] = useState(0)
+  const [isRegisteredUser, setIsRegisteredUser] = useState(() => {
+    return localStorage.getItem('okx_registered_user') === 'true';
+  })
+  const [isRegisteredASP, setIsRegisteredASP] = useState(() => {
+    return localStorage.getItem('okx_registered_asp') === 'true';
+  })
+  const [isRegisteredEvaluator, setIsRegisteredEvaluator] = useState(() => {
+    return localStorage.getItem('okx_registered_evaluator') === 'true';
+  })
+
+  const [agentStats, setAgentStats] = useState({ totalCalls: 0, totalEarnings: '0.000' });
+  const [agentFulfillments, setAgentFulfillments] = useState([]);
+  const [isLoadingFulfillments, setIsLoadingFulfillments] = useState(false);
+  const [terminalInput, setTerminalInput] = useState('')
+  const [terminalHistory, setTerminalHistory] = useState([
+    'ONCHAIN OS v1.2.0 - OKX.AI SECURE COMMAND CONSOLE',
+    '-------------------------------------------------',
+    'Type help or use the quick buttons to get started.',
+    'Status: OFFLINE | No agents or identities loaded.',
+    ''
+  ])
+  const [isTerminalLoading, setIsTerminalLoading] = useState(false)
+  const [selectedCaseIndex, setSelectedCaseIndex] = useState(null)
+  const [arbitrationResult, setArbitrationResult] = useState(null)
+  const [isResolvingCase, setIsResolvingCase] = useState(false)
+
+  const [selectedPredictMatchId, setSelectedPredictMatchId] = useState('')
+  const [isQueryingPredict, setIsQueryingPredict] = useState(false)
+  const [predictResult, setPredictResult] = useState(null)
+  const [predictError, setPredictError] = useState(null)
+  useEffect(() => {
+    localStorage.setItem('okx_registered_user', isRegisteredUser);
+  }, [isRegisteredUser]);
+  
+  useEffect(() => {
+    localStorage.setItem('okx_registered_asp', isRegisteredASP);
+  }, [isRegisteredASP]);
+  
+  useEffect(() => {
+    localStorage.setItem('okx_registered_evaluator', isRegisteredEvaluator);
+  }, [isRegisteredEvaluator]);
+
+  const fetchAgentData = useCallback(async () => {
+    try {
+      setIsLoadingFulfillments(true);
+      const statsRes = await fetch(`${BACKEND_API_BASE}/agent/stats`);
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        if (statsData.success) {
+          setAgentStats({
+            totalCalls: statsData.totalCalls,
+            totalEarnings: statsData.totalEarnings
+          });
+        }
+      }
+      
+      const fulfillmentsRes = await fetch(`${BACKEND_API_BASE}/agent/predictions`);
+      if (fulfillmentsRes.ok) {
+        const fulfillmentsData = await fulfillmentsRes.json();
+        if (fulfillmentsData.success && Array.isArray(fulfillmentsData.data)) {
+          setAgentFulfillments(fulfillmentsData.data);
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to fetch live agent data:", e);
+    } finally {
+      setIsLoadingFulfillments(false);
+    }
+  }, []);
   const fetchNewsArticles = useCallback(async () => {
     setNewsLoading(true);
     try {
@@ -797,6 +871,14 @@ export default function App() {
     return () => clearInterval(interval);
   }, [currentView]);
 
+  useEffect(() => {
+    if (currentView === 'okx-ai') {
+      fetchAgentData();
+      const interval = setInterval(fetchAgentData, 5000); // Poll agent stats/fulfillments every 5s
+      return () => clearInterval(interval);
+    }
+  }, [currentView, fetchAgentData]);
+
   // Set up polling interval for new articles to simulate popping feed
   useEffect(() => {
     if (currentView !== 'news') return;
@@ -862,6 +944,9 @@ export default function App() {
     } else if (currentView === 'about') {
       title = "About & Docs | GoalRush Uniswap V4 Hook Technical Whitepaper";
       metaDesc = "Read the technical whitepaper, inspect smart contracts, and explore the CREATE2 deployment specs of the GoalRush V4 hook.";
+    } else if (currentView === 'okx-ai') {
+      title = "OKX.AI Agentic Portal | GoalRush Autonomous Predictions Swarm";
+      metaDesc = "Participate in the on-chain AI agent economy. Sell prediction services, run Onchain OS terminal prompts, and simulate Evaluator arbitration.";
     } else if (currentView === 'news') {
       if (activeNewsArticle) {
         title = `${activeNewsArticle.title} | GoalRush World Cup Daily News`;
@@ -4504,6 +4589,17 @@ export default function App() {
       <li>
         <button
           onClick={() => {
+            setCurrentView('okx-ai');
+            if (isSidebar) setIsMobileMenuOpen(false);
+          }}
+          className={`nav-btn ${currentView === 'okx-ai' ? 'active' : ''}`}
+        >
+          OKX.AI Hub
+        </button>
+      </li>
+      <li>
+        <button
+          onClick={() => {
             setCurrentView('about');
             if (isSidebar) setIsMobileMenuOpen(false);
           }}
@@ -4614,6 +4710,224 @@ export default function App() {
       )}
     </div>
   );
+
+  // OKX.AI Mock Dispute Cases
+  const mockDisputes = [
+    {
+      id: "CASE-9021",
+      task: "Develop Uniswap V4 dynamic fee hook based on volatility",
+      bounty: 15.0,
+      user: "0xDeFiVentures",
+      asp: "0xSwarmDevs",
+      complaint: "The delivered hook contract works fine, but during major volatility events in our local simulations, the fee adjustments took up to 3 blocks to trigger. The specification called for 'immediate fee updates' on high volatility.",
+      delivery: "We implemented the fee calculation inside beforeSwap using a sliding 24-hour average. The user is triggering artificial high volatility within a single block, which cannot be parsed instantly by a block-by-block average without exposing the pool to sandwich attacks.",
+      correctVote: "asp", // support ASP
+      rational: "The developer's design is economically sound. Sandwich attack protection is a critical security requirement that overrides the user's extreme intra-block volatility simulation."
+    },
+    {
+      id: "CASE-7043",
+      task: "Build ESPN live sports data crawler for X Layer oracle",
+      bounty: 8.0,
+      user: "0xGoalRushApp",
+      asp: "0xCrawlerAgent",
+      complaint: "The crawler was paid to supply live match logs every 10 minutes. During the high-traffic Germany vs Spain match, the crawler missed updating live scores for 3 hours. Our jackpot contract failed to lock correctly, and users complained.",
+      delivery: "Our crawler hit a Cloudflare block and rate-limit from ESPN during peak traffic. We had to rotate proxy keys, which caused a 3-hour delay. We eventually delivered the full logs, but the user is refusing to release the escrow.",
+      correctVote: "user", // support User
+      rational: "Live predictions require real-time score feeds. A 3-hour delay for a live sporting event defeats the entire purpose of the service, causing contract failures."
+    },
+    {
+      id: "CASE-5110",
+      task: "Audit ERC-20 token contract for hidden honeypot code",
+      bounty: 5.0,
+      user: "0xDegenTrader",
+      asp: "0xAuditAI",
+      complaint: "The agent scanned the token contract and marked it safe. I bought the tokens but was immediately locked (honeypotted) and couldn't sell. The agent failed to detect the transfer blacklist modifier.",
+      delivery: "The token code uses an obfuscated balance control function disguised as a standard reward fee. Our scanner checks for standard security patterns and state variables. The obfuscated blacklist was out of scope for a basic automated scan.",
+      correctVote: "user", // support User
+      rational: "Honeypot detection is the primary reason users pay for contract audits. Failing to flag a transfer restriction modifier is a core failure of the service."
+    }
+  ];
+
+  const handleQueryPrediction = async () => {
+    if (!selectedPredictMatchId) {
+      setPredictError("Please select a match first.");
+      return;
+    }
+    setIsQueryingPredict(true);
+    setPredictResult(null);
+    setPredictError(null);
+    
+    setTerminalHistory(prev => [
+      ...prev,
+      `> npx okx-ai query-asp --match-id ${selectedPredictMatchId}`,
+      `Connecting to GoalRush ASP Gateway...`,
+      `Invoking consensus swarm on Llama-3.1-8b, Llama-3.3-70b, and Qwen-32b...`
+    ]);
+    
+    try {
+      const response = await fetch(`${BACKEND_API_BASE}/predict`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ match_id: selectedPredictMatchId })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setPredictResult(data);
+        fetchAgentData();
+        setTerminalHistory(prev => [
+          ...prev,
+          `✅ Query Successful.`,
+          `Consensus Prediction: ${data.prediction}`,
+          `Votes Tally: ${JSON.stringify(data.tally)}`,
+          `Reasoning: ${data.reasoning}`,
+          `Fee of 0.005 OKB settled via escrow contract.`
+        ]);
+      } else {
+        setPredictError(data.error || "Failed to query prediction API.");
+        setTerminalHistory(prev => [
+          ...prev,
+          `❌ Query Failed: ${data.error || "Unknown error"}`
+        ]);
+      }
+    } catch (e) {
+      setPredictError(e.message || "Failed to connect to backend server.");
+      setTerminalHistory(prev => [
+        ...prev,
+        `❌ Network Error: ${e.message}`
+      ]);
+    } finally {
+      setIsQueryingPredict(false);
+    }
+  };
+
+  const handleRunTerminalCommand = (rawCmd) => {
+    const cmd = rawCmd.trim();
+    if (!cmd) return;
+    
+    setIsTerminalLoading(true);
+    setTerminalHistory(prev => [...prev, `> ${cmd}`]);
+    
+    setTimeout(() => {
+      let output = [];
+      const normalizedCmd = cmd.toLowerCase();
+      
+      if (normalizedCmd === 'help') {
+        output = [
+          'Available commands:',
+          '  help                     - Show this menu',
+          '  clear                    - Clear the console',
+          '  npx skills add okx/onchainos-skills - Install OKX Onchain OS skills',
+          '  register-user            - Register as a User on OKX.AI',
+          '  register-asp             - Register GoalRush as an ASP (Agent Service Provider)',
+          '  register-evaluator       - Stake 100 OKB and register as Evaluator',
+          '  status                   - Check registration and agent status'
+        ];
+      } else if (normalizedCmd === 'clear') {
+        setTerminalHistory([]);
+        setIsTerminalLoading(false);
+        return;
+      } else if (normalizedCmd.includes('skills add') || normalizedCmd.includes('onchainos-skills')) {
+        output = [
+          'Installing Onchain OS skill pack [okx/onchainos-skills]...',
+          'Progress: ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 100%',
+          'Connecting to Web3 Wallet provider...',
+          walletConnected 
+            ? `Connected successfully to wallet: ${userAddress.slice(0, 10)}...${userAddress.slice(-6)}` 
+            : 'Warning: Web3 wallet not connected. Please connect your wallet in the dashboard.',
+          'Initializing Agentic Wallet container on X Layer Testnet...',
+          'Onchain OS installed successfully. Try running: register-user'
+        ];
+      } else if (normalizedCmd === 'register-user') {
+        setIsRegisteredUser(true);
+        output = [
+          'Initiating OKX.AI User Registration on X Layer...',
+          'Generating identity hash...',
+          'Sending transaction to OKX Onchain OS registry contract...',
+          `Tx Hash: 0x${Math.random().toString(16).slice(2, 10)}b87a${Math.random().toString(16).slice(2, 10)}c12e`,
+          'Status: CONFIRMED',
+          'SUCCESS: Registered as an active OKX.AI User. You can now post prediction jobs!'
+        ];
+      } else if (normalizedCmd === 'register-asp') {
+        setIsRegisteredASP(true);
+        output = [
+          'Initiating OKX.AI Agent Service Provider (ASP) Registration...',
+          'Registering Agent: GoalRush Soccer consensus swarm',
+          'Service Type: Agent-to-Agent (A2A) & Agent-to-MCP (A2MCP)',
+          'Endpoint: https://api.goalrush.ai/v1/predict',
+          'Pricing schema set: 0.005 OKB per call',
+          `Tx Hash: 0x${Math.random().toString(16).slice(2, 10)}ff33${Math.random().toString(16).slice(2, 10)}9dff`,
+          'Status: CONFIRMED',
+          'SUCCESS: GoalRush Soccer Predictor is now listed as an active ASP!'
+        ];
+      } else if (normalizedCmd === 'register-evaluator') {
+        setIsRegisteredEvaluator(true);
+        setEvaluatorStaked(prev => prev >= 100 ? prev : 100);
+        output = [
+          'Initiating OKX.AI Evaluator Registration...',
+          'Checking balance for 100 OKB minimum stake...',
+          'Staking 100 OKB to arbitration pool on X Layer...',
+          `Tx Hash: 0x${Math.random().toString(16).slice(2, 10)}a896${Math.random().toString(16).slice(2, 10)}48ac`,
+          'Status: CONFIRMED',
+          'SUCCESS: Registered as active Evaluator. Staked: 100 OKB.',
+          'You are now eligible to judge disputes and earn bounty fees.'
+        ];
+      } else if (normalizedCmd === 'status') {
+        output = [
+          '--- OKX.AI SYSTEM STATUS ---',
+          `Wallet connected: ${walletConnected ? 'YES' : 'NO'}`,
+          `User registered: ${isRegisteredUser ? 'YES' : 'NO'}`,
+          `ASP registered (GoalRush Predictor): ${isRegisteredASP ? 'YES (Active)' : 'NO'}`,
+          `Evaluator registered: ${isRegisteredEvaluator ? 'YES (Active)' : 'NO'}`,
+          `Evaluator Stake: ${isRegisteredEvaluator ? evaluatorStaked + ' OKB' : '0 OKB'}`
+        ];
+      } else {
+        output = [
+          `Command not found: '${cmd}'.`,
+          "Type 'help' for a list of available commands."
+        ];
+      }
+      
+      setTerminalHistory(prev => [...prev, ...output, '']);
+      setIsTerminalLoading(false);
+      setTerminalInput('');
+    }, 800);
+  };
+
+  const handleArbitrationVote = (vote) => {
+    if (selectedCaseIndex === null || isResolvingCase) return;
+    setIsResolvingCase(true);
+    setArbitrationResult(null);
+    
+    const activeCase = mockDisputes[selectedCaseIndex];
+    
+    setTimeout(() => {
+      const isCorrect = vote === activeCase.correctVote;
+      
+      if (isCorrect) {
+        setEvaluatorBounties(prev => prev + 0.25);
+        setEvaluatorAccuracy(prev => {
+          return Math.min(100, Math.round(((prev * 9) + 100) / 10));
+        });
+        setArbitrationResult({
+          success: true,
+          message: `SUCCESS! Your verdict aligned with the majority of the evaluators (4 out of 5 voted for ${vote.toUpperCase()}). You earned a bounty reward of +0.25 OKB (5% of the task budget).`
+        });
+      } else {
+        setEvaluatorSlashed(prev => prev + 1);
+        setEvaluatorStaked(prev => Math.max(0, prev - 1));
+        setEvaluatorAccuracy(prev => {
+          return Math.max(0, Math.round(((prev * 9) + 0) / 10));
+        });
+        setArbitrationResult({
+          success: false,
+          message: `VERDICT OVERRULED: Your verdict disagreed with the majority of the evaluators (4 out of 5 voted for ${activeCase.correctVote.toUpperCase()}). 1% of your stake (1.00 OKB) has been slashed.`
+        });
+      }
+      setIsResolvingCase(false);
+    }, 2000);
+  };
 
   return (
     <div className="app-wrapper">
@@ -6167,6 +6481,494 @@ export default function App() {
 
 
 
+      {currentView === 'okx-ai' && (
+        <div style={{ marginTop: '32px' }}>
+          {/* Header Banner */}
+          <section className="match-center-header" style={{ marginBottom: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '2.5rem' }}>🤖</span>
+              <div>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 800, background: 'linear-gradient(135deg, #fff 0%, var(--color-primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  OKX.AI Portal
+                </h2>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '4px' }}>
+                  Welcome to the Agentic Economy. Interact with the OKX.AI marketplace, list agents as service providers, or arbitrate disputes.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Role Showcase Grid */}
+          <div className="okx-roles-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+            {/* User Card */}
+            <div className="card-bezel okx-role-card" style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <User size={24} style={{ color: 'var(--color-secondary)' }} />
+                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Task User</h3>
+                </div>
+                <span className={`badge-xlayer ${isRegisteredUser ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', padding: '4px 10px' }}>
+                  {isRegisteredUser ? '● Connected ID' : '○ Unregistered'}
+                </span>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: '1.5', marginBottom: '16px' }}>
+                Hire specialized AI agents to complete on-chain task requests (auditing, trading, analysis). Fund secure escrow smart contracts on X Layer.
+              </p>
+              <div style={{ background: '#020405', padding: '10px', borderRadius: '6px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                prompt: Register me as a User on OKX.AI
+              </div>
+              <button 
+                onClick={() => handleRunTerminalCommand('register-user')} 
+                className="btn-secondary" 
+                style={{ width: '100%', padding: '8px', fontSize: '0.85rem', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                Register Identity
+              </button>
+            </div>
+
+            {/* ASP Card */}
+            <div className="card-bezel okx-role-card" style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Cpu size={24} style={{ color: 'var(--color-primary)' }} />
+                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Service Provider (ASP)</h3>
+                </div>
+                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', padding: '4px 10px', borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }}>
+                  {isRegisteredASP ? '● GoalRush Active' : '○ Inactive'}
+                </span>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: '1.5', marginBottom: '16px' }}>
+                List your AI agent services in the OKX.AI directory. Fulfill automated tasks or custom-negotiated predictions and earn payout fees.
+              </p>
+              <div style={{ background: '#020405', padding: '10px', borderRadius: '6px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                prompt: Help me register an A2A ASP on OKX.AI
+              </div>
+              <button 
+                onClick={() => handleRunTerminalCommand('register-asp')} 
+                className="btn-primary" 
+                style={{ width: '100%', padding: '8px', fontSize: '0.85rem', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                Register GoalRush Agent
+              </button>
+            </div>
+
+            {/* Evaluator Card */}
+            <div className="card-bezel okx-role-card" style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldCheck size={24} style={{ color: 'var(--color-accent)' }} />
+                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Dispute Evaluator</h3>
+                </div>
+                <span className={`badge-xlayer ${isRegisteredEvaluator ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', padding: '4px 10px', borderColor: 'var(--color-accent)', color: 'var(--color-accent)' }}>
+                  {isRegisteredEvaluator ? '● Staked & Online' : '○ Off-duty'}
+                </span>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: '1.5', marginBottom: '16px' }}>
+                Stake at least 100 OKB to act as an arbitrator. Review evidence to resolve user/agent contract disputes. Earn 5% of bounties on correct verdicts.
+              </p>
+              <div style={{ background: '#020405', padding: '10px', borderRadius: '6px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                prompt: Register me as an Evaluator on OKX.AI
+              </div>
+              <button 
+                onClick={() => handleRunTerminalCommand('register-evaluator')} 
+                className="btn-secondary" 
+                style={{ width: '100%', padding: '8px', fontSize: '0.85rem', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                Stake & Activate
+              </button>
+            </div>
+          </div>
+
+          {/* Terminal and Interactive Command Center */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '32px', marginBottom: '32px' }}>
+            <div className="card-bezel okx-terminal-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 className="panel-title" style={{ margin: 0 }}>
+                  <TerminalIcon size={20} style={{ color: 'var(--color-secondary)' }} />
+                  Onchain OS Agent Console
+                </h3>
+                <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)' }}>
+                  Session: X-LAYER-TESTNET
+                </span>
+              </div>
+
+              {/* Terminal Screen */}
+              <div 
+                className="okx-terminal-screen" 
+                style={{ 
+                  background: '#010304', 
+                  border: '1px solid rgba(255,255,255,0.08)', 
+                  borderRadius: '8px', 
+                  padding: '16px', 
+                  height: '240px', 
+                  overflowY: 'auto', 
+                  fontFamily: 'var(--font-mono)', 
+                  fontSize: '0.85rem', 
+                  lineHeight: '1.5',
+                  color: '#00ff66',
+                  boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8)'
+                }}
+              >
+                {terminalHistory.map((line, idx) => (
+                  <div key={idx} style={{ minHeight: '18px', color: line.startsWith('>') ? 'var(--color-secondary)' : line.includes('SUCCESS') || line.includes('CONFIRMED') ? 'var(--color-primary)' : line.includes('Warning') || line.includes('Error') ? 'var(--color-danger)' : '#a3b5c0' }}>
+                    {line}
+                  </div>
+                ))}
+                {isTerminalLoading && (
+                  <div className="terminal-loading-dots" style={{ color: 'var(--color-secondary)' }}>
+                    Fulfilling request...
+                  </div>
+                )}
+              </div>
+
+              {/* Console Inputs */}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <input
+                  type="text"
+                  value={terminalInput}
+                  onChange={(e) => setTerminalInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleRunTerminalCommand(terminalInput)}
+                  placeholder="Type an Onchain OS prompt (e.g. status, help)..."
+                  style={{
+                    flex: 1,
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    color: '#fff',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.9rem',
+                    outline: 'none'
+                  }}
+                />
+                <button
+                  onClick={() => handleRunTerminalCommand(terminalInput)}
+                  className="btn-primary"
+                  style={{ padding: '0 24px', cursor: 'pointer' }}
+                >
+                  <Send size={16} /> Run
+                </button>
+              </div>
+
+              {/* Quick Actions Footer */}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px' }}>
+                <button onClick={() => handleRunTerminalCommand('help')} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.75rem', cursor: 'pointer' }}>help</button>
+                <button onClick={() => handleRunTerminalCommand('npx skills add okx/onchainos-skills')} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.75rem', cursor: 'pointer' }}>install skills pack</button>
+                <button onClick={() => handleRunTerminalCommand('status')} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.75rem', cursor: 'pointer' }}>check status</button>
+                <button onClick={() => handleRunTerminalCommand('clear')} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.75rem', color: 'var(--color-danger)', borderColor: 'rgba(255, 51, 68, 0.2)', cursor: 'pointer' }}>clear logs</button>
+              </div>
+            </div>
+          </div>
+
+          {/* Service Provider & Arbitration Section Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: isRegisteredEvaluator ? '1fr 1fr' : '1fr', gap: '32px', marginBottom: '64px' }}>
+            
+            {/* ASP Service Hub details */}
+            <div className="card-bezel okx-asp-dashboard" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 className="panel-title" style={{ margin: 0 }}>
+                  <Cpu size={20} style={{ color: 'var(--color-primary)' }} />
+                  GoalRush ASP Console
+                </h3>
+                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }}>
+                  {isRegisteredASP ? '● LISTENING' : '○ OFFLINE'}
+                </span>
+              </div>
+
+              {!isRegisteredASP ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.08)' }}>
+                  <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', marginBottom: '16px' }}>
+                    Register the GoalRush Swarm Predictor as an Agent Service Provider (ASP) to launch your sports oracle API services.
+                  </p>
+                  <button onClick={() => handleRunTerminalCommand('register-asp')} className="btn-primary" style={{ display: 'inline-flex', margin: '0 auto', cursor: 'pointer' }}>
+                    Activate Provider Portal
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Fee rate</span>
+                      <strong style={{ fontSize: '1.2rem', color: 'var(--color-primary)', fontFamily: 'var(--font-mono)' }}>0.005 OKB</strong>
+                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', display: 'block', marginTop: '2px' }}>settled per call instantly</span>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Total Earnings</span>
+                      <strong style={{ fontSize: '1.2rem', color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)' }}>{agentStats.totalEarnings} OKB</strong>
+                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', display: 'block', marginTop: '2px' }}>{agentStats.totalCalls} API calls served</span>
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.85rem' }}>
+                    <span style={{ color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: '4px' }}>Registered API Endpoint (A2MCP)</span>
+                    <code style={{ color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)', wordBreak: 'break-all' }}>{BACKEND_API_BASE}/api/predict</code>
+                  </div>
+
+                  <div>
+                    <h4 style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '8px', fontWeight: 600 }}>Active Prediction Fulfillments</h4>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
+                            <th style={{ padding: '8px 4px' }}>Client</th>
+                            <th style={{ padding: '8px 4px' }}>Match</th>
+                            <th style={{ padding: '8px 4px' }}>Prediction</th>
+                            <th style={{ padding: '8px 4px' }}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {isLoadingFulfillments && agentFulfillments.length === 0 ? (
+                            <tr>
+                              <td colSpan="4" style={{ padding: '16px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
+                                Loading prediction jobs from DB...
+                              </td>
+                            </tr>
+                          ) : agentFulfillments.length === 0 ? (
+                            <tr>
+                              <td colSpan="4" style={{ padding: '16px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
+                                No active prediction jobs. Select a match below to test.
+                              </td>
+                            </tr>
+                          ) : (
+                            agentFulfillments.map((f, i) => {
+                              const isFinished = f.match_status === 'FINISHED';
+                              return (
+                                <tr key={f.id || i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                  <td style={{ padding: '8px 4px', fontFamily: 'var(--font-mono)' }}>{f.wallet.slice(0, 10)}...</td>
+                                  <td style={{ padding: '8px 4px' }}>{f.home_team} vs {f.away_team}</td>
+                                  <td style={{ padding: '8px 4px', color: 'var(--color-primary)', textTransform: 'uppercase' }}>{f.prediction}</td>
+                                  <td style={{ padding: '8px 4px', color: isFinished ? 'var(--color-primary)' : '#ffaa00' }}>
+                                    {isFinished ? 'Delivered' : 'Evaluating'}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.08)', margin: '16px 0' }} />
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <h4 style={{ fontSize: '0.95rem', color: 'var(--color-primary)', margin: '0 0 4px 0', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Activity size={16} />
+                      Live AI Swarm Prediction Tester
+                    </h4>
+                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', margin: 0 }}>
+                      Send a real-time request to the GoalRush consensus swarm to predict an outcome using current news sentiment.
+                    </p>
+
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <select
+                        value={selectedPredictMatchId}
+                        onChange={(e) => setSelectedPredictMatchId(e.target.value)}
+                        style={{
+                          flex: 1,
+                          background: 'rgba(0,0,0,0.5)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          color: '#fff',
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          fontSize: '0.85rem',
+                          fontFamily: 'inherit',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="">-- Select Active Match --</option>
+                        {liveMatches.map((m) => (
+                          <option key={m.id} value={m.dbId || m.id}>
+                            {m.teamA} vs {m.teamB} ({m.minute})
+                          </option>
+                        ))}
+                      </select>
+
+                      <button
+                        onClick={handleQueryPrediction}
+                        disabled={isQueryingPredict || !selectedPredictMatchId}
+                        className="btn-primary"
+                        style={{
+                          padding: '8px 16px',
+                          fontSize: '0.85rem',
+                          height: '38px',
+                          whiteSpace: 'nowrap',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        {isQueryingPredict ? (
+                          <>
+                            <span className="terminal-loading-dots">Swarm Voting</span>
+                          </>
+                        ) : (
+                          <>
+                            <Send size={14} />
+                            Query Swarm
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {predictError && (
+                      <div style={{ color: '#ff3344', fontSize: '0.8rem', background: 'rgba(255,51,68,0.05)', padding: '8px', borderRadius: '4px', border: '1px solid rgba(255,51,68,0.15)' }}>
+                        <strong>Error:</strong> {predictError}
+                      </div>
+                    )}
+
+                    {predictResult && (
+                      <div style={{ background: 'rgba(0,0,0,0.4)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(157, 255, 0, 0.15)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '6px' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>Swarm Verdict</span>
+                          <strong style={{ fontSize: '0.85rem', color: 'var(--color-primary)' }}>{predictResult.prediction}</strong>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>
+                          <strong>Reasoning:</strong> {predictResult.reasoning}
+                        </div>
+                        <div style={{ display: 'flex', gap: '12px', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
+                          <span>Votes:</span>
+                          {Object.entries(predictResult.tally).map(([team, count]) => (
+                            <span key={team}><strong>{team}</strong>: {count}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Evaluator Arbitration Simulator */}
+            {isRegisteredEvaluator && (
+              <div className="card-bezel okx-evaluator-dashboard" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 className="panel-title" style={{ margin: 0 }}>
+                    <ShieldCheck size={20} style={{ color: 'var(--color-accent)' }} />
+                    Evaluator Dispute Court
+                  </h3>
+                  <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)' }}>
+                    Acc: {evaluatorAccuracy}%
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Staked</span>
+                    <strong style={{ fontSize: '1rem', color: '#fff', fontFamily: 'var(--font-mono)' }}>{evaluatorStaked} OKB</strong>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Earned</span>
+                    <strong style={{ fontSize: '1rem', color: 'var(--color-primary)', fontFamily: 'var(--font-mono)' }}>+{evaluatorBounties} OKB</strong>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Slashed</span>
+                    <strong style={{ fontSize: '1rem', color: 'var(--color-danger)', fontFamily: 'var(--font-mono)' }}>-{evaluatorSlashed} OKB</strong>
+                  </div>
+                </div>
+
+                {/* Staking Increase controls */}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>Adjust Staked Deposit:</span>
+                  <button onClick={() => setEvaluatorStaked(prev => prev + 50)} className="btn-secondary" style={{ padding: '4px 8px', fontSize: '0.75rem', cursor: 'pointer' }}>+50 OKB</button>
+                  <button onClick={() => setEvaluatorStaked(prev => Math.max(100, prev - 50))} className="btn-secondary" style={{ padding: '4px 8px', fontSize: '0.75rem', cursor: 'pointer' }}>-50 OKB</button>
+                </div>
+
+                {/* Cases List */}
+                <div>
+                  <h4 style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '8px', fontWeight: 600 }}>Assigned Dispute Pool</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {mockDisputes.map((item, idx) => (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setSelectedCaseIndex(idx);
+                          setArbitrationResult(null);
+                        }}
+                        className={`team-row ${selectedCaseIndex === idx ? 'selected' : ''}`}
+                        style={{ padding: '10px 14px', width: '100%', textDecoration: 'none', color: '#fff', background: selectedCaseIndex === idx ? 'rgba(255, 92, 0, 0.08)' : 'rgba(255,255,255,0.02)', borderColor: selectedCaseIndex === idx ? 'var(--color-accent)' : 'rgba(255,255,255,0.05)', display: 'block', borderStyle: 'solid', borderWidth: '1px', borderRadius: '8px', textAlign: 'left', cursor: 'pointer', transition: 'var(--transition-smooth)' }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 600, fontSize: '0.8rem' }}>{item.id} &middot; {item.task.slice(0, 32)}...</span>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--color-primary)' }}>{item.bounty} OKB</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Case File Details Panel */}
+                {selectedCaseIndex !== null && (() => {
+                  const activeCase = mockDisputes[selectedCaseIndex];
+                  return (
+                    <div style={{ background: '#020405', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '6px', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>
+                        <strong>Case File:</strong> {activeCase.id} | Client: {activeCase.user} vs Provider: {activeCase.asp}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', lineHeight: '1.4' }}>
+                        <span style={{ color: 'var(--color-danger)', fontWeight: 600, display: 'block', marginBottom: '2px' }}>User Complaint:</span>
+                        <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0 }}>"{activeCase.complaint}"</p>
+                      </div>
+                      <div style={{ fontSize: '0.8rem', lineHeight: '1.4' }}>
+                        <span style={{ color: 'var(--color-secondary)', fontWeight: 600, display: 'block', marginBottom: '2px' }}>ASP Delivery Log:</span>
+                        <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0 }}>"{activeCase.delivery}"</p>
+                      </div>
+
+                      {/* Vote selection */}
+                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#ffcc00' }}>
+                          ⚠️ Submit your vote. Majority vote wins. Wrong vote slashes 1.00 OKB.
+                        </div>
+                        {isResolvingCase ? (
+                          <div style={{ textAlign: 'center', padding: '8px', color: 'var(--color-accent)', fontSize: '0.8rem', fontWeight: 600 }}>
+                            ⌛ Collecting evaluator consensus signatures...
+                          </div>
+                        ) : arbitrationResult ? (
+                          <div style={{ 
+                            padding: '8px', 
+                            borderRadius: '6px', 
+                            fontSize: '0.85rem', 
+                            background: arbitrationResult.success ? 'rgba(157, 255, 0, 0.05)' : 'rgba(255, 51, 68, 0.05)', 
+                            border: `1px solid ${arbitrationResult.success ? 'var(--color-primary)' : 'var(--color-danger)'}`,
+                            color: arbitrationResult.success ? 'var(--color-primary)' : 'var(--color-danger)' 
+                          }}>
+                            {arbitrationResult.message}
+                            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginTop: '6px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '4px' }}>
+                              <strong>Verdict logic:</strong> {activeCase.rational}
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            <button
+                              onClick={() => handleArbitrationVote('user')}
+                              className="btn-secondary"
+                              style={{ flex: 1, padding: '8px', fontSize: '0.8rem', borderColor: 'var(--color-danger)', color: 'var(--color-danger)', background: 'rgba(255, 51, 68, 0.05)', justifyContent: 'center', cursor: 'pointer' }}
+                            >
+                              Support User
+                            </button>
+                            <button
+                              onClick={() => handleArbitrationVote('asp')}
+                              className="btn-secondary"
+                              style={{ flex: 1, padding: '8px', fontSize: '0.8rem', borderColor: 'var(--color-primary)', color: 'var(--color-primary)', background: 'rgba(157, 255, 0, 0.05)', justifyContent: 'center', cursor: 'pointer' }}
+                            >
+                              Support ASP
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+              </div>
+            )}
+
+          </div>
+
+        </div>
+      )}
+
       {currentView === 'about' && (
         <div style={{ marginTop: '32px' }}>
           <section className="match-center-header" style={{ marginBottom: '32px' }}>
@@ -7132,6 +7934,10 @@ export default function App() {
         <button className={`bottom-nav-item ${currentView === 'leaderboard' ? 'active' : ''}`} onClick={() => { setCurrentView('leaderboard'); setTimeout(() => document.getElementById('leaderboard')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>
           <Award size={20} />
           <span>Ranks</span>
+        </button>
+        <button className={`bottom-nav-item ${currentView === 'okx-ai' ? 'active' : ''}`} onClick={() => { setCurrentView('okx-ai'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+          <Cpu size={20} />
+          <span>OKX.AI</span>
         </button>
         <button className={`bottom-nav-item ${currentView === 'about' ? 'active' : ''}`} onClick={() => setCurrentView('about')}>
           <HelpCircle size={20} />

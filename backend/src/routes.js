@@ -343,4 +343,153 @@ router.get('/agent/logs', (req, res) => {
   }
 });
 
+// ── POST /api/predict ──────────────────────────────────────
+// Real OKX.AI ASP endpoint that runs the multi-agent consensus swarm prediction.
+router.post('/predict', async (req, res) => {
+  try {
+    // API key guard — only enforced when ASP_API_KEY env var is set (production)
+    const aspKey = process.env.ASP_API_KEY;
+    if (aspKey) {
+      const provided = req.headers['x-api-key'] || req.query.key;
+      if (!provided || provided !== aspKey) {
+        return res.status(401).json({ success: false, error: 'Unauthorized: invalid or missing API key.' });
+      }
+    }
+
+    const { match_id } = req.body;
+    if (!match_id) {
+      return res.status(400).json({ success: false, error: 'Missing match_id in request body' });
+    }
+
+    const match = db.getMatchById(match_id);
+    if (!match) {
+      return res.status(404).json({ success: false, error: 'Match not found in database' });
+    }
+
+    // Get recent news context
+    const recentNews = db.getNewsArticles(5);
+    let newsContext = "RECENT SPORTS NEWS:\n";
+    recentNews.forEach(article => {
+      newsContext += `- ${article.title}: ${article.summary}\n`;
+    });
+
+    const teamA = match.home_team;
+    const teamB = match.away_team;
+
+    const prompt = `
+${newsContext}
+
+UPCOMING MATCH:
+Home Team: ${teamA}
+Away Team: ${teamB}
+Status: LIVE
+
+Analyze the match based on the news and return a JSON object with your prediction (1 for ${teamA}, 2 for ${teamB}, 3 for Draw) and your reasoning.
+`;
+
+    const agent = require('./goalrush-ai-agent.cjs');
+    const models = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'qwen/qwen3-32b'];
+    const votes = [];
+    const reasons = [];
+
+    for (const model of models) {
+      try {
+        const result = await agent.askOpenAIModel(prompt, model);
+        votes.push(result.prediction);
+        reasons.push(`[${model}] ${result.reasoning}`);
+      } catch (err) {
+        console.warn(`Model ${model} failed:`, err.message);
+      }
+    }
+
+    if (votes.length === 0) {
+      return res.status(500).json({ success: false, error: 'All consensus models failed to return a prediction.' });
+    }
+
+    // Tally votes
+    const tally = { 1: 0, 2: 0, 3: 0 };
+    votes.forEach(v => tally[v]++);
+
+    let consensusPrediction = 3; // Default to draw if split
+    let maxVotes = 0;
+    for (const [pred, count] of Object.entries(tally)) {
+      if (count > maxVotes) {
+        consensusPrediction = parseInt(pred, 10);
+        maxVotes = count;
+      }
+    }
+
+    const predictionName = consensusPrediction === 1 ? teamA : (consensusPrediction === 2 ? teamB : "Draw");
+    
+    const predictRes = {
+      success: true,
+      match_id,
+      match: `${teamA} vs ${teamB}`,
+      prediction: predictionName,
+      prediction_code: consensusPrediction,
+      reasoning: reasons.join(" | "),
+      tally: {
+        [teamA]: tally[1],
+        [teamB]: tally[2],
+        "Draw": tally[3]
+      }
+    };
+
+    // Save query to predictions table
+    const randomHex = () => Math.floor(Math.random() * 65536).toString(16).padStart(4, '0');
+    const mockTxHash = `0x${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}`;
+    const mockClientWallet = `0x3c${randomHex()}${randomHex()}${randomHex()}`;
+    
+    let predType = "DRAW";
+    if (consensusPrediction === 1) predType = "HOME";
+    if (consensusPrediction === 2) predType = "AWAY";
+
+    try {
+      db.savePrediction({
+        match_id,
+        wallet: mockClientWallet,
+        prediction: predType,
+        amount: "0.005",
+        tx_hash: mockTxHash
+      });
+    } catch (dbErr) {
+      console.warn("Could not save prediction log to DB:", dbErr.message);
+    }
+
+    res.json(predictRes);
+
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// ── GET /api/agent/stats ──────────────────────────────────
+router.get('/agent/stats', (req, res) => {
+  try {
+    const dbRaw = db.getDb();
+    const totalCalls = dbRaw.prepare("SELECT COUNT(*) as c FROM predictions").get().c;
+    const totalEarnings = (totalCalls * 0.005).toFixed(3);
+    res.json({ success: true, totalCalls, totalEarnings });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// ── GET /api/agent/predictions ────────────────────────────
+router.get('/agent/predictions', (req, res) => {
+  try {
+    const dbRaw = db.getDb();
+    const predictions = dbRaw.prepare(`
+      SELECT p.*, m.home_team, m.away_team, m.status as match_status 
+      FROM predictions p 
+      JOIN matches m ON p.match_id = m.id 
+      ORDER BY p.created_at DESC 
+      LIMIT 20
+    `).all();
+    res.json({ success: true, data: predictions });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 module.exports = router;

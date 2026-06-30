@@ -308,5 +308,6 @@ runAgent();
 
 module.exports = {
   getAgentLogs: () => agentLogBuffer,
-  runAgent
+  runAgent,
+  askOpenAIModel
 };

@@ -4963,3 +4963,70 @@ input:focus-visible {
     width: 20px !important;
   }
 }
+
+/* OKX.AI Hub Custom Styles */
+.okx-roles-grid {
+  margin-top: 24px;
+}
+
+.okx-role-card {
+  transition: var(--transition-smooth);
+}
+
+.okx-role-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.active-badge {
+  background: rgba(157, 255, 0, 0.1) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+  text-shadow: 0 0 8px rgba(157, 255, 0, 0.4);
+}
+
+.okx-terminal-screen::-webkit-scrollbar {
+  width: 4px;
+}
+
+.okx-terminal-screen::-webkit-scrollbar-track {
+  background: #010304;
+}
+
+.okx-terminal-screen::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 2px;
+}
+
+.okx-terminal-screen::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+}
+
+.terminal-loading-dots::after {
+  content: '...';
+  display: inline-block;
+  animation: dots-pulse 1.5s steps(4, end) infinite;
+  width: 0;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+@keyframes dots-pulse {
+  to {
+    width: 1.25em;
+  }
+}
+
+.okx-asp-dashboard table th,
+.okx-asp-dashboard table td {
+  padding: 10px 8px;
+}
+
+.okx-evaluator-dashboard button.selected {
+  background: rgba(255, 92, 0, 0.08) !important;
+  border-color: var(--color-accent) !important;
+  color: #fff !important;
+  box-shadow: 0 0 15px rgba(255, 92, 0, 0.15);
+}
+

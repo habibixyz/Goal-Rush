@@ -124,11 +124,23 @@ npm install
 ```
 
 ### 2. Run the Development Server
-Start the local server:
+GoalRush includes a unified dev runner script that starts both the Vite frontend client and the Express backend server concurrently:
 ```bash
 npm run dev
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser to view the interactive soccer pitch swap dashboard.
+- **Frontend URL**: `http://localhost:5173` (or `http://localhost:5174` if port is in use)
+- **Backend URL**: `http://localhost:3001` (Express API & Socket.io server)
+
+---
+
+## 🤖 OKX.AI Onchain OS Integration & Skills Manifest
+
+GoalRush is integrated with OKX's Agentic Wallet and Agent Service Provider (ASP) standards. 
+
+### Local Console & Registry
+- The frontend features an interactive **Onchain OS Secure Console** where developers can run registry commands (`register-asp`, `register-user`, `status`, `help`).
+- In the local simulation, the GoalRush agent is registered on-chain with **Agent ID: #2312** under the `Listing under review` status. 
+- You can find the official skill metadata and schemas in [skills/goalrush/SKILL.md](file:///c:/Users/user/.gemini/antigravity/scratch/hook-the-world-cup/skills/goalrush/SKILL.md) to publish the agent live to the OKX Onchain OS store.
 
 ---
 

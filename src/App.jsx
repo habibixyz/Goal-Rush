@@ -720,13 +720,20 @@ export default function App() {
   const [agentFulfillments, setAgentFulfillments] = useState([]);
   const [isLoadingFulfillments, setIsLoadingFulfillments] = useState(false);
   const [terminalInput, setTerminalInput] = useState('')
-  const [terminalHistory, setTerminalHistory] = useState([
-    'ONCHAIN OS v1.2.0 - OKX.AI SECURE COMMAND CONSOLE',
-    '-------------------------------------------------',
-    'Type help or use the quick buttons to get started.',
-    'Status: OFFLINE | No agents or identities loaded.',
-    ''
-  ])
+  const [terminalHistory, setTerminalHistory] = useState(() => {
+    const isUser = localStorage.getItem('okx_registered_user') === 'true';
+    const isAsp = localStorage.getItem('okx_registered_asp') === 'true';
+    const statusLine = (isUser || isAsp)
+      ? `Status: ONLINE | User ID: Active | ASP: ${isAsp ? 'Listening' : 'Offline'}`
+      : 'Status: OFFLINE | No agents or identities loaded.';
+    return [
+      'ONCHAIN OS v1.2.0 - OKX.AI SECURE COMMAND CONSOLE',
+      '-------------------------------------------------',
+      'Type help or use the quick buttons to get started.',
+      statusLine,
+      ''
+    ];
+  })
   const [isTerminalLoading, setIsTerminalLoading] = useState(false)
   const [selectedCaseIndex, setSelectedCaseIndex] = useState(null)
   const [arbitrationResult, setArbitrationResult] = useState(null)
@@ -3265,7 +3272,7 @@ export default function App() {
   }, [liveMatches]);
 
   useEffect(() => {
-    const socketUrl = 'https://goal-rush-backend-production.up.railway.app';
+    const socketUrl = BACKEND_API_BASE.replace('/api', '');
     const socket = io(socketUrl, { reconnectionDelayMax: 10000 });
     socketRef.current = socket;
 
@@ -4854,12 +4861,13 @@ export default function App() {
         output = [
           'Initiating OKX.AI Agent Service Provider (ASP) Registration...',
           'Registering Agent: GoalRush Soccer consensus swarm',
+          'Assigned Agent ID: #2312',
           'Service Type: Agent-to-Agent (A2A) & Agent-to-MCP (A2MCP)',
-          'Endpoint: https://api.goalrush.ai/v1/predict',
+          'Endpoint: http://localhost:3001/api/predict',
           'Pricing schema set: 0.005 OKB per call',
           `Tx Hash: 0x${Math.random().toString(16).slice(2, 10)}ff33${Math.random().toString(16).slice(2, 10)}9dff`,
-          'Status: CONFIRMED',
-          'SUCCESS: GoalRush Soccer Predictor is now listed as an active ASP!'
+          'Status: REGISTERED & PENDING REVIEW',
+          'SUCCESS: GoalRush Soccer Predictor is registered on-chain as ID #2312. Current status: Listing under review.'
         ];
       } else if (normalizedCmd === 'register-evaluator') {
         setIsRegisteredEvaluator(true);
@@ -4878,7 +4886,7 @@ export default function App() {
           '--- OKX.AI SYSTEM STATUS ---',
           `Wallet connected: ${walletConnected ? 'YES' : 'NO'}`,
           `User registered: ${isRegisteredUser ? 'YES' : 'NO'}`,
-          `ASP registered (GoalRush Predictor): ${isRegisteredASP ? 'YES (Active)' : 'NO'}`,
+          `ASP registered (GoalRush Predictor): ${isRegisteredASP ? 'YES (ID: #2312, Listing under review)' : 'NO'}`,
           `Evaluator registered: ${isRegisteredEvaluator ? 'YES (Active)' : 'NO'}`,
           `Evaluator Stake: ${isRegisteredEvaluator ? evaluatorStaked + ' OKB' : '0 OKB'}`
         ];
@@ -6533,8 +6541,8 @@ export default function App() {
                   <Cpu size={24} style={{ color: 'var(--color-primary)' }} />
                   <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Service Provider (ASP)</h3>
                 </div>
-                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', padding: '4px 10px', borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }}>
-                  {isRegisteredASP ? '● GoalRush Active' : '○ Inactive'}
+                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', padding: '4px 10px', borderColor: isRegisteredASP ? '#eab308' : 'var(--color-primary)', color: isRegisteredASP ? '#eab308' : 'var(--color-primary)' }}>
+                  {isRegisteredASP ? '● Under Review (ID: #2312)' : '○ Inactive'}
                 </span>
               </div>
               <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: '1.5', marginBottom: '16px' }}>
@@ -6670,8 +6678,8 @@ export default function App() {
                   <Cpu size={20} style={{ color: 'var(--color-primary)' }} />
                   GoalRush ASP Console
                 </h3>
-                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }}>
-                  {isRegisteredASP ? '● LISTENING' : '○ OFFLINE'}
+                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', borderColor: isRegisteredASP ? '#eab308' : 'var(--color-primary)', color: isRegisteredASP ? '#eab308' : 'var(--color-primary)' }}>
+                  {isRegisteredASP ? '● UNDER REVIEW (ID: #2312)' : '○ OFFLINE'}
                 </span>
               </div>
 
@@ -6686,6 +6694,16 @@ export default function App() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ background: 'rgba(234, 179, 8, 0.1)', padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(234, 179, 8, 0.25)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#eab308', fontWeight: 600, fontSize: '0.85rem' }}>
+                      <AlertTriangle size={16} />
+                      <span>Listing Under Review (Agent ID: #2312)</span>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.4' }}>
+                      Your Agent Service Provider gateway is running and fully operational locally. External queries through the OKX Onchain OS will be routed here automatically once listing is approved.
+                    </span>
+                  </div>
+
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                       <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Fee rate</span>

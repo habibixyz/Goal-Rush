@@ -132,6 +132,58 @@ async function runAgent() {
       predictedMatches = JSON.parse(fs.readFileSync(stateFile));
     }
 
+    // ─── BACKFILL DATABASE PREDICTIONS FROM ON-CHAIN ───────────────────────
+    try {
+      const dbRaw = db.getDb();
+      for (const pMatchId of predictedMatches) {
+        // Find the match in SQLite matching this on-chain ID
+        const allDbMatches = db.getAllMatches(100);
+        const dbMatch = allDbMatches.find(m => {
+          try {
+            const derivedBigInt = BigInt(ethers.keccak256(ethers.toUtf8Bytes(m.id)));
+            return derivedBigInt === BigInt(pMatchId);
+          } catch (e) {
+            return false;
+          }
+        });
+        const matchId = dbMatch ? dbMatch.id : `espn_${pMatchId}`;
+
+        // Check if already in predictions table
+        const existing = dbRaw.prepare("SELECT * FROM predictions WHERE match_id = ? AND wallet = ?").get(matchId, wallet.address);
+        if (!existing) {
+          log(`Backfilling missing database log for predicted match ${pMatchId}...`);
+          const predictions = await hook.getUserPredictions(BigInt(pMatchId), wallet.address);
+          const okbAmounts = predictions[0];
+          
+          let predictedTeam = 0;
+          for (let i = 1; i <= 3; i++) {
+            if (okbAmounts[i] > 0n) {
+              predictedTeam = i;
+              break;
+            }
+          }
+
+          if (predictedTeam > 0) {
+            let predType = "DRAW";
+            if (predictedTeam === 1) predType = "HOME";
+            if (predictedTeam === 2) predType = "AWAY";
+
+            db.savePrediction({
+              match_id: matchId,
+              wallet: wallet.address,
+              prediction: predType,
+              amount: MAX_PREDICTION_AMOUNT_OKB,
+              tx_hash: `0x_backfilled_${pMatchId.slice(-8)}`
+            });
+            log(`   ✅ Backfilled match ${matchId} (${predType}) to local DB.`);
+          }
+        }
+      }
+    } catch (backfillErr) {
+      log(`⚠️ Failed to run backfill: ${backfillErr.message}`);
+    }
+    // ───────────────────────────────────────────────────────────────────────
+
     let claimedMatches = [];
     if (fs.existsSync(claimedFile)) {
       claimedMatches = JSON.parse(fs.readFileSync(claimedFile));
@@ -285,6 +337,42 @@ Analyze the match based on the news and return a JSON object with your predictio
     log(`> ✅ Executive Tx submitted! Hash: ${tx.hash}`);
     await tx.wait(1);
     log(`> 🎯 Prediction locked on-chain successfully.`);
+
+    // Save to local database
+    let predType = "DRAW";
+    if (consensusPrediction === 1) predType = "HOME";
+    if (consensusPrediction === 2) predType = "AWAY";
+
+    let matchId = `espn_${activeMatchId}`;
+    try {
+      const allDbMatches = db.getAllMatches(100);
+      const dbMatch = allDbMatches.find(m => {
+        try {
+          const derivedBigInt = BigInt(ethers.keccak256(ethers.toUtf8Bytes(m.id)));
+          return derivedBigInt === activeMatchIdBigInt;
+        } catch (e) {
+          return false;
+        }
+      });
+      if (dbMatch) {
+        matchId = dbMatch.id;
+      }
+    } catch (e) {
+      log(`> ⚠️ Error finding matching database match: ${e.message}`);
+    }
+
+    try {
+      db.savePrediction({
+        match_id: matchId,
+        wallet: wallet.address,
+        prediction: predType,
+        amount: MAX_PREDICTION_AMOUNT_OKB,
+        tx_hash: tx.hash
+      });
+      log(`> 💾 Registered autonomous prediction in local database.`);
+    } catch (dbErr) {
+      log(`> ⚠️ Failed to save prediction to DB: ${dbErr.message}`);
+    }
 
     // Mark as predicted
     predictedMatches.push(activeMatchId);

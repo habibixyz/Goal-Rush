@@ -102,12 +102,12 @@ function getWinner(event) {
   const comps = event.competitions?.[0]?.competitors || [];
   const home = comps.find(c => c.homeAway === 'home');
   const away = comps.find(c => c.homeAway === 'away');
-  if (!home || !away) return 0;
+  if (!home || !away) return 3;
   const hScore = parseInt(home.score || '0', 10);
   const aScore = parseInt(away.score || '0', 10);
   if (hScore > aScore) return 1;
   if (aScore > hScore) return 2;
-  return 0; // draw
+  return 3; // draw
 }
 
 // ── Keeper loop ───────────────────────────────────────────────

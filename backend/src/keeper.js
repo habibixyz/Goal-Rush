@@ -74,12 +74,12 @@ function getWinnerCode(event) {
   const comps = event.competitions?.[0]?.competitors || [];
   const home  = comps.find(c => c.homeAway === 'home');
   const away  = comps.find(c => c.homeAway === 'away');
-  if (!home || !away) return 0;
+  if (!home || !away) return 3;
   const h = parseInt(home.score || '0', 10);
   const a = parseInt(away.score || '0', 10);
   if (h > a) return 1; // teamA (home) wins
   if (a > h) return 2; // teamB (away) wins
-  return 0;             // draw
+  return 3;             // draw
 }
 
 async function fetchESPNEvents() {

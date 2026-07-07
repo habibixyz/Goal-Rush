@@ -27,7 +27,7 @@ npx skills add okx/onchainos-skills
 - **URL**: `http://localhost:3001/api/predict` (Local Dev) or `https://goal-rush-backend-production.up.railway.app/api/predict` (Production)
 - **Protocol**: HTTP REST (Agent-to-MCP)
 - **Method**: `POST`
-- **Fee**: `0.005 OKB` settled instantly on-chain
+- **Fee**: `0.005 USDT` settled instantly on-chain via eip155:196 permit2
 
 ### Request Payload
 

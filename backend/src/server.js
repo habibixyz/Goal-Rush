@@ -30,7 +30,7 @@ async function configureX402Payments(app) {
   // Real USDT contract on X Layer mainnet
   const asset = process.env.X402_ASSET || '0x1E4a5963aBFD975d8c9021ce480b42188849D41d';
   const price = process.env.X402_PRICE || '0.005';
-  const facilitatorUrl = process.env.X402_FACILITATOR_URL || 'https://x402.org/facilitator';
+  const facilitatorUrl = process.env.X402_FACILITATOR_URL || 'https://facilitator.payai.network';
 
   try {
     const { paymentMiddleware, x402ResourceServer } = await import('@x402/express');

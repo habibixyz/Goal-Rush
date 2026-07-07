@@ -133,14 +133,24 @@ npm run dev
 
 ---
 
-## 🤖 OKX.AI Onchain OS Integration & Skills Manifest
+## 🤖 OKX.AI Onchain OS Integration & Payments Protocol Compliance
 
-GoalRush is integrated with OKX's Agentic Wallet and Agent Service Provider (ASP) standards. 
+GoalRush is integrated with the official OKX Agentic Wallet, Agent Service Provider (ASP) standards, and the OKX Agent Payments Protocol (x402).
 
-### Local Console & Registry
-- The frontend features an interactive **Onchain OS Secure Console** where developers can run registry commands (`register-asp`, `register-user`, `status`, `help`).
-- In the local simulation, the GoalRush agent is registered on-chain with **Agent ID: #2312** under the `Listing under review` status. 
-- You can find the official skill metadata and schemas in [skills/goalrush/SKILL.md](file:///c:/Users/user/.gemini/antigravity/scratch/hook-the-world-cup/skills/goalrush/SKILL.md) to publish the agent live to the OKX Onchain OS store.
+### 1. ASP Identity & Listing Status
+* **Agent ID**: `#4564`
+* **Name**: `GoalRush`
+* **Role**: `Agent Service Provider (ASP)`
+* **Status**: `Listing under review` (Resubmitted with verified payments integration)
+* **Owner Wallet Address**: `0xd96c9899b4d48c02efbd88dc22252a60dc6ee38d`
+
+### 2. OKX Agent Payments Protocol (x402) Integration
+The `/api/predict` route handler is protected by the official `@x402/express` middleware. When queried directly, it issues an HTTP 402 challenge requesting payment:
+* **Asset/Token**: `USDT` on X Layer Mainnet (`eip155:196`)
+* **Service Fee**: `0.005` USDT (represented as `5000` micro-units)
+* **Contract/Asset Address**: `0x1E4a5963aBFD975d8c9021ce480b42188849D41d`
+* **Default Facilitator**: `https://facilitator.payai.network`
+* **Live Endpoint**: `https://goal-rush-backend-production.up.railway.app/api/predict`
 
 ---
 

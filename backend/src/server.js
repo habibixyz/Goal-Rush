@@ -38,8 +38,26 @@ async function configureX402Payments(app) {
     const { ExactEvmScheme } = await import('@x402/evm/exact/server');
 
     const facilitatorClient = new HTTPFacilitatorClient({ url: facilitatorUrl });
+    const evmScheme = new ExactEvmScheme();
+    evmScheme.registerMoneyParser(async (amount, net) => {
+      if (net === 'eip155:196' || net === 'eip155:1952') {
+        const decimals = 6; // USDT has 6 decimals
+        const tokenAmount = (amount * Math.pow(10, decimals)).toFixed(0);
+        return {
+          amount: tokenAmount,
+          asset: asset,
+          extra: {
+            name: 'USDT',
+            version: '1',
+            assetTransferMethod: 'permit2'
+          }
+        };
+      }
+      return null;
+    });
+
     const resourceServer = new x402ResourceServer(facilitatorClient)
-      .register(network, new ExactEvmScheme());
+      .register(network, evmScheme);
 
     app.use(paymentMiddleware(
       {

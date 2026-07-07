@@ -698,6 +698,11 @@ export default function App() {
   const [mintStatus, setMintStatus] = useState('')
   const [accessPassSupply, setAccessPassSupply] = useState('0');
   const ACCESS_PASS_ADDRESS = '0x953a03161A2e4be8E5e8405B74a254B336cdBe97'; // UPDATE ME AFTER DEPLOYMENT
+  const GOALRUSH_ASP_ID = '#4564';
+  const GOALRUSH_ASP_STATUS = 'Pending resubmission';
+  const GOALRUSH_ASP_FEE = '0.005 USDT';
+  const GOALRUSH_ASP_NETWORK = 'X Layer (eip155:196)';
+  const GOALRUSH_ASP_ASSET = '0x1E4a5963aBFD975d8c9021ce480b42188849D41d'; // Real USDT on X Layer
   const [grushPriceUsd, setGrushPriceUsd] = useState(null);
   const [viewedCard, setViewedCard] = useState(null) // For viewing other users' cards from gallery
 
@@ -709,9 +714,7 @@ export default function App() {
   const [isRegisteredUser, setIsRegisteredUser] = useState(() => {
     return localStorage.getItem('okx_registered_user') === 'true';
   })
-  const [isRegisteredASP, setIsRegisteredASP] = useState(() => {
-    return localStorage.getItem('okx_registered_asp') === 'true';
-  })
+  const [isRegisteredASP, setIsRegisteredASP] = useState(true)
   const [isRegisteredEvaluator, setIsRegisteredEvaluator] = useState(() => {
     return localStorage.getItem('okx_registered_evaluator') === 'true';
   })
@@ -722,10 +725,9 @@ export default function App() {
   const [terminalInput, setTerminalInput] = useState('')
   const [terminalHistory, setTerminalHistory] = useState(() => {
     const isUser = localStorage.getItem('okx_registered_user') === 'true';
-    const isAsp = localStorage.getItem('okx_registered_asp') === 'true';
-    const statusLine = (isUser || isAsp)
-      ? `Status: ONLINE | User ID: Active | ASP: ${isAsp ? 'Listening' : 'Offline'}`
-      : 'Status: OFFLINE | No agents or identities loaded.';
+    const statusLine = isUser
+      ? `Status: ONLINE | User ID: Active | ASP: ${GOALRUSH_ASP_ID} (${GOALRUSH_ASP_STATUS})`
+      : `Status: ONLINE | ASP: ${GOALRUSH_ASP_ID} (${GOALRUSH_ASP_STATUS})`;
     return [
       'ONCHAIN OS v1.2.0 - OKX.AI SECURE COMMAND CONSOLE',
       '-------------------------------------------------',
@@ -746,10 +748,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('okx_registered_user', isRegisteredUser);
   }, [isRegisteredUser]);
-  
-  useEffect(() => {
-    localStorage.setItem('okx_registered_asp', isRegisteredASP);
-  }, [isRegisteredASP]);
   
   useEffect(() => {
     localStorage.setItem('okx_registered_evaluator', isRegisteredEvaluator);
@@ -4777,7 +4775,7 @@ export default function App() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ match_id: selectedPredictMatchId })
+        body: JSON.stringify({ match_id: selectedPredictMatchId, clientAddress: userAddress })
       });
       const data = await response.json();
       if (response.ok && data.success) {
@@ -4789,7 +4787,27 @@ export default function App() {
           `Consensus Prediction: ${data.prediction}`,
           `Votes Tally: ${JSON.stringify(data.tally)}`,
           `Reasoning: ${data.reasoning}`,
-          `Fee of 0.005 OKB settled via escrow contract.`
+          `Payment verified by @x402/express middleware. Fee: ${GOALRUSH_ASP_FEE}.`
+        ]);
+      } else if (response.status === 402) {
+        // Decode the real PAYMENT-REQUIRED header from @x402/express middleware
+        const paymentHeader = response.headers.get('payment-required');
+        let paymentInfo = '';
+        if (paymentHeader) {
+          try {
+            const decoded = JSON.parse(atob(paymentHeader));
+            const opt = decoded.accepts ? decoded.accepts[0] : decoded;
+            paymentInfo = ` Network: ${opt.network || 'eip155:196'}, Asset: ${opt.asset || GOALRUSH_ASP_ASSET}, Price: ${opt.price || '0.005'}`;
+          } catch (e) { /* ignore decode error */ }
+        }
+        setPredictError(`Payment required (${GOALRUSH_ASP_FEE}).${paymentInfo} Use an OKX.AI / Onchain OS agent to execute the paid A2MCP call.`);
+        setTerminalHistory(prev => [
+          ...prev,
+          `HTTP 402 — Payment Required: ${GOALRUSH_ASP_FEE}`,
+          `Network: ${GOALRUSH_ASP_NETWORK}`,
+          `Asset (USDT): ${GOALRUSH_ASP_ASSET}`,
+          'This endpoint is gated by the OKX Agent Payments Protocol (@x402/express).',
+          'Use an Onchain OS agent client to make the paid A2MCP call.'
         ]);
       } else {
         setPredictError(data.error || "Failed to query prediction API.");
@@ -4827,7 +4845,7 @@ export default function App() {
           '  clear                    - Clear the console',
           '  npx skills add okx/onchainos-skills - Install OKX Onchain OS skills',
           '  register-user            - Register as a User on OKX.AI',
-          '  register-asp             - Register GoalRush as an ASP (Agent Service Provider)',
+          '  register-asp             - Show the real GoalRush ASP registration status',
           '  register-evaluator       - Stake 100 OKB and register as Evaluator',
           '  status                   - Check registration and agent status'
         ];
@@ -4847,46 +4865,38 @@ export default function App() {
           'Onchain OS installed successfully. Try running: register-user'
         ];
       } else if (normalizedCmd === 'register-user') {
-        setIsRegisteredUser(true);
         output = [
-          'Initiating OKX.AI User Registration on X Layer...',
-          'Generating identity hash...',
-          'Sending transaction to OKX Onchain OS registry contract...',
-          `Tx Hash: 0x${Math.random().toString(16).slice(2, 10)}b87a${Math.random().toString(16).slice(2, 10)}c12e`,
-          'Status: CONFIRMED',
-          'SUCCESS: Registered as an active OKX.AI User. You can now post prediction jobs!'
+          'User registration must be completed in Onchain OS with wallet confirmation.',
+          'Open a Codex/Agent session with Onchain OS and ask: "Register me as a User on OKX.AI".',
+          'This browser console will not fabricate a User identity or transaction hash.'
         ];
       } else if (normalizedCmd === 'register-asp') {
         setIsRegisteredASP(true);
         output = [
-          'Initiating OKX.AI Agent Service Provider (ASP) Registration...',
-          'Registering Agent: GoalRush Soccer consensus swarm',
-          'Assigned Agent ID: #2312',
-          'Service Type: Agent-to-Agent (A2A) & Agent-to-MCP (A2MCP)',
-          'Endpoint: http://localhost:3001/api/predict',
-          'Pricing schema set: 0.005 OKB per call',
-          `Tx Hash: 0x${Math.random().toString(16).slice(2, 10)}ff33${Math.random().toString(16).slice(2, 10)}9dff`,
-          'Status: REGISTERED & PENDING REVIEW',
-          'SUCCESS: GoalRush Soccer Predictor is registered on-chain as ID #2312. Current status: Listing under review.'
+          'GoalRush ASP registered on-chain via Onchain OS.',
+          `Agent ID: ${GOALRUSH_ASP_ID}`,
+          'Service: Soccer Prediction Swarm (A2MCP)',
+          `Endpoint: ${BACKEND_API_BASE}/predict`,
+          `Fee: ${GOALRUSH_ASP_FEE} per call`,
+          `Payment Network: ${GOALRUSH_ASP_NETWORK}`,
+          `Payment Asset (USDT): ${GOALRUSH_ASP_ASSET}`,
+          `Receiver: 0xd96c9899b4d48c02efbd88dc22252a60dc6ee38d`,
+          `x402 Middleware: @x402/express (ExactEvmScheme)`,
+          `Registration TX: 0x9d500f0defa939c287a78e0db0879b2587d4171fdbf0e4d8540e69daaee76e56`,
+          `Status: ${GOALRUSH_ASP_STATUS}`
         ];
       } else if (normalizedCmd === 'register-evaluator') {
-        setIsRegisteredEvaluator(true);
-        setEvaluatorStaked(prev => prev >= 100 ? prev : 100);
         output = [
-          'Initiating OKX.AI Evaluator Registration...',
-          'Checking balance for 100 OKB minimum stake...',
-          'Staking 100 OKB to arbitration pool on X Layer...',
-          `Tx Hash: 0x${Math.random().toString(16).slice(2, 10)}a896${Math.random().toString(16).slice(2, 10)}48ac`,
-          'Status: CONFIRMED',
-          'SUCCESS: Registered as active Evaluator. Staked: 100 OKB.',
-          'You are now eligible to judge disputes and earn bounty fees.'
+          'Evaluator registration and staking must be completed in Onchain OS with wallet confirmation.',
+          'This browser console will not fabricate stake, eligibility, or transaction hashes.',
+          'Use the official OKX.AI evaluator flow if you want to register as an arbitrator.'
         ];
       } else if (normalizedCmd === 'status') {
         output = [
           '--- OKX.AI SYSTEM STATUS ---',
           `Wallet connected: ${walletConnected ? 'YES' : 'NO'}`,
           `User registered: ${isRegisteredUser ? 'YES' : 'NO'}`,
-          `ASP registered (GoalRush Predictor): ${isRegisteredASP ? 'YES (ID: #2312, Listing under review)' : 'NO'}`,
+          `ASP registered (GoalRush Predictor): YES (${GOALRUSH_ASP_ID}, ${GOALRUSH_ASP_STATUS})`,
           `Evaluator registered: ${isRegisteredEvaluator ? 'YES (Active)' : 'NO'}`,
           `Evaluator Stake: ${isRegisteredEvaluator ? evaluatorStaked + ' OKB' : '0 OKB'}`
         ];
@@ -6541,15 +6551,15 @@ export default function App() {
                   <Cpu size={24} style={{ color: 'var(--color-primary)' }} />
                   <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Service Provider (ASP)</h3>
                 </div>
-                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', padding: '4px 10px', borderColor: isRegisteredASP ? '#eab308' : 'var(--color-primary)', color: isRegisteredASP ? '#eab308' : 'var(--color-primary)' }}>
-                  {isRegisteredASP ? '● Under Review (ID: #2312)' : '○ Inactive'}
+                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', padding: '4px 10px', borderColor: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)', color: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)' }}>
+                  {isRegisteredASP ? `● ${GOALRUSH_ASP_STATUS} (${GOALRUSH_ASP_ID})` : '○ Not registered'}
                 </span>
               </div>
               <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: '1.5', marginBottom: '16px' }}>
                 List your AI agent services in the OKX.AI directory. Fulfill automated tasks or custom-negotiated predictions and earn payout fees.
               </p>
               <div style={{ background: '#020405', padding: '10px', borderRadius: '6px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                prompt: Help me register an A2A ASP on OKX.AI
+                prompt: GoalRush ASP is registered as an A2MCP service on OKX.AI
               </div>
               <button 
                 onClick={() => handleRunTerminalCommand('register-asp')} 
@@ -6678,8 +6688,8 @@ export default function App() {
                   <Cpu size={20} style={{ color: 'var(--color-primary)' }} />
                   GoalRush ASP Console
                 </h3>
-                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', borderColor: isRegisteredASP ? '#eab308' : 'var(--color-primary)', color: isRegisteredASP ? '#eab308' : 'var(--color-primary)' }}>
-                  {isRegisteredASP ? '● UNDER REVIEW (ID: #2312)' : '○ OFFLINE'}
+                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', borderColor: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)', color: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)' }}>
+                  {isRegisteredASP ? `● ${GOALRUSH_ASP_STATUS.toUpperCase()} (${GOALRUSH_ASP_ID})` : '○ OFFLINE'}
                 </span>
               </div>
 
@@ -6694,32 +6704,32 @@ export default function App() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ background: 'rgba(234, 179, 8, 0.1)', padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(234, 179, 8, 0.25)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#eab308', fontWeight: 600, fontSize: '0.85rem' }}>
-                      <AlertTriangle size={16} />
-                      <span>Listing Under Review (Agent ID: #2312)</span>
+                  <div style={{ background: 'rgba(157, 255, 0, 0.08)', padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(157, 255, 0, 0.25)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.85rem' }}>
+                      <CheckCircle size={16} />
+                      <span>Listing submitted to OKX.AI review (Agent ID: {GOALRUSH_ASP_ID})</span>
                     </div>
                     <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.4' }}>
-                      Your Agent Service Provider gateway is running and fully operational locally. External queries through the OKX Onchain OS will be routed here automatically once listing is approved.
+                      The GoalRush ASP is registered on-chain and submitted for OKX.AI review. Paid API calls must pass the x402 payment middleware before the prediction route runs.
                     </span>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                       <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Fee rate</span>
-                      <strong style={{ fontSize: '1.2rem', color: 'var(--color-primary)', fontFamily: 'var(--font-mono)' }}>0.005 OKB</strong>
-                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', display: 'block', marginTop: '2px' }}>settled per call instantly</span>
+                      <strong style={{ fontSize: '1.2rem', color: 'var(--color-primary)', fontFamily: 'var(--font-mono)' }}>{GOALRUSH_ASP_FEE}</strong>
+                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', display: 'block', marginTop: '2px' }}>charged per paid API call</span>
                     </div>
                     <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                       <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Total Earnings</span>
-                      <strong style={{ fontSize: '1.2rem', color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)' }}>{agentStats.totalEarnings} OKB</strong>
+                      <strong style={{ fontSize: '1.2rem', color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)' }}>{agentStats.totalEarnings} USDT</strong>
                       <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', display: 'block', marginTop: '2px' }}>{agentStats.totalCalls} API calls served</span>
                     </div>
                   </div>
 
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.85rem' }}>
                     <span style={{ color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: '4px' }}>Registered API Endpoint (A2MCP)</span>
-                    <code style={{ color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)', wordBreak: 'break-all' }}>{BACKEND_API_BASE}/api/predict</code>
+                    <code style={{ color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)', wordBreak: 'break-all' }}>{BACKEND_API_BASE}/predict</code>
                   </div>
 
                   <div>

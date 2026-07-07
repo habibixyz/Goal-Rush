@@ -17,7 +17,55 @@ app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 // ─── Routes ───────────────────────────────────────────────
-app.use('/api', routes);
+async function configureX402Payments(app) {
+  const enabled = process.env.X402_ENABLED !== 'false';
+  if (!enabled) {
+    console.warn('[x402] Payment protection disabled by X402_ENABLED=false');
+    return;
+  }
+
+  // Real OKX Agentic Wallet address on X Layer (chain 196)
+  const payTo = process.env.X402_RECEIVER_ADDRESS || '0xd96c9899b4d48c02efbd88dc22252a60dc6ee38d';
+  const network = process.env.X402_NETWORK || 'eip155:196';
+  // Real USDT contract on X Layer mainnet
+  const asset = process.env.X402_ASSET || '0x1E4a5963aBFD975d8c9021ce480b42188849D41d';
+  const price = process.env.X402_PRICE || '0.005';
+  const facilitatorUrl = process.env.X402_FACILITATOR_URL || 'https://x402.org/facilitator';
+
+  try {
+    const { paymentMiddleware, x402ResourceServer } = await import('@x402/express');
+    const { HTTPFacilitatorClient } = await import('@x402/core/server');
+    const { ExactEvmScheme } = await import('@x402/evm/exact/server');
+
+    const facilitatorClient = new HTTPFacilitatorClient({ url: facilitatorUrl });
+    const resourceServer = new x402ResourceServer(facilitatorClient)
+      .register(network, new ExactEvmScheme());
+
+    app.use(paymentMiddleware(
+      {
+        'POST /api/predict': {
+          accepts: [
+            {
+              scheme: 'exact',
+              price,
+              network,
+              asset,
+              payTo
+            }
+          ],
+          description: 'GoalRush consensus soccer match prediction — OKX.AI ASP #4564.',
+          mimeType: 'application/json'
+        }
+      },
+      resourceServer
+    ));
+
+    console.log(`[x402] Protecting POST /api/predict — network=${network} asset=${asset} price=${price} payTo=${payTo}`);
+  } catch (err) {
+    console.error('[x402] Failed to initialize payment middleware:', err.message);
+    console.error('[x402] The /api/predict endpoint will NOT be payment-protected.');
+  }
+}
 
 // Health check
 app.get('/', (req, res) => {
@@ -46,6 +94,8 @@ cron.schedule('*/10 * * * *', async () => {
 // ─── Boot ─────────────────────────────────────────────────
 async function boot() {
   await db.init();
+  await configureX402Payments(app);
+  app.use('/api', routes);
 
   // Start on-chain keeper (auto-activates & resolves matches on X Layer)
   startKeeper(cron);

@@ -344,7 +344,9 @@ router.get('/agent/logs', (req, res) => {
 });
 
 // ── POST /api/predict ──────────────────────────────────────
-// Real OKX.AI ASP endpoint that runs the multi-agent consensus swarm prediction.
+// OKX.AI ASP #4564 endpoint — multi-agent consensus swarm prediction.
+// Payment gating handled by @x402/express middleware in server.js.
+// If a request reaches this handler, it has already passed payment verification.
 router.post('/predict', async (req, res) => {
   try {
     // API key guard — only enforced when ASP_API_KEY env var is set (production)
@@ -356,7 +358,11 @@ router.post('/predict', async (req, res) => {
       }
     }
 
-    const { match_id } = req.body;
+    const match_id = req.body.match_id || req.body.matchId;
+    const clientWallet = req.body.clientAddress || req.body.wallet
+      || (req.paymentPayload && req.paymentPayload.payer)
+      || null;
+
     if (!match_id) {
       return res.status(400).json({ success: false, error: 'Missing match_id in request body' });
     }
@@ -435,22 +441,20 @@ Analyze the match based on the news and return a JSON object with your predictio
       }
     };
 
-    // Save query to predictions table
-    const randomHex = () => Math.floor(Math.random() * 65536).toString(16).padStart(4, '0');
-    const mockTxHash = `0x${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}`;
-    const mockClientWallet = `0x3c${randomHex()}${randomHex()}${randomHex()}`;
-    
     let predType = "DRAW";
     if (consensusPrediction === 1) predType = "HOME";
     if (consensusPrediction === 2) predType = "AWAY";
 
+    // Extract payment tx hash from x402 middleware if available
+    const paymentTxHash = (req.paymentPayload && req.paymentPayload.transaction) || null;
+
     try {
       db.savePrediction({
         match_id,
-        wallet: mockClientWallet,
+        wallet: clientWallet || 'unknown',
         prediction: predType,
         amount: "0.005",
-        tx_hash: mockTxHash
+        tx_hash: paymentTxHash
       });
     } catch (dbErr) {
       console.warn("Could not save prediction log to DB:", dbErr.message);

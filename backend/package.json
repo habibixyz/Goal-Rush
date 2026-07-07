@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "@railway/cli": "^5.20.0",
+    "@x402/core": "^2.17.0",
+    "@x402/evm": "^2.17.0",
+    "@x402/express": "^2.17.0",
     "axios": "^1.6.8",
     "better-sqlite3": "^9.4.3",
     "cheerio": "^1.2.0",

@@ -335,6 +335,7 @@ async function fetchWorldCupNews() {
     console.log(`[NEWS SCRAPE] Crawlee completed. Saved ${added} new football articles.`);
   } catch (err) {
     console.error('[NEWS SCRAPE] Crawlee fatal error:', err.message);
+    throw err;
   } finally {
     // Cleanup temporary storage to prevent disk space leaks and clear cache for next runs
     try {

@@ -10,7 +10,7 @@
 
 const axios = require('axios');
 const path = require('path');
-const { CheerioCrawler } = require('@crawlee/cheerio');
+const { CheerioCrawler, Configuration } = require('@crawlee/cheerio');
 const db = require('./db');
 
 // Intercept child_process.spawn to mock 'ps' calls and prevent crashes on environments without procps/ps
@@ -223,6 +223,10 @@ async function fetchWorldCupNews() {
       console.error('[CRAWLER] Failed to fetch ESPN RSS:', rssErr.message);
     }
 
+    const crawleeConfig = new Configuration({
+      storageDir: uniqueStorageDir
+    });
+
     const crawler = new CheerioCrawler({
       maxConcurrency: 3,
       maxRequestsPerCrawl: 25,
@@ -318,7 +322,7 @@ async function fetchWorldCupNews() {
       failedRequestHandler({ request, error }) {
         console.error(`[CRAWLER] Request failed for ${request.url}:`, error.message);
       }
-    });
+    }, crawleeConfig);
 
     console.log('[CRAWLER] Starting news crawler for Sky Sports & ESPN.in...');
     await crawler.run(initialUrls);

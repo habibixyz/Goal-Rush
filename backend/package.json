@@ -16,7 +16,7 @@
     "@x402/evm": "^2.17.0",
     "@x402/express": "^2.17.0",
     "axios": "^1.6.8",
-    "better-sqlite3": "^9.4.3",
+    "better-sqlite3": "^12.11.1",
     "cheerio": "^1.2.0",
     "cors": "^2.8.5",
     "crawlee": "^3.17.0",

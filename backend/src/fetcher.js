@@ -32,7 +32,13 @@ cp.spawn = function(command, args, options) {
 
 // ─── ESPN Public API (completely free, no key) ────────────
 const ESPN_LEAGUES = [
-  { id: 'fifa.world',       name: 'FIFA World Cup' }
+  { id: 'fifa.world',       name: 'FIFA World Cup' },
+  { id: 'eng.1',            name: 'English Premier League' },
+  { id: 'uefa.champions',   name: 'UEFA Champions League' },
+  { id: 'esp.1',            name: 'Spanish La Liga' },
+  { id: 'ger.1',            name: 'German Bundesliga' },
+  { id: 'ita.1',            name: 'Italian Serie A' },
+  { id: 'usa.1',            name: 'Major League Soccer' }
 ];
 
 async function fetchESPN() {
@@ -108,6 +114,11 @@ const FD_KEY = process.env.FOOTBALL_DATA_KEY;
 // Free tier covers: WC, EC, CL, PL, PD, BL1, SA, FL1, DED, BSA, PPL, ELC, WCQ (some)
 const FD_COMPETITIONS = [
   'WC',   // FIFA World Cup
+  'CL',   // UEFA Champions League
+  'PL',   // English Premier League
+  'PD',   // Spanish La Liga
+  'BL1',  // German Bundesliga
+  'SA'    // Italian Serie A
 ];
 
 async function fetchFootballData() {

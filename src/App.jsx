@@ -508,7 +508,33 @@ const getTeamFifaCode = (name) => {
     'turkey': 'TUR',
     'iraq': 'IRQ',
     'norway': 'NOR',
-    'algeria': 'ALG'
+    'algeria': 'ALG',
+    // EPL clubs (England)
+    'arsenal': 'ENG', 'chelsea': 'ENG', 'liverpool': 'ENG', 'manchester city': 'ENG', 'man city': 'ENG',
+    'manchester united': 'ENG', 'man united': 'ENG', 'tottenham hotspur': 'ENG', 'tottenham': 'ENG',
+    'aston villa': 'ENG', 'newcastle': 'ENG', 'newcastle united': 'ENG', 'west ham': 'ENG', 'west ham united': 'ENG',
+    'everton': 'ENG', 'leicester': 'ENG', 'leicester city': 'ENG', 'wolves': 'ENG', 'wolverhampton wanderers': 'ENG',
+    'crystal palace': 'ENG', 'brighton': 'ENG', 'fulham': 'ENG', 'brentford': 'ENG', 'bournemouth': 'ENG',
+    'nottingham forest': 'ENG', 'ipswich': 'ENG', 'ipswich town': 'ENG', 'southampton': 'ENG',
+    // La Liga clubs (Spain)
+    'real madrid': 'ESP', 'barcelona': 'ESP', 'fc barcelona': 'ESP', 'atletico madrid': 'ESP',
+    'real sociedad': 'ESP', 'sevilla': 'ESP', 'real betis': 'ESP', 'athletic club': 'ESP', 'athletic bilbao': 'ESP',
+    'girona': 'ESP', 'valencia': 'ESP', 'villarreal': 'ESP',
+    // Bundesliga clubs (Germany)
+    'bayern munich': 'GER', 'bayern münchen': 'GER', 'borussia dortmund': 'GER', 'dortmund': 'GER',
+    'bayer leverkusen': 'GER', 'leverkusen': 'GER', 'rb leipzig': 'GER', 'leipzig': 'GER',
+    'eintracht frankfurt': 'GER', 'stuttgart': 'GER', 'vfb stuttgart': 'GER',
+    // Serie A clubs (Italy)
+    'juventus': 'ITA', 'ac milan': 'ITA', 'milan': 'ITA', 'inter milan': 'ITA', 'inter': 'ITA', 'internazionale': 'ITA',
+    'napoli': 'ITA', 'roma': 'ITA', 'as roma': 'ITA', 'lazio': 'ITA', 'atalanta': 'ITA', 'fiorentina': 'ITA',
+    // Ligue 1 clubs (France)
+    'paris saint-germain': 'FRA', 'psg': 'FRA', 'marseille': 'FRA', 'monaco': 'FRA', 'as monaco': 'FRA',
+    'lyon': 'FRA', 'lille': 'FRA', 'lens': 'FRA',
+    // MLS clubs (USA/Canada)
+    'inter miami': 'USA', 'inter miami cf': 'USA', 'la galaxy': 'USA', 'lafc': 'USA', 'los angeles fc': 'USA',
+    'new york red bulls': 'USA', 'nycfc': 'USA', 'new york city fc': 'USA', 'seattle sounders': 'USA',
+    'toronto fc': 'CAN', 'vancouver whitecaps': 'CAN', 'cf montreal': 'CAN', 'sporting kansas city': 'USA',
+    'chicago fire': 'USA', 'chicago fire fc': 'USA', 'st. louis city sc': 'USA', 'columbus crew': 'USA'
   };
   return mapping[name?.toLowerCase().trim()] || 'UN';
 };
@@ -665,6 +691,7 @@ export default function App() {
   const [selectedMatchCenterId, setSelectedMatchCenterId] = useState(10)
   const [matchFilter, setMatchFilter] = useState('all')
   const [matchCenterSubTab, setMatchCenterSubTab] = useState('lineup')
+  const [competitionCategory, setCompetitionCategory] = useState('world-cup')
 
   // Daily News States
   const [newsArticles, setNewsArticles] = useState([]);
@@ -2568,7 +2595,8 @@ export default function App() {
                   city: match.city || 'City',
                   referee: match.referee || 'Referee',
                   scorersA: [],
-                  scorersB: []
+                  scorersB: [],
+                  competition: match.competition || 'FIFA World Cup'
                 };
               });
 
@@ -6412,8 +6440,19 @@ export default function App() {
             </div>
           );
         }
-        const selectedMatch = liveMatches.find(m => m.id === selectedMatchCenterId) || liveMatches[0];
-        const filteredMatches = liveMatches.filter(m => {
+
+        const isWorldCupMatch = (m) => {
+          const comp = m.competition?.toLowerCase() || '';
+          return comp.includes('world cup') || comp.includes('fifa');
+        };
+
+        const categoryMatches = liveMatches.filter(m => {
+          const isWC = isWorldCupMatch(m);
+          return competitionCategory === 'world-cup' ? isWC : !isWC;
+        });
+
+        const selectedMatch = categoryMatches.find(m => m.id === selectedMatchCenterId) || categoryMatches[0];
+        const filteredMatches = categoryMatches.filter(m => {
           if (matchFilter === 'live') return m.isLive && m.minute !== 'FT';
           if (matchFilter === 'completed') return m.minute === 'FT';
           if (matchFilter === 'upcoming') return !m.isLive && m.minute !== 'FT';
@@ -6426,72 +6465,138 @@ export default function App() {
         const completedGroup = filteredMatches.filter(m => m.minute === 'FT');
         const upcomingFutureGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date !== TODAY_LABEL && m.date !== TOMORROW_LABEL);
 
+        const handleCategoryChange = (category) => {
+          setCompetitionCategory(category);
+          const targetMatches = liveMatches.filter(m => {
+            const isWC = isWorldCupMatch(m);
+            return category === 'world-cup' ? isWC : !isWC;
+          });
+          if (targetMatches.length > 0) {
+            setSelectedMatchCenterId(targetMatches[0].id);
+          } else {
+            setSelectedMatchCenterId(null);
+          }
+        };
+
         return (
           <div style={{ marginTop: '32px' }}>
             <section className="match-center-header" style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '2.5rem' }}>🏆</span>
-                <div>
-                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 800, background: 'linear-gradient(135deg, #fff 0%, var(--color-primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Match Center Hub</h2>
-                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '4px' }}>Real-time match scoring, tactical formations, and decentralized prediction jackpot pools.</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '2.5rem' }}>{competitionCategory === 'world-cup' ? '🏆' : '⚽'}</span>
+                  <div>
+                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 800, background: 'linear-gradient(135deg, #fff 0%, var(--color-primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                      {competitionCategory === 'world-cup' ? 'World Cup Match Hub' : 'Leagues & Cups Hub'}
+                    </h2>
+                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '4px' }}>
+                      {competitionCategory === 'world-cup'
+                        ? 'Real-time match scoring, tactical formations, and decentralized prediction jackpot pools for FIFA World Cup.'
+                        : 'Real-time fixtures, predictions, and stats for the major domestic leagues and continental cups.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Competition Segmented Tabs */}
+                <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <button
+                    onClick={() => handleCategoryChange('world-cup')}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      transition: 'all 0.2s',
+                      background: competitionCategory === 'world-cup' ? 'var(--color-primary)' : 'transparent',
+                      color: competitionCategory === 'world-cup' ? '#000' : 'rgba(255,255,255,0.6)'
+                    }}
+                  >
+                    🏆 FIFA World Cup
+                  </button>
+                  <button
+                    onClick={() => handleCategoryChange('club')}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      transition: 'all 0.2s',
+                      background: competitionCategory === 'club' ? 'var(--color-primary)' : 'transparent',
+                      color: competitionCategory === 'club' ? '#000' : 'rgba(255,255,255,0.6)'
+                    }}
+                  >
+                    ⚽ Leagues & Cups
+                  </button>
                 </div>
               </div>
             </section>
 
             <div className="match-center-container">
-              <div className="match-center-left">
-                <div className="match-filter-tabs">
-                  <button onClick={() => setMatchFilter('all')} className={`match-filter-btn ${matchFilter === 'all' ? 'active' : ''}`}>All</button>
-                  <button onClick={() => setMatchFilter('live')} className={`match-filter-btn ${matchFilter === 'live' ? 'active' : ''} live-tab`}>Live 🔴</button>
-                  <button onClick={() => setMatchFilter('upcoming')} className={`match-filter-btn ${matchFilter === 'upcoming' ? 'active' : ''}`}>Upcoming</button>
-                  <button onClick={() => setMatchFilter('completed')} className={`match-filter-btn ${matchFilter === 'completed' ? 'active' : ''}`}>Completed</button>
+              {categoryMatches.length === 0 ? (
+                <div style={{ flex: 1, textAlign: 'center', padding: '60px', color: 'rgba(255,255,255,0.4)', background: 'var(--color-surface)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', marginTop: '16px' }}>
+                  <div style={{ fontSize: '1.2rem', marginBottom: '8px', color: 'rgba(255,255,255,0.7)' }}>No matches active today</div>
+                  <div>Domestic leagues schedule is currently offline. Check back later!</div>
                 </div>
+              ) : (
+                <>
+                  <div className="match-center-left">
+                    <div className="match-filter-tabs">
+                      <button onClick={() => setMatchFilter('all')} className={`match-filter-btn ${matchFilter === 'all' ? 'active' : ''}`}>All</button>
+                      <button onClick={() => setMatchFilter('live')} className={`match-filter-btn ${matchFilter === 'live' ? 'active' : ''} live-tab`}>Live 🔴</button>
+                      <button onClick={() => setMatchFilter('upcoming')} className={`match-filter-btn ${matchFilter === 'upcoming' ? 'active' : ''}`}>Upcoming</button>
+                      <button onClick={() => setMatchFilter('completed')} className={`match-filter-btn ${matchFilter === 'completed' ? 'active' : ''}`}>Completed</button>
+                    </div>
 
-                {liveGroup.length > 0 && (
-                  <>
-                    <div className="match-group-header">Live Matches 🔴</div>
-                    {liveGroup.map(m => renderMatchCard(m))}
-                  </>
-                )}
+                    {liveGroup.length > 0 && (
+                      <>
+                        <div className="match-group-header">Live Matches 🔴</div>
+                        {liveGroup.map(m => renderMatchCard(m))}
+                      </>
+                    )}
 
-                {todayUpcomingGroup.length > 0 && (
-                  <>
-                    <div className="match-group-header">Today - Upcoming ({TODAY_LABEL})</div>
-                    {todayUpcomingGroup.map(m => renderMatchCard(m))}
-                  </>
-                )}
+                    {todayUpcomingGroup.length > 0 && (
+                      <>
+                        <div className="match-group-header">Today - Upcoming ({TODAY_LABEL})</div>
+                        {todayUpcomingGroup.map(m => renderMatchCard(m))}
+                      </>
+                    )}
 
-                {tomorrowGroup.length > 0 && (
-                  <>
-                    <div className="match-group-header">Tomorrow ({TOMORROW_LABEL})</div>
-                    {tomorrowGroup.map(m => renderMatchCard(m))}
-                  </>
-                )}
+                    {tomorrowGroup.length > 0 && (
+                      <>
+                        <div className="match-group-header">Tomorrow ({TOMORROW_LABEL})</div>
+                        {tomorrowGroup.map(m => renderMatchCard(m))}
+                      </>
+                    )}
 
-                {upcomingFutureGroup.length > 0 && (
-                  <>
-                    <div className="match-group-header">Upcoming Fixtures</div>
-                    {upcomingFutureGroup.map(m => renderMatchCard(m))}
-                  </>
-                )}
+                    {upcomingFutureGroup.length > 0 && (
+                      <>
+                        <div className="match-group-header">Upcoming Fixtures</div>
+                        {upcomingFutureGroup.map(m => renderMatchCard(m))}
+                      </>
+                    )}
 
-                {completedGroup.length > 0 && (
-                  <>
-                    <div className="match-group-header">Completed Matches (FT)</div>
-                    {completedGroup.map(m => renderMatchCard(m))}
-                  </>
-                )}
+                    {completedGroup.length > 0 && (
+                      <>
+                        <div className="match-group-header">Completed Matches (FT)</div>
+                        {completedGroup.map(m => renderMatchCard(m))}
+                      </>
+                    )}
 
-                {filteredMatches.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.4)', background: 'var(--color-surface)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    No matches found for the selected filter.
+                    {filteredMatches.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.4)', background: 'var(--color-surface)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        No matches found for the selected filter.
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              <div className="match-center-right">
-                {renderMatchHubDetails(selectedMatch)}
-              </div>
+                  <div className="match-center-right">
+                    {selectedMatch && renderMatchHubDetails(selectedMatch)}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         );

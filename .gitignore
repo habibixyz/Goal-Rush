@@ -44,5 +44,9 @@ pnpm-debug.log*
 logs/
 *.pid
 
+# Scratch files
+scratch/
+backend/src/test-crawlee.cjs
+
 # Keep a redacted configuration template in version control
 !.env.example

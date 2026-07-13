@@ -63,6 +63,16 @@ function httpGet(url) {
 /**
  * Fetch ESPN fixtures for a date range (YYYYMMDD-YYYYMMDD)
  */
+const KEEPER_LEAGUES = [
+  'fifa.world',
+  'eng.1',
+  'uefa.champions',
+  'esp.1',
+  'ger.1',
+  'ita.1',
+  'usa.1'
+];
+
 async function fetchESPN() {
   const now = new Date();
   const fmt = (d) => {
@@ -80,10 +90,21 @@ async function fetchESPN() {
 
   const start = fmt(yesterday);
   const end   = fmt(tomorrow);
+  const dates = `${start}-${end}`;
 
-  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${start}-${end}`;
-  const data = await httpGet(url);
-  return data.events || [];
+  const allEvents = [];
+  for (const leagueId of KEEPER_LEAGUES) {
+    try {
+      const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueId}/scoreboard?dates=${dates}`;
+      const data = await httpGet(url);
+      if (data.events && data.events.length > 0) {
+        allEvents.push(...data.events);
+      }
+    } catch (err) {
+      log(`⚠️ ESPN fetch failed for league ${leagueId}: ${err.message}`);
+    }
+  }
+  return allEvents;
 }
 
 /**

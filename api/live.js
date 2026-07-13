@@ -64,7 +64,33 @@ function getTeamFifaCode(name) {
     'turkey': 'TUR',
     'iraq': 'IRQ',
     'norway': 'NOR',
-    'algeria': 'ALG'
+    'algeria': 'ALG',
+    // EPL clubs (England)
+    'arsenal': 'ENG', 'chelsea': 'ENG', 'liverpool': 'ENG', 'manchester city': 'ENG', 'man city': 'ENG',
+    'manchester united': 'ENG', 'man united': 'ENG', 'tottenham hotspur': 'ENG', 'tottenham': 'ENG',
+    'aston villa': 'ENG', 'newcastle': 'ENG', 'newcastle united': 'ENG', 'west ham': 'ENG', 'west ham united': 'ENG',
+    'everton': 'ENG', 'leicester': 'ENG', 'leicester city': 'ENG', 'wolves': 'ENG', 'wolverhampton wanderers': 'ENG',
+    'crystal palace': 'ENG', 'brighton': 'ENG', 'fulham': 'ENG', 'brentford': 'ENG', 'bournemouth': 'ENG',
+    'nottingham forest': 'ENG', 'ipswich': 'ENG', 'ipswich town': 'ENG', 'southampton': 'ENG',
+    // La Liga clubs (Spain)
+    'real madrid': 'ESP', 'barcelona': 'ESP', 'fc barcelona': 'ESP', 'atletico madrid': 'ESP',
+    'real sociedad': 'ESP', 'sevilla': 'ESP', 'real betis': 'ESP', 'athletic club': 'ESP', 'athletic bilbao': 'ESP',
+    'girona': 'ESP', 'valencia': 'ESP', 'villarreal': 'ESP',
+    // Bundesliga clubs (Germany)
+    'bayern munich': 'GER', 'bayern münchen': 'GER', 'borussia dortmund': 'GER', 'dortmund': 'GER',
+    'bayer leverkusen': 'GER', 'leverkusen': 'GER', 'rb leipzig': 'GER', 'leipzig': 'GER',
+    'eintracht frankfurt': 'GER', 'stuttgart': 'GER', 'vfb stuttgart': 'GER',
+    // Serie A clubs (Italy)
+    'juventus': 'ITA', 'ac milan': 'ITA', 'milan': 'ITA', 'inter milan': 'ITA', 'inter': 'ITA', 'internazionale': 'ITA',
+    'napoli': 'ITA', 'roma': 'ITA', 'as roma': 'ITA', 'lazio': 'ITA', 'atalanta': 'ITA', 'fiorentina': 'ITA',
+    // Ligue 1 clubs (France)
+    'paris saint-germain': 'FRA', 'psg': 'FRA', 'marseille': 'FRA', 'monaco': 'FRA', 'as monaco': 'FRA',
+    'lyon': 'FRA', 'lille': 'FRA', 'lens': 'FRA',
+    // MLS clubs (USA/Canada)
+    'inter miami': 'USA', 'inter miami cf': 'USA', 'la galaxy': 'USA', 'lafc': 'USA', 'los angeles fc': 'USA',
+    'new york red bulls': 'USA', 'nycfc': 'USA', 'new york city fc': 'USA', 'seattle sounders': 'USA',
+    'toronto fc': 'CAN', 'vancouver whitecaps': 'CAN', 'cf montreal': 'CAN', 'sporting kansas city': 'USA',
+    'chicago fire': 'USA', 'chicago fire fc': 'USA', 'st. louis city sc': 'USA', 'columbus crew': 'USA'
   };
   return map[name?.toLowerCase().trim()] || 'UN';
 }
@@ -121,16 +147,22 @@ function mapDatabaseMatches(matches) {
       city: 'City',
       referee: 'Referee',
       scorersA: [],
-      scorersB: []
+      scorersB: [],
+      competition: match.competition || 'FIFA World Cup'
     };
   });
 }
 
 function fetchFromBackend() {
+  const isDev = process.env.NODE_ENV !== 'production' || !process.env.VERCEL;
+  const hostname = isDev ? '127.0.0.1' : 'goal-rush-backend-production.up.railway.app';
+  const port = isDev ? 3001 : undefined;
+
   return new Promise((resolve, reject) => {
     const options = {
-      hostname: 'goal-rush-backend-production.up.railway.app',
-      path: '/api/matches/live',
+      hostname: hostname,
+      port: port,
+      path: '/api/matches/all',
       method: 'GET',
       timeout: 3000
     };
@@ -178,14 +210,8 @@ export default async function handler(req, res) {
     const responseBody = await fetchFromBackend();
     const backendData = responseBody.data ? responseBody.data : responseBody;
     if (Array.isArray(backendData) && backendData.length > 0) {
-      // Filter to only FIFA World Cup matches
-      const worldCupBackendData = backendData.filter(m => 
-        !m.competition || 
-        m.competition.toLowerCase().includes('world cup') || 
-        m.competition.toLowerCase().includes('fifa')
-      );
       const internationalTeams = ['Belgium', 'Egypt', 'Saudi Arabia', 'Uruguay', 'Iran', 'New Zealand', 'Spain', 'Cape Verde', 'France', 'Argentina', 'Netherlands', 'Japan', 'Senegal'];
-      worldCupBackendData.sort((a, b) => {
+      backendData.sort((a, b) => {
         const homeA = a.home_team || (a.homeTeam && a.homeTeam.name) || '';
         const awayA = a.away_team || (a.awayTeam && a.awayTeam.name) || '';
         const homeB = b.home_team || (b.homeTeam && b.homeTeam.name) || '';
@@ -197,7 +223,7 @@ export default async function handler(req, res) {
         if (!aIsIntl && bIsIntl) return 1;
         return 0;
       });
-      allMatches = mapDatabaseMatches(worldCupBackendData);
+      allMatches = mapDatabaseMatches(backendData);
     }
   } catch (err) {
     console.warn('Failed to fetch live matches from backend:', err.message);
@@ -339,14 +365,14 @@ function fetchLiveFromApiSports() {
 }
 
 function mapFixtures(fixtures) {
-  // Filter for World Cup matches only (League ID 1 or name containing 'world cup')
-  const worldCupFixtures = fixtures.filter(item => 
-    item.league.id === 1 || 
-    (item.league.name && item.league.name.toLowerCase().includes('world cup'))
-  );
+  // Keep World Cup and our other configured leagues
+  const filteredFixtures = fixtures.filter(item => {
+    const name = item.league.name?.toLowerCase() || '';
+    return name.includes('world cup') || name.includes('premier league') || name.includes('champions league') || name.includes('la liga') || name.includes('bundesliga') || name.includes('serie a') || name.includes('major league soccer') || name.includes('mls');
+  });
 
-  // Take top 25 matches of the day to keep it clean and performant
-  return worldCupFixtures.slice(0, 25).map(item => {
+  // Take top 50 matches to support more league coverage
+  return filteredFixtures.slice(0, 50).map(item => {
     const isLive = ['1H', '2H', 'HT', 'ET', 'BT', 'P', 'INT'].includes(item.fixture.status.short);
     const isCompleted = ['FT', 'AET', 'PEN'].includes(item.fixture.status.short);
     
@@ -386,7 +412,8 @@ function mapFixtures(fixtures) {
       city: item.fixture.venue.city || 'City',
       referee: item.fixture.referee || 'Referee',
       scorersA: [],
-      scorersB: []
+      scorersB: [],
+      competition: item.league.name || 'FIFA World Cup'
     };
   });
 }
@@ -467,41 +494,64 @@ function mapESPNFixtures(events) {
       city: comp.venue?.address?.city || 'City',
       referee: 'Referee',
       scorersA: [],
-      scorersB: []
+      scorersB: [],
+      competition: event.leagueName || 'FIFA World Cup'
     };
   }).filter(Boolean);
 }
 
 function fetchFromESPN(startDate, endDate) {
-  return new Promise((resolve, reject) => {
-    let path = '/apis/site/v2/sports/soccer/fifa.world/scoreboard';
-    if (startDate && endDate) {
-      path += `?dates=${startDate}-${endDate}`;
-    }
-    const options = {
-      hostname: 'site.api.espn.com',
-      path: path,
-      method: 'GET',
-      timeout: 5000
-    };
+  const leagues = [
+    { id: 'fifa.world',       name: 'FIFA World Cup' },
+    { id: 'eng.1',            name: 'English Premier League' },
+    { id: 'uefa.champions',   name: 'UEFA Champions League' },
+    { id: 'esp.1',            name: 'Spanish La Liga' },
+    { id: 'ger.1',            name: 'German Bundesliga' },
+    { id: 'ita.1',            name: 'Italian Serie A' },
+    { id: 'usa.1',            name: 'Major League Soccer' }
+  ];
 
-    const req = https.request(options, (res) => {
-      let body = '';
-      res.on('data', (chunk) => body += chunk);
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(body));
-        } catch (err) {
-          reject(err);
+  return Promise.all(
+    leagues.map(league => {
+      return new Promise((resolve) => {
+        let path = `/apis/site/v2/sports/soccer/${league.id}/scoreboard`;
+        if (startDate && endDate) {
+          path += `?dates=${startDate}-${endDate}`;
         }
+        const options = {
+          hostname: 'site.api.espn.com',
+          path: path,
+          method: 'GET',
+          timeout: 4000
+        };
+        const req = https.request(options, (res) => {
+          let body = '';
+          res.on('data', (chunk) => body += chunk);
+          res.on('end', () => {
+            try {
+              const parsed = JSON.parse(body);
+              if (parsed.events) {
+                parsed.events.forEach(e => {
+                  e.leagueName = league.name;
+                });
+                resolve(parsed.events);
+              } else {
+                resolve([]);
+              }
+            } catch (err) {
+              resolve([]);
+            }
+          });
+        });
+        req.on('error', () => resolve([]));
+        req.on('timeout', () => {
+          req.destroy();
+          resolve([]);
+        });
+        req.end();
       });
-    });
-
-    req.on('error', reject);
-    req.on('timeout', () => {
-      req.destroy();
-      reject(new Error('ESPN timeout'));
-    });
-    req.end();
+    })
+  ).then(results => {
+    return { events: results.flat() };
   });
 }

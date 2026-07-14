@@ -4854,7 +4854,7 @@ export default function App() {
         setCurrentView('match-center');
         if (isSidebar) setIsMobileMenuOpen(false);
       }} className={`nav-btn ${currentView === 'match-center' ? 'active' : ''}`}>
-          {t("Match Center")}
+          {t("Matches")}
         </button>
       </li>
       <li>
@@ -4862,7 +4862,7 @@ export default function App() {
         setCurrentView('news');
         if (isSidebar) setIsMobileMenuOpen(false);
       }} className={`nav-btn ${currentView === 'news' ? 'active' : ''}`}>
-          {t("Daily News")}
+          {t("News")}
         </button>
       </li>
       <li>
@@ -4883,7 +4883,7 @@ export default function App() {
         setCurrentView('okx-ai');
         if (isSidebar) setIsMobileMenuOpen(false);
       }} className={`nav-btn ${currentView === 'okx-ai' ? 'active' : ''}`}>
-          OKX.AI Hub
+          AI Hub
         </button>
       </li>
       <li>
@@ -4891,7 +4891,7 @@ export default function App() {
         setCurrentView('about');
         if (isSidebar) setIsMobileMenuOpen(false);
       }} className={`nav-btn ${currentView === 'about' ? 'active' : ''}`}>
-          {t("About & Docs")}
+          {t("Docs")}
         </button>
       </li>
     </ul>;
@@ -5284,14 +5284,12 @@ export default function App() {
               mixBlendMode: 'screen',
               filter: 'drop-shadow(0 0 12px rgba(157, 255, 0, 0.4)) contrast(1.2)'
             }} />
-                <h1 style={{
+                <h1 className="animated-hero-text" style={{
               fontSize: 'clamp(3rem, 6vw, 5rem)',
               fontWeight: 900,
               margin: 0,
               lineHeight: 1,
-              letterSpacing: '-1.5px',
-              color: '#ffffff',
-              textShadow: '0 0 20px rgba(157, 255, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.5)'
+              letterSpacing: '-1.5px'
             }}>
                   {t("GoalRush")}
                 </h1>

@@ -2240,9 +2240,9 @@ input:focus-visible {
   }
 }
 
-/* ──────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Twitter Football Cards Styles
-   ────────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .football-card-section {
   display: flex;
   flex-direction: column;
@@ -2664,9 +2664,9 @@ input:focus-visible {
   font-weight: 700;
 }
 
-/* ──────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    PSA Graded Slab Styles
-   ────────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .psa-slab-container {
   display: flex;
   justify-content: center;
@@ -2986,7 +2986,7 @@ input:focus-visible {
   transform: translateX(-50%);
 }
 
-/* ── Daily News Section Styling ──────────────────────────── */
+/* â”€â”€ Daily News Section Styling â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .news-container-layout {
   animation: fadeIn 0.4s ease-out;
   padding: 0 16px;
@@ -3505,7 +3505,7 @@ input:focus-visible {
   }
 }
 
-/* ── Tablet Breakpoint (max-width: 1024px) ──────────────── */
+/* â”€â”€ Tablet Breakpoint (max-width: 1024px) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 1024px) {
   .news-container-layout {
     padding: 0 20px;
@@ -3541,7 +3541,7 @@ input:focus-visible {
   }
 }
 
-/* ── Mobile Breakpoint — Daily News (max-width: 768px) ──── */
+/* â”€â”€ Mobile Breakpoint â€” Daily News (max-width: 768px) â”€â”€â”€â”€ */
 @media (max-width: 768px) {
   /* --- News Layout Container --- */
   .news-container-layout {
@@ -3589,7 +3589,7 @@ input:focus-visible {
     font-size: 0.78rem;
   }
 
-  /* --- Category Filter Pills — Horizontal Scroll --- */
+  /* --- Category Filter Pills â€” Horizontal Scroll --- */
   .news-tabs-nav {
     display: flex;
     flex-wrap: nowrap;
@@ -3613,7 +3613,7 @@ input:focus-visible {
     white-space: nowrap;
   }
 
-  /* --- Featured News Card — Stack Vertically --- */
+  /* --- Featured News Card â€” Stack Vertically --- */
   .featured-news-card {
     grid-template-columns: 1fr;
     margin-bottom: 24px;
@@ -3672,7 +3672,7 @@ input:focus-visible {
     font-size: 0.75rem;
   }
 
-  /* --- Regular News Grid — Single Column --- */
+  /* --- Regular News Grid â€” Single Column --- */
   .regular-news-grid {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -3768,7 +3768,7 @@ input:focus-visible {
     font-size: 0.65rem;
   }
 
-  /* --- News Modal — Full-Screen on Mobile --- */
+  /* --- News Modal â€” Full-Screen on Mobile --- */
   .news-modal-overlay {
     padding: 0;
     align-items: flex-end;
@@ -5032,3 +5032,43 @@ input:focus-visible {
   box-shadow: 0 0 15px rgba(255, 92, 0, 0.15);
 }
 
+@keyframes majesticFloat {
+  0%, 100% { 
+    transform: translateY(0) scale(1) perspective(500px) rotateX(0deg) rotateY(0deg); 
+    filter: drop-shadow(0 15px 25px rgba(157, 255, 0, 0.2)) contrast(1.1); 
+  }
+  50% { 
+    transform: translateY(-6px) scale(1.02) perspective(500px) rotateX(3deg) rotateY(-4deg); 
+    filter: drop-shadow(0 25px 35px rgba(157, 255, 0, 0.4)) contrast(1.2); 
+  }
+}
+
+@keyframes elegantShine {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+.animated-hero-logo {
+  animation: majesticFloat 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animated-hero-text {
+  background: linear-gradient(
+    110deg,
+    #ffffff 10%,
+    #e4ffcc 30%,
+    rgba(157, 255, 0, 0.9) 45%,
+    #ffffff 60%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: elegantShine 5s linear infinite;
+  display: inline-block;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 25px rgba(157, 255, 0, 0.15));
+}

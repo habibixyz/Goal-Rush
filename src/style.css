@@ -4219,15 +4219,13 @@ input:focus-visible {
     flex-direction: column;
     align-items: stretch;
     gap: 16px;
-    padding: 16px 0;
+    padding: 16px;
     width: 100%;
     box-sizing: border-box;
-    overflow: hidden;
   }
   
   .navbar nav {
     width: 100%;
-    overflow: hidden; /* clip any subpixel horizontal overflow of scrolling links */
   }
   
   .logo-wrap {
@@ -4236,12 +4234,11 @@ input:focus-visible {
   
   .nav-links {
     display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 8px;
-    padding: 4px 16px 12px;
-    margin: 0 -16px; /* align scrolling container with screen padding */
+    padding: 4px 0 12px;
+    margin: 0;
     scrollbar-width: none;
   }
   
@@ -4619,7 +4616,9 @@ input:focus-visible {
   }
   .mobile-wallet-nav .wallet-connected-wrapper {
     flex-direction: row !important;
-    gap: 12px !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 8px !important;
   }
   .mobile-wallet-nav .badge-xlayer {
     padding: 6px 10px !important;
@@ -4660,7 +4659,10 @@ input:focus-visible {
   /* Ensure everything aligns nicely to the right */
   .mobile-wallet-nav {
     display: flex;
-    justify-content: flex-end;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 16px;
   }
 }
 

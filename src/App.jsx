@@ -1,38 +1,13 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { io } from 'socket.io-client'
-import { ethers } from 'ethers'
-import confetti from 'canvas-confetti'
-import goalRushLogo from './assets/logo.png'
-import SoccerBall3D from './components/SoccerBall3D'
-import currentHookSolidityCode from '../contracts/WorldCupGoalRushHook.sol?raw'
-import collectibleSolidityCode from '../contracts/AccessPass.sol?raw'
-import {
-  Coins,
-  Terminal as TerminalIcon,
-  Award,
-  Code,
-  Cpu,
-  Play,
-  HelpCircle,
-  CheckCircle,
-  Copy,
-  ChevronRight,
-  ExternalLink,
-  Flame,
-  User,
-  ShieldCheck,
-  AlertTriangle,
-  LogOut,
-  X,
-  Menu,
-  Plus,
-  Twitter,
-  Send,
-  Globe,
-  Activity,
-  Download,
-  Home
-} from 'lucide-react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { io } from 'socket.io-client';
+import { ethers } from 'ethers';
+import confetti from 'canvas-confetti';
+import goalRushLogo from './assets/logo.png';
+import SoccerBall3D from './components/SoccerBall3D';
+import currentHookSolidityCode from '../contracts/WorldCupGoalRushHook.sol?raw';
+import collectibleSolidityCode from '../contracts/AccessPass.sol?raw';
+import { Coins, Terminal as TerminalIcon, Award, Code, Cpu, Play, HelpCircle, CheckCircle, Copy, ChevronRight, ExternalLink, Flame, User, ShieldCheck, AlertTriangle, LogOut, X, Menu, Plus, Twitter, Send, Globe, Activity, Download, Home, ChevronDown } from 'lucide-react';
+import { t, setGlobalLanguage, getGlobalLanguage } from './translations.js';
 
 // Real codebase strings to display in Code Viewer
 const hookSolidityCode = `// SPDX-License-Identifier: MIT
@@ -271,7 +246,6 @@ contract WorldCupGoalRushHook {
         goalRushChance = _chance;
     }
 }`;
-
 const mockManagerCode = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
@@ -330,7 +304,6 @@ contract MockPoolManager {
         return (beforeSelector, afterSelector);
     }
 }`;
-
 const deployScriptCode = `// scripts/deploy.js
 const { ethers } = require("hardhat");
 
@@ -358,7 +331,6 @@ async function main() {
   await tx.wait();
   console.log("Successfully deployed contract via CREATE2!");
 }`;
-
 const readmeMarkdown = `# GoalRush — World Cup Uniswap V4 Hook
 
 GoalRush is a gamified Uniswap V4 hook custom-built for the OKX X Layer "Hook the World Cup" Hackathon.
@@ -374,7 +346,6 @@ GoalRush is a gamified Uniswap V4 hook custom-built for the OKX X Layer "Hook th
 3. **Graduate**: Reach the bonding curve cap. Eulr.fun automatically initializes the Uniswap V4 pool with your hook.
 4. **Drive Volume**: All swaps on the graduated pool run through your hook. Trade via OKX Wallet to rank!
 `;
-
 const asciiArtText = `
                                          #IF-28082006-FFFFFFFF - BLOCK_LINDY - 3835388 - OR-CHECKSIZE_BLOCK...
                                    #00000000000000000000 - HAS-MEM-INJECTOR-283 - BLOCK_CHECKER_TEST...
@@ -432,26 +403,59 @@ const asciiArtText = `
          #UniswapV4 - beforeSwap.selector - BeforeSwapDelta - afterSwap.selector - bytes32...
         #block.timestamp - block.prevrandao - msg.sender - abi.encodePacked - keccak256 - entropy...
 `;
-
-const getFlagUrl = (fifaCode) => {
+const getFlagUrl = fifaCode => {
   if (fifaCode && (fifaCode.startsWith('http://') || fifaCode.startsWith('https://'))) {
     return fifaCode;
   }
   const fifaToIso = {
-    QAT: 'qa', ECU: 'ec', ENG: 'gb-eng', IRN: 'ir', SEN: 'sn', NED: 'nl',
-    USA: 'us', WAL: 'gb-wls', ARG: 'ar', KSA: 'sa', DEN: 'dk', TUN: 'tn',
-    MEX: 'mx', POL: 'pl', FRA: 'fr', AUS: 'au', MAR: 'ma', CRO: 'hr',
-    GER: 'de', JPN: 'jp', ESP: 'es', CRC: 'cr', BEL: 'be', CAN: 'ca',
-    SUI: 'ch', CMR: 'cm', URU: 'uy', KOR: 'kr', POR: 'pt', GHA: 'gh',
-    SRB: 'rs', BRA: 'br', ITA: 'it', SCO: 'gb-sct',
-    BIH: 'ba', PAR: 'py', RSA: 'za', CZE: 'cz', HAI: 'ht', CUW: 'cw',
-    NZL: 'nz', EGY: 'eg', CPV: 'cv'
+    QAT: 'qa',
+    ECU: 'ec',
+    ENG: 'gb-eng',
+    IRN: 'ir',
+    SEN: 'sn',
+    NED: 'nl',
+    USA: 'us',
+    WAL: 'gb-wls',
+    ARG: 'ar',
+    KSA: 'sa',
+    DEN: 'dk',
+    TUN: 'tn',
+    MEX: 'mx',
+    POL: 'pl',
+    FRA: 'fr',
+    AUS: 'au',
+    MAR: 'ma',
+    CRO: 'hr',
+    GER: 'de',
+    JPN: 'jp',
+    ESP: 'es',
+    CRC: 'cr',
+    BEL: 'be',
+    CAN: 'ca',
+    SUI: 'ch',
+    CMR: 'cm',
+    URU: 'uy',
+    KOR: 'kr',
+    POR: 'pt',
+    GHA: 'gh',
+    SRB: 'rs',
+    BRA: 'br',
+    ITA: 'it',
+    SCO: 'gb-sct',
+    BIH: 'ba',
+    PAR: 'py',
+    RSA: 'za',
+    CZE: 'cz',
+    HAI: 'ht',
+    CUW: 'cw',
+    NZL: 'nz',
+    EGY: 'eg',
+    CPV: 'cv'
   };
   const iso = fifaToIso[fifaCode?.toUpperCase()] || 'un';
   return `https://flagcdn.com/w40/${iso}.png`;
 };
-
-const getTeamFifaCode = (name) => {
+const getTeamFifaCode = name => {
   const mapping = {
     'argentina': 'ARG',
     'france': 'FRA',
@@ -510,35 +514,102 @@ const getTeamFifaCode = (name) => {
     'norway': 'NOR',
     'algeria': 'ALG',
     // EPL clubs (England)
-    'arsenal': 'ENG', 'chelsea': 'ENG', 'liverpool': 'ENG', 'manchester city': 'ENG', 'man city': 'ENG',
-    'manchester united': 'ENG', 'man united': 'ENG', 'tottenham hotspur': 'ENG', 'tottenham': 'ENG',
-    'aston villa': 'ENG', 'newcastle': 'ENG', 'newcastle united': 'ENG', 'west ham': 'ENG', 'west ham united': 'ENG',
-    'everton': 'ENG', 'leicester': 'ENG', 'leicester city': 'ENG', 'wolves': 'ENG', 'wolverhampton wanderers': 'ENG',
-    'crystal palace': 'ENG', 'brighton': 'ENG', 'fulham': 'ENG', 'brentford': 'ENG', 'bournemouth': 'ENG',
-    'nottingham forest': 'ENG', 'ipswich': 'ENG', 'ipswich town': 'ENG', 'southampton': 'ENG',
+    'arsenal': 'ENG',
+    'chelsea': 'ENG',
+    'liverpool': 'ENG',
+    'manchester city': 'ENG',
+    'man city': 'ENG',
+    'manchester united': 'ENG',
+    'man united': 'ENG',
+    'tottenham hotspur': 'ENG',
+    'tottenham': 'ENG',
+    'aston villa': 'ENG',
+    'newcastle': 'ENG',
+    'newcastle united': 'ENG',
+    'west ham': 'ENG',
+    'west ham united': 'ENG',
+    'everton': 'ENG',
+    'leicester': 'ENG',
+    'leicester city': 'ENG',
+    'wolves': 'ENG',
+    'wolverhampton wanderers': 'ENG',
+    'crystal palace': 'ENG',
+    'brighton': 'ENG',
+    'fulham': 'ENG',
+    'brentford': 'ENG',
+    'bournemouth': 'ENG',
+    'nottingham forest': 'ENG',
+    'ipswich': 'ENG',
+    'ipswich town': 'ENG',
+    'southampton': 'ENG',
     // La Liga clubs (Spain)
-    'real madrid': 'ESP', 'barcelona': 'ESP', 'fc barcelona': 'ESP', 'atletico madrid': 'ESP',
-    'real sociedad': 'ESP', 'sevilla': 'ESP', 'real betis': 'ESP', 'athletic club': 'ESP', 'athletic bilbao': 'ESP',
-    'girona': 'ESP', 'valencia': 'ESP', 'villarreal': 'ESP',
+    'real madrid': 'ESP',
+    'barcelona': 'ESP',
+    'fc barcelona': 'ESP',
+    'atletico madrid': 'ESP',
+    'real sociedad': 'ESP',
+    'sevilla': 'ESP',
+    'real betis': 'ESP',
+    'athletic club': 'ESP',
+    'athletic bilbao': 'ESP',
+    'girona': 'ESP',
+    'valencia': 'ESP',
+    'villarreal': 'ESP',
     // Bundesliga clubs (Germany)
-    'bayern munich': 'GER', 'bayern münchen': 'GER', 'borussia dortmund': 'GER', 'dortmund': 'GER',
-    'bayer leverkusen': 'GER', 'leverkusen': 'GER', 'rb leipzig': 'GER', 'leipzig': 'GER',
-    'eintracht frankfurt': 'GER', 'stuttgart': 'GER', 'vfb stuttgart': 'GER',
+    'bayern munich': 'GER',
+    'bayern münchen': 'GER',
+    'borussia dortmund': 'GER',
+    'dortmund': 'GER',
+    'bayer leverkusen': 'GER',
+    'leverkusen': 'GER',
+    'rb leipzig': 'GER',
+    'leipzig': 'GER',
+    'eintracht frankfurt': 'GER',
+    'stuttgart': 'GER',
+    'vfb stuttgart': 'GER',
     // Serie A clubs (Italy)
-    'juventus': 'ITA', 'ac milan': 'ITA', 'milan': 'ITA', 'inter milan': 'ITA', 'inter': 'ITA', 'internazionale': 'ITA',
-    'napoli': 'ITA', 'roma': 'ITA', 'as roma': 'ITA', 'lazio': 'ITA', 'atalanta': 'ITA', 'fiorentina': 'ITA',
+    'juventus': 'ITA',
+    'ac milan': 'ITA',
+    'milan': 'ITA',
+    'inter milan': 'ITA',
+    'inter': 'ITA',
+    'internazionale': 'ITA',
+    'napoli': 'ITA',
+    'roma': 'ITA',
+    'as roma': 'ITA',
+    'lazio': 'ITA',
+    'atalanta': 'ITA',
+    'fiorentina': 'ITA',
     // Ligue 1 clubs (France)
-    'paris saint-germain': 'FRA', 'psg': 'FRA', 'marseille': 'FRA', 'monaco': 'FRA', 'as monaco': 'FRA',
-    'lyon': 'FRA', 'lille': 'FRA', 'lens': 'FRA',
+    'paris saint-germain': 'FRA',
+    'psg': 'FRA',
+    'marseille': 'FRA',
+    'monaco': 'FRA',
+    'as monaco': 'FRA',
+    'lyon': 'FRA',
+    'lille': 'FRA',
+    'lens': 'FRA',
     // MLS clubs (USA/Canada)
-    'inter miami': 'USA', 'inter miami cf': 'USA', 'la galaxy': 'USA', 'lafc': 'USA', 'los angeles fc': 'USA',
-    'new york red bulls': 'USA', 'nycfc': 'USA', 'new york city fc': 'USA', 'seattle sounders': 'USA',
-    'toronto fc': 'CAN', 'vancouver whitecaps': 'CAN', 'cf montreal': 'CAN', 'sporting kansas city': 'USA',
-    'chicago fire': 'USA', 'chicago fire fc': 'USA', 'st. louis city sc': 'USA', 'columbus crew': 'USA'
+    'inter miami': 'USA',
+    'inter miami cf': 'USA',
+    'la galaxy': 'USA',
+    'lafc': 'USA',
+    'los angeles fc': 'USA',
+    'new york red bulls': 'USA',
+    'nycfc': 'USA',
+    'new york city fc': 'USA',
+    'seattle sounders': 'USA',
+    'toronto fc': 'CAN',
+    'vancouver whitecaps': 'CAN',
+    'cf montreal': 'CAN',
+    'sporting kansas city': 'USA',
+    'chicago fire': 'USA',
+    'chicago fire fc': 'USA',
+    'st. louis city sc': 'USA',
+    'columbus crew': 'USA'
   };
   return mapping[name?.toLowerCase().trim()] || 'UN';
 };
-
 const getCleanAbbreviation = (teamName, flagCode) => {
   if (flagCode && flagCode !== 'UN' && !flagCode.startsWith('http')) {
     return flagCode;
@@ -549,7 +620,6 @@ const getCleanAbbreviation = (teamName, flagCode) => {
   }
   return teamName?.slice(0, 3).toUpperCase() || 'UN';
 };
-
 
 // Helper to get the correct OKX Wallet provider strictly
 const getProvider = () => {
@@ -570,47 +640,64 @@ const getProvider = () => {
   }
   return null;
 };
-
 const HOOK_ADDRESS = '0x700656337a252A004Ca0B170828f4adEaa680288';
 const ROUTER_ADDRESS = '0x8f3e9B45a377cEa9fCeC9509e82EEe237e67ba24';
 const GRUSH_TOKEN_ADDRESS = '0x422fe165b2da990d18c6dca944b11dcd61519671';
-const BACKEND_API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:3001/api'
-  : 'https://goal-rush-backend-production.up.railway.app/api';
+const BACKEND_API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001/api' : 'https://goal-rush-backend-production.up.railway.app/api';
 
 // Helper to get today/tomorrow date strings dynamically
 const getTodayLabel = () => {
   const d = new Date();
-  return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'America/New_York' }).format(d);
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'America/New_York'
+  }).format(d);
 };
 const getTomorrowLabel = () => {
   const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'America/New_York' }).format(d);
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'America/New_York'
+  }).format(d);
 };
-
-const formatLocalTime = (timestamp) => {
+const formatLocalTime = timestamp => {
   if (!timestamp) return 'Upcoming';
   const d = new Date(timestamp);
   if (isNaN(d.getTime())) return 'Upcoming';
-  const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-  const tzParts = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(d);
+  const timeStr = d.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+  const tzParts = new Intl.DateTimeFormat('en-US', {
+    timeZoneName: 'short'
+  }).formatToParts(d);
   const tzName = tzParts.find(p => p.type === 'timeZoneName')?.value || '';
   return `${timeStr} ${tzName}`.trim();
 };
-
-const formatLocalDate = (timestamp) => {
+const formatLocalDate = timestamp => {
   if (!timestamp) return 'TBD';
   const d = new Date(timestamp);
   if (isNaN(d.getTime())) return 'TBD';
-  return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(d);
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    day: 'numeric'
+  }).format(d);
 };
-
 const TODAY_LABEL = getTodayLabel();
 const TOMORROW_LABEL = getTomorrowLabel();
 const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
-
 export default function App() {
-  const getNumericMatchId = (matchId) => {
+  const [lang, setLang] = useState(getGlobalLanguage());
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const handleLangChange = newLang => {
+    setLang(newLang);
+    setGlobalLanguage(newLang);
+    setShowLangMenu(false);
+  };
+  const getNumericMatchId = matchId => {
     if (!matchId) return 0n;
     if (typeof matchId === 'bigint') return matchId;
     if (typeof matchId === 'number') return BigInt(matchId);
@@ -618,8 +705,7 @@ export default function App() {
     if (/^\d+$/.test(s)) return BigInt(s);
     return BigInt(ethers.id(s));
   };
-
-  const parseRevertReason = (err) => {
+  const parseRevertReason = err => {
     if (!err) return '';
     if (err.reason) return err.reason;
     const msg = err.message || String(err);
@@ -636,10 +722,8 @@ export default function App() {
     if (matchGenericRevert && matchGenericRevert[1]) return matchGenericRevert[1].trim();
     return '';
   };
-
   const [onChainActiveId, setOnChainActiveId] = useState(0n);
   const [isSelectedMatchOnChain, setIsSelectedMatchOnChain] = useState(false);
-
   const [activeMatch, setActiveMatch] = useState({
     id: 10,
     teamA: 'Netherlands',
@@ -651,7 +735,6 @@ export default function App() {
     isLive: true,
     minute: "1'"
   });
-
   const activeMatchRef = useRef(activeMatch);
   const socketRef = useRef(null);
   const liveMatchesRef = useRef([]);
@@ -660,38 +743,40 @@ export default function App() {
   const leaderboardScannedRef = useRef(false); // Track if we have done a full historical scan
   const hasInitializedLeaderboardRef = useRef(false); // Track if we started the historical scan
   const lastFetchedBlockRef = useRef(62494373); // Start from first contract deployment block
-  const activeOnChainMatchRef = useRef({ id: 1, teamA: 'Canada', teamB: 'Bosnia & Herzegovina' });
-
+  const activeOnChainMatchRef = useRef({
+    id: 1,
+    teamA: 'Canada',
+    teamB: 'Bosnia & Herzegovina'
+  });
   useEffect(() => {
     activeMatchRef.current = activeMatch;
   }, [activeMatch]);
-
-  const [matchId, setMatchId] = useState(1)
-  const [prediction, setPrediction] = useState(1) // 1 = Argentina, 2 = France
-  const [swapAmount, setSwapAmount] = useState('0.001')
-  const [selectedToken, setSelectedToken] = useState('OKB')
-  const [jackpot, setJackpot] = useState(0)
-  const [grushJackpot, setGrushJackpot] = useState(0)
-  const [teamAVotes, setTeamAVotes] = useState(0) // Argentina volume OKB
-  const [teamBVotes, setTeamBVotes] = useState(0) // France volume OKB
-  const [teamDrawVotes, setTeamDrawVotes] = useState(0) // Draw volume OKB
-  const [teamAGrushVotes, setTeamAGrushVotes] = useState(0)
-  const [teamBGrushVotes, setTeamBGrushVotes] = useState(0)
-  const [teamDrawGrushVotes, setTeamDrawGrushVotes] = useState(0)
-   const [activeTab, setActiveTab] = useState('collectible') // collectible, hook, mock, deploy
-   const [aboutSubTab, setAboutSubTab] = useState('overview') // overview, whitepaper, contracts, deployment
-   const [showDevPortal, setShowDevPortal] = useState(false)
-   const [showWhitepaper, setShowWhitepaper] = useState(false)
-   const [showPrivacy, setShowPrivacy] = useState(false)
-   const [showTerms, setShowTerms] = useState(false)
-  const [activeRightTab, setActiveRightTab] = useState('match') // match or scores
-  const [shootoutStatus, setShootoutStatus] = useState('')
-  const [currentView, setCurrentView] = useState('dashboard')
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // dashboard or match-center
-  const [selectedMatchCenterId, setSelectedMatchCenterId] = useState(10)
-  const [matchFilter, setMatchFilter] = useState('all')
-  const [matchCenterSubTab, setMatchCenterSubTab] = useState('lineup')
-  const [competitionCategory, setCompetitionCategory] = useState('world-cup')
+  const [matchId, setMatchId] = useState(1);
+  const [prediction, setPrediction] = useState(1); // 1 = Argentina, 2 = France
+  const [swapAmount, setSwapAmount] = useState('0.001');
+  const [selectedToken, setSelectedToken] = useState('OKB');
+  const [jackpot, setJackpot] = useState(0);
+  const [grushJackpot, setGrushJackpot] = useState(0);
+  const [teamAVotes, setTeamAVotes] = useState(0); // Argentina volume OKB
+  const [teamBVotes, setTeamBVotes] = useState(0); // France volume OKB
+  const [teamDrawVotes, setTeamDrawVotes] = useState(0); // Draw volume OKB
+  const [teamAGrushVotes, setTeamAGrushVotes] = useState(0);
+  const [teamBGrushVotes, setTeamBGrushVotes] = useState(0);
+  const [teamDrawGrushVotes, setTeamDrawGrushVotes] = useState(0);
+  const [activeTab, setActiveTab] = useState('collectible'); // collectible, hook, mock, deploy
+  const [aboutSubTab, setAboutSubTab] = useState('overview'); // overview, whitepaper, contracts, deployment
+  const [showDevPortal, setShowDevPortal] = useState(false);
+  const [showWhitepaper, setShowWhitepaper] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [activeRightTab, setActiveRightTab] = useState('match'); // match or scores
+  const [shootoutStatus, setShootoutStatus] = useState('');
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // dashboard or match-center
+  const [selectedMatchCenterId, setSelectedMatchCenterId] = useState(10);
+  const [matchFilter, setMatchFilter] = useState('all');
+  const [matchCenterSubTab, setMatchCenterSubTab] = useState('lineup');
+  const [competitionCategory, setCompetitionCategory] = useState('world-cup');
 
   // Daily News States
   const [newsArticles, setNewsArticles] = useState([]);
@@ -709,20 +794,29 @@ export default function App() {
     }
   });
   const [newsCountdown, setNewsCountdown] = useState(600);
-  const [oracleLogs, setOracleLogs] = useState([
-    `> Oracle console initialized at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET`,
-    `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Connected to X Layer mempool & Sentient AGI Swarm.`
-  ]);
+  const [oracleLogs, setOracleLogs] = useState([`> Oracle console initialized at ${new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+    timeZone: 'America/New_York'
+  })} ET`, `[${new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+    timeZone: 'America/New_York'
+  })} ET] > Connected to X Layer mempool & Sentient AGI Swarm.`]);
   const [isIngesting, setIsIngesting] = useState(false);
 
   // Twitter Card states
-  const [twitterUsername, setTwitterUsername] = useState('')
-  const [isConnectingTwitter, setIsConnectingTwitter] = useState(false)
-  const [authPopupStep, setAuthPopupStep] = useState(0)
-  const [twitterCard, setTwitterCard] = useState(null)
-  const [recentCards, setRecentCards] = useState([])
-  const [isMintingCard, setIsMintingCard] = useState(false)
-  const [mintStatus, setMintStatus] = useState('')
+  const [twitterUsername, setTwitterUsername] = useState('');
+  const [isConnectingTwitter, setIsConnectingTwitter] = useState(false);
+  const [authPopupStep, setAuthPopupStep] = useState(0);
+  const [twitterCard, setTwitterCard] = useState(null);
+  const [recentCards, setRecentCards] = useState([]);
+  const [isMintingCard, setIsMintingCard] = useState(false);
+  const [mintStatus, setMintStatus] = useState('');
   const [accessPassSupply, setAccessPassSupply] = useState('0');
   const ACCESS_PASS_ADDRESS = '0x953a03161A2e4be8E5e8405B74a254B336cdBe97'; // UPDATE ME AFTER DEPLOYMENT
   const GOALRUSH_ASP_ID = '#4564';
@@ -731,55 +825,46 @@ export default function App() {
   const GOALRUSH_ASP_NETWORK = 'X Layer (eip155:196)';
   const GOALRUSH_ASP_ASSET = '0x1E4a5963aBFD975d8c9021ce480b42188849D41d'; // Real USDT on X Layer
   const [grushPriceUsd, setGrushPriceUsd] = useState(null);
-  const [viewedCard, setViewedCard] = useState(null) // For viewing other users' cards from gallery
+  const [viewedCard, setViewedCard] = useState(null); // For viewing other users' cards from gallery
 
   // OKX.AI Hub state variables
-  const [evaluatorStaked, setEvaluatorStaked] = useState(100)
-  const [evaluatorAccuracy, setEvaluatorAccuracy] = useState(94)
-  const [evaluatorBounties, setEvaluatorBounties] = useState(0)
-  const [evaluatorSlashed, setEvaluatorSlashed] = useState(0)
+  const [evaluatorStaked, setEvaluatorStaked] = useState(100);
+  const [evaluatorAccuracy, setEvaluatorAccuracy] = useState(94);
+  const [evaluatorBounties, setEvaluatorBounties] = useState(0);
+  const [evaluatorSlashed, setEvaluatorSlashed] = useState(0);
   const [isRegisteredUser, setIsRegisteredUser] = useState(() => {
     return localStorage.getItem('okx_registered_user') === 'true';
-  })
-  const [isRegisteredASP, setIsRegisteredASP] = useState(true)
+  });
+  const [isRegisteredASP, setIsRegisteredASP] = useState(true);
   const [isRegisteredEvaluator, setIsRegisteredEvaluator] = useState(() => {
     return localStorage.getItem('okx_registered_evaluator') === 'true';
-  })
-
-  const [agentStats, setAgentStats] = useState({ totalCalls: 0, totalEarnings: '0.000' });
+  });
+  const [agentStats, setAgentStats] = useState({
+    totalCalls: 0,
+    totalEarnings: '0.000'
+  });
   const [agentFulfillments, setAgentFulfillments] = useState([]);
   const [isLoadingFulfillments, setIsLoadingFulfillments] = useState(false);
-  const [terminalInput, setTerminalInput] = useState('')
+  const [terminalInput, setTerminalInput] = useState('');
   const [terminalHistory, setTerminalHistory] = useState(() => {
     const isUser = localStorage.getItem('okx_registered_user') === 'true';
-    const statusLine = isUser
-      ? `Status: ONLINE | User ID: Active | ASP: ${GOALRUSH_ASP_ID} (${GOALRUSH_ASP_STATUS})`
-      : `Status: ONLINE | ASP: ${GOALRUSH_ASP_ID} (${GOALRUSH_ASP_STATUS})`;
-    return [
-      'ONCHAIN OS v1.2.0 - OKX.AI SECURE COMMAND CONSOLE',
-      '-------------------------------------------------',
-      'Type help or use the quick buttons to get started.',
-      statusLine,
-      ''
-    ];
-  })
-  const [isTerminalLoading, setIsTerminalLoading] = useState(false)
-  const [selectedCaseIndex, setSelectedCaseIndex] = useState(null)
-  const [arbitrationResult, setArbitrationResult] = useState(null)
-  const [isResolvingCase, setIsResolvingCase] = useState(false)
-
-  const [selectedPredictMatchId, setSelectedPredictMatchId] = useState('')
-  const [isQueryingPredict, setIsQueryingPredict] = useState(false)
-  const [predictResult, setPredictResult] = useState(null)
-  const [predictError, setPredictError] = useState(null)
+    const statusLine = isUser ? `Status: ONLINE | User ID: Active | ASP: ${GOALRUSH_ASP_ID} (${GOALRUSH_ASP_STATUS})` : `Status: ONLINE | ASP: ${GOALRUSH_ASP_ID} (${GOALRUSH_ASP_STATUS})`;
+    return ['ONCHAIN OS v1.2.0 - OKX.AI SECURE COMMAND CONSOLE', '-------------------------------------------------', 'Type help or use the quick buttons to get started.', statusLine, ''];
+  });
+  const [isTerminalLoading, setIsTerminalLoading] = useState(false);
+  const [selectedCaseIndex, setSelectedCaseIndex] = useState(null);
+  const [arbitrationResult, setArbitrationResult] = useState(null);
+  const [isResolvingCase, setIsResolvingCase] = useState(false);
+  const [selectedPredictMatchId, setSelectedPredictMatchId] = useState('');
+  const [isQueryingPredict, setIsQueryingPredict] = useState(false);
+  const [predictResult, setPredictResult] = useState(null);
+  const [predictError, setPredictError] = useState(null);
   useEffect(() => {
     localStorage.setItem('okx_registered_user', isRegisteredUser);
   }, [isRegisteredUser]);
-  
   useEffect(() => {
     localStorage.setItem('okx_registered_evaluator', isRegisteredEvaluator);
   }, [isRegisteredEvaluator]);
-
   const fetchAgentData = useCallback(async () => {
     try {
       setIsLoadingFulfillments(true);
@@ -793,7 +878,6 @@ export default function App() {
           });
         }
       }
-      
       const fulfillmentsRes = await fetch(`${BACKEND_API_BASE}/agent/predictions`);
       if (fulfillmentsRes.ok) {
         const fulfillmentsData = await fulfillmentsRes.json();
@@ -823,11 +907,16 @@ export default function App() {
       setNewsLoading(false);
     }
   }, []);
-
   const triggerOracleIngest = async () => {
     if (isIngesting) return;
     setIsIngesting(true);
-    setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Manual override triggered. Contacting backend...`]);
+    setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+      timeZone: 'America/New_York'
+    })} ET] > Manual override triggered. Contacting backend...`]);
     try {
       const response = await fetch(`${BACKEND_API_BASE}/news/ingest`, {
         method: 'POST'
@@ -839,19 +928,36 @@ export default function App() {
           await fetchNewsArticles();
           setNewsCountdown(600);
         } else {
-          setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Error: Ingestion failed: ${body.error}`]);
+          setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+            timeZone: 'America/New_York'
+          })} ET] > Error: Ingestion failed: ${body.error}`]);
         }
       } else {
-        setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Error: Server returned status ${response.status}`]);
+        setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true,
+          timeZone: 'America/New_York'
+        })} ET] > Error: Server returned status ${response.status}`]);
       }
     } catch (e) {
-      setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Error: Ingestion failed: ${e.message}`]);
+      setOracleLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+        timeZone: 'America/New_York'
+      })} ET] > Error: Ingestion failed: ${e.message}`]);
     } finally {
       setIsIngesting(false);
     }
   };
-
-  const handleLikeArticle = async (id) => {
+  const handleLikeArticle = async id => {
     if (likedArticles.includes(id)) return; // Already liked
     try {
       const response = await fetch(`${BACKEND_API_BASE}/news/${id}/like`, {
@@ -863,9 +969,12 @@ export default function App() {
           const newLikes = [...likedArticles, id];
           setLikedArticles(newLikes);
           localStorage.setItem('goalrush_liked_articles', JSON.stringify(newLikes));
-          
+
           // Optimistically update local article count
-          setNewsArticles(prev => prev.map(art => art.id === id ? { ...art, likes: art.likes + 1 } : art));
+          setNewsArticles(prev => prev.map(art => art.id === id ? {
+            ...art,
+            likes: art.likes + 1
+          } : art));
           addLog(`[News Hub] Liked news article: ID ${id}`);
         }
       }
@@ -873,7 +982,6 @@ export default function App() {
       console.warn('Failed to like article:', e);
     }
   };
-
   useEffect(() => {
     if (currentView === 'news') {
       fetchNewsArticles();
@@ -883,7 +991,6 @@ export default function App() {
   // Sync Sentient Swarm Agent Logs
   useEffect(() => {
     if (currentView !== 'news') return;
-    
     const fetchLogs = async () => {
       try {
         const res = await fetch(`${BACKEND_API_BASE}/agent/logs`);
@@ -897,12 +1004,10 @@ export default function App() {
         // Silent catch for polling
       }
     };
-
     fetchLogs(); // initial fetch
     const interval = setInterval(fetchLogs, 3000); // poll every 3s
     return () => clearInterval(interval);
   }, [currentView]);
-
   useEffect(() => {
     if (currentView === 'okx-ai') {
       fetchAgentData();
@@ -914,33 +1019,28 @@ export default function App() {
   // Set up polling interval for new articles to simulate popping feed
   useEffect(() => {
     if (currentView !== 'news') return;
-
     const interval = setInterval(() => {
-      fetch(`${BACKEND_API_BASE}/news`)
-        .then(res => res.json())
-        .then(body => {
-          if (body.success && Array.isArray(body.data) && body.data.length > 0) {
-            setNewsArticles(prev => {
-              if (prev.length === 0) return body.data;
-              // Detect if any new article exists in the response
-              const prevTitles = new Set(prev.map(a => a.title));
-              const newArticlesList = body.data.filter(a => !prevTitles.has(a.title));
-              
-              if (newArticlesList.length > 0) {
-                // Found new articles! Toast the newest one
-                const newest = newArticlesList[0];
-                setLatestNewArticle(newest);
-                setShowNewsToast(true);
-                // Dismiss toast after 7 seconds
-                setTimeout(() => {
-                  setShowNewsToast(false);
-                }, 7000);
-              }
-              return body.data;
-            });
-          }
-        })
-        .catch(err => console.warn('Polling news failed:', err));
+      fetch(`${BACKEND_API_BASE}/news`).then(res => res.json()).then(body => {
+        if (body.success && Array.isArray(body.data) && body.data.length > 0) {
+          setNewsArticles(prev => {
+            if (prev.length === 0) return body.data;
+            // Detect if any new article exists in the response
+            const prevTitles = new Set(prev.map(a => a.title));
+            const newArticlesList = body.data.filter(a => !prevTitles.has(a.title));
+            if (newArticlesList.length > 0) {
+              // Found new articles! Toast the newest one
+              const newest = newArticlesList[0];
+              setLatestNewArticle(newest);
+              setShowNewsToast(true);
+              // Dismiss toast after 7 seconds
+              setTimeout(() => {
+                setShowNewsToast(false);
+              }, 7000);
+            }
+            return body.data;
+          });
+        }
+      }).catch(err => console.warn('Polling news failed:', err));
     }, 15000); // 15 seconds polling
 
     return () => clearInterval(interval);
@@ -952,7 +1052,13 @@ export default function App() {
     const interval = setInterval(() => {
       setNewsCountdown(prev => {
         if (prev <= 1) {
-          setOracleLogs(l => [...l, `[${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET] > Scheduled 10-minute sync timer fired. Running ingestion...`]);
+          setOracleLogs(l => [...l, `[${new Date().toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+            timeZone: 'America/New_York'
+          })} ET] > Scheduled 10-minute sync timer fired. Running ingestion...`]);
           fetchNewsArticles();
           return 600;
         }
@@ -966,7 +1072,6 @@ export default function App() {
   useEffect(() => {
     let title = "GoalRush — World Cup Uniswap V4 Hook & Jackpot on X Layer";
     let metaDesc = "GoalRush is a World Cup-themed Uniswap V4 hook featuring match prediction jackpots and gamified swap rebate penalties on OKX X Layer.";
-    
     if (currentView === 'dashboard' || currentView === 'leaderboard') {
       title = currentView === 'leaderboard' ? "Leaderboard | GoalRush — World Cup Hook & Jackpot" : "Dashboard | GoalRush — World Cup Hook & Jackpot";
       metaDesc = "View active World Cup prediction jackpots, simulate swaps, track goals scored, and see Leaderboard rankings on GoalRush.";
@@ -988,19 +1093,17 @@ export default function App() {
         metaDesc = "Get the latest 2026 FIFA World Cup matches, match analysis, player card updates, and GoalRush announcements directly on X Layer.";
       }
     }
-    
     document.title = title;
-    
+
     // Update Meta Description
     const metaDescTag = document.querySelector('meta[name="description"]');
     if (metaDescTag) {
       metaDescTag.setAttribute('content', metaDesc);
     }
-    
+
     // Update Open Graph tags for Social Media SEO
     const ogTitle = document.querySelector('meta[property="og:title"]');
     if (ogTitle) ogTitle.setAttribute('content', title);
-    
     const ogDesc = document.querySelector('meta[property="og:description"]');
     if (ogDesc) ogDesc.setAttribute('content', metaDesc);
   }, [currentView, activeNewsArticle]);
@@ -1009,9 +1112,7 @@ export default function App() {
   useEffect(() => {
     const existingScript = document.getElementById('goalrush-jsonld-schema');
     if (existingScript) existingScript.remove();
-
     let schemaData = null;
-
     if (currentView === 'news' && activeNewsArticle) {
       schemaData = {
         "@context": "https://schema.org",
@@ -1019,11 +1120,7 @@ export default function App() {
         "headline": activeNewsArticle.title,
         "description": activeNewsArticle.summary,
         "articleBody": activeNewsArticle.content,
-        "image": [
-          activeNewsArticle.image_url?.startsWith('http') 
-            ? activeNewsArticle.image_url 
-            : `${window.location.origin}${activeNewsArticle.image_url}`
-        ],
+        "image": [activeNewsArticle.image_url?.startsWith('http') ? activeNewsArticle.image_url : `${window.location.origin}${activeNewsArticle.image_url}`],
         "datePublished": activeNewsArticle.published_at,
         "author": {
           "@type": "Organization",
@@ -1060,7 +1157,6 @@ export default function App() {
         }
       };
     }
-
     if (schemaData) {
       const script = document.createElement('script');
       script.id = 'goalrush-jsonld-schema';
@@ -1069,7 +1165,6 @@ export default function App() {
       document.head.appendChild(script);
     }
   }, [currentView, activeNewsArticle]);
-
   const fetchAccessPassSupply = useCallback(async () => {
     try {
       if (!window.ethereum && !rpcProvider) return;
@@ -1084,7 +1179,6 @@ export default function App() {
       console.warn("Failed to fetch access pass supply", e);
     }
   }, [rpcProvider]);
-
   const fetchGrushPrice = useCallback(async () => {
     try {
       const res = await fetch('https://api.geckoterminal.com/api/v2/networks/x-layer/pools/0xd639d7f0dc532caec7e31703281519f9e59a027a93ab71df3257ef9454fbef4f');
@@ -1097,13 +1191,11 @@ export default function App() {
       console.warn('Failed to fetch GRUSH price:', e);
     }
   }, []);
-
   useEffect(() => {
     fetchGrushPrice();
     const interval = setInterval(fetchGrushPrice, 60000);
     return () => clearInterval(interval);
   }, [fetchGrushPrice]);
-
   const fetchRecentCards = useCallback(async () => {
     try {
       const response = await fetch(`${BACKEND_API_BASE}/cards?limit=10`);
@@ -1117,12 +1209,10 @@ export default function App() {
       console.warn('Failed to fetch recent Twitter cards:', e);
     }
   }, []);
-
   useEffect(() => {
     fetchRecentCards();
   }, [fetchRecentCards]);
-
-  const generateStatsFromUsername = (username) => {
+  const generateStatsFromUsername = username => {
     const cleanName = username.replace('@', '').trim().toLowerCase();
     if (!cleanName) return null;
 
@@ -1144,12 +1234,12 @@ export default function App() {
     const pos = positions[hash % positions.length];
 
     // Compute stats (bounded between 70 and 99)
-    let defi_iq = 75 + (hash % 25);
-    let prediction_power = 72 + ((hash >> 1) % 28);
-    let jackpot_luck = 68 + ((hash >> 2) % 32);
-    let degen_level = 80 + ((hash >> 3) % 20); // Degen level usually higher
-    let swap_speed = 70 + ((hash >> 4) % 30);
-    let x_factor = 75 + ((hash >> 5) % 25);
+    let defi_iq = 75 + hash % 25;
+    let prediction_power = 72 + (hash >> 1) % 28;
+    let jackpot_luck = 68 + (hash >> 2) % 32;
+    let degen_level = 80 + (hash >> 3) % 20; // Degen level usually higher
+    let swap_speed = 70 + (hash >> 4) % 30;
+    let x_factor = 75 + (hash >> 5) % 25;
 
     // Apply prediction volume stat boosts to reward platform activity!
     let userVol = Number(totalUserVolume || 0);
@@ -1159,7 +1249,7 @@ export default function App() {
         try {
           const okbVol = Number(ethers.formatEther(stats.volume || 0n));
           const grushVol = Number(ethers.formatEther(stats.grushVolume || 0n));
-          userVol = Math.max(userVol, okbVol + (grushVol * 0.001)); // Scale GRUSH utility
+          userVol = Math.max(userVol, okbVol + grushVol * 0.001); // Scale GRUSH utility
         } catch (e) {
           console.error("Error reading volume for stat boost:", e);
         }
@@ -1171,11 +1261,10 @@ export default function App() {
     if (userVol >= 5.0) {
       volumeBoost = 15; // Promotes active power-users directly to Legendary/Diamond
     } else if (userVol >= 1.0) {
-      volumeBoost = 8;  // Promotes active users to Diamond/Gold
+      volumeBoost = 8; // Promotes active users to Diamond/Gold
     } else if (userVol >= 0.1) {
-      volumeBoost = 4;  // Promotes users to Gold/Silver
+      volumeBoost = 4; // Promotes users to Gold/Silver
     }
-
     defi_iq = Math.min(99, defi_iq + volumeBoost);
     prediction_power = Math.min(99, prediction_power + volumeBoost);
     jackpot_luck = Math.min(99, jackpot_luck + volumeBoost);
@@ -1188,55 +1277,32 @@ export default function App() {
 
     // Card tier/type
     let card_type = 'gold';
-    if (overall >= 94 || (hash % 20 === 0)) card_type = 'legendary';
-    else if (overall >= 88) card_type = 'diamond';
-    else if (overall >= 80) card_type = 'gold';
-    else if (overall >= 74) card_type = 'silver';
-    else card_type = 'bronze';
+    if (overall >= 94 || hash % 20 === 0) card_type = 'legendary';else if (overall >= 88) card_type = 'diamond';else if (overall >= 80) card_type = 'gold';else if (overall >= 74) card_type = 'silver';else card_type = 'bronze';
 
     // List of VIP influencers who automatically get Legendary cards for marketing and virality
-    const vipInfluencers = [
-      'waleswoosh',
-      'chillpill',
-      'vitalik',
-      'elonmusk',
-      'cz_binance',
-      'sandeepnailwal',
-      'cobie',
-      'ansem',
-      'gainzy',
-      'rovercrc'
-    ];
+    const vipInfluencers = ['waleswoosh', 'chillpill', 'vitalik', 'elonmusk', 'cz_binance', 'sandeepnailwal', 'cobie', 'ansem', 'gainzy', 'rovercrc'];
 
     // Fallback if handle contains special keywords or is a VIP influencer -> promote to Legendary!
-    if (
-      cleanName.includes('okx') || 
-      cleanName.includes('xlayer') || 
-      cleanName.includes('grush') || 
-      cleanName.includes('uniswap') ||
-      vipInfluencers.includes(cleanName)
-    ) {
+    if (cleanName.includes('okx') || cleanName.includes('xlayer') || cleanName.includes('grush') || cleanName.includes('uniswap') || vipInfluencers.includes(cleanName)) {
       card_type = 'legendary';
     }
 
     // Boost stats for Legendary cards to make sure they display epic tier values (94-99)
     if (card_type === 'legendary') {
-      defi_iq = Math.max(defi_iq, 94 + (hash % 6));
-      prediction_power = Math.max(prediction_power, 93 + ((hash >> 1) % 7));
-      jackpot_luck = Math.max(jackpot_luck, 94 + ((hash >> 2) % 6));
-      degen_level = Math.max(degen_level, 95 + ((hash >> 3) % 5));
-      swap_speed = Math.max(swap_speed, 92 + ((hash >> 4) % 8));
-      x_factor = Math.max(x_factor, 95 + ((hash >> 5) % 5));
+      defi_iq = Math.max(defi_iq, 94 + hash % 6);
+      prediction_power = Math.max(prediction_power, 93 + (hash >> 1) % 7);
+      jackpot_luck = Math.max(jackpot_luck, 94 + (hash >> 2) % 6);
+      degen_level = Math.max(degen_level, 95 + (hash >> 3) % 5);
+      swap_speed = Math.max(swap_speed, 92 + (hash >> 4) % 8);
+      x_factor = Math.max(x_factor, 95 + (hash >> 5) % 5);
       overall = Math.round((defi_iq + prediction_power + jackpot_luck + degen_level + swap_speed + x_factor) / 6);
     }
-
     const flagMap = {
       st: 'ARG',
       cm: 'POR',
       cb: 'GER',
       gk: 'ESP'
     };
-
     return {
       username: username.startsWith('@') ? username : `@${username}`,
       avatar_url: `https://unavatar.io/x/${cleanName}`,
@@ -1253,7 +1319,6 @@ export default function App() {
       flagCode: flagMap[pos.toLowerCase()] || 'UN'
     };
   };
-
   const handleConnectTwitter = () => {
     if (!twitterUsername.trim()) {
       alert('Please enter a Twitter handle!');
@@ -1261,7 +1326,6 @@ export default function App() {
     }
     setIsConnectingTwitter(true);
     setAuthPopupStep(1);
-
     setTimeout(() => {
       setAuthPopupStep(2);
       setTimeout(() => {
@@ -1279,8 +1343,7 @@ export default function App() {
       }, 1000);
     }, 1000);
   };
-
-  const handleMintNFT = async (paymentMethod) => {
+  const handleMintNFT = async paymentMethod => {
     if (!walletConnected || !userAddress) {
       alert("Please connect your wallet first!");
       return;
@@ -1289,39 +1352,24 @@ export default function App() {
       alert("Please generate a Twitter card first!");
       return;
     }
-    
     setIsMintingCard(true);
     setMintStatus(`Initializing minting via ${paymentMethod}...`);
     addLog(`[Mint NFT] Minting ${twitterCard.username}'s card using ${paymentMethod}...`);
-
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
 
       // Collectible NFT Contract Address
       const nftAddress = '0xd30b894bbD3185737c5D6a276367A4fEDF44de5C';
-      const nftAbi = [
-        "function mintWithOKB(string username, string pos, uint8 overall, uint8 defi_iq, uint8 prediction_power, uint8 jackpot_luck, uint8 degen_level, uint8 swap_speed, uint8 x_factor, string card_type, string uri) external payable returns (uint256)",
-        "function mintWithGrush(string username, string pos, uint8 overall, uint8 defi_iq, uint8 prediction_power, uint8 jackpot_luck, uint8 degen_level, uint8 swap_speed, uint8 x_factor, string card_type, string uri) external returns (uint256)",
-        "function okbMintPrice() external view returns (uint256)",
-        "function grushMintPrice() external view returns (uint256)"
-      ];
+      const nftAbi = ["function mintWithOKB(string username, string pos, uint8 overall, uint8 defi_iq, uint8 prediction_power, uint8 jackpot_luck, uint8 degen_level, uint8 swap_speed, uint8 x_factor, string card_type, string uri) external payable returns (uint256)", "function mintWithGrush(string username, string pos, uint8 overall, uint8 defi_iq, uint8 prediction_power, uint8 jackpot_luck, uint8 degen_level, uint8 swap_speed, uint8 x_factor, string card_type, string uri) external returns (uint256)", "function okbMintPrice() external view returns (uint256)", "function grushMintPrice() external view returns (uint256)"];
       const nftContract = new ethers.Contract(nftAddress, nftAbi, signer);
-
       const cardTypeLabel = twitterCard.card_type || 'gold';
       const cleanUser = twitterCard.username.replace('@', '').trim().toLowerCase();
       // Point directly to backend for future mints, bypassing frontend proxy
       const metadataUri = `https://goal-rush-backend-production.up.railway.app/api/metadata/${cleanUser}`;
-
       let tx;
-
       if (paymentMethod === 'GRUSH') {
-        const tokenAbi = [
-          "function transferFrom(address from, address to, uint256 value) external returns (bool)",
-          "function balanceOf(address account) external view returns (uint256)",
-          "function approve(address spender, uint256 amount) external returns (bool)",
-          "function allowance(address owner, address spender) external view returns (uint256)"
-        ];
+        const tokenAbi = ["function transferFrom(address from, address to, uint256 value) external returns (bool)", "function balanceOf(address account) external view returns (uint256)", "function approve(address spender, uint256 amount) external returns (bool)", "function allowance(address owner, address spender) external view returns (uint256)"];
         const tokenContract = new ethers.Contract(GRUSH_TOKEN_ADDRESS, tokenAbi, signer);
 
         // Check balance
@@ -1342,21 +1390,8 @@ export default function App() {
           await approveTx.wait();
           addLog(`[Mint NFT] GRUSH approved successfully!`);
         }
-
         setMintStatus('Confirming GRUSH Mint Transaction in wallet...');
-        tx = await nftContract.mintWithGrush(
-          twitterCard.username,
-          twitterCard.posAbbr || 'ST',
-          twitterCard.overall,
-          twitterCard.defi_iq,
-          twitterCard.prediction_power,
-          twitterCard.jackpot_luck,
-          twitterCard.degen_level,
-          twitterCard.swap_speed,
-          twitterCard.x_factor,
-          cardTypeLabel,
-          metadataUri
-        );
+        tx = await nftContract.mintWithGrush(twitterCard.username, twitterCard.posAbbr || 'ST', twitterCard.overall, twitterCard.defi_iq, twitterCard.prediction_power, twitterCard.jackpot_luck, twitterCard.degen_level, twitterCard.swap_speed, twitterCard.x_factor, cardTypeLabel, metadataUri);
       } else {
         // Mint with OKB
         const okbPrice = ethers.parseEther('0.002');
@@ -1364,24 +1399,11 @@ export default function App() {
         if (balance < okbPrice) {
           throw new Error("Insufficient OKB balance (0.002 OKB required).");
         }
-
         setMintStatus('Confirming OKB Mint Transaction in wallet...');
-        tx = await nftContract.mintWithOKB(
-          twitterCard.username,
-          twitterCard.posAbbr || 'ST',
-          twitterCard.overall,
-          twitterCard.defi_iq,
-          twitterCard.prediction_power,
-          twitterCard.jackpot_luck,
-          twitterCard.degen_level,
-          twitterCard.swap_speed,
-          twitterCard.x_factor,
-          cardTypeLabel,
-          metadataUri,
-          { value: okbPrice }
-        );
+        tx = await nftContract.mintWithOKB(twitterCard.username, twitterCard.posAbbr || 'ST', twitterCard.overall, twitterCard.defi_iq, twitterCard.prediction_power, twitterCard.jackpot_luck, twitterCard.degen_level, twitterCard.swap_speed, twitterCard.x_factor, cardTypeLabel, metadataUri, {
+          value: okbPrice
+        });
       }
-
       addLog(`[Mint NFT] Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       setMintStatus('Waiting for on-chain block confirmation...');
       const receipt = await tx.wait();
@@ -1410,17 +1432,16 @@ export default function App() {
           tx_hash: tx.hash
         })
       });
-
       if (!response.ok) {
         throw new Error("Failed to save card metadata to backend database");
       }
-
       addLog(`[Mint NFT] Card saved to database successfully!`);
-      
-      const updatedCard = { ...twitterCard, tx_hash: tx.hash };
+      const updatedCard = {
+        ...twitterCard,
+        tx_hash: tx.hash
+      };
       setTwitterCard(updatedCard);
       alert(`🎉 Successfully minted your Player Card as a real ERC-721 NFT on X Layer!`);
-      
       updateGrushBalance(userAddress);
       fetchRecentCards();
     } catch (err) {
@@ -1432,7 +1453,6 @@ export default function App() {
       setMintStatus('');
     }
   };
-
   const handleMintAccessPass = async () => {
     if (!walletConnected || !userAddress) {
       handleConnectWallet();
@@ -1443,26 +1463,17 @@ export default function App() {
     try {
       const provider = new ethers.BrowserProvider(getProvider());
       const signer = await provider.getSigner();
-
-      const tokenAbi = [
-        "function approve(address spender, uint256 amount) external returns (bool)",
-        "function allowance(address owner, address spender) external view returns (uint256)",
-        "function balanceOf(address account) external view returns (uint256)"
-      ];
+      const tokenAbi = ["function approve(address spender, uint256 amount) external returns (bool)", "function allowance(address owner, address spender) external view returns (uint256)", "function balanceOf(address account) external view returns (uint256)"];
       const tokenContract = new ethers.Contract(GRUSH_TOKEN_ADDRESS, tokenAbi, signer);
-
       const passAbi = ["function mint() external", "function mintPrice() external view returns (uint256)"];
       const passContract = new ethers.Contract(ACCESS_PASS_ADDRESS, passAbi, signer);
-
       setMintStatus('Reading mint price from contract...');
       const mintFee = await passContract.mintPrice();
       const mintFeeFormatted = parseFloat(ethers.formatEther(mintFee)).toLocaleString();
-
       const balance = await tokenContract.balanceOf(userAddress);
       if (balance < mintFee) {
         throw new Error(`Insufficient GRUSH balance. You need ${mintFeeFormatted} GRUSH ($10) to mint an Access Pass.`);
       }
-
       setMintStatus('Checking GRUSH allowance...');
       const allowance = await tokenContract.allowance(userAddress, ACCESS_PASS_ADDRESS);
       if (allowance < mintFee) {
@@ -1470,12 +1481,10 @@ export default function App() {
         const approveTx = await tokenContract.approve(ACCESS_PASS_ADDRESS, mintFee);
         await approveTx.wait();
       }
-
       setMintStatus('Confirm mint transaction in your wallet...');
       const tx = await passContract.mint();
       setMintStatus('Waiting for on-chain confirmation...');
       await tx.wait();
-
       addLog(`[Access Pass] Successfully minted! TX: ${tx.hash.slice(0, 14)}...`);
       alert('🎉 Successfully minted your GoalRush VIP Access Pass!');
       updateGrushBalance(userAddress);
@@ -1491,7 +1500,6 @@ export default function App() {
       setMintStatus('');
     }
   };
-
   const handleDownloadCard = () => {
     const cardData = viewedCard || twitterCard;
     if (!cardData) return;
@@ -1507,11 +1515,9 @@ export default function App() {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.src = cardData.avatar_url;
-
     const flagImg = new Image();
     flagImg.crossOrigin = 'anonymous';
     flagImg.src = getFlagUrl(cardData.flagCode);
-
     const renderCard = () => {
       // 0. Deterministic cert number & grade details
       let certHash = 0;
@@ -1519,7 +1525,6 @@ export default function App() {
         certHash = cleanUser.charCodeAt(i) + ((certHash << 5) - certHash);
       }
       const certNumber = Math.abs(certHash).toString().substring(0, 8).padEnd(8, '0');
-
       let gradeTitle = 'GEM MT';
       let gradeScore = '10';
       if (cardData.overall >= 93) {
@@ -1591,10 +1596,8 @@ export default function App() {
       ctx.font = '900 13px Courier, monospace';
       ctx.textAlign = 'left';
       ctx.fillText('2026 GOALRUSH DEGENS', labelX + 16, labelY + 30);
-
       ctx.font = 'bold 20px Courier, monospace';
       ctx.fillText(`@${cleanUser}`, labelX + 16, labelY + 62);
-
       ctx.font = 'bold 11px Courier, monospace';
       ctx.fillStyle = '#555';
       ctx.fillText(cardData.position.toUpperCase(), labelX + 16, labelY + 86);
@@ -1604,11 +1607,9 @@ export default function App() {
       ctx.fillStyle = '#e60000';
       ctx.font = '900 11px Courier, monospace';
       ctx.fillText(gradeTitle, labelX + labelW - 16, labelY + 30);
-
       ctx.fillStyle = '#000';
       ctx.font = '900 48px Courier, monospace';
       ctx.fillText(gradeScore, labelX + labelW - 16, labelY + 75);
-
       ctx.font = 'bold 12px Courier, monospace';
       ctx.fillStyle = '#444';
       ctx.fillText(`OVR: ${cardData.overall}`, labelX + labelW - 16, labelY + 98);
@@ -1666,7 +1667,6 @@ export default function App() {
       const cardY = 210;
       const cardW = canvas.width - 48;
       const cardH = 726;
-
       ctx.save();
       // Clip to inner card boundary
       drawRoundRect(cardX, cardY, cardW, cardH, 20);
@@ -1704,7 +1704,6 @@ export default function App() {
         grad.addColorStop(1, '#a0522d');
         borderColor = '#b87333';
       }
-
       ctx.fillStyle = grad;
       ctx.fillRect(cardX, cardY, cardW, cardH);
 
@@ -1728,7 +1727,6 @@ export default function App() {
       ctx.textAlign = 'left';
       ctx.font = 'bold 76px sans-serif';
       ctx.fillText(cardData.overall.toString(), cardX + 40, cardY + 110);
-      
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.font = 'bold 24px sans-serif';
       const posOnly = cardData.position.substring(cardData.position.indexOf('(') + 1, cardData.position.indexOf(')'));
@@ -1742,7 +1740,6 @@ export default function App() {
         ctx.font = 'bold 18px sans-serif';
         ctx.fillText(cardData.flagCode || 'UN', cardX + 40, cardY + 195);
       }
-
       ctx.font = '32px sans-serif';
       const emojiIcon = posOnly === 'ST' ? '⚽' : posOnly === 'CM' ? '💎' : posOnly === 'CB' ? '🛡️' : '🧤';
       ctx.fillText(emojiIcon, cardX + 40, cardY + 240);
@@ -1751,20 +1748,17 @@ export default function App() {
       const drawAvatarPolygon = (x, y, size) => {
         ctx.beginPath();
         for (let i = 0; i < 6; i++) {
-          const angle = (i * Math.PI) / 3 - Math.PI / 2;
+          const angle = i * Math.PI / 3 - Math.PI / 2;
           ctx.lineTo(x + size * Math.cos(angle), y + size * Math.sin(angle));
         }
         ctx.closePath();
       };
-
       ctx.save();
       const avX = cardX + cardW / 2 + 30;
       const avY = cardY + 175;
       const avSize = 105;
-      
       drawAvatarPolygon(avX, avY, avSize);
       ctx.clip();
-
       try {
         ctx.drawImage(img, avX - avSize, avY - avSize, avSize * 2, avSize * 2);
       } catch (err) {
@@ -1809,13 +1803,11 @@ export default function App() {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
         ctx.font = '21px monospace';
         ctx.fillText(lbl, x, y);
-
         ctx.textAlign = 'right';
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 23px monospace';
         ctx.fillText(val.toString(), x + 140, y);
       };
-
       const startY = cardY + 455;
       const stepY = 48;
       const col1X = cardX + 60;
@@ -1840,10 +1832,7 @@ export default function App() {
       ctx.stroke();
 
       // Draw Playstyle label on Canvas
-      const playstyleName = posOnly === 'ST' ? 'ARBITRAGE HUNTER' :
-                            posOnly === 'CM' ? 'LIQUIDITY CATALYST' :
-                            posOnly === 'CB' ? 'SLIPPAGE SHADOW' :
-                            'MEV GUARDIAN';
+      const playstyleName = posOnly === 'ST' ? 'ARBITRAGE HUNTER' : posOnly === 'CM' ? 'LIQUIDITY CATALYST' : posOnly === 'CB' ? 'SLIPPAGE SHADOW' : 'MEV GUARDIAN';
       ctx.fillStyle = '#ffcc00'; // FUT style gold text
       ctx.textAlign = 'center';
       ctx.font = 'bold 15px sans-serif';
@@ -1861,13 +1850,11 @@ export default function App() {
       ctx.textAlign = 'center';
       ctx.font = '15px monospace';
       ctx.fillText('GOALRUSH DEGEN PLATFORM • X LAYER', cardX + cardW / 2, cardY + 645);
-      
       if (cardData.tx_hash) {
         ctx.fillStyle = '#9dff00';
         ctx.font = 'bold 12px monospace';
         ctx.fillText(`MINTED NFT: ${cardData.tx_hash.substring(0, 16)}...`, cardX + cardW / 2, cardY + 675);
       }
-
       ctx.restore(); // restore from clipping
 
       // Convert to image download
@@ -1885,64 +1872,56 @@ export default function App() {
         alert("Failed to download image. CORS restrictions may apply.");
       }
     };
-
     let loadedCount = 0;
     const totalToLoad = 2;
     let rendered = false;
-
     const tryRender = () => {
       if (rendered) return;
       rendered = true;
       renderCard();
     };
-
     const handleLoaded = () => {
       loadedCount++;
       if (loadedCount >= totalToLoad) {
         tryRender();
       }
     };
-
     img.onload = handleLoaded;
     img.onerror = () => {
       console.warn("Avatar failed to load with CORS, rendering fallback card");
       handleLoaded();
     };
-
     flagImg.onload = handleLoaded;
     flagImg.onerror = () => {
       console.warn("Flag failed to load with CORS, rendering fallback card");
       handleLoaded();
     };
-
     setTimeout(() => {
       tryRender();
     }, 4000);
   };
 
   // Card mouse movement for 3D tilt effect
-  const handleCardMouseMove = (e) => {
+  const handleCardMouseMove = e => {
     const card = e.currentTarget;
     const box = card.getBoundingClientRect();
     const x = e.clientX - box.left - box.width / 2;
     const y = e.clientY - box.top - box.height / 2;
-    
+
     // Tilt angle (max 15 degrees)
     const rotateX = -(y / (box.height / 2)) * 12;
-    const rotateY = (x / (box.width / 2)) * 12;
-    
+    const rotateY = x / (box.width / 2) * 12;
     card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.03, 1.03, 1.03)`;
-    
+
     // Position gloss overlay relative to mouse cursor
     const gloss = card.querySelector('.card-gloss');
     if (gloss) {
-      const glossX = ((e.clientX - box.left) / box.width) * 100;
-      const glossY = ((e.clientY - box.top) / box.height) * 100;
+      const glossX = (e.clientX - box.left) / box.width * 100;
+      const glossY = (e.clientY - box.top) / box.height * 100;
       gloss.style.background = `radial-gradient(circle 180px at ${glossX}% ${glossY}%, rgba(255, 255, 255, 0.35), transparent)`;
     }
   };
-
-  const handleCardMouseLeave = (e) => {
+  const handleCardMouseLeave = e => {
     const card = e.currentTarget;
     card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
     const gloss = card.querySelector('.card-gloss');
@@ -1950,22 +1929,20 @@ export default function App() {
       gloss.style.background = 'transparent';
     }
   };
-
-  const getMatchStats = (m) => {
+  const getMatchStats = m => {
     const seed = m.id;
-    const possessionA = 40 + (seed % 21);
+    const possessionA = 40 + seed % 21;
     const possessionB = 100 - possessionA;
-    const shotsA = 5 + (seed % 12);
-    const shotsB = 5 + ((seed * 3) % 12);
+    const shotsA = 5 + seed % 12;
+    const shotsB = 5 + seed * 3 % 12;
     const targetA = Math.max(1, Math.round(shotsA * 0.4));
     const targetB = Math.max(1, Math.round(shotsB * 0.4));
-    const cornersA = 2 + (seed % 6);
-    const cornersB = 2 + ((seed * 2) % 6);
-    const foulsA = 8 + (seed % 8);
-    const foulsB = 8 + ((seed * 3) % 8);
+    const cornersA = 2 + seed % 6;
+    const cornersB = 2 + seed * 2 % 6;
+    const foulsA = 8 + seed % 8;
+    const foulsB = 8 + seed * 3 % 8;
     const yellowA = seed % 3;
-    const yellowB = (seed * 2) % 3;
-
+    const yellowB = seed * 2 % 3;
     return {
       possession: [possessionA, possessionB],
       shots: [shotsA, shotsB],
@@ -1975,9 +1952,8 @@ export default function App() {
       yellowCards: [yellowA, yellowB]
     };
   };
-
   const getLineups = (teamAName, teamBName) => {
-    const getRoster = (teamName) => {
+    const getRoster = teamName => {
       const name = teamName?.toLowerCase() || '';
       if (name.includes('canada')) {
         return ['M. Crépeau', 'A. Johnston', 'K. Miller', 'D. Cornelius', 'A. Davies', 'I. Koné', 'S. Eustáquio', 'T. Buchanan', 'J. David', 'C. Larin', 'L. Millar'];
@@ -2032,127 +2008,295 @@ export default function App() {
       return positions.map((pos, idx) => {
         const charCodeSum = teamName.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
         const index = (charCodeSum + idx * 7) % commonSurnames.length;
-        const initial = String.fromCharCode(65 + ((charCodeSum + idx) % 26));
+        const initial = String.fromCharCode(65 + (charCodeSum + idx) % 26);
         return initial + '. ' + commonSurnames[index];
       });
     };
-
     const squadA = getRoster(teamAName);
     const squadB = getRoster(teamBName);
-
-    const coordsA = [
-      { pos: 'GK', x: 50, y: 8 },
-      { pos: 'DF', x: 20, y: 22 },
-      { pos: 'DF', x: 40, y: 20 },
-      { pos: 'DF', x: 60, y: 20 },
-      { pos: 'DF', x: 80, y: 22 },
-      { pos: 'MF', x: 30, y: 35 },
-      { pos: 'MF', x: 50, y: 33 },
-      { pos: 'MF', x: 70, y: 35 },
-      { pos: 'FW', x: 20, y: 45 },
-      { pos: 'FW', x: 50, y: 47 },
-      { pos: 'FW', x: 80, y: 45 }
-    ];
-
-    const coordsB = [
-      { pos: 'GK', x: 50, y: 92 },
-      { pos: 'DF', x: 20, y: 78 },
-      { pos: 'DF', x: 40, y: 80 },
-      { pos: 'DF', x: 60, y: 80 },
-      { pos: 'DF', x: 80, y: 78 },
-      { pos: 'MF', x: 30, y: 65 },
-      { pos: 'MF', x: 50, y: 67 },
-      { pos: 'MF', x: 70, y: 65 },
-      { pos: 'FW', x: 20, y: 55 },
-      { pos: 'FW', x: 50, y: 53 },
-      { pos: 'FW', x: 80, y: 55 }
-    ];
-
+    const coordsA = [{
+      pos: 'GK',
+      x: 50,
+      y: 8
+    }, {
+      pos: 'DF',
+      x: 20,
+      y: 22
+    }, {
+      pos: 'DF',
+      x: 40,
+      y: 20
+    }, {
+      pos: 'DF',
+      x: 60,
+      y: 20
+    }, {
+      pos: 'DF',
+      x: 80,
+      y: 22
+    }, {
+      pos: 'MF',
+      x: 30,
+      y: 35
+    }, {
+      pos: 'MF',
+      x: 50,
+      y: 33
+    }, {
+      pos: 'MF',
+      x: 70,
+      y: 35
+    }, {
+      pos: 'FW',
+      x: 20,
+      y: 45
+    }, {
+      pos: 'FW',
+      x: 50,
+      y: 47
+    }, {
+      pos: 'FW',
+      x: 80,
+      y: 45
+    }];
+    const coordsB = [{
+      pos: 'GK',
+      x: 50,
+      y: 92
+    }, {
+      pos: 'DF',
+      x: 20,
+      y: 78
+    }, {
+      pos: 'DF',
+      x: 40,
+      y: 80
+    }, {
+      pos: 'DF',
+      x: 60,
+      y: 80
+    }, {
+      pos: 'DF',
+      x: 80,
+      y: 78
+    }, {
+      pos: 'MF',
+      x: 30,
+      y: 65
+    }, {
+      pos: 'MF',
+      x: 50,
+      y: 67
+    }, {
+      pos: 'MF',
+      x: 70,
+      y: 65
+    }, {
+      pos: 'FW',
+      x: 20,
+      y: 55
+    }, {
+      pos: 'FW',
+      x: 50,
+      y: 53
+    }, {
+      pos: 'FW',
+      x: 80,
+      y: 55
+    }];
     return {
-      teamA: squadA.map((name, i) => ({ name, ...coordsA[i] })),
-      teamB: squadB.map((name, i) => ({ name, ...coordsB[i] }))
+      teamA: squadA.map((name, i) => ({
+        name,
+        ...coordsA[i]
+      })),
+      teamB: squadB.map((name, i) => ({
+        name,
+        ...coordsB[i]
+      }))
     };
   };
-
-  const renderMatchCard = (m) => {
+  const renderMatchCard = m => {
     const isSelected = selectedMatchCenterId === m.id;
-    return (
-      <div
-        key={m.id}
-        onClick={() => setSelectedMatchCenterId(m.id)}
-        style={{
-          background: isSelected ? 'rgba(157, 255, 0, 0.04)' : 'var(--color-surface)',
-          border: isSelected ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.05)',
-          borderRadius: '12px',
-          padding: '16px',
-          cursor: 'pointer',
-          transition: 'var(--transition-smooth)',
-          position: 'relative'
-        }}
-      >
-        {isSelected && <div style={{ position: 'absolute', left: 0, top: '15%', bottom: '15%', width: '3px', background: 'var(--color-primary)', borderRadius: '0 4px 4px 0' }}></div>}
+    return <div key={m.id} onClick={() => setSelectedMatchCenterId(m.id)} style={{
+      background: isSelected ? 'rgba(157, 255, 0, 0.04)' : 'var(--color-surface)',
+      border: isSelected ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.05)',
+      borderRadius: '12px',
+      padding: '16px',
+      cursor: 'pointer',
+      transition: 'var(--transition-smooth)',
+      position: 'relative'
+    }}>
+        {isSelected && <div style={{
+        position: 'absolute',
+        left: 0,
+        top: '15%',
+        bottom: '15%',
+        width: '3px',
+        background: 'var(--color-primary)',
+        borderRadius: '0 4px 4px 0'
+      }}></div>}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <img src={getFlagUrl(m.flagA)} alt={m.teamA} style={{ width: '18px', height: '12px', objectFit: 'cover', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: isSelected ? 'var(--color-primary)' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.teamA}</span>
-              <span style={{ marginLeft: 'auto', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-primary)', width: '24px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{m.scoreA}</span>
+        <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+          <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          flex: 1,
+          minWidth: 0
+        }}>
+            <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+              <img src={getFlagUrl(m.flagA)} alt={m.teamA} style={{
+              width: '18px',
+              height: '12px',
+              objectFit: 'cover',
+              borderRadius: '1px',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }} />
+              <span style={{
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              color: isSelected ? 'var(--color-primary)' : '#fff',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>{m.teamA}</span>
+              <span style={{
+              marginLeft: 'auto',
+              fontSize: '0.9rem',
+              fontWeight: 700,
+              color: 'var(--color-primary)',
+              width: '24px',
+              textAlign: 'right',
+              fontVariantNumeric: 'tabular-nums'
+            }}>{m.scoreA}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <img src={getFlagUrl(m.flagB)} alt={m.teamB} style={{ width: '18px', height: '12px', objectFit: 'cover', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: isSelected ? 'var(--color-primary)' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.teamB}</span>
-              <span style={{ marginLeft: 'auto', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-primary)', width: '24px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{m.scoreB}</span>
+            <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+              <img src={getFlagUrl(m.flagB)} alt={m.teamB} style={{
+              width: '18px',
+              height: '12px',
+              objectFit: 'cover',
+              borderRadius: '1px',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }} />
+              <span style={{
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              color: isSelected ? 'var(--color-primary)' : '#fff',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>{m.teamB}</span>
+              <span style={{
+              marginLeft: 'auto',
+              fontSize: '0.9rem',
+              fontWeight: 700,
+              color: 'var(--color-primary)',
+              width: '24px',
+              textAlign: 'right',
+              fontVariantNumeric: 'tabular-nums'
+            }}>{m.scoreB}</span>
             </div>
           </div>
 
-          <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', height: '36px', margin: '0 16px', flexShrink: 0 }}></div>
+          <div style={{
+          borderLeft: '1px solid rgba(255,255,255,0.08)',
+          height: '36px',
+          margin: '0 16px',
+          flexShrink: 0
+        }}></div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '80px', minWidth: '80px', flexShrink: 0, textAlign: 'center' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: (m.isLive && m.minute !== 'FT') ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)', fontVariantNumeric: 'tabular-nums' }}>
+          <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '80px',
+          minWidth: '80px',
+          flexShrink: 0,
+          textAlign: 'center'
+        }}>
+            <span style={{
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            color: m.isLive && m.minute !== 'FT' ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)',
+            fontVariantNumeric: 'tabular-nums'
+          }}>
               {m.isLive || m.minute === 'FT' ? m.minute : formatLocalTime(m.startTime)}
             </span>
-            {m.isLive && m.minute !== 'FT' ? (
-              <span style={{ fontSize: '0.6rem', color: '#ff3344', fontWeight: 700, marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span className="live-pulse-dot" style={{ width: '4px', height: '4px', background: '#ff3344', borderRadius: '50%', display: 'inline-block' }}></span>
-                LIVE
-              </span>
-            ) : m.minute === 'FT' ? (
-              <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                {m.scoreA > m.scoreB
-                  ? `${getCleanAbbreviation(m.teamA, m.flagA)} Won`
-                  : m.scoreB > m.scoreA
-                    ? `${getCleanAbbreviation(m.teamB, m.flagB)} Won`
-                    : 'Draw'}
-              </span>
-            ) : (
-              <span style={{ fontSize: '0.6rem', color: 'var(--color-secondary)', marginTop: '2px', fontWeight: 600 }}>Upcoming</span>
-            )}
+            {m.isLive && m.minute !== 'FT' ? <span style={{
+            fontSize: '0.6rem',
+            color: '#ff3344',
+            fontWeight: 700,
+            marginTop: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}>
+                <span className="live-pulse-dot" style={{
+              width: '4px',
+              height: '4px',
+              background: '#ff3344',
+              borderRadius: '50%',
+              display: 'inline-block'
+            }}></span>
+                {t("LIVE")}
+              </span> : m.minute === 'FT' ? <span style={{
+            fontSize: '0.55rem',
+            color: 'rgba(255,255,255,0.4)',
+            marginTop: '2px',
+            fontWeight: 600,
+            whiteSpace: 'nowrap'
+          }}>
+                {m.scoreA > m.scoreB ? `${getCleanAbbreviation(m.teamA, m.flagA)} Won` : m.scoreB > m.scoreA ? `${getCleanAbbreviation(m.teamB, m.flagB)} Won` : 'Draw'}
+              </span> : <span style={{
+            fontSize: '0.6rem',
+            color: 'var(--color-secondary)',
+            marginTop: '2px',
+            fontWeight: 600
+          }}>{t("Upcoming")}</span>}
           </div>
         </div>
-      </div>
-    );
+      </div>;
   };
-
-  const renderMatchHubDetails = (m) => {
+  const renderMatchHubDetails = m => {
     const isMainActive = activeMatch.id === m.id;
     const isActiveOnChain = getNumericMatchId(m.id) === onChainActiveId && onChainActiveId > 0n;
     const stats = getMatchStats(m);
     const lineups = getLineups(m.teamA, m.teamB);
-
     const displayJackpot = isSelectedMatchOnChain ? jackpot : 0;
     const displayVotesA = isSelectedMatchOnChain ? teamAVotes : 0;
     const displayVotesB = isSelectedMatchOnChain ? teamBVotes : 0;
     const displayVotesDraw = isSelectedMatchOnChain ? teamDrawVotes : 0;
     const totalVotes = displayVotesA + displayVotesB + displayVotesDraw;
-    const percentA = totalVotes > 0 ? ((displayVotesA / totalVotes) * 100).toFixed(0) : '33';
-    const percentDraw = totalVotes > 0 ? ((displayVotesDraw / totalVotes) * 100).toFixed(0) : '33';
-    const percentB = totalVotes > 0 ? ((displayVotesB / totalVotes) * 100).toFixed(0) : '34';
-
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    const percentA = totalVotes > 0 ? (displayVotesA / totalVotes * 100).toFixed(0) : '33';
+    const percentDraw = totalVotes > 0 ? (displayVotesDraw / totalVotes * 100).toFixed(0) : '33';
+    const percentB = totalVotes > 0 ? (displayVotesB / totalVotes * 100).toFixed(0) : '34';
+    return <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '24px'
+    }}>
         <div className="match-hub-header">
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
+          <div style={{
+          fontSize: '0.75rem',
+          fontWeight: 700,
+          color: 'rgba(255,255,255,0.4)',
+          textTransform: 'uppercase',
+          letterSpacing: '1.5px',
+          marginBottom: '8px'
+        }}>
             {formatLocalDate(m.startTime)} • {m.stadium.split(',')[0]}
           </div>
 
@@ -2164,12 +2308,8 @@ export default function App() {
 
             <div className="match-hub-score-wrap">
               <span className="match-hub-score">{m.scoreA} - {m.scoreB}</span>
-              <span className={`match-hub-minute ${(m.isLive && m.minute !== 'FT') ? 'live' : ''}`}>
-                {m.minute === 'FT'
-                  ? `FULL TIME (FT) • ${m.scoreA > m.scoreB ? `${m.teamA} Won` : m.scoreB > m.scoreA ? `${m.teamB} Won` : 'Draw'}`
-                  : (m.isLive && m.minute !== 'FT')
-                    ? `LIVE ${m.minute}`
-                    : 'UPCOMING'}
+              <span className={`match-hub-minute ${m.isLive && m.minute !== 'FT' ? 'live' : ''}`}>
+                {m.minute === 'FT' ? `FULL TIME (FT) • ${m.scoreA > m.scoreB ? `${m.teamA} Won` : m.scoreB > m.scoreA ? `${m.teamB} Won` : 'Draw'}` : m.isLive && m.minute !== 'FT' ? `LIVE ${m.minute}` : 'UPCOMING'}
               </span>
             </div>
 
@@ -2179,222 +2319,361 @@ export default function App() {
             </div>
           </div>
 
-          {((m.scorersA && m.scorersA.length > 0) || (m.scorersB && m.scorersB.length > 0)) && (
-            <div className="match-hub-scorers">
+          {(m.scorersA && m.scorersA.length > 0 || m.scorersB && m.scorersB.length > 0) && <div className="match-hub-scorers">
               <div className="scorer-list">
-                {m.scorersA?.map((sc, i) => (
-                  <div key={i} className="scorer-item">⚽ {sc}</div>
-                ))}
+                {m.scorersA?.map((sc, i) => <div key={i} className="scorer-item">⚽ {sc}</div>)}
               </div>
               <div className="scorer-list right">
-                {m.scorersB?.map((sc, i) => (
-                  <div key={i} className="scorer-item">{sc} ⚽</div>
-                ))}
+                {m.scorersB?.map((sc, i) => <div key={i} className="scorer-item">{sc} ⚽</div>)}
               </div>
-            </div>
-          )}
+            </div>}
         </div>
 
         <div className="card-bezel">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '12px' }}>
-            <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              🎯 Prediction Jackpot Pool
+          <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          paddingBottom: '12px'
+        }}>
+            <h4 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '1rem',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+              {t("🎯 Prediction Jackpot Pool")}
             </h4>
-            {isActiveOnChain ? (
-              <span style={{ fontSize: '0.65rem', background: 'rgba(157, 255, 0, 0.15)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)', padding: '2px 8px', borderRadius: '4px', fontWeight: 700, textTransform: 'uppercase' }}>
-                Active On-Chain
-              </span>
-            ) : (
-              <button
-                onClick={() => handleActivateMatchOnChain(m)}
-                style={{
-                  fontSize: '0.65rem',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  color: '#fff',
-                  padding: '3px 8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => { e.target.style.background = 'var(--color-primary)'; e.target.style.color = '#000'; }}
-                onMouseLeave={(e) => { e.target.style.background = 'rgba(255, 255, 255, 0.05)'; e.target.style.color = '#fff'; }}
-              >
-                Set Active On-Chain
-              </button>
-            )}
+            {isActiveOnChain ? <span style={{
+            fontSize: '0.65rem',
+            background: 'rgba(157, 255, 0, 0.15)',
+            color: 'var(--color-primary)',
+            border: '1px solid var(--color-primary)',
+            padding: '2px 8px',
+            borderRadius: '4px',
+            fontWeight: 700,
+            textTransform: 'uppercase'
+          }}>
+                {t("Active On-Chain")}
+              </span> : <button onClick={() => handleActivateMatchOnChain(m)} style={{
+            fontSize: '0.65rem',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            color: '#fff',
+            padding: '3px 8px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 600,
+            transition: 'all 0.2s'
+          }} onMouseEnter={e => {
+            e.target.style.background = 'var(--color-primary)';
+            e.target.style.color = '#000';
+          }} onMouseLeave={e => {
+            e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+            e.target.style.color = '#fff';
+          }}>
+                {t("Set Active On-Chain")}
+              </button>}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Jackpot Size</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-secondary)' }}>{displayJackpot.toFixed(4)} OKB</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)' }}>≈ ${(displayJackpot * 60).toFixed(2)} USD</div>
+          <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '16px',
+          marginBottom: '20px'
+        }}>
+            <div style={{
+            background: 'rgba(255,255,255,0.02)',
+            padding: '12px',
+            borderRadius: '8px',
+            border: '1px solid rgba(255,255,255,0.05)'
+          }}>
+              <div style={{
+              fontSize: '0.7rem',
+              color: 'rgba(255,255,255,0.4)',
+              textTransform: 'uppercase',
+              marginBottom: '4px'
+            }}>{t("Jackpot Size")}</div>
+              <div style={{
+              fontSize: '1.25rem',
+              fontWeight: 800,
+              color: 'var(--color-secondary)'
+            }}>{displayJackpot.toFixed(4)} {t("OKB")}</div>
+              <div style={{
+              fontSize: '0.7rem',
+              color: 'rgba(255,255,255,0.3)'
+            }}>≈ ${(displayJackpot * 60).toFixed(2)} {t("USD")}</div>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Prediction Volume</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>{totalVotes.toFixed(4)} OKB</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)' }}>Total user tickets</div>
+            <div style={{
+            background: 'rgba(255,255,255,0.02)',
+            padding: '12px',
+            borderRadius: '8px',
+            border: '1px solid rgba(255,255,255,0.05)'
+          }}>
+              <div style={{
+              fontSize: '0.7rem',
+              color: 'rgba(255,255,255,0.4)',
+              textTransform: 'uppercase',
+              marginBottom: '4px'
+            }}>{t("Prediction Volume")}</div>
+              <div style={{
+              fontSize: '1.25rem',
+              fontWeight: 800,
+              color: '#fff'
+            }}>{totalVotes.toFixed(4)} {t("OKB")}</div>
+              <div style={{
+              fontSize: '0.7rem',
+              color: 'rgba(255,255,255,0.3)'
+            }}>{t("Total user tickets")}</div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-              <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{m.teamA} ({percentA}%)</span>
-              <span style={{ fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)' }}>Draw ({percentDraw}%)</span>
-              <span style={{ fontWeight: 600, color: '#ff007a' }}>{m.teamB} ({percentB}%)</span>
+          <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+            <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            fontSize: '0.8rem'
+          }}>
+              <span style={{
+              fontWeight: 600,
+              color: 'var(--color-primary)'
+            }}>{m.teamA} ({percentA}%)</span>
+              <span style={{
+              fontWeight: 600,
+              color: 'rgba(255, 255, 255, 0.5)'
+            }}>{t("Draw (")}{percentDraw}%)</span>
+              <span style={{
+              fontWeight: 600,
+              color: '#ff007a'
+            }}>{m.teamB} ({percentB}%)</span>
             </div>
-            <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '99px', overflow: 'hidden', display: 'flex' }}>
-              <div style={{ width: `${percentA}%`, background: 'var(--color-primary)', height: '100%' }}></div>
-              <div style={{ width: `${percentDraw}%`, background: 'rgba(255, 255, 255, 0.35)', height: '100%' }}></div>
-              <div style={{ width: `${percentB}%`, background: '#ff007a', height: '100%' }}></div>
+            <div style={{
+            height: '8px',
+            background: 'rgba(255,255,255,0.05)',
+            borderRadius: '99px',
+            overflow: 'hidden',
+            display: 'flex'
+          }}>
+              <div style={{
+              width: `${percentA}%`,
+              background: 'var(--color-primary)',
+              height: '100%'
+            }}></div>
+              <div style={{
+              width: `${percentDraw}%`,
+              background: 'rgba(255, 255, 255, 0.35)',
+              height: '100%'
+            }}></div>
+              <div style={{
+              width: `${percentB}%`,
+              background: '#ff007a',
+              height: '100%'
+            }}></div>
             </div>
           </div>
 
           {m.minute === 'FT' ? (() => {
-            if (!walletConnected) {
-              return (
-                <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', fontWeight: 600 }}>
-                  Match Ended ⚽
-                </div>
-              );
-            }
-            
-            if (!centerMatchPredictions) {
-              return (
-                <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
-                  Checking claim eligibility on-chain...
-                </div>
-              );
-            }
-
-            const winnerIndex = centerMatchPredictions.winner;
-            const predOnWinner = centerMatchPredictions[winnerIndex];
-            const okbAmt = parseFloat(predOnWinner?.okbAmount || '0');
-            const grushAmt = parseFloat(predOnWinner?.grushAmount || '0');
-            const hasPredictionOnWinner = okbAmt > 0 || grushAmt > 0;
-
-            if (!hasPredictionOnWinner) {
-              return (
-                <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', fontWeight: 600 }}>
-                  Match Ended ⚽
-                </div>
-              );
-            }
-
-            const okbClaimed = predOnWinner?.okbClaimed;
-            const grushClaimed = predOnWinner?.grushClaimed;
-            const okbNeedClaim = okbAmt > 0 && !okbClaimed;
-            const grushNeedClaim = grushAmt > 0 && !grushClaimed;
-            const hasUnclaimed = okbNeedClaim || grushNeedClaim;
-
-            if (hasUnclaimed) {
-              return (
-                <>
-                  <button
-                    onClick={() => {
-                      handleSelectMatchUI(m);
-                      setCurrentView('dashboard');
-                      setTimeout(() => {
-                        document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth' });
-                      }, 100);
-                    }}
-                    className="swap-btn"
-                    style={{
-                      marginTop: '20px',
-                      background: 'linear-gradient(135deg, #00e5ff 0%, #9dff00 100%)',
-                      color: '#000',
-                      fontWeight: 'bold',
-                      boxShadow: '0 0 15px rgba(157, 255, 0, 0.4)'
-                    }}
-                  >
-                    View Match & Claim Winnings on Dashboard 🏆
-                  </button>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)', marginTop: '8px', textAlign: 'center', lineHeight: '1.4', fontWeight: 600 }}>
-                    🎉 You won! Click above to claim your OKB/GRUSH rewards on the dashboard.
-                  </div>
-                </>
-              );
-            } else {
-              return (
-                <div style={{
-                  marginTop: '20px',
-                  padding: '12px',
-                  background: 'rgba(157, 255, 0, 0.05)',
-                  border: '1px solid rgba(157, 255, 0, 0.25)',
-                  borderRadius: '8px',
-                  textAlign: 'center',
-                  color: 'var(--color-primary)',
-                  fontSize: '0.85rem',
-                  fontWeight: 700
-                }}>
-                  All Winnings Claimed ✅
-                </div>
-              );
-            }
-          })() : (
-            <button
-              onClick={() => {
+          if (!walletConnected) {
+            return <div style={{
+              marginTop: '20px',
+              padding: '12px',
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '8px',
+              textAlign: 'center',
+              color: 'rgba(255,255,255,0.4)',
+              fontSize: '0.85rem',
+              fontWeight: 600
+            }}>
+                  {t("Match Ended ⚽")}
+                </div>;
+          }
+          if (!centerMatchPredictions) {
+            return <div style={{
+              marginTop: '20px',
+              padding: '12px',
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '8px',
+              textAlign: 'center',
+              color: 'rgba(255,255,255,0.4)',
+              fontSize: '0.85rem'
+            }}>
+                  {t("Checking claim eligibility on-chain...")}
+                </div>;
+          }
+          const winnerIndex = centerMatchPredictions.winner;
+          const predOnWinner = centerMatchPredictions[winnerIndex];
+          const okbAmt = parseFloat(predOnWinner?.okbAmount || '0');
+          const grushAmt = parseFloat(predOnWinner?.grushAmount || '0');
+          const hasPredictionOnWinner = okbAmt > 0 || grushAmt > 0;
+          if (!hasPredictionOnWinner) {
+            return <div style={{
+              marginTop: '20px',
+              padding: '12px',
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '8px',
+              textAlign: 'center',
+              color: 'rgba(255,255,255,0.4)',
+              fontSize: '0.85rem',
+              fontWeight: 600
+            }}>
+                  {t("Match Ended ⚽")}
+                </div>;
+          }
+          const okbClaimed = predOnWinner?.okbClaimed;
+          const grushClaimed = predOnWinner?.grushClaimed;
+          const okbNeedClaim = okbAmt > 0 && !okbClaimed;
+          const grushNeedClaim = grushAmt > 0 && !grushClaimed;
+          const hasUnclaimed = okbNeedClaim || grushNeedClaim;
+          if (hasUnclaimed) {
+            return <>
+                  <button onClick={() => {
                 handleSelectMatchUI(m);
                 setCurrentView('dashboard');
                 setTimeout(() => {
-                  document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth' });
+                  document.getElementById('dashboard')?.scrollIntoView({
+                    behavior: 'smooth'
+                  });
                 }, 100);
-              }}
-              className="swap-btn"
-              style={{ marginTop: '20px', background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
-            >
-              Predict Match Winner & Play Shootout! ⚽
-            </button>
-          )}
+              }} className="swap-btn" style={{
+                marginTop: '20px',
+                background: 'linear-gradient(135deg, #00e5ff 0%, #9dff00 100%)',
+                color: '#000',
+                fontWeight: 'bold',
+                boxShadow: '0 0 15px rgba(157, 255, 0, 0.4)'
+              }}>
+                    {t("View Match & Claim Winnings on Dashboard 🏆")}
+                  </button>
+                  <div style={{
+                fontSize: '0.75rem',
+                color: 'var(--color-primary)',
+                marginTop: '8px',
+                textAlign: 'center',
+                lineHeight: '1.4',
+                fontWeight: 600
+              }}>
+                    {t("🎉 You won! Click above to claim your OKB/GRUSH rewards on the dashboard.")}
+                  </div>
+                </>;
+          } else {
+            return <div style={{
+              marginTop: '20px',
+              padding: '12px',
+              background: 'rgba(157, 255, 0, 0.05)',
+              border: '1px solid rgba(157, 255, 0, 0.25)',
+              borderRadius: '8px',
+              textAlign: 'center',
+              color: 'var(--color-primary)',
+              fontSize: '0.85rem',
+              fontWeight: 700
+            }}>
+                  {t("All Winnings Claimed ✅")}
+                </div>;
+          }
+        })() : <button onClick={() => {
+          handleSelectMatchUI(m);
+          setCurrentView('dashboard');
+          setTimeout(() => {
+            document.getElementById('dashboard')?.scrollIntoView({
+              behavior: 'smooth'
+            });
+          }, 100);
+        }} className="swap-btn" style={{
+          marginTop: '20px',
+          background: 'var(--color-primary)',
+          color: '#000',
+          fontWeight: 'bold'
+        }}>
+              {t("Predict Match Winner & Play Shootout! ⚽")}
+            </button>}
         </div>
 
         <div className="card-bezel">
-          <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '20px', paddingBottom: '4px' }}>
-            <button
-              onClick={() => setMatchCenterSubTab('lineup')}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: matchCenterSubTab === 'lineup' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
-                fontFamily: 'var(--font-display)',
-                fontWeight: 700,
-                fontSize: '0.9rem',
-                padding: '8px 4px',
-                cursor: 'pointer',
-                borderBottom: matchCenterSubTab === 'lineup' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                transition: 'var(--transition-smooth)'
-              }}
-            >
-              Lineups
+          <div style={{
+          display: 'flex',
+          gap: '16px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          marginBottom: '20px',
+          paddingBottom: '4px'
+        }}>
+            <button onClick={() => setMatchCenterSubTab('lineup')} style={{
+            background: 'transparent',
+            border: 'none',
+            color: matchCenterSubTab === 'lineup' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
+            fontFamily: 'var(--font-display)',
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            padding: '8px 4px',
+            cursor: 'pointer',
+            borderBottom: matchCenterSubTab === 'lineup' ? '2px solid var(--color-primary)' : '2px solid transparent',
+            transition: 'var(--transition-smooth)'
+          }}>
+              {t("Lineups")}
             </button>
-            <button
-              onClick={() => setMatchCenterSubTab('stats')}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: matchCenterSubTab === 'stats' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
-                fontFamily: 'var(--font-display)',
-                fontWeight: 700,
-                fontSize: '0.9rem',
-                padding: '8px 4px',
-                cursor: 'pointer',
-                borderBottom: matchCenterSubTab === 'stats' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                transition: 'var(--transition-smooth)'
-              }}
-            >
-              Match Stats
+            <button onClick={() => setMatchCenterSubTab('stats')} style={{
+            background: 'transparent',
+            border: 'none',
+            color: matchCenterSubTab === 'stats' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
+            fontFamily: 'var(--font-display)',
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            padding: '8px 4px',
+            cursor: 'pointer',
+            borderBottom: matchCenterSubTab === 'stats' ? '2px solid var(--color-primary)' : '2px solid transparent',
+            transition: 'var(--transition-smooth)'
+          }}>
+              {t("Match Stats")}
             </button>
           </div>
 
-          {matchCenterSubTab === 'lineup' && (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }}>Formation: <strong>4-3-3 (Classic)</strong></span>
-                <div style={{ display: 'flex', gap: '12px', fontSize: '0.72rem' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-primary)', display: 'inline-block' }}></span> {m.teamA}</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-secondary)', display: 'inline-block' }}></span> {m.teamB}</span>
+          {matchCenterSubTab === 'lineup' && <div>
+              <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '12px'
+          }}>
+                <span style={{
+              fontSize: '0.78rem',
+              color: 'rgba(255,255,255,0.5)'
+            }}>{t("Formation:")} <strong>{t("4-3-3 (Classic)")}</strong></span>
+                <div style={{
+              display: 'flex',
+              gap: '12px',
+              fontSize: '0.72rem'
+            }}>
+                  <span style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}><span style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: 'var(--color-primary)',
+                  display: 'inline-block'
+                }}></span> {m.teamA}</span>
+                  <span style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}><span style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: 'var(--color-secondary)',
+                  display: 'inline-block'
+                }}></span> {m.teamB}</span>
                 </div>
               </div>
 
@@ -2405,98 +2684,121 @@ export default function App() {
                 <div className="tactical-box-top"></div>
                 <div className="tactical-box-bottom"></div>
 
-                {lineups.teamA.map((p, idx) => (
-                  <div key={`ta-${idx}`} className="tactical-player" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
+                {lineups.teamA.map((p, idx) => <div key={`ta-${idx}`} className="tactical-player" style={{
+              left: `${p.x}%`,
+              top: `${p.y}%`
+            }}>
                     <div className="tactical-player-circle">{idx + 1}</div>
                     <span className="tactical-player-name">{p.name}</span>
-                  </div>
-                ))}
+                  </div>)}
 
-                {lineups.teamB.map((p, idx) => (
-                  <div key={`tb-${idx}`} className="tactical-player team-b" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
+                {lineups.teamB.map((p, idx) => <div key={`tb-${idx}`} className="tactical-player team-b" style={{
+              left: `${p.x}%`,
+              top: `${p.y}%`
+            }}>
                     <div className="tactical-player-circle">{idx + 1}</div>
                     <span className="tactical-player-name">{p.name}</span>
-                  </div>
-                ))}
+                  </div>)}
               </div>
-            </div>
-          )}
+            </div>}
 
-          {matchCenterSubTab === 'stats' && (
-            <div className="match-stats-grid">
+          {matchCenterSubTab === 'stats' && <div className="match-stats-grid">
               <div className="stat-row-wrap">
                 <div className="stat-label-row">
                   <span>{stats.possession[0]}%</span>
-                  <span className="stat-label-title">Possession</span>
+                  <span className="stat-label-title">{t("Possession")}</span>
                   <span>{stats.possession[1]}%</span>
                 </div>
                 <div className="stat-bar-bg">
-                  <div className="stat-bar-fill-a" style={{ width: `${stats.possession[0]}%` }}></div>
-                  <div className="stat-bar-fill-b" style={{ width: `${stats.possession[1]}%` }}></div>
+                  <div className="stat-bar-fill-a" style={{
+                width: `${stats.possession[0]}%`
+              }}></div>
+                  <div className="stat-bar-fill-b" style={{
+                width: `${stats.possession[1]}%`
+              }}></div>
                 </div>
               </div>
 
               <div className="stat-row-wrap">
                 <div className="stat-label-row">
                   <span>{stats.shots[0]}</span>
-                  <span className="stat-label-title">Total Shots</span>
+                  <span className="stat-label-title">{t("Total Shots")}</span>
                   <span>{stats.shots[1]}</span>
                 </div>
                 <div className="stat-bar-bg">
-                  <div className="stat-bar-fill-a" style={{ width: `${(stats.shots[0] / (stats.shots[0] + stats.shots[1] || 1)) * 100}%` }}></div>
-                  <div className="stat-bar-fill-b" style={{ width: `${(stats.shots[1] / (stats.shots[0] + stats.shots[1] || 1)) * 100}%` }}></div>
+                  <div className="stat-bar-fill-a" style={{
+                width: `${stats.shots[0] / (stats.shots[0] + stats.shots[1] || 1) * 100}%`
+              }}></div>
+                  <div className="stat-bar-fill-b" style={{
+                width: `${stats.shots[1] / (stats.shots[0] + stats.shots[1] || 1) * 100}%`
+              }}></div>
                 </div>
               </div>
 
               <div className="stat-row-wrap">
                 <div className="stat-label-row">
                   <span>{stats.shotsOnTarget[0]}</span>
-                  <span className="stat-label-title">Shots on Target</span>
+                  <span className="stat-label-title">{t("Shots on Target")}</span>
                   <span>{stats.shotsOnTarget[1]}</span>
                 </div>
                 <div className="stat-bar-bg">
-                  <div className="stat-bar-fill-a" style={{ width: `${(stats.shotsOnTarget[0] / (stats.shotsOnTarget[0] + stats.shotsOnTarget[1] || 1)) * 100}%` }}></div>
-                  <div className="stat-bar-fill-b" style={{ width: `${(stats.shotsOnTarget[1] / (stats.shotsOnTarget[0] + stats.shotsOnTarget[1] || 1)) * 100}%` }}></div>
+                  <div className="stat-bar-fill-a" style={{
+                width: `${stats.shotsOnTarget[0] / (stats.shotsOnTarget[0] + stats.shotsOnTarget[1] || 1) * 100}%`
+              }}></div>
+                  <div className="stat-bar-fill-b" style={{
+                width: `${stats.shotsOnTarget[1] / (stats.shotsOnTarget[0] + stats.shotsOnTarget[1] || 1) * 100}%`
+              }}></div>
                 </div>
               </div>
 
               <div className="stat-row-wrap">
                 <div className="stat-label-row">
                   <span>{stats.corners[0]}</span>
-                  <span className="stat-label-title">Corners</span>
+                  <span className="stat-label-title">{t("Corners")}</span>
                   <span>{stats.corners[1]}</span>
                 </div>
                 <div className="stat-bar-bg">
-                  <div className="stat-bar-fill-a" style={{ width: `${(stats.corners[0] / (stats.corners[0] + stats.corners[1] || 1)) * 100}%` }}></div>
-                  <div className="stat-bar-fill-b" style={{ width: `${(stats.corners[1] / (stats.corners[0] + stats.corners[1] || 1)) * 100}%` }}></div>
+                  <div className="stat-bar-fill-a" style={{
+                width: `${stats.corners[0] / (stats.corners[0] + stats.corners[1] || 1) * 100}%`
+              }}></div>
+                  <div className="stat-bar-fill-b" style={{
+                width: `${stats.corners[1] / (stats.corners[0] + stats.corners[1] || 1) * 100}%`
+              }}></div>
                 </div>
               </div>
 
               <div className="stat-row-wrap">
                 <div className="stat-label-row">
                   <span>{stats.fouls[0]}</span>
-                  <span className="stat-label-title">Fouls</span>
+                  <span className="stat-label-title">{t("Fouls")}</span>
                   <span>{stats.fouls[1]}</span>
                 </div>
                 <div className="stat-bar-bg">
-                  <div className="stat-bar-fill-a" style={{ width: `${(stats.fouls[0] / (stats.fouls[0] + stats.fouls[1] || 1)) * 100}%` }}></div>
-                  <div className="stat-bar-fill-b" style={{ width: `${(stats.fouls[1] / (stats.fouls[0] + stats.fouls[1] || 1)) * 100}%` }}></div>
+                  <div className="stat-bar-fill-a" style={{
+                width: `${stats.fouls[0] / (stats.fouls[0] + stats.fouls[1] || 1) * 100}%`
+              }}></div>
+                  <div className="stat-bar-fill-b" style={{
+                width: `${stats.fouls[1] / (stats.fouls[0] + stats.fouls[1] || 1) * 100}%`
+              }}></div>
                 </div>
               </div>
 
               <div className="stat-row-wrap">
                 <div className="stat-label-row">
                   <span>{stats.yellowCards[0]}</span>
-                  <span className="stat-label-title">Yellow Cards</span>
+                  <span className="stat-label-title">{t("Yellow Cards")}</span>
                   <span>{stats.yellowCards[1]}</span>
                 </div>
                 <div className="stat-bar-bg">
-                  <div className="stat-bar-fill-a" style={{ width: `${(stats.yellowCards[0] / (stats.yellowCards[0] + stats.yellowCards[1] || 1)) * 100}%` }}></div>
-                  <div className="stat-bar-fill-b" style={{ width: `${(stats.yellowCards[1] / (stats.yellowCards[0] + stats.yellowCards[1] || 1)) * 100}%` }}></div>
+                  <div className="stat-bar-fill-a" style={{
+                width: `${stats.yellowCards[0] / (stats.yellowCards[0] + stats.yellowCards[1] || 1) * 100}%`
+              }}></div>
+                  <div className="stat-bar-fill-b" style={{
+                width: `${stats.yellowCards[1] / (stats.yellowCards[0] + stats.yellowCards[1] || 1) * 100}%`
+              }}></div>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
 
         <div className="match-venue-card">
@@ -2505,23 +2807,22 @@ export default function App() {
           </div>
           <div className="venue-details">
             <div className="venue-name">{m.stadium}</div>
-            <div className="venue-meta">Capacity: {m.capacity} • City: {m.city}</div>
-            <div className="venue-meta" style={{ marginTop: '2px' }}>Referee: <strong>{m.referee}</strong></div>
+            <div className="venue-meta">{t("Capacity:")} {m.capacity} {t("• City:")} {m.city}</div>
+            <div className="venue-meta" style={{
+            marginTop: '2px'
+          }}>{t("Referee:")} <strong>{m.referee}</strong></div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   };
-
   const [history, setHistory] = useState(() => {
-    const saved = localStorage.getItem('goalrush_history')
-    return saved ? JSON.parse(saved) : []
-  })
-    const [liveMatches, setLiveMatches] = useState([]);
+    const saved = localStorage.getItem('goalrush_history');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [liveMatches, setLiveMatches] = useState([]);
   useEffect(() => {
     liveMatchesRef.current = liveMatches;
   }, [liveMatches]);
-
   useEffect(() => {
     const loadRealMatches = async () => {
       try {
@@ -2551,7 +2852,6 @@ export default function App() {
               const mapped = rawMatches.map(match => {
                 const isLive = match.status === 'LIVE';
                 const isCompleted = match.status === 'FINISHED';
-                
                 let minuteDisplay = 'Upcoming';
                 if (isLive) {
                   minuteDisplay = `${match.minute || 1}'`;
@@ -2561,22 +2861,28 @@ export default function App() {
                   try {
                     const matchDate = new Date(match.kickoff_utc || match.start_time || match.startTime);
                     if (!isNaN(matchDate.getTime())) {
-                      minuteDisplay = matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/New_York' }) + ' ET';
+                      minuteDisplay = matchDate.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                        timeZone: 'America/New_York'
+                      }) + ' ET';
                     }
                   } catch (e) {}
                 }
-
                 let dateDisplay = 'TBD';
                 try {
                   const matchDate = new Date(match.kickoff_utc || match.start_time || match.startTime);
                   if (!isNaN(matchDate.getTime())) {
-                    dateDisplay = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'America/New_York' }).format(matchDate);
+                    dateDisplay = new Intl.DateTimeFormat('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      timeZone: 'America/New_York'
+                    }).format(matchDate);
                   }
                 } catch (e) {}
-
-                const homeName = match.home_team || (match.homeTeam && match.homeTeam.name) || 'Unknown';
-                const awayName = match.away_team || (match.awayTeam && match.awayTeam.name) || 'Unknown';
-
+                const homeName = match.home_team || match.homeTeam && match.homeTeam.name || 'Unknown';
+                const awayName = match.away_team || match.awayTeam && match.awayTeam.name || 'Unknown';
                 return {
                   id: match.sofaId || match.id,
                   dbId: match.id,
@@ -2599,7 +2905,6 @@ export default function App() {
                   competition: match.competition || 'FIFA World Cup'
                 };
               });
-
               data = mapped;
             }
           }
@@ -2608,289 +2913,271 @@ export default function App() {
         // 3. Clean and inject the live/scheduled FIFA World Cup 2026 matches
         // Filter out duplicates in case backend has them under different statuses
         const teamPairsToMock = [];
-        
         data = data.filter(m => {
-          const isMocked = teamPairsToMock.some(pair => 
-            (m.teamA === pair[0] && m.teamB === pair[1]) ||
-            (m.teamA === pair[1] && m.teamB === pair[0])
-          );
+          const isMocked = teamPairsToMock.some(pair => m.teamA === pair[0] && m.teamB === pair[1] || m.teamA === pair[1] && m.teamB === pair[0]);
           return !isMocked;
         });
-
         const nowMs = Date.now();
-        const getFutureTime = (hours) => nowMs + (hours * 60 * 60 * 1000);
-
-        const getOffsetDateLabel = (daysOffset) => {
+        const getFutureTime = hours => nowMs + hours * 60 * 60 * 1000;
+        const getOffsetDateLabel = daysOffset => {
           const d = new Date(Date.now() + daysOffset * 24 * 60 * 60 * 1000);
-          return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'America/New_York' }).format(d);
+          return new Intl.DateTimeFormat('en-US', {
+            month: 'long',
+            day: 'numeric',
+            timeZone: 'America/New_York'
+          }).format(d);
         };
-
-        const mocks = [
-          {
-            id: 'mock_por_cod',
-            dbId: 'mock_por_cod',
-            teamA: 'Portugal',
-            flagA: 'POR',
-            teamB: 'DR Congo',
-            flagB: 'COD',
-            scoreA: 0,
-            scoreB: 0,
-            minute: '14:00',
-            isLive: false,
-            date: getOffsetDateLabel(0),
-            startTime: getFutureTime(3),
-            stadium: 'Houston Stadium',
-            capacity: '72,000',
-            city: 'Houston',
-            referee: 'Mustapha Ghorbal',
-            scorersA: [],
-            scorersB: []
-          },
-          {
-            id: 'mock_eng_cro',
-            dbId: 'mock_eng_cro',
-            teamA: 'England',
-            flagA: 'ENG',
-            teamB: 'Croatia',
-            flagB: 'CRO',
-            scoreA: 0,
-            scoreB: 0,
-            minute: '1:00 am',
-            isLive: false,
-            date: getOffsetDateLabel(1),
-            startTime: getFutureTime(14),
-            stadium: 'Dallas Stadium',
-            capacity: '80,000',
-            city: 'Dallas',
-            referee: 'Szymon Marciniak',
-            scorersA: [],
-            scorersB: []
-          },
-          {
-            id: 'mock_gha_pan',
-            dbId: 'mock_gha_pan',
-            teamA: 'Ghana',
-            flagA: 'GHA',
-            teamB: 'Panama',
-            flagB: 'PAN',
-            scoreA: 0,
-            scoreB: 0,
-            minute: '4:30 am',
-            isLive: false,
-            date: getOffsetDateLabel(1),
-            startTime: getFutureTime(17.5),
-            stadium: 'Toronto Stadium',
-            capacity: '45,000',
-            city: 'Toronto',
-            referee: 'Victor Gomes',
-            scorersA: [],
-            scorersB: []
-          },
-          {
-            id: 'mock_uzb_col',
-            dbId: 'mock_uzb_col',
-            teamA: 'Uzbekistan',
-            flagA: 'UZB',
-            teamB: 'Colombia',
-            flagB: 'COL',
-            scoreA: 0,
-            scoreB: 0,
-            minute: '7:00 am',
-            isLive: false,
-            date: getOffsetDateLabel(1),
-            startTime: getFutureTime(20),
-            stadium: 'Mexico City Stadium',
-            capacity: '87,000',
-            city: 'Mexico City',
-            referee: 'Cesar Ramos',
-            scorersA: [],
-            scorersB: []
-          },
-          {
-            id: 'mock_cze_rsa',
-            dbId: 'mock_cze_rsa',
-            teamA: 'Czechia',
-            flagA: 'CZE',
-            teamB: 'South Africa',
-            flagB: 'RSA',
-            scoreA: 0,
-            scoreB: 0,
-            minute: '9:30 am',
-            isLive: false,
-            date: getOffsetDateLabel(1),
-            startTime: getFutureTime(22.5),
-            stadium: 'Mercedes-Benz Stadium',
-            capacity: '71,000',
-            city: 'Atlanta',
-            referee: 'Michael Oliver',
-            scorersA: [],
-            scorersB: []
-          },
-          {
-            id: 'mock_sui_bih',
-            dbId: 'mock_sui_bih',
-            teamA: 'Switzerland',
-            flagA: 'SUI',
-            teamB: 'Bosnia and Herzegovina',
-            flagB: 'BIH',
-            scoreA: 0,
-            scoreB: 0,
-            minute: '12:00 pm',
-            isLive: false,
-            date: getOffsetDateLabel(2),
-            startTime: getFutureTime(48),
-            stadium: 'SoFi Stadium',
-            capacity: '70,000',
-            city: 'Los Angeles',
-            referee: 'Felix Zwayer',
-            scorersA: [],
-            scorersB: []
-          },
-          {
-            id: 'mock_can_qat',
-            dbId: 'mock_can_qat',
-            teamA: 'Canada',
-            flagA: 'CAN',
-            teamB: 'Qatar',
-            flagB: 'QAT',
-            scoreA: 0,
-            scoreB: 0,
-            minute: '2:30 pm',
-            isLive: false,
-            date: getOffsetDateLabel(2),
-            startTime: getFutureTime(50.5),
-            stadium: 'BC Place',
-            capacity: '54,000',
-            city: 'Vancouver',
-            referee: 'Abdulrahman Al-Jassim',
-            scorersA: [],
-            scorersB: []
-          },
-          {
-            id: 'mock_mex_kor',
-            dbId: 'mock_mex_kor',
-            teamA: 'Mexico',
-            flagA: 'MEX',
-            teamB: 'South Korea',
-            flagB: 'KOR',
-            scoreA: 0,
-            scoreB: 0,
-            minute: '5:00 pm',
-            isLive: false,
-            date: getOffsetDateLabel(2),
-            startTime: getFutureTime(53),
-            stadium: 'Estadio Guadalajara',
-            capacity: '48,000',
-            city: 'Zapopan',
-            referee: 'Danny Makkelie',
-            scorersA: [],
-            scorersB: []
-          },
-          {
-            id: 'mock_usa_aus',
-            dbId: 'mock_usa_aus',
-            teamA: 'USA',
-            flagA: 'USA',
-            teamB: 'Australia',
-            flagB: 'AUS',
-            scoreA: 0,
-            scoreB: 0,
-            minute: '12:00 pm',
-            isLive: false,
-            date: getOffsetDateLabel(3),
-            startTime: getFutureTime(72),
-            stadium: 'MetLife Stadium',
-            capacity: '82,500',
-            city: 'East Rutherford',
-            referee: 'Michael Oliver',
-            scorersA: [],
-            scorersB: []
-          },
-          {
-            id: 'mock_sco_mar',
-            dbId: 'mock_sco_mar',
-            teamA: 'Scotland',
-            flagA: 'SCO',
-            teamB: 'Morocco',
-            flagB: 'MAR',
-            scoreA: 0,
-            scoreB: 0,
-            minute: '4:30 pm',
-            isLive: false,
-            date: getOffsetDateLabel(3),
-            startTime: getFutureTime(76.5),
-            stadium: 'Lumen Field',
-            capacity: '68,000',
-            city: 'Seattle',
-            referee: 'Wilmar Roldan',
-            scorersA: [],
-            scorersB: []
-          },
-          {
-            id: 'mock_svk_hai',
-            dbId: 'mock_svk_hai',
-            teamA: 'Slovakia',
-            flagA: 'SVK',
-            teamB: 'Haiti',
-            flagB: 'HAI',
-            scoreA: 0,
-            scoreB: 0,
-            minute: '9:30 pm',
-            isLive: false,
-            date: getOffsetDateLabel(3),
-            startTime: getFutureTime(81.5),
-            stadium: 'Gillette Stadium',
-            capacity: '65,800',
-            city: 'Foxborough',
-            referee: 'Cesar Ramos',
-            scorersA: [],
-            scorersB: []
-          },
-          {
-            id: 'mock_tur_par',
-            dbId: 'mock_tur_par',
-            teamA: 'Turkey',
-            flagA: 'TUR',
-            teamB: 'Paraguay',
-            flagB: 'PAR',
-            scoreA: 0,
-            scoreB: 0,
-            minute: '1:00 am',
-            isLive: false,
-            date: getOffsetDateLabel(4),
-            startTime: getFutureTime(96),
-            stadium: 'Arrowhead Stadium',
-            capacity: '76,000',
-            city: 'Kansas City',
-            referee: 'Mustapha Ghorbal',
-            scorersA: [],
-            scorersB: []
-          },
-          {
-            id: 'mock_ned_srb',
-            dbId: 'mock_ned_srb',
-            teamA: 'Netherlands',
-            flagA: 'NED',
-            teamB: 'Serbia',
-            flagB: 'SRB',
-            scoreA: 0,
-            scoreB: 0,
-            minute: '6:30 am',
-            isLive: false,
-            date: getOffsetDateLabel(4),
-            startTime: getFutureTime(101.5),
-            stadium: 'Lincoln Financial Field',
-            capacity: '67,500',
-            city: 'Philadelphia',
-            referee: 'Szymon Marciniak',
-            scorersA: [],
-            scorersB: []
-          }
-        ];
+        const mocks = [{
+          id: 'mock_por_cod',
+          dbId: 'mock_por_cod',
+          teamA: 'Portugal',
+          flagA: 'POR',
+          teamB: 'DR Congo',
+          flagB: 'COD',
+          scoreA: 0,
+          scoreB: 0,
+          minute: '14:00',
+          isLive: false,
+          date: getOffsetDateLabel(0),
+          startTime: getFutureTime(3),
+          stadium: 'Houston Stadium',
+          capacity: '72,000',
+          city: 'Houston',
+          referee: 'Mustapha Ghorbal',
+          scorersA: [],
+          scorersB: []
+        }, {
+          id: 'mock_eng_cro',
+          dbId: 'mock_eng_cro',
+          teamA: 'England',
+          flagA: 'ENG',
+          teamB: 'Croatia',
+          flagB: 'CRO',
+          scoreA: 0,
+          scoreB: 0,
+          minute: '1:00 am',
+          isLive: false,
+          date: getOffsetDateLabel(1),
+          startTime: getFutureTime(14),
+          stadium: 'Dallas Stadium',
+          capacity: '80,000',
+          city: 'Dallas',
+          referee: 'Szymon Marciniak',
+          scorersA: [],
+          scorersB: []
+        }, {
+          id: 'mock_gha_pan',
+          dbId: 'mock_gha_pan',
+          teamA: 'Ghana',
+          flagA: 'GHA',
+          teamB: 'Panama',
+          flagB: 'PAN',
+          scoreA: 0,
+          scoreB: 0,
+          minute: '4:30 am',
+          isLive: false,
+          date: getOffsetDateLabel(1),
+          startTime: getFutureTime(17.5),
+          stadium: 'Toronto Stadium',
+          capacity: '45,000',
+          city: 'Toronto',
+          referee: 'Victor Gomes',
+          scorersA: [],
+          scorersB: []
+        }, {
+          id: 'mock_uzb_col',
+          dbId: 'mock_uzb_col',
+          teamA: 'Uzbekistan',
+          flagA: 'UZB',
+          teamB: 'Colombia',
+          flagB: 'COL',
+          scoreA: 0,
+          scoreB: 0,
+          minute: '7:00 am',
+          isLive: false,
+          date: getOffsetDateLabel(1),
+          startTime: getFutureTime(20),
+          stadium: 'Mexico City Stadium',
+          capacity: '87,000',
+          city: 'Mexico City',
+          referee: 'Cesar Ramos',
+          scorersA: [],
+          scorersB: []
+        }, {
+          id: 'mock_cze_rsa',
+          dbId: 'mock_cze_rsa',
+          teamA: 'Czechia',
+          flagA: 'CZE',
+          teamB: 'South Africa',
+          flagB: 'RSA',
+          scoreA: 0,
+          scoreB: 0,
+          minute: '9:30 am',
+          isLive: false,
+          date: getOffsetDateLabel(1),
+          startTime: getFutureTime(22.5),
+          stadium: 'Mercedes-Benz Stadium',
+          capacity: '71,000',
+          city: 'Atlanta',
+          referee: 'Michael Oliver',
+          scorersA: [],
+          scorersB: []
+        }, {
+          id: 'mock_sui_bih',
+          dbId: 'mock_sui_bih',
+          teamA: 'Switzerland',
+          flagA: 'SUI',
+          teamB: 'Bosnia and Herzegovina',
+          flagB: 'BIH',
+          scoreA: 0,
+          scoreB: 0,
+          minute: '12:00 pm',
+          isLive: false,
+          date: getOffsetDateLabel(2),
+          startTime: getFutureTime(48),
+          stadium: 'SoFi Stadium',
+          capacity: '70,000',
+          city: 'Los Angeles',
+          referee: 'Felix Zwayer',
+          scorersA: [],
+          scorersB: []
+        }, {
+          id: 'mock_can_qat',
+          dbId: 'mock_can_qat',
+          teamA: 'Canada',
+          flagA: 'CAN',
+          teamB: 'Qatar',
+          flagB: 'QAT',
+          scoreA: 0,
+          scoreB: 0,
+          minute: '2:30 pm',
+          isLive: false,
+          date: getOffsetDateLabel(2),
+          startTime: getFutureTime(50.5),
+          stadium: 'BC Place',
+          capacity: '54,000',
+          city: 'Vancouver',
+          referee: 'Abdulrahman Al-Jassim',
+          scorersA: [],
+          scorersB: []
+        }, {
+          id: 'mock_mex_kor',
+          dbId: 'mock_mex_kor',
+          teamA: 'Mexico',
+          flagA: 'MEX',
+          teamB: 'South Korea',
+          flagB: 'KOR',
+          scoreA: 0,
+          scoreB: 0,
+          minute: '5:00 pm',
+          isLive: false,
+          date: getOffsetDateLabel(2),
+          startTime: getFutureTime(53),
+          stadium: 'Estadio Guadalajara',
+          capacity: '48,000',
+          city: 'Zapopan',
+          referee: 'Danny Makkelie',
+          scorersA: [],
+          scorersB: []
+        }, {
+          id: 'mock_usa_aus',
+          dbId: 'mock_usa_aus',
+          teamA: 'USA',
+          flagA: 'USA',
+          teamB: 'Australia',
+          flagB: 'AUS',
+          scoreA: 0,
+          scoreB: 0,
+          minute: '12:00 pm',
+          isLive: false,
+          date: getOffsetDateLabel(3),
+          startTime: getFutureTime(72),
+          stadium: 'MetLife Stadium',
+          capacity: '82,500',
+          city: 'East Rutherford',
+          referee: 'Michael Oliver',
+          scorersA: [],
+          scorersB: []
+        }, {
+          id: 'mock_sco_mar',
+          dbId: 'mock_sco_mar',
+          teamA: 'Scotland',
+          flagA: 'SCO',
+          teamB: 'Morocco',
+          flagB: 'MAR',
+          scoreA: 0,
+          scoreB: 0,
+          minute: '4:30 pm',
+          isLive: false,
+          date: getOffsetDateLabel(3),
+          startTime: getFutureTime(76.5),
+          stadium: 'Lumen Field',
+          capacity: '68,000',
+          city: 'Seattle',
+          referee: 'Wilmar Roldan',
+          scorersA: [],
+          scorersB: []
+        }, {
+          id: 'mock_svk_hai',
+          dbId: 'mock_svk_hai',
+          teamA: 'Slovakia',
+          flagA: 'SVK',
+          teamB: 'Haiti',
+          flagB: 'HAI',
+          scoreA: 0,
+          scoreB: 0,
+          minute: '9:30 pm',
+          isLive: false,
+          date: getOffsetDateLabel(3),
+          startTime: getFutureTime(81.5),
+          stadium: 'Gillette Stadium',
+          capacity: '65,800',
+          city: 'Foxborough',
+          referee: 'Cesar Ramos',
+          scorersA: [],
+          scorersB: []
+        }, {
+          id: 'mock_tur_par',
+          dbId: 'mock_tur_par',
+          teamA: 'Turkey',
+          flagA: 'TUR',
+          teamB: 'Paraguay',
+          flagB: 'PAR',
+          scoreA: 0,
+          scoreB: 0,
+          minute: '1:00 am',
+          isLive: false,
+          date: getOffsetDateLabel(4),
+          startTime: getFutureTime(96),
+          stadium: 'Arrowhead Stadium',
+          capacity: '76,000',
+          city: 'Kansas City',
+          referee: 'Mustapha Ghorbal',
+          scorersA: [],
+          scorersB: []
+        }, {
+          id: 'mock_ned_srb',
+          dbId: 'mock_ned_srb',
+          teamA: 'Netherlands',
+          flagA: 'NED',
+          teamB: 'Serbia',
+          flagB: 'SRB',
+          scoreA: 0,
+          scoreB: 0,
+          minute: '6:30 am',
+          isLive: false,
+          date: getOffsetDateLabel(4),
+          startTime: getFutureTime(101.5),
+          stadium: 'Lincoln Financial Field',
+          capacity: '67,500',
+          city: 'Philadelphia',
+          referee: 'Szymon Marciniak',
+          scorersA: [],
+          scorersB: []
+        }];
         // data.push(...mocks);
         data.sort((a, b) => a.startTime - b.startTime);
         setLiveMatches(data);
-
         let defaultMatch = data.find(m => m.isLive);
         if (!defaultMatch) {
           defaultMatch = data.find(m => !m.isLive && m.minute !== 'FT');
@@ -2898,7 +3185,6 @@ export default function App() {
         if (!defaultMatch && data.length > 0) {
           defaultMatch = data[0];
         }
-
         if (defaultMatch) {
           setSelectedMatchCenterId(prev => prev === 10 ? defaultMatch.id : prev);
           setActiveMatch(prev => {
@@ -2924,44 +3210,40 @@ export default function App() {
         console.warn('Failed to load real-world matches:', err);
       }
     };
-
     loadRealMatches();
     const interval = setInterval(loadRealMatches, 60000); // refresh every minute to catch anything socket missed
     return () => clearInterval(interval);
   }, []);
-
-  const [logs, setLogs] = useState([
-    'System: GoalRush Hook verified on X Layer. Ready for mainnet deployment.',
-    'System: Active Match is accepting predictions.',
-    'System: Current jackpot pool backed by native OKB.'
-  ])
-
-  const handleNavClick = (sectionId) => {
+  const [logs, setLogs] = useState(['System: GoalRush Hook verified on X Layer. Ready for mainnet deployment.', 'System: Active Match is accepting predictions.', 'System: Current jackpot pool backed by native OKB.']);
+  const handleNavClick = sectionId => {
     setShowDevPortal(true);
-  }
+  };
 
   // Wallet state
-  const [walletConnected, setWalletConnected] = useState(false)
-  const [userAddress, setUserAddress] = useState('')
-  const [userBalance, setUserBalance] = useState('0.00')
-  const [grushBalance, setGrushBalance] = useState('0.00')
-  const [chainId, setChainId] = useState(null)
-  const [userPredictions, setUserPredictions] = useState(null)
-
-  const [isStriking, setIsStriking] = useState(false)
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [userAddress, setUserAddress] = useState('');
+  const [userBalance, setUserBalance] = useState('0.00');
+  const [grushBalance, setGrushBalance] = useState('0.00');
+  const [chainId, setChainId] = useState(null);
+  const [userPredictions, setUserPredictions] = useState(null);
+  const [isStriking, setIsStriking] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState({
     tone: 'idle',
     message: 'No transaction is pending. Review the match, pick, token, and amount before signing.'
-  })
-  const [showGoalFlash, setShowGoalFlash] = useState(false)
+  });
+  const [showGoalFlash, setShowGoalFlash] = useState(false);
   const [userScore, setUserScore] = useState(() => {
     return Number(localStorage.getItem('goalrush_userScore') || '0');
-  })
+  });
   const [totalUserVolume, setTotalUserVolume] = useState(() => {
     return parseFloat(localStorage.getItem('goalrush_userVolume') || '0');
-  })
+  });
   const [onChainStats, setOnChainStats] = useState({});
-  const [scanState, setScanState] = useState({ current: 62494373, total: 62494373, done: false });
+  const [scanState, setScanState] = useState({
+    current: 62494373,
+    total: 62494373,
+    done: false
+  });
 
   // Past-match claim checker state
   const [showPastClaimChecker, setShowPastClaimChecker] = useState(false);
@@ -2975,10 +3257,11 @@ export default function App() {
   const [estimatedGrush, setEstimatedGrush] = useState('0.00');
   const [isQuoting, setIsQuoting] = useState(false);
   const [isSwapping, setIsSwapping] = useState(false);
-  const [swapStatus, setSwapStatus] = useState({ tone: 'idle', message: '' });
-
+  const [swapStatus, setSwapStatus] = useState({
+    tone: 'idle',
+    message: ''
+  });
   const [centerMatchPredictions, setCenterMatchPredictions] = useState(null);
-
   useEffect(() => {
     const fetchCenterPrediction = async () => {
       if (!walletConnected || !userAddress || !selectedMatchCenterId) {
@@ -2987,21 +3270,15 @@ export default function App() {
       }
       try {
         const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
-        const queryAbi = [
-          "function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)",
-          "function matches(uint256) view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)"
-        ];
+        const queryAbi = ["function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)", "function matches(uint256) view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)"];
         const queryContract = new ethers.Contract(HOOK_ADDRESS, queryAbi, rpcProvider);
         const numericId = getNumericMatchId(selectedMatchCenterId);
-        
         const onChainMatch = await queryContract.matches(numericId);
         if (onChainMatch[0] === 0n) {
           setCenterMatchPredictions(null);
           return;
         }
-
         const [okbAmounts, grushAmounts, okbClaimeds, grushClaimeds] = await queryContract.getUserPredictions(numericId, userAddress);
-        
         const predsObj = {
           resolved: onChainMatch[5],
           winner: Number(onChainMatch[6])
@@ -3031,16 +3308,24 @@ export default function App() {
       liveMatches.forEach(m => {
         if (m && (m.minute === 'FT' || m.status === 'FINISHED')) {
           if (!list.some(item => item.matchId === m.id)) {
-            list.push({ label: `${m.teamA} vs ${m.teamB}`, matchId: m.id });
+            list.push({
+              label: `${m.teamA} vs ${m.teamB}`,
+              matchId: m.id
+            });
           }
         }
       });
     }
-    const historical = [
-      { label: 'United States vs Australia', matchId: 'espn_760442' },
-      { label: 'France vs Senegal', matchId: 'espn_760432' },
-      { label: 'Canada vs Bosnia & Herzegovina', matchId: '1' },
-    ];
+    const historical = [{
+      label: 'United States vs Australia',
+      matchId: 'espn_760442'
+    }, {
+      label: 'France vs Senegal',
+      matchId: 'espn_760432'
+    }, {
+      label: 'Canada vs Bosnia & Herzegovina',
+      matchId: '1'
+    }];
     historical.forEach(h => {
       if (!list.some(item => item.matchId === h.matchId)) {
         list.push(h);
@@ -3048,45 +3333,38 @@ export default function App() {
     });
     return list;
   }, [liveMatches]);
-
-  const handleCheckPastClaim = async (matchIdInput) => {
+  const handleCheckPastClaim = async matchIdInput => {
     if (!walletConnected || !userAddress) {
       alert('Connect your wallet first to check claims.');
       return;
     }
     if (!matchIdInput) return;
-
     setPastClaimLoading(true);
     setPastClaimResult(null);
     try {
       const rpcProvider = new ethers.JsonRpcProvider('https://rpc.xlayer.tech');
-      const abi = [
-        'function matches(uint256) view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)',
-        'function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)'
-      ];
+      const abi = ['function matches(uint256) view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)', 'function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)'];
       const hook = new ethers.Contract(HOOK_ADDRESS, abi, rpcProvider);
       const numericId = getNumericMatchId(matchIdInput);
       const matchData = await hook.matches(numericId);
       const exists = matchData[0] !== 0n;
-
       if (!exists) {
-        setPastClaimResult({ error: `No match found on-chain for ID "${matchIdInput}".` });
+        setPastClaimResult({
+          error: `No match found on-chain for ID "${matchIdInput}".`
+        });
         return;
       }
-
       const [okbAmounts, grushAmounts, okbClaimeds, grushClaimeds] = await hook.getUserPredictions(numericId, userAddress);
       const teamA = matchData[1];
       const teamB = matchData[2];
       const resolved = matchData[5];
       const winner = Number(matchData[6]);
       const jackpot = ethers.formatEther(matchData[7]);
-
       let predictedTeam = 0;
       let okbAmt = '0.0';
       let grushAmt = '0.0';
       let okbClaimed = false;
       let grushClaimed = false;
-
       for (let i = 1; i <= 3; i++) {
         const oAmt = ethers.formatEther(okbAmounts[i] || 0n);
         const gAmt = ethers.formatEther(grushAmounts[i] || 0n);
@@ -3107,24 +3385,32 @@ export default function App() {
           }
         }
       }
-
       setPastClaimResult({
         matchIdInput,
         numericId,
-        teamA, teamB, resolved, winner, jackpot,
-        predictedTeam, okbAmount: okbAmt, grushAmount: grushAmt, okbClaimed, grushClaimed,
+        teamA,
+        teamB,
+        resolved,
+        winner,
+        jackpot,
+        predictedTeam,
+        okbAmount: okbAmt,
+        grushAmount: grushAmt,
+        okbClaimed,
+        grushClaimed,
         isWinner: resolved && predictedTeam > 0 && predictedTeam === winner,
-        hasPrediction: parseFloat(okbAmt) > 0 || parseFloat(grushAmt) > 0,
+        hasPrediction: parseFloat(okbAmt) > 0 || parseFloat(grushAmt) > 0
       });
     } catch (e) {
       console.error('Past claim check error:', e);
-      setPastClaimResult({ error: `Failed to query contract: ${e.message}` });
+      setPastClaimResult({
+        error: `Failed to query contract: ${e.message}`
+      });
     } finally {
       setPastClaimLoading(false);
     }
   };
-
-  const handleClaimPastOkb = async (numericId) => {
+  const handleClaimPastOkb = async numericId => {
     try {
       const rawProvider = getProvider();
       if (!rawProvider) throw new Error('No wallet provider');
@@ -3142,8 +3428,7 @@ export default function App() {
       alert(`Claim failed: ${err.reason || err.message}`);
     }
   };
-
-  const handleClaimPastGrush = async (numericId) => {
+  const handleClaimPastGrush = async numericId => {
     try {
       const rawProvider = getProvider();
       if (!rawProvider) throw new Error('No wallet provider');
@@ -3161,11 +3446,10 @@ export default function App() {
       alert(`GRUSH claim failed: ${err.reason || err.message}`);
     }
   };
-
-
-
   const leaderboardData = useMemo(() => {
-    const merged = { ...onChainStats };
+    const merged = {
+      ...onChainStats
+    };
 
     // Layer local storage for the connected user so UI is updated instantly
     if (userAddress) {
@@ -3173,7 +3457,6 @@ export default function App() {
       const localG = Number(localStorage.getItem('goalrush_userScore') || '0');
       const localV = parseFloat(localStorage.getItem('goalrush_userVolume') || '0');
       const localVWei = ethers.parseEther(localV.toFixed(18));
-
       if (!merged[lower]) {
         merged[lower] = {
           address: userAddress,
@@ -3184,10 +3467,7 @@ export default function App() {
           grushClaimed: 0n
         };
       } else {
-        const currentVolBig = typeof merged[lower].volume === 'bigint'
-          ? merged[lower].volume
-          : ethers.parseEther((merged[lower].volume || 0).toString());
-
+        const currentVolBig = typeof merged[lower].volume === 'bigint' ? merged[lower].volume : ethers.parseEther((merged[lower].volume || 0).toString());
         merged[lower] = {
           ...merged[lower],
           goals: Math.max(merged[lower].goals, localG),
@@ -3214,24 +3494,31 @@ export default function App() {
       if (b.volume !== a.volume) return b.volume - a.volume;
       return b.grushVolume - a.grushVolume;
     });
-
     return statsArray;
   }, [onChainStats, userAddress, userScore, totalUserVolume]);
-  const [opponentScore, setOpponentScore] = useState(0)
-  const [goalsScoredCount, setGoalsScoredCount] = useState(14)
+  const [opponentScore, setOpponentScore] = useState(0);
+  const [goalsScoredCount, setGoalsScoredCount] = useState(14);
 
   // Soccer field physics & position state
-  const [ballPos, setBallPos] = useState({ x: 50, y: 50 })
-  const [playerPos, setPlayerPos] = useState({ x: 50, y: 56 })
-  const [gkPos, setGkPos] = useState({ x: 2, y: 50 })
-
+  const [ballPos, setBallPos] = useState({
+    x: 50,
+    y: 50
+  });
+  const [playerPos, setPlayerPos] = useState({
+    x: 50,
+    y: 56
+  });
+  const [gkPos, setGkPos] = useState({
+    x: 2,
+    y: 50
+  });
   useEffect(() => {
     const provider = getProvider();
     if (provider) {
       // Get current accounts if already connected
-      provider.request({ method: 'eth_accounts' })
-        .then(handleAccountsChanged)
-        .catch(console.error);
+      provider.request({
+        method: 'eth_accounts'
+      }).then(handleAccountsChanged).catch(console.error);
 
       // Listen for account/network changes
       provider.on('accountsChanged', handleAccountsChanged);
@@ -3246,18 +3533,11 @@ export default function App() {
     };
   }, []);
 
-
-
   // Sync activeMatch score/minute whenever liveMatches updates
   useEffect(() => {
     if (!activeMatch?.id) return;
     const updated = liveMatches.find(m => m.id === activeMatch.id);
-    if (updated && (
-      updated.scoreA !== activeMatch.scoreA ||
-      updated.scoreB !== activeMatch.scoreB ||
-      updated.minute !== activeMatch.minute ||
-      updated.isLive !== activeMatch.isLive
-    )) {
+    if (updated && (updated.scoreA !== activeMatch.scoreA || updated.scoreB !== activeMatch.scoreB || updated.minute !== activeMatch.minute || updated.isLive !== activeMatch.isLive)) {
       setActiveMatch(prev => ({
         ...prev,
         scoreA: updated.scoreA,
@@ -3270,16 +3550,13 @@ export default function App() {
       }));
     }
   }, [liveMatches]);
-
   const prevLiveMatchesRef = useRef([]);
-
   useEffect(() => {
     const prevMatches = prevLiveMatchesRef.current;
     if (prevMatches && prevMatches.length > 0 && liveMatches && liveMatches.length > 0) {
       liveMatches.forEach(m => {
         const prev_m = prevMatches.find(pm => pm.id === m.id);
         if (!prev_m) return;
-        
         if (m.scoreA > prev_m.scoreA) {
           setLogs(logs => [`⚽ GOAL! ${m.teamA} ${m.scoreA}–${m.scoreB} ${m.teamB} (${m.minute})`, ...logs].slice(0, 50));
         } else if (m.scoreB > prev_m.scoreB) {
@@ -3296,60 +3573,57 @@ export default function App() {
     }
     prevLiveMatchesRef.current = liveMatches;
   }, [liveMatches]);
-
   useEffect(() => {
     const socketUrl = BACKEND_API_BASE.replace('/api', '');
-    const socket = io(socketUrl, { reconnectionDelayMax: 10000 });
+    const socket = io(socketUrl, {
+      reconnectionDelayMax: 10000
+    });
     socketRef.current = socket;
-
     socket.on('connect', () => {
       console.log('Connected to Goal Rush Backend Socket Server');
     });
 
     // Listen for realtime match events
-    socket.on('match_event', (data) => {
+    socket.on('match_event', data => {
       console.log('Received socket event:', data);
-      const { type, match, event } = data;
-
+      const {
+        type,
+        match,
+        event
+      } = data;
       if (type === 'match_updated' && match) {
-        setLiveMatches((prev) =>
-          prev.map((m) => {
-            if (m.dbId === match.id) {
-              const isLive = match.status === 'LIVE';
-              const isCompleted = match.status === 'FINISHED';
-              
-              let minuteDisplay = 'Upcoming';
-              if (isLive) {
-                minuteDisplay = `${match.minute}'`;
-              } else if (isCompleted) {
-                minuteDisplay = 'FT';
-              }
-
-              return {
-                ...m,
-                scoreA: match.scoreHome,
-                scoreB: match.scoreAway,
-                minute: minuteDisplay,
-                isLive: isLive
-              };
-            }
-            return m;
-          })
-        );
-
-        // Also update the selected match in details if the active match updates
-        setActiveMatch((prevActive) => {
-          if (prevActive && prevActive.dbId === match.id) {
+        setLiveMatches(prev => prev.map(m => {
+          if (m.dbId === match.id) {
             const isLive = match.status === 'LIVE';
             const isCompleted = match.status === 'FINISHED';
-            
             let minuteDisplay = 'Upcoming';
             if (isLive) {
               minuteDisplay = `${match.minute}'`;
             } else if (isCompleted) {
               minuteDisplay = 'FT';
             }
+            return {
+              ...m,
+              scoreA: match.scoreHome,
+              scoreB: match.scoreAway,
+              minute: minuteDisplay,
+              isLive: isLive
+            };
+          }
+          return m;
+        }));
 
+        // Also update the selected match in details if the active match updates
+        setActiveMatch(prevActive => {
+          if (prevActive && prevActive.dbId === match.id) {
+            const isLive = match.status === 'LIVE';
+            const isCompleted = match.status === 'FINISHED';
+            let minuteDisplay = 'Upcoming';
+            if (isLive) {
+              minuteDisplay = `${match.minute}'`;
+            } else if (isCompleted) {
+              minuteDisplay = 'FT';
+            }
             return {
               ...prevActive,
               scoreA: match.scoreHome,
@@ -3361,7 +3635,6 @@ export default function App() {
           return prevActive;
         });
       }
-
       if (type === 'new_event' && event) {
         const targetMatch = liveMatchesRef.current.find(m => m.dbId === data.matchId);
         if (targetMatch) {
@@ -3370,7 +3643,6 @@ export default function App() {
         }
       }
     });
-
     return () => {
       socket.disconnect();
     };
@@ -3379,13 +3651,12 @@ export default function App() {
   // Separate hook to subscribe to rooms as matches get loaded
   useEffect(() => {
     if (!socketRef.current) return;
-    liveMatches.forEach((m) => {
+    liveMatches.forEach(m => {
       if (m.dbId) {
         socketRef.current.emit('join_match', m.dbId);
       }
     });
   }, [liveMatches]);
-
   useEffect(() => {
     const fetchOnChainData = async () => {
       try {
@@ -3395,29 +3666,10 @@ export default function App() {
         // Use official public RPC for general reads to bypass CORS/adblocker blocks, and Sentio for logs
         const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
         const logProvider = new ethers.JsonRpcProvider("https://xlayer-mainnet.rpc.sentio.xyz");
-        const abi = [
-          "function activeMatchId() external view returns (uint256)",
-          "function matches(uint256) external view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)",
-          "function teamPredictionVolume(uint256, uint8) external view returns (uint256)",
-          "function teamGrushPredictionVolume(uint256, uint8) external view returns (uint256)",
-          "function matchGrushJackpot(uint256) external view returns (uint256)",
-          "event GoalScored(address indexed swapper, uint256 bonusAmount)",
-          "event PredictionPlaced(address indexed user, uint256 indexed matchId, uint8 team, uint256 volume)",
-          "event GrushPredictionPlaced(address indexed user, uint256 indexed matchId, uint8 team, uint256 volume)",
-          "event JackpotClaimed(address indexed user, uint256 indexed matchId, uint256 amount)",
-          "event GrushJackpotClaimed(address indexed user, uint256 indexed matchId, uint256 amount)"
-        ];
-
-        const routerAbi = [
-          "event PredictionDeposited(address indexed user, uint8 indexed team, uint256 amount)",
-          "event GrushPredictionDeposited(address indexed user, uint8 indexed team, uint256 amount)",
-          "event PredictionDeposited(address indexed user, uint256 amount)",
-          "event GrushPredictionDeposited(address indexed user, uint256 amount)"
-        ];
-
+        const abi = ["function activeMatchId() external view returns (uint256)", "function matches(uint256) external view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)", "function teamPredictionVolume(uint256, uint8) external view returns (uint256)", "function teamGrushPredictionVolume(uint256, uint8) external view returns (uint256)", "function matchGrushJackpot(uint256) external view returns (uint256)", "event GoalScored(address indexed swapper, uint256 bonusAmount)", "event PredictionPlaced(address indexed user, uint256 indexed matchId, uint8 team, uint256 volume)", "event GrushPredictionPlaced(address indexed user, uint256 indexed matchId, uint8 team, uint256 volume)", "event JackpotClaimed(address indexed user, uint256 indexed matchId, uint256 amount)", "event GrushJackpotClaimed(address indexed user, uint256 indexed matchId, uint256 amount)"];
+        const routerAbi = ["event PredictionDeposited(address indexed user, uint8 indexed team, uint256 amount)", "event GrushPredictionDeposited(address indexed user, uint8 indexed team, uint256 amount)", "event PredictionDeposited(address indexed user, uint256 amount)", "event GrushPredictionDeposited(address indexed user, uint256 amount)"];
         const hookContract = new ethers.Contract(hookAddress, abi, rpcProvider);
         const routerContract = new ethers.Contract(routerAddress, routerAbi, rpcProvider);
-
         let currentId = activeMatchRef.current.id;
 
         // If not initialized yet from the contract, query the default activeMatchId
@@ -3430,10 +3682,9 @@ export default function App() {
                 const actMatchData = await hookContract.matches(activeId);
                 const actTeamA = actMatchData[1] || actMatchData.teamA || 'Canada';
                 const actTeamB = actMatchData[2] || actMatchData.teamB || 'Bosnia & Herzegovina';
-                
+
                 // Find a matching match in liveMatches list (by checking getNumericMatchId)
                 const matchedLive = liveMatchesRef.current.find(m => getNumericMatchId(m.id) === activeId);
-                
                 activeOnChainMatchRef.current = {
                   id: matchedLive ? matchedLive.id : activeId.toString(),
                   teamA: actTeamA,
@@ -3466,10 +3717,8 @@ export default function App() {
             console.warn("Failed to fetch activeMatchId on initialization:", activeIdErr);
           }
         }
-
         const activeIdFromContract = await hookContract.activeMatchId();
         setOnChainActiveId(activeIdFromContract);
-
         const numericId = getNumericMatchId(currentId);
         console.log("[fetchOnChainData] currentId:", currentId, "numericId:", numericId.toString(), "activeIdFromContract:", activeIdFromContract.toString());
 
@@ -3485,7 +3734,6 @@ export default function App() {
           const exists = existsByData || isActiveMatchSelected;
           console.log("[fetchOnChainData] matchData.id:", matchData[0].toString(), "existsByData:", existsByData, "isActiveMatchSelected:", isActiveMatchSelected, "exists:", exists);
           setIsSelectedMatchOnChain(exists);
-
           if (exists) {
             // If we only matched via activeMatchId (not by direct data lookup), re-fetch using activeIdFromContract
             let effectiveMatchData = matchData;
@@ -3499,11 +3747,10 @@ export default function App() {
                 console.warn("[fetchOnChainData] Fallback fetch by activeIdFromContract failed:", fallbackErr);
               }
             }
-
             const teamAName = effectiveMatchData[1] || effectiveMatchData.teamA || 'Team A';
             const teamBName = effectiveMatchData[2] || effectiveMatchData.teamB || 'Team B';
             const isResolved = effectiveMatchData[5] !== undefined ? effectiveMatchData[5] : effectiveMatchData.resolved;
-            const winnerId = Number(effectiveMatchData[6] !== undefined ? effectiveMatchData[6] : (effectiveMatchData.winner || 0));
+            const winnerId = Number(effectiveMatchData[6] !== undefined ? effectiveMatchData[6] : effectiveMatchData.winner || 0);
 
             // Keep the active onchain match ref updated
             if (numericId === activeIdFromContract) {
@@ -3513,7 +3760,6 @@ export default function App() {
                 teamB: teamBName
               };
             }
-
             const totalJackpotWei = effectiveMatchData[7] || effectiveMatchData.totalJackpot || 0n;
             // OKB predictions are held by the Router contract - check both
             const hookBalance = await rpcProvider.getBalance(hookAddress);
@@ -3521,7 +3767,6 @@ export default function App() {
             const combinedBalance = hookBalance + routerBalance;
             const displayJackpot = combinedBalance > totalJackpotWei ? combinedBalance : totalJackpotWei;
             setJackpot(Number(ethers.formatEther(displayJackpot)));
-
             const volA = await hookContract.teamPredictionVolume(effectiveNumericId, 1);
             const volB = await hookContract.teamPredictionVolume(effectiveNumericId, 2);
             const volDraw = await hookContract.teamPredictionVolume(effectiveNumericId, 3);
@@ -3592,20 +3837,26 @@ export default function App() {
           hasInitializedLeaderboardRef.current = true;
         }
         const startBlock = lastFetchedBlockRef.current || DEPLOY_BLOCK;
-
         if (!leaderboardScannedRef.current) {
           setScanState(prev => {
             const nextCurrent = Math.max(prev.current, startBlock);
             if (prev.total !== latestBlock || prev.current !== nextCurrent) {
-              return { ...prev, current: nextCurrent, total: latestBlock, done: false };
+              return {
+                ...prev,
+                current: nextCurrent,
+                total: latestBlock,
+                done: false
+              };
             }
             return prev;
           });
         } else {
-          setScanState({ current: latestBlock, total: latestBlock, done: true });
+          setScanState({
+            current: latestBlock,
+            total: latestBlock,
+            done: true
+          });
         }
-
-
         if (latestBlock >= startBlock) {
           // Fix: Sentio supports up to 100,000 block ranges per query.
           // We use 50,000 to be extremely fast and robust.
@@ -3614,25 +3865,22 @@ export default function App() {
 
           // Process retrieved events and accumulate in statsCache
           const stats = statsCacheRef.current;
-           const getOrCreateUser = (addr) => {
-             const lower = addr.toLowerCase();
-             if (!stats[lower]) {
-               stats[lower] = {
-                 address: addr,
-                 goals: 0,
-                 volume: 0n,
-                 grushVolume: 0n,
-                 claimed: 0n,
-                 grushClaimed: 0n
-               };
-             }
-             return stats[lower];
-           };
-
+          const getOrCreateUser = addr => {
+            const lower = addr.toLowerCase();
+            if (!stats[lower]) {
+              stats[lower] = {
+                address: addr,
+                goals: 0,
+                volume: 0n,
+                grushVolume: 0n,
+                claimed: 0n,
+                grushClaimed: 0n
+              };
+            }
+            return stats[lower];
+          };
           const tokenAddress = GRUSH_TOKEN_ADDRESS;
-          const tokenInterface = new ethers.Interface([
-            "event Transfer(address indexed from, address indexed to, uint256 value)"
-          ]);
+          const tokenInterface = new ethers.Interface(["event Transfer(address indexed from, address indexed to, uint256 value)"]);
 
           // Query in chunks of blocks sequentially using getLogs to avoid batch limits on free tier
           let chunksProcessed = 0;
@@ -3643,23 +3891,13 @@ export default function App() {
             const to = Math.min(from + chunkSize - 1, latestBlock);
             try {
               const logs = await logProvider.getLogs({
-                address: [
-                  hookAddress, 
-                  routerAddress, 
-                  '0x9bA0a504dbdBbe96300E56D69FCbd5154b10C0c0',
-                  '0xB8332a105f2ea7F53Bd94554F74658Bf767f8D67',
-                  '0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0', 
-                  '0xe1Ad1C1Ab7600E6c3Fbaf0c80c3b947B7F901B7F'
-                ],
+                address: [hookAddress, routerAddress, '0x9bA0a504dbdBbe96300E56D69FCbd5154b10C0c0', '0xB8332a105f2ea7F53Bd94554F74658Bf767f8D67', '0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0', '0xe1Ad1C1Ab7600E6c3Fbaf0c80c3b947B7F901B7F'],
                 fromBlock: from,
                 toBlock: to
               });
-
               logs.forEach(log => {
                 const addrLower = log.address.toLowerCase();
-                if (addrLower === hookAddress.toLowerCase() || 
-                    addrLower === '0x9bA0a504dbdBbe96300E56D69FCbd5154b10C0c0'.toLowerCase() ||
-                    addrLower === '0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0'.toLowerCase()) {
+                if (addrLower === hookAddress.toLowerCase() || addrLower === '0x9bA0a504dbdBbe96300E56D69FCbd5154b10C0c0'.toLowerCase() || addrLower === '0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0'.toLowerCase()) {
                   try {
                     const parsed = hookContract.interface.parseLog(log);
                     if (parsed) {
@@ -3687,9 +3925,7 @@ export default function App() {
                   } catch (e) {
                     // Ignore decoding errors
                   }
-                } else if (addrLower === routerAddress.toLowerCase() || 
-                           addrLower === '0xB8332a105f2ea7F53Bd94554F74658Bf767f8D67'.toLowerCase() ||
-                           addrLower === '0xe1Ad1C1Ab7600E6c3Fbaf0c80c3b947B7F901B7F'.toLowerCase()) {
+                } else if (addrLower === routerAddress.toLowerCase() || addrLower === '0xB8332a105f2ea7F53Bd94554F74658Bf767f8D67'.toLowerCase() || addrLower === '0xe1Ad1C1Ab7600E6c3Fbaf0c80c3b947B7F901B7F'.toLowerCase()) {
                   try {
                     // Parse raw log directly since deployed contract may differ from source
                     // Topic[0] = event sig, Topic[1] = indexed user address
@@ -3701,11 +3937,9 @@ export default function App() {
 
                       // Check topic hash directly to determine isGrush
                       const topic0 = log.topics[0];
-                      if (topic0 === '0x2e01df39b7a4eb312b9a7c6c4ea6c4d7ec6be99e19574cd621570d588523c90a' ||
-                          topic0 === '0x68f7053e14bf6b672cf8419d143181591a688ca022a665aedce174ed730b8a9a') {
+                      if (topic0 === '0x2e01df39b7a4eb312b9a7c6c4ea6c4d7ec6be99e19574cd621570d588523c90a' || topic0 === '0x68f7053e14bf6b672cf8419d143181591a688ca022a665aedce174ed730b8a9a') {
                         isGrush = true;
                       }
-
                       try {
                         const parsed = routerContract.interface.parseLog(log);
                         if (parsed) {
@@ -3728,7 +3962,6 @@ export default function App() {
                           amount = BigInt('0x' + dataHex.slice(2));
                         }
                       }
-
                       if (amount > 0n) {
                         if (isGrush) {
                           getOrCreateUser(user).grushVolume += amount;
@@ -3743,13 +3976,15 @@ export default function App() {
                 } else if (addrLower === tokenAddress.toLowerCase()) {
                   // SKIP: GRUSH Transfer events = trading noise, not predictions
                 }
-
               });
 
               // Advance block pointer chunk-by-chunk to save progress!
               lastFetchedBlockRef.current = to + 1;
               chunksProcessed++;
-              setScanState(prev => ({ ...prev, current: to }));
+              setScanState(prev => ({
+                ...prev,
+                current: to
+              }));
 
               // Respectful rate limit delay between calls
               await new Promise(resolve => setTimeout(resolve, 80));
@@ -3761,38 +3996,34 @@ export default function App() {
           // Mark full scan as done once we reach latest block
           if (lastFetchedBlockRef.current > latestBlock) {
             leaderboardScannedRef.current = true;
-            setScanState(prev => ({ ...prev, done: true }));
+            setScanState(prev => ({
+              ...prev,
+              done: true
+            }));
           }
-
         }
-
       } catch (err) {
         console.error("General error in fetchOnChainData:", err);
       }
-
-      setOnChainStats({ ...statsCacheRef.current });
+      setOnChainStats({
+        ...statsCacheRef.current
+      });
     };
-
     fetchOnChainData();
     const interval = setInterval(fetchOnChainData, 15000);
     return () => clearInterval(interval);
   }, [activeMatch.id]);
-
   const fetchUserPrediction = useCallback(async () => {
     if (!walletConnected || !userAddress || !activeMatch.id) {
       setUserPredictions(null);
       return;
     }
-    
     try {
       const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
-      const queryAbi = [
-        "function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)"
-      ];
+      const queryAbi = ["function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)"];
       const queryContract = new ethers.Contract(HOOK_ADDRESS, queryAbi, rpcProvider);
       const numericId = getNumericMatchId(activeMatch.id);
       const [okbAmounts, grushAmounts, okbClaimeds, grushClaimeds] = await queryContract.getUserPredictions(numericId, userAddress);
-      
       const predsObj = {};
       for (let i = 1; i <= 3; i++) {
         predsObj[i] = {
@@ -3808,25 +4039,24 @@ export default function App() {
       setUserPredictions(null);
     }
   }, [walletConnected, userAddress, activeMatch.id]);
-
   useEffect(() => {
     fetchUserPrediction();
     const interval = setInterval(fetchUserPrediction, 8000);
     return () => clearInterval(interval);
   }, [fetchUserPrediction]);
-
-  const handleAccountsChanged = async (accounts) => {
+  const handleAccountsChanged = async accounts => {
     if (accounts.length > 0) {
       setWalletConnected(true);
       const address = accounts[0];
       setUserAddress(address);
       addLog(`Wallet connected: ${address.slice(0, 6)}...${address.slice(-4)}`);
-
       updateBalance(address);
       updateGrushBalance(address);
       const provider = getProvider();
       if (provider) {
-        const chain = await provider.request({ method: 'eth_chainId' });
+        const chain = await provider.request({
+          method: 'eth_chainId'
+        });
         handleChainChanged(chain);
       }
     } else {
@@ -3837,17 +4067,14 @@ export default function App() {
       addLog('Wallet disconnected.');
     }
   };
-
-  const updateGrushBalance = async (address) => {
+  const updateGrushBalance = async address => {
     try {
       const provider = getProvider();
       if (!provider) return;
-
       const tokenAddress = GRUSH_TOKEN_ADDRESS;
       // balanceOf signature is 0x70a08231
       const cleanAddr = address.toLowerCase().replace('0x', '');
       const data = '0x70a08231' + cleanAddr.padStart(64, '0');
-
       const balanceHex = await provider.request({
         method: 'eth_call',
         params: [{
@@ -3855,11 +4082,13 @@ export default function App() {
           data: data
         }, 'latest']
       });
-
       if (balanceHex && balanceHex !== '0x') {
         const balanceBigInt = BigInt(balanceHex);
         const balanceDec = Number(balanceBigInt) / 10 ** 18;
-        setGrushBalance(balanceDec.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        setGrushBalance(balanceDec.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }));
       } else {
         setGrushBalance('0.00');
       }
@@ -3868,8 +4097,7 @@ export default function App() {
       setGrushBalance('0.00');
     }
   };
-
-  const handleChainChanged = (hexChainId) => {
+  const handleChainChanged = hexChainId => {
     const decChainId = parseInt(hexChainId, 16);
     setChainId(decChainId);
     if (decChainId === 196) {
@@ -3880,8 +4108,7 @@ export default function App() {
       addLog(`Connected to Chain ID ${decChainId}. Please switch to X Layer Mainnet (Chain ID 196).`);
     }
   };
-
-  const updateBalance = async (address) => {
+  const updateBalance = async address => {
     try {
       const provider = getProvider();
       if (!provider) return;
@@ -3895,7 +4122,6 @@ export default function App() {
       console.error(e);
     }
   };
-
   const handleConnectWallet = async () => {
     const provider = getProvider();
     if (!provider) {
@@ -3903,14 +4129,15 @@ export default function App() {
       return;
     }
     try {
-      const accounts = await provider.request({ method: 'eth_requestAccounts' });
+      const accounts = await provider.request({
+        method: 'eth_requestAccounts'
+      });
       handleAccountsChanged(accounts);
     } catch (error) {
       console.error(error);
       addLog('Wallet connection request rejected.');
     }
   };
-
   const handleDisconnectWallet = () => {
     setWalletConnected(false);
     setUserAddress('');
@@ -3919,14 +4146,15 @@ export default function App() {
     setChainId(null);
     addLog('Wallet disconnected by user.');
   };
-
   const handleSwitchNetwork = async () => {
     const provider = getProvider();
     if (!provider) return;
     try {
       await provider.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0xc4' }] // 196 is 0xc4
+        params: [{
+          chainId: '0xc4'
+        }] // 196 is 0xc4
       });
     } catch (switchError) {
       if (switchError.code === 4902) {
@@ -3936,7 +4164,11 @@ export default function App() {
             params: [{
               chainId: '0xc4',
               chainName: 'X Layer Mainnet',
-              nativeCurrency: { name: 'OKB', symbol: 'OKB', decimals: 18 },
+              nativeCurrency: {
+                name: 'OKB',
+                symbol: 'OKB',
+                decimals: 18
+              },
               rpcUrls: ['https://rpc.xlayer.tech'],
               blockExplorerUrls: ['https://www.okx.com/explorer/xlayer']
             }]
@@ -3947,11 +4179,9 @@ export default function App() {
       }
     }
   };
-
-  const addLog = (message) => {
-    setLogs((prev) => [message, ...prev])
-  }
-
+  const addLog = message => {
+    setLogs(prev => [message, ...prev]);
+  };
   const handleAddGrushToWallet = async () => {
     const provider = getProvider();
     if (!provider) {
@@ -3977,7 +4207,6 @@ export default function App() {
       addLog(`Failed to add GRUSH: ${err.message || err}`);
     }
   };
-
   const copyCA = () => {
     navigator.clipboard.writeText(GRUSH_TOKEN_ADDRESS);
     setCaCopied(true);
@@ -3987,7 +4216,8 @@ export default function App() {
 
   // === Uniswap V4 Pool Constants (GRUSH graduated from bonding curve) ===
   const V4_POOL_KEY = {
-    currency0: '0x0000000000000000000000000000000000000000', // native OKB
+    currency0: '0x0000000000000000000000000000000000000000',
+    // native OKB
     currency1: GRUSH_TOKEN_ADDRESS,
     fee: 3000,
     tickSpacing: 60,
@@ -3995,8 +4225,7 @@ export default function App() {
   };
   const UNIVERSAL_ROUTER = '0x8b844f885672f333bc0042cb669255f93a4c1e6b';
   const POOL_MANAGER = '0x360e68faccca8ca495c1b759fd9eee466db9fb32';
-
-  const fetchSwapQuote = async (val) => {
+  const fetchSwapQuote = async val => {
     if (!val || isNaN(val) || parseFloat(val) <= 0) {
       setEstimatedGrush('0.00');
       return;
@@ -4004,16 +4233,11 @@ export default function App() {
     setIsQuoting(true);
     try {
       const provider = new ethers.JsonRpcProvider('https://rpc.xlayer.tech');
-      const pm = new ethers.Contract(POOL_MANAGER, [
-        "function extsload(bytes32 slot) external view returns (bytes32)"
-      ], provider);
+      const pm = new ethers.Contract(POOL_MANAGER, ["function extsload(bytes32 slot) external view returns (bytes32)"], provider);
 
       // Compute poolId from PoolKey
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-      const poolId = ethers.keccak256(abiCoder.encode(
-        ["address", "address", "uint24", "int24", "address"],
-        [V4_POOL_KEY.currency0, V4_POOL_KEY.currency1, V4_POOL_KEY.fee, V4_POOL_KEY.tickSpacing, V4_POOL_KEY.hooks]
-      ));
+      const poolId = ethers.keccak256(abiCoder.encode(["address", "address", "uint24", "int24", "address"], [V4_POOL_KEY.currency0, V4_POOL_KEY.currency1, V4_POOL_KEY.fee, V4_POOL_KEY.tickSpacing, V4_POOL_KEY.hooks]));
 
       // Read slot0 from PoolManager storage (mapping slot index 6)
       const slot0Key = ethers.keccak256(abiCoder.encode(["bytes32", "uint256"], [poolId, 6n]));
@@ -4026,31 +4250,37 @@ export default function App() {
       // Price = (sqrtPriceX96 / 2^96)^2; amountOut = amountIn * price
       const amountIn = ethers.parseEther(val);
       const Q96 = 2n ** 96n;
-      const amountOut = (amountIn * sqrtPriceX96 * sqrtPriceX96) / (Q96 * Q96);
+      const amountOut = amountIn * sqrtPriceX96 * sqrtPriceX96 / (Q96 * Q96);
 
       // Apply 0.3% fee estimate
-      const amountOutAfterFee = (amountOut * 997n) / 1000n;
+      const amountOutAfterFee = amountOut * 997n / 1000n;
       const formatted = ethers.formatEther(amountOutAfterFee);
-      setEstimatedGrush(parseFloat(formatted).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-      setSwapStatus({ tone: 'idle', message: '' });
+      setEstimatedGrush(parseFloat(formatted).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }));
+      setSwapStatus({
+        tone: 'idle',
+        message: ''
+      });
     } catch (e) {
       console.error("Quoting failed:", e);
       setEstimatedGrush('0.00');
-      setSwapStatus({ tone: 'error', message: 'Could not fetch V4 pool quote.' });
+      setSwapStatus({
+        tone: 'error',
+        message: 'Could not fetch V4 pool quote.'
+      });
     } finally {
       setIsQuoting(false);
     }
   };
-
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchSwapQuote(swapAmountOKB);
     }, 500);
-
     return () => clearTimeout(delayDebounceFn);
   }, [swapAmountOKB]);
-
-  const executeSwap = async (e) => {
+  const executeSwap = async e => {
     if (e) e.preventDefault();
     if (!walletConnected || !userAddress) {
       alert("Please connect your wallet first.");
@@ -4060,23 +4290,20 @@ export default function App() {
       alert("Please enter a valid OKB amount.");
       return;
     }
-    
     setIsSwapping(true);
-    setSwapStatus({ tone: 'progress', message: 'Initiating V4 swap via Universal Router...' });
-    
+    setSwapStatus({
+      tone: 'progress',
+      message: 'Initiating V4 swap via Universal Router...'
+    });
     try {
       const provider = getProvider();
       if (!provider) throw new Error("No wallet provider detected.");
-      
       const web3Provider = new ethers.BrowserProvider(provider);
       const signer = await web3Provider.getSigner();
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-      
       const amountIn = ethers.parseEther(swapAmountOKB);
       const parsedGrushQuote = parseFloat(estimatedGrush.replace(/,/g, ''));
-      const minAmountOut = isNaN(parsedGrushQuote) || parsedGrushQuote <= 0 
-        ? 0n 
-        : ethers.parseEther((parsedGrushQuote * 0.95).toFixed(6)); // 5% slippage
+      const minAmountOut = isNaN(parsedGrushQuote) || parsedGrushQuote <= 0 ? 0n : ethers.parseEther((parsedGrushQuote * 0.95).toFixed(6)); // 5% slippage
 
       // V4 Action constants
       const SWAP_EXACT_IN_SINGLE = 0x06;
@@ -4085,138 +4312,139 @@ export default function App() {
       const V4_SWAP_CMD = 0x10;
 
       // 1. Encode ExactInputSingleParams
-      const swapParams = abiCoder.encode(
-        ["tuple(tuple(address,address,uint24,int24,address),bool,uint128,uint128,bytes)"],
-        [[
-          [V4_POOL_KEY.currency0, V4_POOL_KEY.currency1, V4_POOL_KEY.fee, V4_POOL_KEY.tickSpacing, V4_POOL_KEY.hooks],
-          true, // zeroForOne: OKB → GRUSH
-          amountIn,
-          minAmountOut,
-          "0x" // empty hookData
-        ]]
-      );
+      const swapParams = abiCoder.encode(["tuple(tuple(address,address,uint24,int24,address),bool,uint128,uint128,bytes)"], [[[V4_POOL_KEY.currency0, V4_POOL_KEY.currency1, V4_POOL_KEY.fee, V4_POOL_KEY.tickSpacing, V4_POOL_KEY.hooks], true,
+      // zeroForOne: OKB → GRUSH
+      amountIn, minAmountOut, "0x" // empty hookData
+      ]]);
 
       // 2. Encode SETTLE_ALL params: (currency, maxAmount)
-      const settleParams = abiCoder.encode(
-        ["address", "uint128"],
-        [V4_POOL_KEY.currency0, amountIn]
-      );
+      const settleParams = abiCoder.encode(["address", "uint128"], [V4_POOL_KEY.currency0, amountIn]);
 
       // 3. Encode TAKE_ALL params: (currency, minAmount)
-      const takeParams = abiCoder.encode(
-        ["address", "uint128"],
-        [V4_POOL_KEY.currency1, minAmountOut]
-      );
+      const takeParams = abiCoder.encode(["address", "uint128"], [V4_POOL_KEY.currency1, minAmountOut]);
 
       // 4. Encode actions bytes
-      const actions = ethers.concat([
-        new Uint8Array([SWAP_EXACT_IN_SINGLE]),
-        new Uint8Array([SETTLE_ALL]),
-        new Uint8Array([TAKE_ALL])
-      ]);
+      const actions = ethers.concat([new Uint8Array([SWAP_EXACT_IN_SINGLE]), new Uint8Array([SETTLE_ALL]), new Uint8Array([TAKE_ALL])]);
 
       // 5. Encode the V4_SWAP input
-      const v4SwapInput = abiCoder.encode(
-        ["bytes", "bytes[]"],
-        [actions, [swapParams, settleParams, takeParams]]
-      );
+      const v4SwapInput = abiCoder.encode(["bytes", "bytes[]"], [actions, [swapParams, settleParams, takeParams]]);
 
       // 6. Build and execute via Universal Router
       const deadline = Math.floor(Date.now() / 1000) + 1200; // 20 min
-      const routerContract = new ethers.Contract(UNIVERSAL_ROUTER, [
-        "function execute(bytes calldata commands, bytes[] calldata inputs, uint256 deadline) external payable"
-      ], signer);
-
-      const tx = await routerContract.execute(
-        new Uint8Array([V4_SWAP_CMD]),
-        [v4SwapInput],
-        deadline,
-        { value: amountIn }
-      );
-      
-      setSwapStatus({ tone: 'progress', message: `Transaction submitted! Hash: ${tx.hash.substring(0, 10)}... waiting for confirmation...` });
-      
+      const routerContract = new ethers.Contract(UNIVERSAL_ROUTER, ["function execute(bytes calldata commands, bytes[] calldata inputs, uint256 deadline) external payable"], signer);
+      const tx = await routerContract.execute(new Uint8Array([V4_SWAP_CMD]), [v4SwapInput], deadline, {
+        value: amountIn
+      });
+      setSwapStatus({
+        tone: 'progress',
+        message: `Transaction submitted! Hash: ${tx.hash.substring(0, 10)}... waiting for confirmation...`
+      });
       await tx.wait(1);
-      
-      setSwapStatus({ tone: 'success', message: `Successfully bought GRUSH via Uniswap V4! Transaction confirmed.` });
+      setSwapStatus({
+        tone: 'success',
+        message: `Successfully bought GRUSH via Uniswap V4! Transaction confirmed.`
+      });
       addLog(`Bought GRUSH with ${swapAmountOKB} OKB via Uniswap V4 pool.`);
-      
       updateBalance(userAddress);
       updateGrushBalance(userAddress);
     } catch (e) {
       console.error("Swap failed:", e);
-      setSwapStatus({ tone: 'error', message: `Swap failed: ${e.reason || e.message || e}` });
+      setSwapStatus({
+        tone: 'error',
+        message: `Swap failed: ${e.reason || e.message || e}`
+      });
     } finally {
       setIsSwapping(false);
     }
   };
-
-  const handlePredictionChange = (teamId) => {
-    setPrediction(teamId)
-    const selectedTeam = teamId === 1 ? activeMatch.teamA : teamId === 2 ? activeMatch.teamB : 'Draw'
-    addLog(`Selected Prediction: ${selectedTeam} ⚽`)
+  const handlePredictionChange = teamId => {
+    setPrediction(teamId);
+    const selectedTeam = teamId === 1 ? activeMatch.teamA : teamId === 2 ? activeMatch.teamB : 'Draw';
+    addLog(`Selected Prediction: ${selectedTeam} ⚽`);
 
     // Ball and player always reset to the middle!
-    setBallPos({ x: 50, y: 50 })
-    setPlayerPos({ x: 50, y: 56 })
+    setBallPos({
+      x: 50,
+      y: 50
+    });
+    setPlayerPos({
+      x: 50,
+      y: 56
+    });
 
     // Goalkeeper snaps to the predicted goalpost
     if (teamId === 1) {
-      setGkPos({ x: 2, y: 50 }) // left goal
+      setGkPos({
+        x: 2,
+        y: 50
+      }); // left goal
     } else if (teamId === 2) {
-      setGkPos({ x: 98, y: 50 }) // right goal
+      setGkPos({
+        x: 98,
+        y: 50
+      }); // right goal
     } else {
-      setGkPos({ x: 50, y: 25 }) // center
+      setGkPos({
+        x: 50,
+        y: 25
+      }); // center
     }
-  }
-
-  const handleSwapAndStrike = async (e) => {
-    e.preventDefault()
+  };
+  const handleSwapAndStrike = async e => {
+    e.preventDefault();
     console.log("[handleSwapAndStrike] isSelectedMatchOnChain:", isSelectedMatchOnChain, "activeMatch:", activeMatch);
     if (!isSelectedMatchOnChain) {
-      setTransactionStatus({ tone: 'warning', message: 'This match is not active on-chain. Select the contract-active match before continuing.' })
+      setTransactionStatus({
+        tone: 'warning',
+        message: 'This match is not active on-chain. Select the contract-active match before continuing.'
+      });
       return;
     }
     if (!walletConnected) {
-      setTransactionStatus({ tone: 'warning', message: 'Connect your wallet to review and submit this prediction.' })
-      return
+      setTransactionStatus({
+        tone: 'warning',
+        message: 'Connect your wallet to review and submit this prediction.'
+      });
+      return;
     }
-
     if (chainId !== 196) {
-      setTransactionStatus({ tone: 'danger', message: 'Wrong network. Switch your wallet to X Layer Mainnet before signing.' })
-      return
+      setTransactionStatus({
+        tone: 'danger',
+        message: 'Wrong network. Switch your wallet to X Layer Mainnet before signing.'
+      });
+      return;
     }
-
-    const parsedAmount = parseFloat(swapAmount)
+    const parsedAmount = parseFloat(swapAmount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      setTransactionStatus({ tone: 'danger', message: 'Enter a valid prediction amount greater than zero.' })
-      return
+      setTransactionStatus({
+        tone: 'danger',
+        message: 'Enter a valid prediction amount greater than zero.'
+      });
+      return;
     }
-
-    setIsStriking(true)
-    setTransactionStatus({ tone: 'pending', message: 'Waiting for your wallet. Verify the destination, amount, and X Layer network before signing.' })
-
+    setIsStriking(true);
+    setTransactionStatus({
+      tone: 'pending',
+      message: 'Waiting for your wallet. Verify the destination, amount, and X Layer network before signing.'
+    });
     try {
       const rawProvider = getProvider();
       if (!rawProvider) throw new Error("No wallet provider detected");
       const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
-
       let tx;
       if (selectedToken === 'GRUSH') {
-        const tokenAbi = [
-          "function approve(address spender, uint256 amount) external returns (bool)",
-          "function allowance(address owner, address spender) external view returns (uint256)"
-        ];
+        const tokenAbi = ["function approve(address spender, uint256 amount) external returns (bool)", "function allowance(address owner, address spender) external view returns (uint256)"];
         const routerAbi = ["function predictWithGRUSH(uint256 matchId, uint8 predictedTeam, uint256 amount) external"];
         const tokenContract = new ethers.Contract(GRUSH_TOKEN_ADDRESS, tokenAbi, signer);
         const routerContract = new ethers.Contract(ROUTER_ADDRESS, routerAbi, signer);
-
         const amountWei = ethers.parseEther(swapAmount);
         const currentAllowance = await tokenContract.allowance(userAddress, ROUTER_ADDRESS);
-
         if (currentAllowance < amountWei) {
-          setTransactionStatus({ tone: 'pending', message: `Step 1 of 2: approve exactly ${parsedAmount} GRUSH for the prediction router.` })
+          setTransactionStatus({
+            tone: 'pending',
+            message: `Step 1 of 2: approve exactly ${parsedAmount} GRUSH for the prediction router.`
+          });
           addLog(`[approve] Approving ${parsedAmount} GRUSH for the prediction router...`);
           const approveTx = await tokenContract.approve(ROUTER_ADDRESS, amountWei);
           addLog(`Approval submitted: ${approveTx.hash.slice(0, 10)}... waiting for confirmation`);
@@ -4224,17 +4452,13 @@ export default function App() {
         } else {
           addLog(`[allowance] Existing allowance (${ethers.formatEther(currentAllowance)} GRUSH) is sufficient. Skipping approval transaction!`);
         }
-
         const predictionLabel = prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw';
         addLog(`[predictWithGRUSH] Recording ${parsedAmount} GRUSH prediction for ${predictionLabel}...`);
         const numericMatchId = getNumericMatchId(activeMatch.id);
         tx = await routerContract.predictWithGRUSH(numericMatchId, prediction, amountWei);
       } else {
-        const routerAbi = [
-          "function predictWithOKB(uint256 matchId, uint8 predictedTeam) external payable"
-        ];
+        const routerAbi = ["function predictWithOKB(uint256 matchId, uint8 predictedTeam) external payable"];
         const routerContract = new ethers.Contract(ROUTER_ADDRESS, routerAbi, signer);
-
         const predictionLabel = prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw';
         addLog(`[predictWithOKB] Recording ${parsedAmount} OKB prediction for ${predictionLabel}...`);
         const numericMatchId = getNumericMatchId(activeMatch.id);
@@ -4242,32 +4466,39 @@ export default function App() {
           value: ethers.parseEther(swapAmount)
         });
       }
-
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
-      setTransactionStatus({ tone: 'pending', message: `Transaction ${tx.hash.slice(0, 10)}... submitted. Waiting for X Layer confirmation.` })
+      setTransactionStatus({
+        tone: 'pending',
+        message: `Transaction ${tx.hash.slice(0, 10)}... submitted. Waiting for X Layer confirmation.`
+      });
       await tx.wait();
       fetchUserPrediction();
-      setTransactionStatus({ tone: 'success', message: 'Prediction confirmed on X Layer. The penalty animation is cosmetic and does not change the on-chain result.' })
-
+      setTransactionStatus({
+        tone: 'success',
+        message: 'Prediction confirmed on X Layer. The penalty animation is cosmetic and does not change the on-chain result.'
+      });
       if (selectedToken === 'GRUSH') {
         addLog(`🎉 Transaction confirmed! Prediction jackpot successfully funded with ${parsedAmount} GRUSH.`);
         if (prediction === 1) {
-          setTeamAGrushVotes((prev) => prev + parsedAmount);
+          setTeamAGrushVotes(prev => prev + parsedAmount);
         } else if (prediction === 2) {
-          setTeamBGrushVotes((prev) => prev + parsedAmount);
+          setTeamBGrushVotes(prev => prev + parsedAmount);
         } else {
-          setTeamDrawGrushVotes((prev) => prev + parsedAmount);
+          setTeamDrawGrushVotes(prev => prev + parsedAmount);
         }
-        setGrushJackpot((prev) => prev + parsedAmount);
+        setGrushJackpot(prev => prev + parsedAmount);
         try {
           const currentGrushVal = parseFloat(grushBalance.replace(/,/g, ''));
           const nextGrushVal = Math.max(0, currentGrushVal - parsedAmount);
-          setGrushBalance(nextGrushVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-        } catch (e) { }
+          setGrushBalance(nextGrushVal.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }));
+        } catch (e) {}
       } else {
         addLog(`🎉 Transaction confirmed! Match jackpot successfully funded with ${parsedAmount} OKB.`);
-        setJackpot((prev) => prev + parsedAmount);
-        setTotalUserVolume((prev) => {
+        setJackpot(prev => prev + parsedAmount);
+        setTotalUserVolume(prev => {
           const next = prev + parsedAmount;
           localStorage.setItem('goalrush_userVolume', next.toString());
           return next;
@@ -4285,26 +4516,29 @@ export default function App() {
       const isGoalResult = Math.random() < successChance;
 
       // 1. Set Status to "READY"
-      setShootoutStatus('READY 🚨')
-      addLog("⚽ Shootout Initiated! Prepare for strike...")
-      await new Promise(resolve => setTimeout(resolve, 800))
+      setShootoutStatus('READY 🚨');
+      addLog("⚽ Shootout Initiated! Prepare for strike...");
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       // 2. Set Status to "SET"
-      setShootoutStatus('SET 🎯')
-      await new Promise(resolve => setTimeout(resolve, 800))
+      setShootoutStatus('SET 🎯');
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       // 3. Set Status to "STRIKE"
-      setShootoutStatus('STRIKE ⚽')
-      await new Promise(resolve => setTimeout(resolve, 600))
-      setShootoutStatus('') // Clear countdown overlay to show action
+      setShootoutStatus('STRIKE ⚽');
+      await new Promise(resolve => setTimeout(resolve, 600));
+      setShootoutStatus(''); // Clear countdown overlay to show action
 
       // 4. Player runs up to the ball (moves from 56 to 50, 50)
-      addLog("🏃 Swapper running up to kick...")
-      setPlayerPos({ x: 50, y: 50 })
-      await new Promise(resolve => setTimeout(resolve, 400))
+      addLog("🏃 Swapper running up to kick...");
+      setPlayerPos({
+        x: 50,
+        y: 50
+      });
+      await new Promise(resolve => setTimeout(resolve, 400));
 
       // 5. Kick the ball (it moves halfway and GK starts to move)
-      addLog("⚡ Strike launched! Ball in mid-air...")
+      addLog("⚡ Strike launched! Ball in mid-air...");
       let targetX, gkTargetX;
       if (prediction === 1) {
         targetX = 1;
@@ -4316,7 +4550,7 @@ export default function App() {
         targetX = 50;
         gkTargetX = 50;
       }
-      const targetY = prediction === 3 ? 15 + Math.random() * 8 : 42 + Math.random() * 16 // final ball Y coordinate
+      const targetY = prediction === 3 ? 15 + Math.random() * 8 : 42 + Math.random() * 16; // final ball Y coordinate
 
       // Goalkeeper final Y coordinate
       // If Goal, goalkeeper dives far away from the ball. If Save, goalkeeper dives close to the ball.
@@ -4324,123 +4558,153 @@ export default function App() {
       if (prediction === 3 && isGoalResult) {
         finalGkTargetX = 50 + (Math.random() > 0.5 ? -25 : 25);
       }
-      const gkTargetY = isGoalResult
-        ? targetY + (Math.random() > 0.5 ? -16 : 16)
-        : targetY + (Math.random() - 0.5) * 4;
+      const gkTargetY = isGoalResult ? targetY + (Math.random() > 0.5 ? -16 : 16) : targetY + (Math.random() - 0.5) * 4;
 
       // Mid-point coordinates from the center circle (50, 50)
-      setBallPos({ x: (50 + targetX) / 2, y: (50 + targetY) / 2 })
-      setGkPos({ x: (50 + finalGkTargetX) / 2, y: (50 + gkTargetY) / 2 })
+      setBallPos({
+        x: (50 + targetX) / 2,
+        y: (50 + targetY) / 2
+      });
+      setGkPos({
+        x: (50 + finalGkTargetX) / 2,
+        y: (50 + gkTargetY) / 2
+      });
 
       // Dramatic pause at mid-air (slow-mo effect)
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // 6. Impact: Ball reaches the goal, goalkeeper completes the dive
-      setBallPos({ x: targetX, y: targetY })
-      setGkPos({ x: finalGkTargetX, y: gkTargetY })
+      setBallPos({
+        x: targetX,
+        y: targetY
+      });
+      setGkPos({
+        x: finalGkTargetX,
+        y: gkTargetY
+      });
 
       // Wait for ball to hit target
-      await new Promise(resolve => setTimeout(resolve, 300))
-
-      const distance = Math.abs(gkTargetY - targetY)
-      const isGoal = distance > 8
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const distance = Math.abs(gkTargetY - targetY);
+      const isGoal = distance > 8;
 
       // Haptic shake on pitch card
-      const pitchEl = document.querySelector('.pitch-container')
+      const pitchEl = document.querySelector('.pitch-container');
       if (pitchEl) {
-        pitchEl.classList.add('pitch-shake')
-        setTimeout(() => pitchEl.classList.remove('pitch-shake'), 400)
+        pitchEl.classList.add('pitch-shake');
+        setTimeout(() => pitchEl.classList.remove('pitch-shake'), 400);
       }
-
       if (isGoal) {
-        setUserScore((prev) => {
+        setUserScore(prev => {
           const next = prev + 1;
           localStorage.setItem('goalrush_userScore', next.toString());
           return next;
         });
-        setShowGoalFlash(true)
+        setShowGoalFlash(true);
         confetti({
           particleCount: 120,
           spread: 80,
-          origin: { y: 0.5 }
-        })
+          origin: {
+            y: 0.5
+          }
+        });
         // Extra confetti burst for maximum dopamine rush!
         setTimeout(() => {
           confetti({
             particleCount: 80,
             angle: 60,
             spread: 55,
-            origin: { x: 0 }
-          })
+            origin: {
+              x: 0
+            }
+          });
           confetti({
             particleCount: 80,
             angle: 120,
             spread: 55,
-            origin: { x: 1 }
-          })
-        }, 300)
-        addLog(`⚽ GOAL! Ball hit the back of the net. You scored!`)
+            origin: {
+              x: 1
+            }
+          });
+        }, 300);
+        addLog(`⚽ GOAL! Ball hit the back of the net. You scored!`);
       } else {
-        setOpponentScore((prev) => prev + 1)
-        addLog(`❌ SAVED! Goalkeeper made a stunning save. Swap executed but penalty missed.`)
+        setOpponentScore(prev => prev + 1);
+        addLog(`❌ SAVED! Goalkeeper made a stunning save. Swap executed but penalty missed.`);
       }
 
       // Increment predicted team volume dynamically in state
       if (selectedToken === 'OKB') {
         if (prediction === 1) {
-          setTeamAVotes((prev) => prev + parsedAmount);
+          setTeamAVotes(prev => prev + parsedAmount);
         } else if (prediction === 2) {
-          setTeamBVotes((prev) => prev + parsedAmount);
+          setTeamBVotes(prev => prev + parsedAmount);
         } else {
-          setTeamDrawVotes((prev) => prev + parsedAmount);
+          setTeamDrawVotes(prev => prev + parsedAmount);
         }
       }
 
       // Add to prediction history
       const newHistoryEntry = {
         id: Date.now(),
-        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/New_York' }) + ' ET',
+        timestamp: new Date().toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+          timeZone: 'America/New_York'
+        }) + ' ET',
         match: `${activeMatch.teamA} vs ${activeMatch.teamB}`,
         prediction: prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw',
         amount: `${parsedAmount} ${selectedToken}`,
         result: isGoal ? 'GOAL ⚽' : 'SAVED ❌'
-      }
-      setHistory((prev) => {
-        const next = [newHistoryEntry, ...prev]
-        localStorage.setItem('goalrush_history', JSON.stringify(next))
-        return next
-      })
+      };
+      setHistory(prev => {
+        const next = [newHistoryEntry, ...prev];
+        localStorage.setItem('goalrush_history', JSON.stringify(next));
+        return next;
+      });
 
       // 7. Reset player, ball, and goalie
       setTimeout(() => {
-        setBallPos({ x: 50, y: 50 })
-        setPlayerPos({ x: 50, y: 56 })
+        setBallPos({
+          x: 50,
+          y: 50
+        });
+        setPlayerPos({
+          x: 50,
+          y: 56
+        });
         if (prediction === 1) {
-          setGkPos({ x: 2, y: 50 })
+          setGkPos({
+            x: 2,
+            y: 50
+          });
         } else if (prediction === 2) {
-          setGkPos({ x: 98, y: 50 })
+          setGkPos({
+            x: 98,
+            y: 50
+          });
         } else {
-          setGkPos({ x: 50, y: 25 })
+          setGkPos({
+            x: 50,
+            y: 25
+          });
         }
-        setIsStriking(false)
-        setShowGoalFlash(false)
-      }, 2500)
-
+        setIsStriking(false);
+        setShowGoalFlash(false);
+      }, 2500);
     } catch (err) {
       console.error(err);
       const cleanReason = parseRevertReason(err);
       addLog(`❌ Transaction failed: ${cleanReason || err.message || err}`);
       setTransactionStatus({
         tone: 'danger',
-        message: cleanReason 
-          ? `Transaction reverted: ${cleanReason}`
-          : 'Transaction failed. Verify the network, balance, contract address, and wallet message before retrying.'
-      })
+        message: cleanReason ? `Transaction reverted: ${cleanReason}` : 'Transaction failed. Verify the network, balance, contract address, and wallet message before retrying.'
+      });
       setIsStriking(false);
     }
-  }
-
-  const handleSelectMatchUI = (match) => {
+  };
+  const handleSelectMatchUI = match => {
     setActiveMatch({
       id: match.id,
       dbId: match.dbId,
@@ -4457,13 +4721,21 @@ export default function App() {
       winner: match.winner ?? 0
     });
     setPrediction(1);
-    setBallPos({ x: 50, y: 50 })
-    setPlayerPos({ x: 50, y: 56 })
-    setGkPos({ x: 2, y: 50 })
+    setBallPos({
+      x: 50,
+      y: 50
+    });
+    setPlayerPos({
+      x: 50,
+      y: 56
+    });
+    setGkPos({
+      x: 2,
+      y: 50
+    });
     addLog(`Selected Match in UI: ${match.teamA} vs ${match.teamB}`);
   };
-
-  const handleActivateMatchOnChain = async (match) => {
+  const handleActivateMatchOnChain = async match => {
     if (!walletConnected) {
       alert("Please connect your wallet first!");
       return;
@@ -4473,18 +4745,14 @@ export default function App() {
       if (!rawProvider) throw new Error("No wallet provider detected");
       const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
-      const abi = [
-        "function createMatch(uint256 _matchId, string _teamA, string _teamB, uint256 _duration) external"
-      ];
+      const abi = ["function createMatch(uint256 _matchId, string _teamA, string _teamB, uint256 _duration) external"];
       const hookContract = new ethers.Contract(HOOK_ADDRESS, abi, signer);
       addLog(`[Activate Match] Submitting transaction to activate ${match.teamA} vs ${match.teamB} on-chain...`);
-
       const numericId = getNumericMatchId(match.id);
       const tx = await hookContract.createMatch(numericId, match.teamA, match.teamB, 24 * 60 * 60);
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       await tx.wait();
       addLog(`🎉 Match (${match.teamA} vs ${match.teamB}) successfully activated on-chain!`);
-
       setActiveMatch({
         id: match.id,
         teamA: match.teamA,
@@ -4493,16 +4761,24 @@ export default function App() {
         winner: 0
       });
       setPrediction(1);
-      setBallPos({ x: 50, y: 50 })
-      setPlayerPos({ x: 50, y: 56 })
-      setGkPos({ x: 2, y: 50 })
+      setBallPos({
+        x: 50,
+        y: 50
+      });
+      setPlayerPos({
+        x: 50,
+        y: 56
+      });
+      setGkPos({
+        x: 2,
+        y: 50
+      });
     } catch (err) {
       console.error(err);
       addLog(`❌ Activation failed: ${err.reason || err.message || err}`);
       alert(`Activation failed. Only the contract owner can change the active match. Details: ${err.reason || err.message || err}`);
     }
   };
-
   const handleClaimJackpot = async () => {
     if (!walletConnected) {
       alert("Please connect your wallet first!");
@@ -4513,13 +4789,10 @@ export default function App() {
       if (!rawProvider) throw new Error("No wallet provider detected");
       const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
-      const abi = [
-        "function claimJackpot(uint256 _matchId) external"
-      ];
+      const abi = ["function claimJackpot(uint256 _matchId) external"];
       const hookContract = new ethers.Contract(HOOK_ADDRESS, abi, signer);
       const numericMatchId = getNumericMatchId(activeMatch.id);
       addLog(`[claimJackpot] Claiming jackpot for Match #${activeMatch.id} (on-chain ID: ${numericMatchId.toString()})...`);
-
       const tx = await hookContract.claimJackpot(numericMatchId);
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       await tx.wait();
@@ -4532,7 +4805,6 @@ export default function App() {
       alert(`Claim failed. Make sure the match is resolved, you predicted the winner correctly, and you have not claimed yet.`);
     }
   };
-
   const handleClaimGrushJackpot = async () => {
     if (!walletConnected) {
       alert("Please connect your wallet first!");
@@ -4543,13 +4815,10 @@ export default function App() {
       if (!rawProvider) throw new Error("No wallet provider detected");
       const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
-      const abi = [
-        "function claimGrushJackpot(uint256 _matchId) external"
-      ];
+      const abi = ["function claimGrushJackpot(uint256 _matchId) external"];
       const hookContract = new ethers.Contract(HOOK_ADDRESS, abi, signer);
       const numericMatchId = getNumericMatchId(activeMatch.id);
       addLog(`[claimGrushJackpot] Claiming GRUSH jackpot for Match #${activeMatch.id} (on-chain ID: ${numericMatchId.toString()})...`);
-
       const tx = await hookContract.claimGrushJackpot(numericMatchId);
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       await tx.wait();
@@ -4563,224 +4832,305 @@ export default function App() {
       alert(`GRUSH claim failed. Make sure the match is resolved, you predicted the winner correctly, and you have not claimed yet.`);
     }
   };
-
-  const copyCode = (codeText) => {
-    navigator.clipboard.writeText(codeText)
-    alert('Code copied to clipboard!')
-  }
-
-  const renderNavLinks = (isSidebar = false) => (
-    <ul className={isSidebar ? "sidebar-nav-links" : "nav-links"}>
+  const copyCode = codeText => {
+    navigator.clipboard.writeText(codeText);
+    alert('Code copied to clipboard!');
+  };
+  const renderNavLinks = (isSidebar = false) => <ul className={isSidebar ? "sidebar-nav-links" : "nav-links"}>
       <li>
-        <button
-          onClick={() => {
-            setCurrentView('dashboard');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            if (isSidebar) setIsMobileMenuOpen(false);
-          }}
-          className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`}
-        >
-          Dashboard
+        <button onClick={() => {
+        setCurrentView('dashboard');
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+        if (isSidebar) setIsMobileMenuOpen(false);
+      }} className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`}>
+          {t("Dashboard")}
         </button>
       </li>
       <li>
-        <button
-          onClick={() => {
-            setCurrentView('match-center');
-            if (isSidebar) setIsMobileMenuOpen(false);
-          }}
-          className={`nav-btn ${currentView === 'match-center' ? 'active' : ''}`}
-        >
-          Match Center
+        <button onClick={() => {
+        setCurrentView('match-center');
+        if (isSidebar) setIsMobileMenuOpen(false);
+      }} className={`nav-btn ${currentView === 'match-center' ? 'active' : ''}`}>
+          {t("Match Center")}
         </button>
       </li>
       <li>
-        <button
-          onClick={() => {
-            setCurrentView('news');
-            if (isSidebar) setIsMobileMenuOpen(false);
-          }}
-          className={`nav-btn ${currentView === 'news' ? 'active' : ''}`}
-        >
-          Daily News
+        <button onClick={() => {
+        setCurrentView('news');
+        if (isSidebar) setIsMobileMenuOpen(false);
+      }} className={`nav-btn ${currentView === 'news' ? 'active' : ''}`}>
+          {t("Daily News")}
         </button>
       </li>
       <li>
-        <button
-          onClick={() => {
-            setCurrentView('leaderboard');
-            setTimeout(() => {
-              document.getElementById('leaderboard')?.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
-            if (isSidebar) setIsMobileMenuOpen(false);
-          }}
-          className={`nav-btn ${currentView === 'leaderboard' ? 'active' : ''}`}
-        >
-          Leaderboard
+        <button onClick={() => {
+        setCurrentView('leaderboard');
+        setTimeout(() => {
+          document.getElementById('leaderboard')?.scrollIntoView({
+            behavior: 'smooth'
+          });
+        }, 100);
+        if (isSidebar) setIsMobileMenuOpen(false);
+      }} className={`nav-btn ${currentView === 'leaderboard' ? 'active' : ''}`}>
+          {t("Leaderboard")}
         </button>
       </li>
       <li>
-        <button
-          onClick={() => {
-            setCurrentView('okx-ai');
-            if (isSidebar) setIsMobileMenuOpen(false);
-          }}
-          className={`nav-btn ${currentView === 'okx-ai' ? 'active' : ''}`}
-        >
+        <button onClick={() => {
+        setCurrentView('okx-ai');
+        if (isSidebar) setIsMobileMenuOpen(false);
+      }} className={`nav-btn ${currentView === 'okx-ai' ? 'active' : ''}`}>
           OKX.AI Hub
         </button>
       </li>
       <li>
-        <button
-          onClick={() => {
-            setCurrentView('about');
-            if (isSidebar) setIsMobileMenuOpen(false);
-          }}
-          className={`nav-btn ${currentView === 'about' ? 'active' : ''}`}
-        >
-          About & Docs
+        <button onClick={() => {
+        setCurrentView('about');
+        if (isSidebar) setIsMobileMenuOpen(false);
+      }} className={`nav-btn ${currentView === 'about' ? 'active' : ''}`}>
+          {t("About & Docs")}
         </button>
       </li>
-    </ul>
-  );
-
-  const renderWalletActions = (isSidebar = false) => (
-    <div className={isSidebar ? "sidebar-wallet-actions" : "nav-actions"}>
-      {chainId !== null ? (
-        chainId === 196 ? (
-          <div className="badge-xlayer" style={{ color: 'var(--color-primary)' }}>
-            <span className="badge-dot" style={{ backgroundColor: 'var(--color-primary)', boxShadow: '0 0 8px var(--color-primary)' }}></span>
-            <span className="badge-text">X Layer Mainnet</span>
-          </div>
-        ) : chainId === 195 ? (
-          <div className="badge-xlayer" style={{ color: '#ffcc00' }}>
-            <span className="badge-dot" style={{ backgroundColor: '#ffcc00', boxShadow: '0 0 8px #ffcc00' }}></span>
-            <span className="badge-text">X Layer Testnet</span>
-          </div>
-        ) : (
-          <button className="badge-xlayer" onClick={() => { handleSwitchNetwork(); if (isSidebar) setIsMobileMenuOpen(false); }} style={{ cursor: 'pointer', background: 'rgba(255, 51, 68, 0.1)', borderColor: '#ff3344', color: '#ff3344' }}>
+    </ul>;
+  const renderWalletActions = (isSidebar = false) => <div className={isSidebar ? "sidebar-wallet-actions" : "nav-actions"}>
+      <div className="lang-selector-container" style={{
+      position: 'relative',
+      display: 'flex',
+      alignItems: 'center',
+      marginRight: '1rem',
+      zIndex: 100
+    }}>
+        <button className="lang-selector-btn" onClick={() => setShowLangMenu(!showLangMenu)} style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        background: 'rgba(255, 255, 255, 0.05)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '6px 12px',
+        borderRadius: '8px',
+        color: '#fff',
+        cursor: 'pointer',
+        backdropFilter: 'blur(10px)'
+      }}>
+          <Globe size={16} />
+          <span style={{
+          fontSize: '14px',
+          fontWeight: '500'
+        }}>{lang.toUpperCase()}</span>
+          <ChevronDown size={14} style={{
+          opacity: 0.7
+        }} />
+        </button>
+        {showLangMenu && <div className="lang-menu" style={{
+        position: 'absolute',
+        top: 'calc(100% + 8px)',
+        right: 0,
+        background: 'rgba(20, 20, 20, 0.95)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '8px',
+        padding: '8px 0',
+        minWidth: '140px',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(20px)',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+            <button onClick={() => handleLangChange('en')} style={{
+          background: 'transparent',
+          border: 'none',
+          color: '#fff',
+          padding: '8px 16px',
+          textAlign: 'left',
+          cursor: 'pointer',
+          opacity: lang === 'en' ? 1 : 0.6
+        }}>{t("English (EN)")}</button>
+            <button onClick={() => handleLangChange('ja')} style={{
+          background: 'transparent',
+          border: 'none',
+          color: '#fff',
+          padding: '8px 16px',
+          textAlign: 'left',
+          cursor: 'pointer',
+          opacity: lang === 'ja' ? 1 : 0.6
+        }}>{t("日本語 (JA)")}</button>
+            <button onClick={() => handleLangChange('ko')} style={{
+          background: 'transparent',
+          border: 'none',
+          color: '#fff',
+          padding: '8px 16px',
+          textAlign: 'left',
+          cursor: 'pointer',
+          opacity: lang === 'ko' ? 1 : 0.6
+        }}>{t("한국어 (KO)")}</button>
+          </div>}
+      </div>
+  
+      {chainId !== null ? chainId === 196 ? <div className="badge-xlayer" style={{
+      color: 'var(--color-primary)'
+    }}>
+            <span className="badge-dot" style={{
+        backgroundColor: 'var(--color-primary)',
+        boxShadow: '0 0 8px var(--color-primary)'
+      }}></span>
+            <span className="badge-text">{t("X Layer Mainnet")}</span>
+          </div> : chainId === 195 ? <div className="badge-xlayer" style={{
+      color: '#ffcc00'
+    }}>
+            <span className="badge-dot" style={{
+        backgroundColor: '#ffcc00',
+        boxShadow: '0 0 8px #ffcc00'
+      }}></span>
+            <span className="badge-text">{t("X Layer Testnet")}</span>
+          </div> : <button className="badge-xlayer" onClick={() => {
+      handleSwitchNetwork();
+      if (isSidebar) setIsMobileMenuOpen(false);
+    }} style={{
+      cursor: 'pointer',
+      background: 'rgba(255, 51, 68, 0.1)',
+      borderColor: '#ff3344',
+      color: '#ff3344'
+    }}>
             <AlertTriangle size={12} />
-            <span className="badge-text">Switch Network</span>
-          </button>
-        )
-      ) : (
-        <div className="badge-xlayer">
-          <span className="badge-dot" style={{ backgroundColor: '#666' }}></span>
-          <span className="badge-text">Not Connected</span>
-        </div>
-      )}
+            <span className="badge-text">{t("Switch Network")}</span>
+          </button> : <div className="badge-xlayer">
+          <span className="badge-dot" style={{
+        backgroundColor: '#666'
+      }}></span>
+          <span className="badge-text">{t("Not Connected")}</span>
+        </div>}
 
-      {walletConnected ? (
-        <div className="wallet-connected-wrapper" style={isSidebar ? { flexDirection: 'column', width: '100%', gap: '8px' } : {}}>
-          <div
-            className="btn-secondary text-glow-green"
-            style={{
-              padding: '8px 16px',
-              fontSize: '0.9rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              cursor: 'default',
-              borderColor: 'var(--color-primary)',
-              background: 'rgba(157, 255, 0, 0.05)',
-              width: isSidebar ? '100%' : 'auto'
-            }}
-          >
+      {walletConnected ? <div className="wallet-connected-wrapper" style={isSidebar ? {
+      flexDirection: 'column',
+      width: '100%',
+      gap: '8px'
+    } : {}}>
+          <div className="btn-secondary text-glow-green" style={{
+        padding: '8px 16px',
+        fontSize: '0.9rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        cursor: 'default',
+        borderColor: 'var(--color-primary)',
+        background: 'rgba(157, 255, 0, 0.05)',
+        width: isSidebar ? '100%' : 'auto'
+      }}>
             <User size={14} />
             <span className="wallet-text-full">
-              Connected: {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
+              {t("Connected:")} {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
             </span>
             <span className="wallet-text-compact">
               {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
             </span>
           </div>
-          <button
-            className="btn-secondary btn-disconnect"
-            onClick={() => { handleDisconnectWallet(); if (isSidebar) setIsMobileMenuOpen(false); }}
-            style={{
-              padding: '8px 12px',
-              fontSize: '0.9rem',
-              color: 'var(--color-danger)',
-              borderColor: 'rgba(255, 51, 68, 0.2)',
-              background: 'rgba(255, 51, 68, 0.05)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: isSidebar ? 'center' : 'flex-start',
-              gap: '6px',
-              cursor: 'pointer',
-              transition: 'var(--transition-smooth)',
-              width: isSidebar ? '100%' : 'auto'
-            }}
-          >
+          <button className="btn-secondary btn-disconnect" onClick={() => {
+        handleDisconnectWallet();
+        if (isSidebar) setIsMobileMenuOpen(false);
+      }} style={{
+        padding: '8px 12px',
+        fontSize: '0.9rem',
+        color: 'var(--color-danger)',
+        borderColor: 'rgba(255, 51, 68, 0.2)',
+        background: 'rgba(255, 51, 68, 0.05)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: isSidebar ? 'center' : 'flex-start',
+        gap: '6px',
+        cursor: 'pointer',
+        transition: 'var(--transition-smooth)',
+        width: isSidebar ? '100%' : 'auto'
+      }}>
             <LogOut size={14} />
-            <span className="btn-disconnect-text">Disconnect</span>
+            <span className="btn-disconnect-text">{t("Disconnect")}</span>
           </button>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', gap: '8px', flexDirection: isSidebar ? 'column' : 'row', width: isSidebar ? '100%' : 'auto', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-          {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
-            <button
-              type="button"
-              onClick={() => {
-                setWalletConnected(true);
-                setUserAddress('0xae1b810ffb88855ffd967dc274d9ba4fadd21990');
-                setUserBalance('0.1500');
-                setGrushBalance('500.00');
-                setChainId(196);
-                addLog('Simulating wallet: 0xae1b... (Winner prediction)');
-                if (isSidebar) setIsMobileMenuOpen(false);
-              }}
-              className="btn-secondary"
-              style={{ padding: '8px 12px', fontSize: '0.85rem', borderColor: '#9dff00', color: '#9dff00', background: 'rgba(157, 255, 0, 0.05)', cursor: 'pointer', width: isSidebar ? '100%' : 'auto', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              Simulate Wallet 🧪
-            </button>
-          )}
-          <button className="btn-primary" onClick={() => { handleConnectWallet(); if (isSidebar) setIsMobileMenuOpen(false); }} style={{ padding: '8px 16px', fontSize: '0.9rem', cursor: 'pointer', width: isSidebar ? '100%' : 'auto', justifyContent: 'center', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
-            Connect Wallet
+        </div> : <div style={{
+      display: 'flex',
+      gap: '8px',
+      flexDirection: isSidebar ? 'column' : 'row',
+      width: isSidebar ? '100%' : 'auto',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      justifyContent: 'center'
+    }}>
+          {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && <button type="button" onClick={() => {
+        setWalletConnected(true);
+        setUserAddress('0xae1b810ffb88855ffd967dc274d9ba4fadd21990');
+        setUserBalance('0.1500');
+        setGrushBalance('500.00');
+        setChainId(196);
+        addLog('Simulating wallet: 0xae1b... (Winner prediction)');
+        if (isSidebar) setIsMobileMenuOpen(false);
+      }} className="btn-secondary" style={{
+        padding: '8px 12px',
+        fontSize: '0.85rem',
+        borderColor: '#9dff00',
+        color: '#9dff00',
+        background: 'rgba(157, 255, 0, 0.05)',
+        cursor: 'pointer',
+        width: isSidebar ? '100%' : 'auto',
+        whiteSpace: 'nowrap',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+              {t("Simulate Wallet 🧪")}
+            </button>}
+          <button className="btn-primary" onClick={() => {
+        handleConnectWallet();
+        if (isSidebar) setIsMobileMenuOpen(false);
+      }} style={{
+        padding: '8px 16px',
+        fontSize: '0.9rem',
+        cursor: 'pointer',
+        width: isSidebar ? '100%' : 'auto',
+        justifyContent: 'center',
+        whiteSpace: 'nowrap',
+        display: 'flex',
+        alignItems: 'center'
+      }}>
+            {t("Connect Wallet")}
           </button>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 
   // OKX.AI Mock Dispute Cases
-  const mockDisputes = [
-    {
-      id: "CASE-9021",
-      task: "Develop Uniswap V4 dynamic fee hook based on volatility",
-      bounty: 15.0,
-      user: "0xDeFiVentures",
-      asp: "0xSwarmDevs",
-      complaint: "The delivered hook contract works fine, but during major volatility events in our local simulations, the fee adjustments took up to 3 blocks to trigger. The specification called for 'immediate fee updates' on high volatility.",
-      delivery: "We implemented the fee calculation inside beforeSwap using a sliding 24-hour average. The user is triggering artificial high volatility within a single block, which cannot be parsed instantly by a block-by-block average without exposing the pool to sandwich attacks.",
-      correctVote: "asp", // support ASP
-      rational: "The developer's design is economically sound. Sandwich attack protection is a critical security requirement that overrides the user's extreme intra-block volatility simulation."
-    },
-    {
-      id: "CASE-7043",
-      task: "Build ESPN live sports data crawler for X Layer oracle",
-      bounty: 8.0,
-      user: "0xGoalRushApp",
-      asp: "0xCrawlerAgent",
-      complaint: "The crawler was paid to supply live match logs every 10 minutes. During the high-traffic Germany vs Spain match, the crawler missed updating live scores for 3 hours. Our jackpot contract failed to lock correctly, and users complained.",
-      delivery: "Our crawler hit a Cloudflare block and rate-limit from ESPN during peak traffic. We had to rotate proxy keys, which caused a 3-hour delay. We eventually delivered the full logs, but the user is refusing to release the escrow.",
-      correctVote: "user", // support User
-      rational: "Live predictions require real-time score feeds. A 3-hour delay for a live sporting event defeats the entire purpose of the service, causing contract failures."
-    },
-    {
-      id: "CASE-5110",
-      task: "Audit ERC-20 token contract for hidden honeypot code",
-      bounty: 5.0,
-      user: "0xDegenTrader",
-      asp: "0xAuditAI",
-      complaint: "The agent scanned the token contract and marked it safe. I bought the tokens but was immediately locked (honeypotted) and couldn't sell. The agent failed to detect the transfer blacklist modifier.",
-      delivery: "The token code uses an obfuscated balance control function disguised as a standard reward fee. Our scanner checks for standard security patterns and state variables. The obfuscated blacklist was out of scope for a basic automated scan.",
-      correctVote: "user", // support User
-      rational: "Honeypot detection is the primary reason users pay for contract audits. Failing to flag a transfer restriction modifier is a core failure of the service."
-    }
-  ];
-
+  const mockDisputes = [{
+    id: "CASE-9021",
+    task: "Develop Uniswap V4 dynamic fee hook based on volatility",
+    bounty: 15.0,
+    user: "0xDeFiVentures",
+    asp: "0xSwarmDevs",
+    complaint: "The delivered hook contract works fine, but during major volatility events in our local simulations, the fee adjustments took up to 3 blocks to trigger. The specification called for 'immediate fee updates' on high volatility.",
+    delivery: "We implemented the fee calculation inside beforeSwap using a sliding 24-hour average. The user is triggering artificial high volatility within a single block, which cannot be parsed instantly by a block-by-block average without exposing the pool to sandwich attacks.",
+    correctVote: "asp",
+    // support ASP
+    rational: "The developer's design is economically sound. Sandwich attack protection is a critical security requirement that overrides the user's extreme intra-block volatility simulation."
+  }, {
+    id: "CASE-7043",
+    task: "Build ESPN live sports data crawler for X Layer oracle",
+    bounty: 8.0,
+    user: "0xGoalRushApp",
+    asp: "0xCrawlerAgent",
+    complaint: "The crawler was paid to supply live match logs every 10 minutes. During the high-traffic Germany vs Spain match, the crawler missed updating live scores for 3 hours. Our jackpot contract failed to lock correctly, and users complained.",
+    delivery: "Our crawler hit a Cloudflare block and rate-limit from ESPN during peak traffic. We had to rotate proxy keys, which caused a 3-hour delay. We eventually delivered the full logs, but the user is refusing to release the escrow.",
+    correctVote: "user",
+    // support User
+    rational: "Live predictions require real-time score feeds. A 3-hour delay for a live sporting event defeats the entire purpose of the service, causing contract failures."
+  }, {
+    id: "CASE-5110",
+    task: "Audit ERC-20 token contract for hidden honeypot code",
+    bounty: 5.0,
+    user: "0xDegenTrader",
+    asp: "0xAuditAI",
+    complaint: "The agent scanned the token contract and marked it safe. I bought the tokens but was immediately locked (honeypotted) and couldn't sell. The agent failed to detect the transfer blacklist modifier.",
+    delivery: "The token code uses an obfuscated balance control function disguised as a standard reward fee. Our scanner checks for standard security patterns and state variables. The obfuscated blacklist was out of scope for a basic automated scan.",
+    correctVote: "user",
+    // support User
+    rational: "Honeypot detection is the primary reason users pay for contract audits. Failing to flag a transfer restriction modifier is a core failure of the service."
+  }];
   const handleQueryPrediction = async () => {
     if (!selectedPredictMatchId) {
       setPredictError("Please select a match first.");
@@ -4789,34 +5139,23 @@ export default function App() {
     setIsQueryingPredict(true);
     setPredictResult(null);
     setPredictError(null);
-    
-    setTerminalHistory(prev => [
-      ...prev,
-      `> npx okx-ai query-asp --match-id ${selectedPredictMatchId}`,
-      `Connecting to GoalRush ASP Gateway...`,
-      `Invoking consensus swarm on Llama-3.1-8b, Llama-3.3-70b, and Qwen-32b...`
-    ]);
-    
+    setTerminalHistory(prev => [...prev, `> npx okx-ai query-asp --match-id ${selectedPredictMatchId}`, `Connecting to GoalRush ASP Gateway...`, `Invoking consensus swarm on Llama-3.1-8b, Llama-3.3-70b, and Qwen-32b...`]);
     try {
       const response = await fetch(`${BACKEND_API_BASE}/predict`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ match_id: selectedPredictMatchId, clientAddress: userAddress })
+        body: JSON.stringify({
+          match_id: selectedPredictMatchId,
+          clientAddress: userAddress
+        })
       });
       const data = await response.json();
       if (response.ok && data.success) {
         setPredictResult(data);
         fetchAgentData();
-        setTerminalHistory(prev => [
-          ...prev,
-          `✅ Query Successful.`,
-          `Consensus Prediction: ${data.prediction}`,
-          `Votes Tally: ${JSON.stringify(data.tally)}`,
-          `Reasoning: ${data.reasoning}`,
-          `Payment verified by @x402/express middleware. Fee: ${GOALRUSH_ASP_FEE}.`
-        ]);
+        setTerminalHistory(prev => [...prev, `✅ Query Successful.`, `Consensus Prediction: ${data.prediction}`, `Votes Tally: ${JSON.stringify(data.tally)}`, `Reasoning: ${data.reasoning}`, `Payment verified by @x402/express middleware. Fee: ${GOALRUSH_ASP_FEE}.`]);
       } else if (response.status === 402) {
         // Decode the real PAYMENT-REQUIRED header from @x402/express middleware
         const paymentHeader = response.headers.get('payment-required');
@@ -4826,135 +5165,65 @@ export default function App() {
             const decoded = JSON.parse(atob(paymentHeader));
             const opt = decoded.accepts ? decoded.accepts[0] : decoded;
             paymentInfo = ` Network: ${opt.network || 'eip155:196'}, Asset: ${opt.asset || GOALRUSH_ASP_ASSET}, Price: ${opt.price || '0.005'}`;
-          } catch (e) { /* ignore decode error */ }
+          } catch (e) {/* ignore decode error */}
         }
         setPredictError(`Payment required (${GOALRUSH_ASP_FEE}).${paymentInfo} Use an OKX.AI / Onchain OS agent to execute the paid A2MCP call.`);
-        setTerminalHistory(prev => [
-          ...prev,
-          `HTTP 402 — Payment Required: ${GOALRUSH_ASP_FEE}`,
-          `Network: ${GOALRUSH_ASP_NETWORK}`,
-          `Asset (USDT): ${GOALRUSH_ASP_ASSET}`,
-          'This endpoint is gated by the OKX Agent Payments Protocol (@x402/express).',
-          'Use an Onchain OS agent client to make the paid A2MCP call.'
-        ]);
+        setTerminalHistory(prev => [...prev, `HTTP 402 — Payment Required: ${GOALRUSH_ASP_FEE}`, `Network: ${GOALRUSH_ASP_NETWORK}`, `Asset (USDT): ${GOALRUSH_ASP_ASSET}`, 'This endpoint is gated by the OKX Agent Payments Protocol (@x402/express).', 'Use an Onchain OS agent client to make the paid A2MCP call.']);
       } else {
         setPredictError(data.error || "Failed to query prediction API.");
-        setTerminalHistory(prev => [
-          ...prev,
-          `❌ Query Failed: ${data.error || "Unknown error"}`
-        ]);
+        setTerminalHistory(prev => [...prev, `❌ Query Failed: ${data.error || "Unknown error"}`]);
       }
     } catch (e) {
       setPredictError(e.message || "Failed to connect to backend server.");
-      setTerminalHistory(prev => [
-        ...prev,
-        `❌ Network Error: ${e.message}`
-      ]);
+      setTerminalHistory(prev => [...prev, `❌ Network Error: ${e.message}`]);
     } finally {
       setIsQueryingPredict(false);
     }
   };
-
-  const handleRunTerminalCommand = (rawCmd) => {
+  const handleRunTerminalCommand = rawCmd => {
     const cmd = rawCmd.trim();
     if (!cmd) return;
-    
     setIsTerminalLoading(true);
     setTerminalHistory(prev => [...prev, `> ${cmd}`]);
-    
     setTimeout(() => {
       let output = [];
       const normalizedCmd = cmd.toLowerCase();
-      
       if (normalizedCmd === 'help') {
-        output = [
-          'Available commands:',
-          '  help                     - Show this menu',
-          '  clear                    - Clear the console',
-          '  npx skills add okx/onchainos-skills - Install OKX Onchain OS skills',
-          '  register-user            - Register as a User on OKX.AI',
-          '  register-asp             - Show the real GoalRush ASP registration status',
-          '  register-evaluator       - Stake 100 OKB and register as Evaluator',
-          '  status                   - Check registration and agent status'
-        ];
+        output = ['Available commands:', '  help                     - Show this menu', '  clear                    - Clear the console', '  npx skills add okx/onchainos-skills - Install OKX Onchain OS skills', '  register-user            - Register as a User on OKX.AI', '  register-asp             - Show the real GoalRush ASP registration status', '  register-evaluator       - Stake 100 OKB and register as Evaluator', '  status                   - Check registration and agent status'];
       } else if (normalizedCmd === 'clear') {
         setTerminalHistory([]);
         setIsTerminalLoading(false);
         return;
       } else if (normalizedCmd.includes('skills add') || normalizedCmd.includes('onchainos-skills')) {
-        output = [
-          'Installing Onchain OS skill pack [okx/onchainos-skills]...',
-          'Progress: ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 100%',
-          'Connecting to Web3 Wallet provider...',
-          walletConnected 
-            ? `Connected successfully to wallet: ${userAddress.slice(0, 10)}...${userAddress.slice(-6)}` 
-            : 'Warning: Web3 wallet not connected. Please connect your wallet in the dashboard.',
-          'Initializing Agentic Wallet container on X Layer Testnet...',
-          'Onchain OS installed successfully. Try running: register-user'
-        ];
+        output = ['Installing Onchain OS skill pack [okx/onchainos-skills]...', 'Progress: ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 100%', 'Connecting to Web3 Wallet provider...', walletConnected ? `Connected successfully to wallet: ${userAddress.slice(0, 10)}...${userAddress.slice(-6)}` : 'Warning: Web3 wallet not connected. Please connect your wallet in the dashboard.', 'Initializing Agentic Wallet container on X Layer Testnet...', 'Onchain OS installed successfully. Try running: register-user'];
       } else if (normalizedCmd === 'register-user') {
-        output = [
-          'User registration must be completed in Onchain OS with wallet confirmation.',
-          'Open a Codex/Agent session with Onchain OS and ask: "Register me as a User on OKX.AI".',
-          'This browser console will not fabricate a User identity or transaction hash.'
-        ];
+        output = ['User registration must be completed in Onchain OS with wallet confirmation.', 'Open a Codex/Agent session with Onchain OS and ask: "Register me as a User on OKX.AI".', 'This browser console will not fabricate a User identity or transaction hash.'];
       } else if (normalizedCmd === 'register-asp') {
         setIsRegisteredASP(true);
-        output = [
-          'GoalRush ASP registered on-chain via Onchain OS.',
-          `Agent ID: ${GOALRUSH_ASP_ID}`,
-          'Service: Soccer Prediction Swarm (A2MCP)',
-          `Endpoint: ${BACKEND_API_BASE}/predict`,
-          `Fee: ${GOALRUSH_ASP_FEE} per call`,
-          `Payment Network: ${GOALRUSH_ASP_NETWORK}`,
-          `Payment Asset (USDT): ${GOALRUSH_ASP_ASSET}`,
-          `Receiver: 0xd96c9899b4d48c02efbd88dc22252a60dc6ee38d`,
-          `x402 Middleware: @x402/express (ExactEvmScheme)`,
-          `Registration TX: 0x9d500f0defa939c287a78e0db0879b2587d4171fdbf0e4d8540e69daaee76e56`,
-          `Status: ${GOALRUSH_ASP_STATUS}`
-        ];
+        output = ['GoalRush ASP registered on-chain via Onchain OS.', `Agent ID: ${GOALRUSH_ASP_ID}`, 'Service: Soccer Prediction Swarm (A2MCP)', `Endpoint: ${BACKEND_API_BASE}/predict`, `Fee: ${GOALRUSH_ASP_FEE} per call`, `Payment Network: ${GOALRUSH_ASP_NETWORK}`, `Payment Asset (USDT): ${GOALRUSH_ASP_ASSET}`, `Receiver: 0xd96c9899b4d48c02efbd88dc22252a60dc6ee38d`, `x402 Middleware: @x402/express (ExactEvmScheme)`, `Registration TX: 0x9d500f0defa939c287a78e0db0879b2587d4171fdbf0e4d8540e69daaee76e56`, `Status: ${GOALRUSH_ASP_STATUS}`];
       } else if (normalizedCmd === 'register-evaluator') {
-        output = [
-          'Evaluator registration and staking must be completed in Onchain OS with wallet confirmation.',
-          'This browser console will not fabricate stake, eligibility, or transaction hashes.',
-          'Use the official OKX.AI evaluator flow if you want to register as an arbitrator.'
-        ];
+        output = ['Evaluator registration and staking must be completed in Onchain OS with wallet confirmation.', 'This browser console will not fabricate stake, eligibility, or transaction hashes.', 'Use the official OKX.AI evaluator flow if you want to register as an arbitrator.'];
       } else if (normalizedCmd === 'status') {
-        output = [
-          '--- OKX.AI SYSTEM STATUS ---',
-          `Wallet connected: ${walletConnected ? 'YES' : 'NO'}`,
-          `User registered: ${isRegisteredUser ? 'YES' : 'NO'}`,
-          `ASP registered (GoalRush Predictor): YES (${GOALRUSH_ASP_ID}, ${GOALRUSH_ASP_STATUS})`,
-          `Evaluator registered: ${isRegisteredEvaluator ? 'YES (Active)' : 'NO'}`,
-          `Evaluator Stake: ${isRegisteredEvaluator ? evaluatorStaked + ' OKB' : '0 OKB'}`
-        ];
+        output = ['--- OKX.AI SYSTEM STATUS ---', `Wallet connected: ${walletConnected ? 'YES' : 'NO'}`, `User registered: ${isRegisteredUser ? 'YES' : 'NO'}`, `ASP registered (GoalRush Predictor): YES (${GOALRUSH_ASP_ID}, ${GOALRUSH_ASP_STATUS})`, `Evaluator registered: ${isRegisteredEvaluator ? 'YES (Active)' : 'NO'}`, `Evaluator Stake: ${isRegisteredEvaluator ? evaluatorStaked + ' OKB' : '0 OKB'}`];
       } else {
-        output = [
-          `Command not found: '${cmd}'.`,
-          "Type 'help' for a list of available commands."
-        ];
+        output = [`Command not found: '${cmd}'.`, "Type 'help' for a list of available commands."];
       }
-      
       setTerminalHistory(prev => [...prev, ...output, '']);
       setIsTerminalLoading(false);
       setTerminalInput('');
     }, 800);
   };
-
-  const handleArbitrationVote = (vote) => {
+  const handleArbitrationVote = vote => {
     if (selectedCaseIndex === null || isResolvingCase) return;
     setIsResolvingCase(true);
     setArbitrationResult(null);
-    
     const activeCase = mockDisputes[selectedCaseIndex];
-    
     setTimeout(() => {
       const isCorrect = vote === activeCase.correctVote;
-      
       if (isCorrect) {
         setEvaluatorBounties(prev => prev + 0.25);
         setEvaluatorAccuracy(prev => {
-          return Math.min(100, Math.round(((prev * 9) + 100) / 10));
+          return Math.min(100, Math.round((prev * 9 + 100) / 10));
         });
         setArbitrationResult({
           success: true,
@@ -4964,7 +5233,7 @@ export default function App() {
         setEvaluatorSlashed(prev => prev + 1);
         setEvaluatorStaked(prev => Math.max(0, prev - 1));
         setEvaluatorAccuracy(prev => {
-          return Math.max(0, Math.round(((prev * 9) + 0) / 10));
+          return Math.max(0, Math.round((prev * 9 + 0) / 10));
         });
         setArbitrationResult({
           success: false,
@@ -4974,16 +5243,14 @@ export default function App() {
       setIsResolvingCase(false);
     }, 2000);
   };
-
-  return (
-    <div className="app-wrapper">
-      <a className="skip-link" href="#dashboard">Skip to prediction dashboard</a>
+  return <div className="app-wrapper">
+      <a className="skip-link" href="#dashboard">{t("Skip to prediction dashboard")}</a>
       <div className="bg-ambient-glow"></div>
       {/* Header / Navbar */}
       <header className="navbar">
         <div className="logo-wrap">
           <span className="logo-icon">⚽</span>
-          <h1 className="logo-text">GoalRush</h1>
+          <h1 className="logo-text">{t("GoalRush")}</h1>
         </div>
         <nav className="desktop-nav">
           {renderNavLinks(false)}
@@ -4993,79 +5260,124 @@ export default function App() {
         </div>
       </header>
 
-      {(currentView === 'dashboard' || currentView === 'leaderboard') && (
-        <>
+      {(currentView === 'dashboard' || currentView === 'leaderboard') && <>
           {/* Hackathon Hero Section */}
           <section className="hackathon-hero-container">
-            <div className="hackathon-left" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '24px', paddingRight: '20px', paddingLeft: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
-                <img
-                  src="/logo.png?v=2"
-                  alt="Goal Rush Logo"
-                  style={{
-                    height: '84px',
-                    width: 'auto',
-                    display: 'block',
-                    mixBlendMode: 'screen',
-                    filter: 'drop-shadow(0 0 12px rgba(157, 255, 0, 0.4)) contrast(1.2)'
-                  }}
-                />
-                <h1 style={{ 
-                  fontSize: 'clamp(3rem, 6vw, 5rem)', 
-                  fontWeight: 900, 
-                  margin: 0, 
-                  lineHeight: 1, 
-                  letterSpacing: '-1.5px',
-                  color: '#ffffff',
-                  textShadow: '0 0 20px rgba(157, 255, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.5)'
-                }}>
-                  GoalRush
+            <div className="hackathon-left" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          gap: '24px',
+          paddingRight: '20px',
+          paddingLeft: '16px'
+        }}>
+              <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            marginBottom: '8px'
+          }}>
+                <img src="/logo.png?v=2" alt="Goal Rush Logo" style={{
+              height: '84px',
+              width: 'auto',
+              display: 'block',
+              mixBlendMode: 'screen',
+              filter: 'drop-shadow(0 0 12px rgba(157, 255, 0, 0.4)) contrast(1.2)'
+            }} />
+                <h1 style={{
+              fontSize: 'clamp(3rem, 6vw, 5rem)',
+              fontWeight: 900,
+              margin: 0,
+              lineHeight: 1,
+              letterSpacing: '-1.5px',
+              color: '#ffffff',
+              textShadow: '0 0 20px rgba(157, 255, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.5)'
+            }}>
+                  {t("GoalRush")}
                 </h1>
               </div>
               
-              <p className="hackathon-desc" style={{ 
-                fontSize: '1.25rem', 
-                lineHeight: '1.6', 
-                color: 'rgba(255, 255, 255, 0.8)', 
-                maxWidth: '620px', 
-                margin: 0,
-                fontWeight: 400
-              }}>
-                The premier decentralized sports prediction experience on <strong style={{color: '#fff'}}>OKX X Layer</strong>. Fund a match pick through the prediction router, follow live fixtures, and play a cosmetic penalty challenge after confirmation.
+              <p className="hackathon-desc" style={{
+            fontSize: '1.25rem',
+            lineHeight: '1.6',
+            color: 'rgba(255, 255, 255, 0.8)',
+            maxWidth: '620px',
+            margin: 0,
+            fontWeight: 400
+          }}>
+                {t("The premier decentralized sports prediction experience on")} <strong style={{
+              color: '#fff'
+            }}>{t("OKX X Layer")}</strong>{t(". Fund a match pick through the prediction router, follow live fixtures, and play a cosmetic penalty challenge after confirmation.")}
               </p>
               
-              <div className="security-status-card desktop-security-card" role="note" aria-label="Protocol security status" style={{ maxWidth: '620px', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div className="security-status-icon" style={{ background: 'rgba(157, 255, 0, 0.1)', flexShrink: 0 }}><ShieldCheck size={24} style={{ color: 'var(--color-primary)' }} /></div>
-                <div style={{ flex: 1 }}>
-                  <strong style={{ fontSize: '1rem', color: '#fff', letterSpacing: '0.5px' }}>Mainnet Beta &middot; Contract Verified</strong>
-                  <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginTop: '4px', lineHeight: '1.4' }}>Verify the contract address and transaction amount in your wallet. GoalRush will never ask for a seed phrase or tell you to bypass a wallet warning.</span>
+              <div className="security-status-card desktop-security-card" role="note" aria-label="Protocol security status" style={{
+            maxWidth: '620px',
+            background: 'rgba(0,0,0,0.4)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px'
+          }}>
+                <div className="security-status-icon" style={{
+              background: 'rgba(157, 255, 0, 0.1)',
+              flexShrink: 0
+            }}><ShieldCheck size={24} style={{
+                color: 'var(--color-primary)'
+              }} /></div>
+                <div style={{
+              flex: 1
+            }}>
+                  <strong style={{
+                fontSize: '1rem',
+                color: '#fff',
+                letterSpacing: '0.5px'
+              }}>{t("Mainnet Beta · Contract Verified")}</strong>
+                  <span style={{
+                fontSize: '0.85rem',
+                color: 'rgba(255,255,255,0.5)',
+                display: 'block',
+                marginTop: '4px',
+                lineHeight: '1.4'
+              }}>{t("Verify the contract address and transaction amount in your wallet. GoalRush will never ask for a seed phrase or tell you to bypass a wallet warning.")}</span>
                 </div>
-                <a href={`https://www.okx.com/explorer/xlayer/address/${HOOK_ADDRESS}`} target="_blank" rel="noopener noreferrer" style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', fontWeight: 600, color: 'var(--color-secondary)', flexShrink: 0, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-                  View Source <ExternalLink size={14} style={{ marginLeft: '6px' }} />
+                <a href={`https://www.okx.com/explorer/xlayer/address/${HOOK_ADDRESS}`} target="_blank" rel="noopener noreferrer" style={{
+              padding: '8px 16px',
+              background: 'rgba(255,255,255,0.05)',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.1)',
+              fontWeight: 600,
+              color: 'var(--color-secondary)',
+              flexShrink: 0,
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+                  {t("View Source")} <ExternalLink size={14} style={{
+                marginLeft: '6px'
+              }} />
                 </a>
               </div>
               
               
-              <div className="hackathon-actions" style={{ marginTop: '8px' }}>
-                <button
-                  onClick={() => {
-                    document.getElementById('grush-token-hub')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="btn-primary"
-                  style={{ 
-                    border: 'none', 
-                    cursor: 'pointer', 
-                    padding: '16px 32px', 
-                    fontSize: '1.15rem', 
-                    fontWeight: 800, 
-                    borderRadius: '16px',
-                    boxShadow: '0 0 30px rgba(157, 255, 0, 0.3)',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                  <Play size={20} fill="currentColor" /> Buy GRUSH Token
+              <div className="hackathon-actions" style={{
+            marginTop: '8px'
+          }}>
+                <button onClick={() => {
+              document.getElementById('grush-token-hub')?.scrollIntoView({
+                behavior: 'smooth'
+              });
+            }} className="btn-primary" style={{
+              border: 'none',
+              cursor: 'pointer',
+              padding: '16px 32px',
+              fontSize: '1.15rem',
+              fontWeight: 800,
+              borderRadius: '16px',
+              boxShadow: '0 0 30px rgba(157, 255, 0, 0.3)',
+              transition: 'all 0.3s ease'
+            }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                  <Play size={20} fill="currentColor" /> {t("Buy GRUSH Token")}
                 </button>
               </div>
             </div>
@@ -5088,23 +5400,31 @@ export default function App() {
           {/* Interactive Dashboard / Simulator */}
           <section id="dashboard" className="dashboard-grid">
             {/* Left Side: Soccer Pitch Simulation */}
-            <div className="card-bezel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="card-bezel" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
               <div>
                 <h3 className="panel-title">
-                  <TerminalIcon size={20} style={{ color: 'var(--color-primary)' }} />
-                  GoalRush Pitch Simulator
+                  <TerminalIcon size={20} style={{
+                color: 'var(--color-primary)'
+              }} />
+                  {t("GoalRush Pitch Simulator")}
                 </h3>
-                <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '12px' }}>
-                  Submit a funded prediction through the router, then play the cosmetic shootout while the on-chain result remains verifiable.
+                <p style={{
+              fontSize: '0.85rem',
+              color: 'rgba(255,255,255,0.5)',
+              marginBottom: '12px'
+            }}>
+                  {t("Submit a funded prediction through the router, then play the cosmetic shootout while the on-chain result remains verifiable.")}
                 </p>
               </div>
 
               <div className="pitch-container">
-                {shootoutStatus && (
-                  <div className="shootout-overlay">
+                {shootoutStatus && <div className="shootout-overlay">
                     <div className="shootout-text-main">{shootoutStatus}</div>
-                  </div>
-                )}
+                  </div>}
                 <div className="pitch-lines"></div>
                 <div className="pitch-midline"></div>
                 <div className="pitch-midcircle"></div>
@@ -5115,41 +5435,44 @@ export default function App() {
 
                 {/* Score overlay */}
                 <div className="pitch-score-overlay">
-                  <span style={{ color: 'var(--color-primary)' }}>SWAPPER: {userScore}</span>
+                  <span style={{
+                color: 'var(--color-primary)'
+              }}>{t("SWAPPER:")} {userScore}</span>
                   <span>vs</span>
-                  <span style={{ color: 'var(--color-danger)' }}>GK: {opponentScore}</span>
+                  <span style={{
+                color: 'var(--color-danger)'
+              }}>{t("GK:")} {opponentScore}</span>
                 </div>
 
                 {/* Goal Flash */}
                 <div className={`pitch-goal-flash ${showGoalFlash ? 'active' : ''}`}>
-                  <div className="pitch-goal-text">GOAL!!</div>
+                  <div className="pitch-goal-text">{t("GOAL!!")}</div>
                 </div>
 
-                <div
-                  className="pitch-ball"
-                  style={{
-                    left: `${ballPos.x}%`,
-                    top: `${ballPos.y}%`,
-                    transform: 'translate(-50%, -50%)',
-                    animation: isStriking ? 'spin-slow 0.4s linear infinite' : 'none'
-                  }}
-                >
+                <div className="pitch-ball" style={{
+              left: `${ballPos.x}%`,
+              top: `${ballPos.y}%`,
+              transform: 'translate(-50%, -50%)',
+              animation: isStriking ? 'spin-slow 0.4s linear infinite' : 'none'
+            }}>
                   ⚽
                 </div>
 
                 {/* Goalkeeper */}
-                <div
-                  className="pitch-player opponent"
-                  style={{ left: `${gkPos.x}%`, top: `${gkPos.y}%`, transform: 'translate(-50%, -50%)' }}
-                >
+                <div className="pitch-player opponent" style={{
+              left: `${gkPos.x}%`,
+              top: `${gkPos.y}%`,
+              transform: 'translate(-50%, -50%)'
+            }}>
                   GK
                 </div>
 
                 {/* Swapper / Player */}
-                <div
-                  className="pitch-player"
-                  style={{ left: `${playerPos.x}%`, top: `${playerPos.y}%`, transform: 'translate(-50%, -50%)' }}
-                >
+                <div className="pitch-player" style={{
+              left: `${playerPos.x}%`,
+              top: `${playerPos.y}%`,
+              transform: 'translate(-50%, -50%)'
+            }}>
                   P
                 </div>
               </div>
@@ -5157,99 +5480,139 @@ export default function App() {
               {/* Swap Box */}
               <form className="swap-widget" onSubmit={handleSwapAndStrike}>
                 {/* Token Selector */}
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedToken('OKB');
-                      setSwapAmount('0.001');
-                    }}
-                    className={`btn-secondary ${selectedToken === 'OKB' ? 'active' : ''}`}
-                    style={{
-                      flex: 1,
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      fontSize: '0.8rem',
-                      border: `1px solid ${selectedToken === 'OKB' ? 'var(--color-primary)' : 'rgba(255,255,255,0.08)'}`,
-                      background: selectedToken === 'OKB' ? 'rgba(157, 255, 0, 0.08)' : 'rgba(255,255,255,0.03)',
-                      color: selectedToken === 'OKB' ? 'var(--color-primary)' : 'rgba(255,255,255,0.6)',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                    disabled={isStriking}
-                  >
-                    native OKB
+                <div style={{
+              display: 'flex',
+              gap: '8px',
+              marginBottom: '16px'
+            }}>
+                  <button type="button" onClick={() => {
+                setSelectedToken('OKB');
+                setSwapAmount('0.001');
+              }} className={`btn-secondary ${selectedToken === 'OKB' ? 'active' : ''}`} style={{
+                flex: 1,
+                padding: '8px 12px',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                border: `1px solid ${selectedToken === 'OKB' ? 'var(--color-primary)' : 'rgba(255,255,255,0.08)'}`,
+                background: selectedToken === 'OKB' ? 'rgba(157, 255, 0, 0.08)' : 'rgba(255,255,255,0.03)',
+                color: selectedToken === 'OKB' ? 'var(--color-primary)' : 'rgba(255,255,255,0.6)',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }} disabled={isStriking}>
+                    {t("native OKB")}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedToken('GRUSH');
-                      setSwapAmount('100');
-                    }}
-                    className={`btn-secondary ${selectedToken === 'GRUSH' ? 'active' : ''}`}
-                    style={{
-                      flex: 1,
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      fontSize: '0.8rem',
-                      border: `1px solid ${selectedToken === 'GRUSH' ? 'var(--color-primary)' : 'rgba(255,255,255,0.08)'}`,
-                      background: selectedToken === 'GRUSH' ? 'rgba(157, 255, 0, 0.08)' : 'rgba(255,255,255,0.03)',
-                      color: selectedToken === 'GRUSH' ? 'var(--color-primary)' : 'rgba(255,255,255,0.6)',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                    disabled={isStriking}
-                  >
-                    GRUSH Token
+                  <button type="button" onClick={() => {
+                setSelectedToken('GRUSH');
+                setSwapAmount('100');
+              }} className={`btn-secondary ${selectedToken === 'GRUSH' ? 'active' : ''}`} style={{
+                flex: 1,
+                padding: '8px 12px',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                border: `1px solid ${selectedToken === 'GRUSH' ? 'var(--color-primary)' : 'rgba(255,255,255,0.08)'}`,
+                background: selectedToken === 'GRUSH' ? 'rgba(157, 255, 0, 0.08)' : 'rgba(255,255,255,0.03)',
+                color: selectedToken === 'GRUSH' ? 'var(--color-primary)' : 'rgba(255,255,255,0.6)',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }} disabled={isStriking}>
+                    {t("GRUSH Token")}
                   </button>
                 </div>
 
                 <div className="swap-input-row">
                   <div className="swap-input-container">
-                    <div className="swap-label">Prediction Size (Ticket Cost)</div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <input
-                        type="number"
-                        value={swapAmount}
-                        onChange={(e) => setSwapAmount(e.target.value)}
-                        className="swap-input"
-                        disabled={isStriking}
-                        step={selectedToken === 'GRUSH' ? '1' : '0.0001'}
-                        min={selectedToken === 'GRUSH' ? '1' : '0.0001'}
-                      />
-                      <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fff' }}>{selectedToken}</span>
+                    <div className="swap-label">{t("Prediction Size (Ticket Cost)")}</div>
+                    <div style={{
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>
+                      <input type="number" value={swapAmount} onChange={e => setSwapAmount(e.target.value)} className="swap-input" disabled={isStriking} step={selectedToken === 'GRUSH' ? '1' : '0.0001'} min={selectedToken === 'GRUSH' ? '1' : '0.0001'} />
+                      <span style={{
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    color: '#fff'
+                  }}>{selectedToken}</span>
                     </div>
-                    <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
-                      {selectedToken === 'GRUSH' ? (
-                        <>
-                          <button type="button" onClick={() => setSwapAmount('10')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>10 GRUSH</button>
-                          <button type="button" onClick={() => setSwapAmount('100')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>100 GRUSH</button>
-                          <button type="button" onClick={() => setSwapAmount('1000')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>1,000 GRUSH</button>
-                        </>
-                      ) : (
-                        <>
-                          <button type="button" onClick={() => setSwapAmount('0.0001')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>0.0001 OKB</button>
-                          <button type="button" onClick={() => setSwapAmount('0.001')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>0.001 OKB</button>
-                          <button type="button" onClick={() => setSwapAmount('0.01')} className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.65rem', minWidth: 'auto', cursor: 'pointer' }} disabled={isStriking}>0.01 OKB</button>
-                        </>
-                      )}
+                    <div style={{
+                  display: 'flex',
+                  gap: '6px',
+                  marginTop: '8px'
+                }}>
+                      {selectedToken === 'GRUSH' ? <>
+                          <button type="button" onClick={() => setSwapAmount('10')} className="btn-secondary" style={{
+                      padding: '2px 8px',
+                      fontSize: '0.65rem',
+                      minWidth: 'auto',
+                      cursor: 'pointer'
+                    }} disabled={isStriking}>{t("10 GRUSH")}</button>
+                          <button type="button" onClick={() => setSwapAmount('100')} className="btn-secondary" style={{
+                      padding: '2px 8px',
+                      fontSize: '0.65rem',
+                      minWidth: 'auto',
+                      cursor: 'pointer'
+                    }} disabled={isStriking}>{t("100 GRUSH")}</button>
+                          <button type="button" onClick={() => setSwapAmount('1000')} className="btn-secondary" style={{
+                      padding: '2px 8px',
+                      fontSize: '0.65rem',
+                      minWidth: 'auto',
+                      cursor: 'pointer'
+                    }} disabled={isStriking}>{t("1,000 GRUSH")}</button>
+                        </> : <>
+                          <button type="button" onClick={() => setSwapAmount('0.0001')} className="btn-secondary" style={{
+                      padding: '2px 8px',
+                      fontSize: '0.65rem',
+                      minWidth: 'auto',
+                      cursor: 'pointer'
+                    }} disabled={isStriking}>{t("0.0001 OKB")}</button>
+                          <button type="button" onClick={() => setSwapAmount('0.001')} className="btn-secondary" style={{
+                      padding: '2px 8px',
+                      fontSize: '0.65rem',
+                      minWidth: 'auto',
+                      cursor: 'pointer'
+                    }} disabled={isStriking}>{t("0.001 OKB")}</button>
+                          <button type="button" onClick={() => setSwapAmount('0.01')} className="btn-secondary" style={{
+                      padding: '2px 8px',
+                      fontSize: '0.65rem',
+                      minWidth: 'auto',
+                      cursor: 'pointer'
+                    }} disabled={isStriking}>{t("0.01 OKB")}</button>
+                        </>}
                     </div>
                   </div>
 
                   <div className="swap-input-container">
-                    <div className="swap-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                      <span>Jackpot Share Weight</span>
-                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: 'normal' }}>
-                        100% of prediction tokens fund the match jackpot pool
+                    <div className="swap-label" style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  width: '100%'
+                }}>
+                      <span>{t("Jackpot Share Weight")}</span>
+                      <span style={{
+                    fontSize: '0.7rem',
+                    color: 'rgba(255,255,255,0.4)',
+                    fontWeight: 'normal'
+                  }}>
+                        {t("100% of prediction tokens fund the match jackpot pool")}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span className="swap-input" style={{ opacity: 0.8 }}>
+                    <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                      <span className="swap-input" style={{
+                    opacity: 0.8
+                  }}>
                         {parseFloat(swapAmount) ? parseFloat(swapAmount).toFixed(selectedToken === 'GRUSH' ? 0 : 4) : '0'}
                       </span>
-                      <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-primary)' }}>{selectedToken}</span>
+                      <span style={{
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    color: 'var(--color-primary)'
+                  }}>{selectedToken}</span>
                     </div>
                   </div>
                 </div>
@@ -5261,490 +5624,629 @@ export default function App() {
                     • Resolved + user won + already claimed → show quiet ✅ badge
                     • Resolved + user lost → nothing shown (no clutter, no shame)
                     • No prediction / wallet not connected → nothing shown
-                ─────────────────────────────────────────────────────────────── */}
-                {isSelectedMatchOnChain && walletConnected && userPredictions && activeMatch.resolved && activeMatch.winner > 0 && (parseFloat(userPredictions[activeMatch.winner]?.okbAmount) > 0 || parseFloat(userPredictions[activeMatch.winner]?.grushAmount) > 0) && (
-                  <div style={{
-                    marginTop: '14px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px'
-                  }}>
+                 ─────────────────────────────────────────────────────────────── */}
+                {isSelectedMatchOnChain && walletConnected && userPredictions && activeMatch.resolved && activeMatch.winner > 0 && (parseFloat(userPredictions[activeMatch.winner]?.okbAmount) > 0 || parseFloat(userPredictions[activeMatch.winner]?.grushAmount) > 0) && <div style={{
+              marginTop: '14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}>
                     {/* OKB Claim */}
-                    {parseFloat(userPredictions[activeMatch.winner]?.okbAmount) > 0 && (
-                      userPredictions[activeMatch.winner]?.okbClaimed ? (
-                        <div style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                          background: 'rgba(157, 255, 0, 0.06)', border: '1px solid rgba(157, 255, 0, 0.2)',
-                          borderRadius: '10px', padding: '10px 14px',
-                          fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-primary)'
-                        }}>
-                          ✅ OKB Jackpot claimed
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          id="claim-okb-jackpot-btn"
-                          onClick={handleClaimJackpot}
-                          className="swap-btn"
-                          style={{
-                            background: 'linear-gradient(135deg, #00e5ff 0%, #9dff00 100%)',
-                            color: '#000', fontWeight: 800, fontSize: '1rem',
-                            boxShadow: '0 0 20px rgba(0, 229, 255, 0.35)',
-                            letterSpacing: '0.3px'
-                          }}
-                        >
-                          💰 Claim OKB Jackpot · {parseFloat(userPredictions[activeMatch.winner]?.okbAmount).toFixed(4)} OKB
-                        </button>
-                      )
-                    )}
+                    {parseFloat(userPredictions[activeMatch.winner]?.okbAmount) > 0 && (userPredictions[activeMatch.winner]?.okbClaimed ? <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                background: 'rgba(157, 255, 0, 0.06)',
+                border: '1px solid rgba(157, 255, 0, 0.2)',
+                borderRadius: '10px',
+                padding: '10px 14px',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                color: 'var(--color-primary)'
+              }}>
+                          {t("✅ OKB Jackpot claimed")}
+                        </div> : <button type="button" id="claim-okb-jackpot-btn" onClick={handleClaimJackpot} className="swap-btn" style={{
+                background: 'linear-gradient(135deg, #00e5ff 0%, #9dff00 100%)',
+                color: '#000',
+                fontWeight: 800,
+                fontSize: '1rem',
+                boxShadow: '0 0 20px rgba(0, 229, 255, 0.35)',
+                letterSpacing: '0.3px'
+              }}>
+                          {t("💰 Claim OKB Jackpot ·")} {parseFloat(userPredictions[activeMatch.winner]?.okbAmount).toFixed(4)} {t("OKB")}
+                        </button>)}
                     {/* GRUSH Claim */}
-                    {parseFloat(userPredictions[activeMatch.winner]?.grushAmount) > 0 && (
-                      userPredictions[activeMatch.winner]?.grushClaimed ? (
-                        <div style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                          background: 'rgba(0, 229, 255, 0.06)', border: '1px solid rgba(0, 229, 255, 0.2)',
-                          borderRadius: '10px', padding: '10px 14px',
-                          fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-secondary)'
-                        }}>
-                          ✅ GRUSH Jackpot claimed
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          id="claim-grush-jackpot-btn"
-                          onClick={handleClaimGrushJackpot}
-                          className="swap-btn"
-                          style={{
-                            background: 'linear-gradient(135deg, #9dff00 0%, #c6ff00 100%)',
-                            color: '#000', fontWeight: 800, fontSize: '1rem',
-                            boxShadow: '0 0 20px rgba(157, 255, 0, 0.35)',
-                            letterSpacing: '0.3px'
-                          }}
-                        >
-                          ⚽ Claim GRUSH Jackpot · {parseFloat(userPredictions[activeMatch.winner]?.grushAmount).toFixed(0)} GRUSH
-                        </button>
-                      )
-                    )}
-                  </div>
-                )}
+                    {parseFloat(userPredictions[activeMatch.winner]?.grushAmount) > 0 && (userPredictions[activeMatch.winner]?.grushClaimed ? <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                background: 'rgba(0, 229, 255, 0.06)',
+                border: '1px solid rgba(0, 229, 255, 0.2)',
+                borderRadius: '10px',
+                padding: '10px 14px',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                color: 'var(--color-secondary)'
+              }}>
+                          {t("✅ GRUSH Jackpot claimed")}
+                        </div> : <button type="button" id="claim-grush-jackpot-btn" onClick={handleClaimGrushJackpot} className="swap-btn" style={{
+                background: 'linear-gradient(135deg, #9dff00 0%, #c6ff00 100%)',
+                color: '#000',
+                fontWeight: 800,
+                fontSize: '1rem',
+                boxShadow: '0 0 20px rgba(157, 255, 0, 0.35)',
+                letterSpacing: '0.3px'
+              }}>
+                          {t("⚽ Claim GRUSH Jackpot ·")} {parseFloat(userPredictions[activeMatch.winner]?.grushAmount).toFixed(0)} {t("GRUSH")}
+                        </button>)}
+                  </div>}
 
 
                 {/* ─── CHECK PAST MATCH CLAIMS ─── */}
-                {walletConnected && (
-                  <div style={{ marginTop: '14px' }}>
-                    <button
-                      type="button"
-                      onClick={() => setShowPastClaimChecker(p => !p)}
-                      style={{
-                        width: '100%', background: 'none', border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '8px', padding: '10px 14px', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        color: 'rgba(255,255,255,0.55)', fontSize: '0.8rem', fontWeight: 600,
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <span>🔍 Check Past Match Claims</span>
-                      <span style={{ transform: showPastClaimChecker ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>▼</span>
+                {walletConnected && <div style={{
+              marginTop: '14px'
+            }}>
+                    <button type="button" onClick={() => setShowPastClaimChecker(p => !p)} style={{
+                width: '100%',
+                background: 'none',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '8px',
+                padding: '10px 14px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                color: 'rgba(255,255,255,0.55)',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                transition: 'all 0.2s'
+              }}>
+                      <span>{t("🔍 Check Past Match Claims")}</span>
+                      <span style={{
+                  transform: showPastClaimChecker ? 'rotate(180deg)' : 'rotate(0)',
+                  transition: 'transform 0.2s'
+                }}>▼</span>
                     </button>
 
-                    {showPastClaimChecker && (
-                      <div style={{
-                        marginTop: '8px', padding: '14px',
-                        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
-                        borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '10px'
-                      }}>
-                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
-                          Select a past match or enter its ID to check your prediction & claim status:
+                    {showPastClaimChecker && <div style={{
+                marginTop: '8px',
+                padding: '14px',
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '10px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
+              }}>
+                        <div style={{
+                  fontSize: '0.75rem',
+                  color: 'rgba(255,255,255,0.5)'
+                }}>
+                          {t("Select a past match or enter its ID to check your prediction & claim status:")}
                         </div>
 
                         {/* Quick-select past matches */}
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                          {knownPastMatches.map(pm => (
-                            <button
-                              key={pm.matchId}
-                              type="button"
-                              onClick={() => { setPastMatchInput(pm.matchId); handleCheckPastClaim(pm.matchId); }}
-                              className="btn-secondary"
-                              style={{ padding: '4px 10px', fontSize: '0.7rem', cursor: 'pointer', minWidth: 'auto' }}
-                            >
+                        <div style={{
+                  display: 'flex',
+                  gap: '6px',
+                  flexWrap: 'wrap'
+                }}>
+                          {knownPastMatches.map(pm => <button key={pm.matchId} type="button" onClick={() => {
+                    setPastMatchInput(pm.matchId);
+                    handleCheckPastClaim(pm.matchId);
+                  }} className="btn-secondary" style={{
+                    padding: '4px 10px',
+                    fontSize: '0.7rem',
+                    cursor: 'pointer',
+                    minWidth: 'auto'
+                  }}>
                               {pm.label}
-                            </button>
-                          ))}
+                            </button>)}
                         </div>
 
                         {/* Manual ID input */}
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <input
-                            type="text"
-                            value={pastMatchInput}
-                            onChange={e => setPastMatchInput(e.target.value)}
-                            placeholder="Match ID (e.g. espn_760432)"
-                            style={{
-                              flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
-                              borderRadius: '6px', padding: '8px 10px', color: '#fff', fontSize: '0.78rem',
-                              fontFamily: 'var(--font-mono)', outline: 'none'
-                            }}
-                            onKeyDown={e => e.key === 'Enter' && handleCheckPastClaim(pastMatchInput)}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleCheckPastClaim(pastMatchInput)}
-                            className="btn-primary"
-                            disabled={pastClaimLoading}
-                            style={{ padding: '8px 14px', fontSize: '0.78rem', minWidth: 'auto' }}
-                          >
+                        <div style={{
+                  display: 'flex',
+                  gap: '6px'
+                }}>
+                          <input type="text" value={pastMatchInput} onChange={e => setPastMatchInput(e.target.value)} placeholder={t("Match ID (e.g. espn_760432)")} style={{
+                    flex: 1,
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '6px',
+                    padding: '8px 10px',
+                    color: '#fff',
+                    fontSize: '0.78rem',
+                    fontFamily: 'var(--font-mono)',
+                    outline: 'none'
+                  }} onKeyDown={e => e.key === 'Enter' && handleCheckPastClaim(pastMatchInput)} />
+                          <button type="button" onClick={() => handleCheckPastClaim(pastMatchInput)} className="btn-primary" disabled={pastClaimLoading} style={{
+                    padding: '8px 14px',
+                    fontSize: '0.78rem',
+                    minWidth: 'auto'
+                  }}>
                             {pastClaimLoading ? '...' : 'Check'}
                           </button>
                         </div>
 
                         {/* Result display */}
-                        {pastClaimResult && (
-                          <div style={{
-                            padding: '12px', borderRadius: '8px',
-                            background: pastClaimResult.error ? 'rgba(255,50,50,0.06)' : 'rgba(255,255,255,0.03)',
-                            border: `1px solid ${pastClaimResult.error ? 'rgba(255,50,50,0.2)' : 'rgba(255,255,255,0.1)'}`,
-                            fontSize: '0.82rem'
-                          }}>
-                            {pastClaimResult.error ? (
-                              <div style={{ color: 'rgba(255,100,100,0.9)' }}>{pastClaimResult.error}</div>
-                            ) : (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <div style={{ color: '#fff', fontWeight: 700 }}>
+                        {pastClaimResult && <div style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  background: pastClaimResult.error ? 'rgba(255,50,50,0.06)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${pastClaimResult.error ? 'rgba(255,50,50,0.2)' : 'rgba(255,255,255,0.1)'}`,
+                  fontSize: '0.82rem'
+                }}>
+                            {pastClaimResult.error ? <div style={{
+                    color: 'rgba(255,100,100,0.9)'
+                  }}>{pastClaimResult.error}</div> : <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px'
+                  }}>
+                                <div style={{
+                      color: '#fff',
+                      fontWeight: 700
+                    }}>
                                   {pastClaimResult.teamA} vs {pastClaimResult.teamB}
                                 </div>
-                                <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem' }}>
-                                  Status: {pastClaimResult.resolved
-                                    ? <span style={{ color: 'var(--color-primary)' }}>Resolved · Winner: {pastClaimResult.winner === 1 ? pastClaimResult.teamA : pastClaimResult.winner === 2 ? pastClaimResult.teamB : pastClaimResult.winner === 3 ? 'Draw' : 'None'}</span>
-                                    : <span style={{ color: '#ffb300' }}>Not resolved yet</span>
-                                  }
+                                <div style={{
+                      color: 'rgba(255,255,255,0.6)',
+                      fontSize: '0.78rem'
+                    }}>
+                                  {t("Status:")} {pastClaimResult.resolved ? <span style={{
+                        color: 'var(--color-primary)'
+                      }}>{t("Resolved · Winner:")} {pastClaimResult.winner === 1 ? pastClaimResult.teamA : pastClaimResult.winner === 2 ? pastClaimResult.teamB : pastClaimResult.winner === 3 ? 'Draw' : 'None'}</span> : <span style={{
+                        color: '#ffb300'
+                      }}>{t("Not resolved yet")}</span>}
                                 </div>
-                                <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem' }}>
-                                  Jackpot: {parseFloat(pastClaimResult.jackpot).toFixed(4)} OKB
+                                <div style={{
+                      color: 'rgba(255,255,255,0.6)',
+                      fontSize: '0.78rem'
+                    }}>
+                                  {t("Jackpot:")} {parseFloat(pastClaimResult.jackpot).toFixed(4)} {t("OKB")}
                                 </div>
 
-                                {!pastClaimResult.hasPrediction ? (
-                                  <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.78rem', fontStyle: 'italic' }}>
-                                    No prediction found from your wallet on this match.
-                                  </div>
-                                ) : (
-                                  <>
-                                    <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.78rem' }}>
-                                      Your pick: <strong style={{ color: '#fff' }}>{pastClaimResult.predictedTeam === 1 ? pastClaimResult.teamA : pastClaimResult.predictedTeam === 2 ? pastClaimResult.teamB : 'Draw'}</strong>
+                                {!pastClaimResult.hasPrediction ? <div style={{
+                      color: 'rgba(255,255,255,0.45)',
+                      fontSize: '0.78rem',
+                      fontStyle: 'italic'
+                    }}>
+                                    {t("No prediction found from your wallet on this match.")}
+                                  </div> : <>
+                                    <div style={{
+                        color: 'rgba(255,255,255,0.7)',
+                        fontSize: '0.78rem'
+                      }}>
+                                      {t("Your pick:")} <strong style={{
+                          color: '#fff'
+                        }}>{pastClaimResult.predictedTeam === 1 ? pastClaimResult.teamA : pastClaimResult.predictedTeam === 2 ? pastClaimResult.teamB : 'Draw'}</strong>
                                       {parseFloat(pastClaimResult.okbAmount) > 0 && ` · ${parseFloat(pastClaimResult.okbAmount).toFixed(4)} OKB`}
                                       {parseFloat(pastClaimResult.grushAmount) > 0 && ` · ${parseFloat(pastClaimResult.grushAmount).toFixed(0)} GRUSH`}
                                     </div>
 
-                                    {pastClaimResult.isWinner ? (
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        {parseFloat(pastClaimResult.okbAmount) > 0 && (
-                                          pastClaimResult.okbClaimed
-                                            ? <div style={{ color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.8rem' }}>✅ OKB Jackpot already claimed</div>
-                                            : <button type="button" onClick={() => handleClaimPastOkb(pastClaimResult.numericId)} className="swap-btn" style={{ background: 'linear-gradient(135deg, #00e5ff, #9dff00)', color: '#000', fontWeight: 800, fontSize: '0.9rem' }}>💰 Claim OKB Jackpot</button>
-                                        )}
-                                        {parseFloat(pastClaimResult.grushAmount) > 0 && (
-                                          pastClaimResult.grushClaimed
-                                            ? <div style={{ color: 'var(--color-secondary)', fontWeight: 600, fontSize: '0.8rem' }}>✅ GRUSH Jackpot already claimed</div>
-                                            : <button type="button" onClick={() => handleClaimPastGrush(pastClaimResult.numericId)} className="swap-btn" style={{ background: 'linear-gradient(135deg, #9dff00, #c6ff00)', color: '#000', fontWeight: 800, fontSize: '0.9rem' }}>⚽ Claim GRUSH Jackpot</button>
-                                        )}
-                                      </div>
-                                    ) : pastClaimResult.resolved ? (
-                                      <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem' }}>
-                                        No winning prediction on this match.
-                                      </div>
-                                    ) : null}
-                                  </>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                                    {pastClaimResult.isWinner ? <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px'
+                      }}>
+                                        {parseFloat(pastClaimResult.okbAmount) > 0 && (pastClaimResult.okbClaimed ? <div style={{
+                          color: 'var(--color-primary)',
+                          fontWeight: 600,
+                          fontSize: '0.8rem'
+                        }}>{t("✅ OKB Jackpot already claimed")}</div> : <button type="button" onClick={() => handleClaimPastOkb(pastClaimResult.numericId)} className="swap-btn" style={{
+                          background: 'linear-gradient(135deg, #00e5ff, #9dff00)',
+                          color: '#000',
+                          fontWeight: 800,
+                          fontSize: '0.9rem'
+                        }}>{t("💰 Claim OKB Jackpot")}</button>)}
+                                        {parseFloat(pastClaimResult.grushAmount) > 0 && (pastClaimResult.grushClaimed ? <div style={{
+                          color: 'var(--color-secondary)',
+                          fontWeight: 600,
+                          fontSize: '0.8rem'
+                        }}>{t("✅ GRUSH Jackpot already claimed")}</div> : <button type="button" onClick={() => handleClaimPastGrush(pastClaimResult.numericId)} className="swap-btn" style={{
+                          background: 'linear-gradient(135deg, #9dff00, #c6ff00)',
+                          color: '#000',
+                          fontWeight: 800,
+                          fontSize: '0.9rem'
+                        }}>{t("⚽ Claim GRUSH Jackpot")}</button>)}
+                                      </div> : pastClaimResult.resolved ? <div style={{
+                        color: 'rgba(255,255,255,0.4)',
+                        fontSize: '0.78rem'
+                      }}>
+                                        {t("No winning prediction on this match.")}
+                                      </div> : null}
+                                  </>}
+                              </div>}
+                          </div>}
+                      </div>}
+                  </div>}
 
-                {typeof activeMatch.id === 'string' && activeMatch.id.startsWith('api-') ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+                {typeof activeMatch.id === 'string' && activeMatch.id.startsWith('api-') ? <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              marginTop: '12px'
+            }}>
                     <div style={{
-                      background: 'rgba(0, 229, 255, 0.04)',
-                      border: '1px solid rgba(0, 229, 255, 0.25)',
-                      borderRadius: '12px',
-                      padding: '16px',
-                      textAlign: 'center'
-                    }}>
-                      <h4 style={{ color: 'var(--color-secondary)', margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 700 }}>🌍 REAL-TIME LIVE TRACKING</h4>
-                      <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.85rem', margin: 0 }}>
-                        This match is a live fixture fetched in real-time from the football API.
+                background: 'rgba(0, 229, 255, 0.04)',
+                border: '1px solid rgba(0, 229, 255, 0.25)',
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center'
+              }}>
+                      <h4 style={{
+                  color: 'var(--color-secondary)',
+                  margin: '0 0 8px 0',
+                  fontSize: '1rem',
+                  fontWeight: 700
+                }}>{t("🌍 REAL-TIME LIVE TRACKING")}</h4>
+                      <p style={{
+                  color: 'rgba(255, 255, 255, 0.85)',
+                  fontSize: '0.85rem',
+                  margin: 0
+                }}>
+                        {t("This match is a live fixture fetched in real-time from the football API.")}
                       </p>
-                      <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem', marginTop: '8px', marginBottom: 0 }}>
-                        Predictions and shootout games are available only on contract-active World Cup matches.
+                      <p style={{
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  fontSize: '0.75rem',
+                  marginTop: '8px',
+                  marginBottom: 0
+                }}>
+                        {t("Predictions and shootout games are available only on contract-active World Cup matches.")}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (activeOnChainMatchRef.current) {
-                          handleSelectMatchUI(activeOnChainMatchRef.current);
-                        } else {
-                          handleSelectMatchUI({ id: 1, teamA: 'Canada', teamB: 'Bosnia & Herzegovina' });
-                        }
-                      }}
-                      className="swap-btn"
-                      style={{ background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
-                    >
-                      Switch to Active Prediction Match ⚽
+                    <button type="button" onClick={() => {
+                if (activeOnChainMatchRef.current) {
+                  handleSelectMatchUI(activeOnChainMatchRef.current);
+                } else {
+                  handleSelectMatchUI({
+                    id: 1,
+                    teamA: 'Canada',
+                    teamB: 'Bosnia & Herzegovina'
+                  });
+                }
+              }} className="swap-btn" style={{
+                background: 'var(--color-primary)',
+                color: '#000',
+                fontWeight: 'bold'
+              }}>
+                      {t("Switch to Active Prediction Match ⚽")}
                     </button>
-                  </div>
-                ) : (activeMatch.resolved || activeMatch.minute === 'FT' || (isSelectedMatchOnChain && activeMatch.resolved)) ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+                  </div> : activeMatch.resolved || activeMatch.minute === 'FT' || isSelectedMatchOnChain && activeMatch.resolved ? <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              marginTop: '12px'
+            }}>
                       <div style={{
-                        background: 'rgba(157, 255, 0, 0.04)',
-                        border: '1px solid rgba(157, 255, 0, 0.25)',
-                        borderRadius: '12px',
-                        padding: '16px',
-                        textAlign: 'center'
-                      }}>
-                        <h4 style={{ color: 'var(--color-primary)', margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 700 }}>🏆 MATCH STATUS</h4>
-                        <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.85rem', margin: 0 }}>
+                background: 'rgba(157, 255, 0, 0.04)',
+                border: '1px solid rgba(157, 255, 0, 0.25)',
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center'
+              }}>
+                        <h4 style={{
+                  color: 'var(--color-primary)',
+                  margin: '0 0 8px 0',
+                  fontSize: '1rem',
+                  fontWeight: 700
+                }}>{t("🏆 MATCH STATUS")}</h4>
+                        <p style={{
+                  color: 'rgba(255, 255, 255, 0.85)',
+                  fontSize: '0.85rem',
+                  margin: 0
+                }}>
                           <strong>{activeMatch.teamA}</strong> {activeMatch.scoreA ?? '?'} – {activeMatch.scoreB ?? '?'} <strong>{activeMatch.teamB}</strong>
                         </p>
-                        <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.8rem', marginTop: '6px', marginBottom: 0 }}>
-                          Result: <strong style={{ color: 'var(--color-secondary)' }}>
+                        <p style={{
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  fontSize: '0.8rem',
+                  marginTop: '6px',
+                  marginBottom: 0
+                }}>
+                          {t("Result:")} <strong style={{
+                    color: 'var(--color-secondary)'
+                  }}>
                             {(() => {
-                              if (isSelectedMatchOnChain) {
-                                if (!activeMatch.resolved) return 'Pending Resolution';
-                                return activeMatch.winner === 1 
-                                  ? `${activeMatch.teamA} Wins` 
-                                  : activeMatch.winner === 2 
-                                    ? `${activeMatch.teamB} Wins` 
-                                    : 'Draw';
-                              }
-                              if (activeMatch.scoreA > activeMatch.scoreB) {
-                                return `${activeMatch.teamA} Wins`;
-                              } else if (activeMatch.scoreB > activeMatch.scoreA) {
-                                return `${activeMatch.teamB} Wins`;
-                              } else {
-                                return 'Draw';
-                              }
-                            })()}
+                      if (isSelectedMatchOnChain) {
+                        if (!activeMatch.resolved) return 'Pending Resolution';
+                        return activeMatch.winner === 1 ? `${activeMatch.teamA} Wins` : activeMatch.winner === 2 ? `${activeMatch.teamB} Wins` : 'Draw';
+                      }
+                      if (activeMatch.scoreA > activeMatch.scoreB) {
+                        return `${activeMatch.teamA} Wins`;
+                      } else if (activeMatch.scoreB > activeMatch.scoreA) {
+                        return `${activeMatch.teamB} Wins`;
+                      } else {
+                        return 'Draw';
+                      }
+                    })()}
                           </strong>
                         </p>
-                        <p style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.72rem', marginTop: '8px', marginBottom: 0 }}>
-                          {isSelectedMatchOnChain 
-                            ? `On-chain Match · Jackpot: ${jackpot.toFixed(4)} OKB`
-                            : 'This is a local simulation match. On-chain claims require the contract-active match.'
-                          }
+                        <p style={{
+                  color: 'rgba(255, 255, 255, 0.4)',
+                  fontSize: '0.72rem',
+                  marginTop: '8px',
+                  marginBottom: 0
+                }}>
+                          {isSelectedMatchOnChain ? `On-chain Match · Jackpot: ${jackpot.toFixed(4)} OKB` : 'This is a local simulation match. On-chain claims require the contract-active match.'}
                         </p>
                       </div>
                       {/* Claim buttons handled by winner-only panel above */}
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // Find a live match to switch to
-                        const liveM = liveMatchesRef.current.find(m => m.isLive && m.minute !== 'FT');
-                        if (liveM) {
-                          handleSelectMatchUI(liveM);
-                        } else if (activeOnChainMatchRef.current) {
-                          handleSelectMatchUI(activeOnChainMatchRef.current);
-                        }
-                      }}
-                      className="swap-btn"
-                      style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.15)' }}
-                    >
-                      Switch to Live Match ⚽
+                    <button type="button" onClick={() => {
+                // Find a live match to switch to
+                const liveM = liveMatchesRef.current.find(m => m.isLive && m.minute !== 'FT');
+                if (liveM) {
+                  handleSelectMatchUI(liveM);
+                } else if (activeOnChainMatchRef.current) {
+                  handleSelectMatchUI(activeOnChainMatchRef.current);
+                }
+              }} className="swap-btn" style={{
+                background: 'rgba(255,255,255,0.08)',
+                color: '#fff',
+                fontWeight: 'bold',
+                border: '1px solid rgba(255,255,255,0.15)'
+              }}>
+                      {t("Switch to Live Match ⚽")}
                     </button>
-                  </div>
-                ) : (!activeMatch.isLive && activeMatch.minute !== 'FT' && activeMatch.startTime && (activeMatch.startTime - Date.now() > 24 * 60 * 60 * 1000)) ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+                  </div> : !activeMatch.isLive && activeMatch.minute !== 'FT' && activeMatch.startTime && activeMatch.startTime - Date.now() > 24 * 60 * 60 * 1000 ? <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              marginTop: '12px'
+            }}>
                     <div style={{
-                      background: 'rgba(255, 179, 0, 0.04)',
-                      border: '1px solid rgba(255, 179, 0, 0.25)',
-                      borderRadius: '12px',
-                      padding: '16px',
-                      textAlign: 'center'
-                    }}>
-                      <h4 style={{ color: '#ffb300', margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 700 }}>📅 UPCOMING MATCH</h4>
-                      <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.85rem', margin: 0 }}>
-                        {activeMatch.teamA} vs {activeMatch.teamB} starts in more than 24 hours.
+                background: 'rgba(255, 179, 0, 0.04)',
+                border: '1px solid rgba(255, 179, 0, 0.25)',
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center'
+              }}>
+                      <h4 style={{
+                  color: '#ffb300',
+                  margin: '0 0 8px 0',
+                  fontSize: '1rem',
+                  fontWeight: 700
+                }}>{t("📅 UPCOMING MATCH")}</h4>
+                      <p style={{
+                  color: 'rgba(255, 255, 255, 0.85)',
+                  fontSize: '0.85rem',
+                  margin: 0
+                }}>
+                        {activeMatch.teamA} vs {activeMatch.teamB} {t("starts in more than 24 hours.")}
                       </p>
-                      <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem', marginTop: '8px', marginBottom: 0 }}>
-                        Predictions open 24 hours before kickoff. Switch to an active match below.
+                      <p style={{
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  fontSize: '0.75rem',
+                  marginTop: '8px',
+                  marginBottom: 0
+                }}>
+                        {t("Predictions open 24 hours before kickoff. Switch to an active match below.")}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const liveM = liveMatchesRef.current.find(m => m.isLive && m.minute !== 'FT');
-                        if (liveM) {
-                          handleSelectMatchUI(liveM);
-                        } else if (activeOnChainMatchRef.current) {
-                          handleSelectMatchUI(activeOnChainMatchRef.current);
-                        }
-                      }}
-                      className="swap-btn"
-                      style={{ background: 'var(--color-primary)', color: '#000', fontWeight: 'bold' }}
-                    >
-                      Switch to Live Match ⚽
+                    <button type="button" onClick={() => {
+                const liveM = liveMatchesRef.current.find(m => m.isLive && m.minute !== 'FT');
+                if (liveM) {
+                  handleSelectMatchUI(liveM);
+                } else if (activeOnChainMatchRef.current) {
+                  handleSelectMatchUI(activeOnChainMatchRef.current);
+                }
+              }} className="swap-btn" style={{
+                background: 'var(--color-primary)',
+                color: '#000',
+                fontWeight: 'bold'
+              }}>
+                      {t("Switch to Live Match ⚽")}
                     </button>
-                  </div>
-                ) : (
-                  <>
+                  </div> : <>
                     {/* Select Team Prediction */}
-                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div className="swap-label" style={{ marginBottom: '8px' }}>Attach Match Winner Prediction (via hookData)</div>
+                    <div style={{
+                background: 'rgba(255,255,255,0.02)',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.05)'
+              }}>
+                      <div className="swap-label" style={{
+                  marginBottom: '8px'
+                }}>{t("Attach Match Winner Prediction (via hookData)")}</div>
                       <div className="prediction-choice-container">
-                        <button
-                          type="button"
-                          onClick={() => handlePredictionChange(1)}
-                          className={`prediction-choice-btn ${prediction === 1 ? 'active' : ''}`}
-                          disabled={isStriking}
-                        >
-                          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              {activeMatch.teamA} <img src={getFlagUrl(activeMatch.flagA || getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} style={{ width: '14px', height: '10px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                        <button type="button" onClick={() => handlePredictionChange(1)} className={`prediction-choice-btn ${prediction === 1 ? 'active' : ''}`} disabled={isStriking}>
+                          <span style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      fontSize: '0.85rem'
+                    }}>
+                            <span style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                              {activeMatch.teamA} <img src={getFlagUrl(activeMatch.flagA || getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} style={{
+                          width: '14px',
+                          height: '10px',
+                          borderRadius: '1px',
+                          border: '1px solid rgba(255,255,255,0.1)'
+                        }} />
                             </span>
-                            {userPredictions && (parseFloat(userPredictions[1]?.okbAmount) > 0 || parseFloat(userPredictions[1]?.grushAmount) > 0) && (
-                              <span style={{ fontSize: '0.7rem', opacity: 0.9, color: 'var(--color-primary)', fontWeight: 600 }}>
-                                Predicted: {parseFloat(userPredictions[1]?.okbAmount) > 0 ? `${parseFloat(userPredictions[1]?.okbAmount).toFixed(3)} OKB` : ''}
+                            {userPredictions && (parseFloat(userPredictions[1]?.okbAmount) > 0 || parseFloat(userPredictions[1]?.grushAmount) > 0) && <span style={{
+                        fontSize: '0.7rem',
+                        opacity: 0.9,
+                        color: 'var(--color-primary)',
+                        fontWeight: 600
+                      }}>
+                                {t("Predicted:")} {parseFloat(userPredictions[1]?.okbAmount) > 0 ? `${parseFloat(userPredictions[1]?.okbAmount).toFixed(3)} OKB` : ''}
                                 {parseFloat(userPredictions[1]?.okbAmount) > 0 && parseFloat(userPredictions[1]?.grushAmount) > 0 ? ' + ' : ''}
                                 {parseFloat(userPredictions[1]?.grushAmount) > 0 ? `${parseFloat(userPredictions[1]?.grushAmount).toFixed(0)} GRUSH` : ''}
-                              </span>
-                            )}
+                              </span>}
                           </span>
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => handlePredictionChange(3)}
-                          className={`prediction-choice-btn ${prediction === 3 ? 'active' : ''}`}
-                          disabled={isStriking}
-                        >
-                          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              Draw 🤝
+                        <button type="button" onClick={() => handlePredictionChange(3)} className={`prediction-choice-btn ${prediction === 3 ? 'active' : ''}`} disabled={isStriking}>
+                          <span style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      fontSize: '0.85rem'
+                    }}>
+                            <span style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                              {t("Draw 🤝")}
                             </span>
-                            {userPredictions && (parseFloat(userPredictions[3]?.okbAmount) > 0 || parseFloat(userPredictions[3]?.grushAmount) > 0) && (
-                              <span style={{ fontSize: '0.7rem', opacity: 0.9, color: 'var(--color-primary)', fontWeight: 600 }}>
-                                Predicted: {parseFloat(userPredictions[3]?.okbAmount) > 0 ? `${parseFloat(userPredictions[3]?.okbAmount).toFixed(3)} OKB` : ''}
+                            {userPredictions && (parseFloat(userPredictions[3]?.okbAmount) > 0 || parseFloat(userPredictions[3]?.grushAmount) > 0) && <span style={{
+                        fontSize: '0.7rem',
+                        opacity: 0.9,
+                        color: 'var(--color-primary)',
+                        fontWeight: 600
+                      }}>
+                                {t("Predicted:")} {parseFloat(userPredictions[3]?.okbAmount) > 0 ? `${parseFloat(userPredictions[3]?.okbAmount).toFixed(3)} OKB` : ''}
                                 {parseFloat(userPredictions[3]?.okbAmount) > 0 && parseFloat(userPredictions[3]?.grushAmount) > 0 ? ' + ' : ''}
                                 {parseFloat(userPredictions[3]?.grushAmount) > 0 ? `${parseFloat(userPredictions[3]?.grushAmount).toFixed(0)} GRUSH` : ''}
-                              </span>
-                            )}
+                              </span>}
                           </span>
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => handlePredictionChange(2)}
-                          className={`prediction-choice-btn ${prediction === 2 ? 'active' : ''}`}
-                          disabled={isStriking}
-                        >
-                          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              {activeMatch.teamB} <img src={getFlagUrl(activeMatch.flagB || getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} style={{ width: '14px', height: '10px', borderRadius: '1px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                        <button type="button" onClick={() => handlePredictionChange(2)} className={`prediction-choice-btn ${prediction === 2 ? 'active' : ''}`} disabled={isStriking}>
+                          <span style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      fontSize: '0.85rem'
+                    }}>
+                            <span style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                              {activeMatch.teamB} <img src={getFlagUrl(activeMatch.flagB || getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} style={{
+                          width: '14px',
+                          height: '10px',
+                          borderRadius: '1px',
+                          border: '1px solid rgba(255,255,255,0.1)'
+                        }} />
                             </span>
-                            {userPredictions && (parseFloat(userPredictions[2]?.okbAmount) > 0 || parseFloat(userPredictions[2]?.grushAmount) > 0) && (
-                              <span style={{ fontSize: '0.7rem', opacity: 0.9, color: 'var(--color-primary)', fontWeight: 600 }}>
-                                Predicted: {parseFloat(userPredictions[2]?.okbAmount) > 0 ? `${parseFloat(userPredictions[2]?.okbAmount).toFixed(3)} OKB` : ''}
+                            {userPredictions && (parseFloat(userPredictions[2]?.okbAmount) > 0 || parseFloat(userPredictions[2]?.grushAmount) > 0) && <span style={{
+                        fontSize: '0.7rem',
+                        opacity: 0.9,
+                        color: 'var(--color-primary)',
+                        fontWeight: 600
+                      }}>
+                                {t("Predicted:")} {parseFloat(userPredictions[2]?.okbAmount) > 0 ? `${parseFloat(userPredictions[2]?.okbAmount).toFixed(3)} OKB` : ''}
                                 {parseFloat(userPredictions[2]?.okbAmount) > 0 && parseFloat(userPredictions[2]?.grushAmount) > 0 ? ' + ' : ''}
                                 {parseFloat(userPredictions[2]?.grushAmount) > 0 ? `${parseFloat(userPredictions[2]?.grushAmount).toFixed(0)} GRUSH` : ''}
-                              </span>
-                            )}
+                              </span>}
                           </span>
                         </button>
                       </div>
                     </div>
 
-                    <button
-                      type={walletConnected ? "submit" : "button"}
-                      className="swap-btn"
-                      disabled={isStriking || (walletConnected && chainId !== 196)}
-                      onClick={!walletConnected ? handleConnectWallet : undefined}
-                    >
+                    <button type={walletConnected ? "submit" : "button"} className="swap-btn" disabled={isStriking || walletConnected && chainId !== 196} onClick={!walletConnected ? handleConnectWallet : undefined}>
                       {isStriking ? 'Transaction in progress...' : !walletConnected ? 'Connect Wallet to Continue' : chainId !== 196 ? 'Switch to X Layer Mainnet' : 'Review & Submit Prediction'}
                     </button>
 
                     <div className={`transaction-status ${transactionStatus.tone}`} role="status" aria-live="polite">
                       <div className="transaction-review-grid">
-                        <span>Match<strong>{activeMatch.teamA} vs {activeMatch.teamB}</strong></span>
-                        <span>Your pick<strong>{prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw'}</strong></span>
-                        <span>Maximum spend<strong>{swapAmount || '0'} {selectedToken} + gas</strong></span>
-                        <span>Network<strong>{chainId === 196 ? 'X Layer Mainnet' : 'Switch required'}</strong></span>
+                        <span>{t("Match")}<strong>{activeMatch.teamA} vs {activeMatch.teamB}</strong></span>
+                        <span>{t("Your pick")}<strong>{prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw'}</strong></span>
+                        <span>{t("Maximum spend")}<strong>{swapAmount || '0'} {selectedToken} {t("+ gas")}</strong></span>
+                        <span>{t("Network")}<strong>{chainId === 196 ? 'X Layer Mainnet' : 'Switch required'}</strong></span>
                       </div>
                       <p>{transactionStatus.message}</p>
-                      <small>If your wallet marks the transaction suspicious or unsafe, cancel it. Verify the router and hook addresses independently before retrying.</small>
+                      <small>{t("If your wallet marks the transaction suspicious or unsafe, cancel it. Verify the router and hook addresses independently before retrying.")}</small>
                     </div>
-                  </>
-                )}
+                  </>}
 
                 {/* GRUSH Token Hub Card */}
                 <div id="grush-token-hub" style={{
-                  marginTop: '20px',
-                  padding: '14px',
-                  background: 'rgba(157, 255, 0, 0.02)',
-                  border: '1px solid rgba(157, 255, 0, 0.12)',
-                  borderRadius: '12px',
+              marginTop: '20px',
+              padding: '14px',
+              background: 'rgba(157, 255, 0, 0.02)',
+              border: '1px solid rgba(157, 255, 0, 0.12)',
+              borderRadius: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}>
+                  <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                    <div style={{
                   display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px'
+                  alignItems: 'center',
+                  gap: '8px'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Coins size={16} style={{ color: 'var(--color-primary)' }} />
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff', letterSpacing: '0.3px' }}>
-                        GRUSH Token Hub
+                      <Coins size={16} style={{
+                    color: 'var(--color-primary)'
+                  }} />
+                      <span style={{
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    color: '#fff',
+                    letterSpacing: '0.3px'
+                  }}>
+                        {t("GRUSH Token Hub")}
                       </span>
                     </div>
                     <span style={{
-                      fontSize: '0.65rem',
-                      background: 'rgba(157, 255, 0, 0.1)',
-                      color: 'var(--color-primary)',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      fontWeight: 600
-                    }}>
-                      X Layer CA
+                  fontSize: '0.65rem',
+                  background: 'rgba(157, 255, 0, 0.1)',
+                  color: 'var(--color-primary)',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontWeight: 600
+                }}>
+                      {t("X Layer CA")}
                     </span>
                   </div>
 
                   {/* Contract Address row */}
                   <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    background: 'rgba(0,0,0,0.2)',
-                    borderRadius: '8px',
-                    padding: '8px 10px',
-                    border: '1px solid rgba(255,255,255,0.05)'
-                  }}>
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: 'rgba(0,0,0,0.2)',
+                borderRadius: '8px',
+                padding: '8px 10px',
+                border: '1px solid rgba(255,255,255,0.05)'
+              }}>
                     <span style={{
-                      fontSize: '0.72rem',
-                      fontFamily: 'var(--font-mono)',
-                      color: 'rgba(255,255,255,0.6)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      maxWidth: '180px'
-                    }}>
+                  fontSize: '0.72rem',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'rgba(255,255,255,0.6)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '180px'
+                }}>
                       {GRUSH_TOKEN_ADDRESS}
                     </span>
-                    <button
-                      type="button"
-                      onClick={copyCA}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: caCopied ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)',
-                        cursor: 'pointer',
-                        fontSize: '0.72rem',
-                        fontWeight: 600,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        transition: 'all 0.2s'
-                      }}
-                    >
+                    <button type="button" onClick={copyCA} style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: caCopied ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)',
+                  cursor: 'pointer',
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  transition: 'all 0.2s'
+                }}>
                       <Copy size={12} />
                       {caCopied ? 'Copied!' : 'Copy CA'}
                     </button>
@@ -5752,122 +6254,150 @@ export default function App() {
 
                   {/* On-Chain Swap Widget */}
                   <div style={{
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    borderRadius: '8px',
-                    padding: '10px',
-                    border: '1px solid rgba(255,255,255,0.05)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px'
-                  }}>
-                    <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      ⚡ Quick Swap OKB for GRUSH
+                background: 'rgba(255, 255, 255, 0.02)',
+                borderRadius: '8px',
+                padding: '10px',
+                border: '1px solid rgba(255,255,255,0.05)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}>
+                    <div style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,0.4)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                      {t("⚡ Quick Swap OKB for GRUSH")}
                     </div>
                     
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '8px'
+                }}>
                       {/* You Pay OKB */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>You Pay (OKB)</span>
-                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', padding: '4px 8px' }}>
-                          <input
-                            type="text"
-                            placeholder="0.0"
-                            value={swapAmountOKB}
-                            onChange={(e) => setSwapAmountOKB(e.target.value)}
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              color: '#fff',
-                              fontSize: '0.8rem',
-                              fontFamily: 'var(--font-mono)',
-                              width: '100%',
-                              outline: 'none'
-                            }}
-                          />
+                      <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
+                        <span style={{
+                      fontSize: '0.65rem',
+                      color: 'rgba(255,255,255,0.5)'
+                    }}>{t("You Pay (OKB)")}</span>
+                        <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: 'rgba(0,0,0,0.3)',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      padding: '4px 8px'
+                    }}>
+                          <input type="text" placeholder="0.0" value={swapAmountOKB} onChange={e => setSwapAmountOKB(e.target.value)} style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#fff',
+                        fontSize: '0.8rem',
+                        fontFamily: 'var(--font-mono)',
+                        width: '100%',
+                        outline: 'none'
+                      }} />
                         </div>
                       </div>
 
                       {/* You Receive GRUSH */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>You Receive (Est)</span>
-                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', padding: '4px 8px', height: '28px' }}>
+                      <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
+                        <span style={{
+                      fontSize: '0.65rem',
+                      color: 'rgba(255,255,255,0.5)'
+                    }}>{t("You Receive (Est)")}</span>
+                        <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: 'rgba(0,0,0,0.3)',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      padding: '4px 8px',
+                      height: '28px'
+                    }}>
                           <span style={{
-                            color: isQuoting ? 'var(--color-primary)' : '#fff',
-                            fontSize: '0.8rem',
-                            fontFamily: 'var(--font-mono)',
-                            width: '100%',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}>
+                        color: isQuoting ? 'var(--color-primary)' : '#fff',
+                        fontSize: '0.8rem',
+                        fontFamily: 'var(--font-mono)',
+                        width: '100%',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}>
                             {isQuoting ? 'Quoting...' : `${estimatedGrush} GRUSH`}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={!walletConnected ? handleConnectWallet : executeSwap}
-                      disabled={walletConnected && (isSwapping || isQuoting || !swapAmountOKB || parseFloat(swapAmountOKB) <= 0 || chainId !== 196)}
-                      style={{
-                        background: 'linear-gradient(135deg, var(--color-primary) 0%, #7dbf00 100%)',
-                        border: 'none',
-                        color: '#000',
-                        fontWeight: 700,
-                        borderRadius: '6px',
-                        padding: '8px',
-                        fontSize: '0.75rem',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        transition: 'all 0.2s',
-                        opacity: (walletConnected && (isSwapping || isQuoting || !swapAmountOKB || parseFloat(swapAmountOKB) <= 0 || chainId !== 196)) ? 0.6 : 1
-                      }}
-                    >
+                    <button type="button" onClick={!walletConnected ? handleConnectWallet : executeSwap} disabled={walletConnected && (isSwapping || isQuoting || !swapAmountOKB || parseFloat(swapAmountOKB) <= 0 || chainId !== 196)} style={{
+                  background: 'linear-gradient(135deg, var(--color-primary) 0%, #7dbf00 100%)',
+                  border: 'none',
+                  color: '#000',
+                  fontWeight: 700,
+                  borderRadius: '6px',
+                  padding: '8px',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s',
+                  opacity: walletConnected && (isSwapping || isQuoting || !swapAmountOKB || parseFloat(swapAmountOKB) <= 0 || chainId !== 196) ? 0.6 : 1
+                }}>
                       {isSwapping ? 'Swapping...' : !walletConnected ? 'Connect Wallet' : chainId !== 196 ? 'Switch to X Layer' : 'Buy GRUSH'}
                     </button>
 
-                    {swapStatus.message && (
-                      <div style={{
-                        fontSize: '0.65rem',
-                        color: swapStatus.tone === 'error' ? '#ff4d4d' : swapStatus.tone === 'success' ? 'var(--color-primary)' : 'var(--color-secondary)',
-                        background: 'rgba(0,0,0,0.2)',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        border: swapStatus.tone === 'error' ? '1px solid rgba(255,77,77,0.1)' : '1px solid rgba(157, 255, 0, 0.1)',
-                        lineHeight: '1.3'
-                      }}>
+                    {swapStatus.message && <div style={{
+                  fontSize: '0.65rem',
+                  color: swapStatus.tone === 'error' ? '#ff4d4d' : swapStatus.tone === 'success' ? 'var(--color-primary)' : 'var(--color-secondary)',
+                  background: 'rgba(0,0,0,0.2)',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  border: swapStatus.tone === 'error' ? '1px solid rgba(255,77,77,0.1)' : '1px solid rgba(157, 255, 0, 0.1)',
+                  lineHeight: '1.3'
+                }}>
                         {swapStatus.message}
-                      </div>
-                    )}
+                      </div>}
                   </div>
 
                   {/* Quick actions grid */}
-                  <div className="grush-hub-actions" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
-                    <button
-                      type="button"
-                      onClick={handleAddGrushToWallet}
-                      style={{
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        color: '#fff',
-                        borderRadius: '8px',
-                        padding: '8px',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <Plus size={14} style={{ color: 'var(--color-primary)' }} />
-                      Add to OKX Wallet
+                  <div className="grush-hub-actions" style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr',
+                gap: '8px'
+              }}>
+                    <button type="button" onClick={handleAddGrushToWallet} style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: '#fff',
+                  borderRadius: '8px',
+                  padding: '8px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}>
+                      <Plus size={14} style={{
+                    color: 'var(--color-primary)'
+                  }} />
+                      {t("Add to OKX Wallet")}
                     </button>
                   </div>
                 </div>
@@ -5875,474 +6405,610 @@ export default function App() {
             </div>
 
             {/* Right Side: Prediction Jackpot Status */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '32px'
+        }}>
               {/* Active Match Info */}
               <div className="card-bezel">
                 {/* Tabs Header */}
-                <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '20px', paddingBottom: '4px' }}>
-                  <button
-                    onClick={() => setActiveRightTab('match')}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: activeRightTab === 'match' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
-                      fontFamily: 'var(--font-display)',
-                      fontWeight: 700,
-                      fontSize: '0.95rem',
-                      padding: '8px 4px',
-                      cursor: 'pointer',
-                      borderBottom: activeRightTab === 'match' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                      transition: 'var(--transition-smooth)'
-                    }}
-                  >
-                    Match Pool
+                <div style={{
+              display: 'flex',
+              gap: '16px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              marginBottom: '20px',
+              paddingBottom: '4px'
+            }}>
+                  <button onClick={() => setActiveRightTab('match')} style={{
+                background: 'transparent',
+                border: 'none',
+                color: activeRightTab === 'match' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                padding: '8px 4px',
+                cursor: 'pointer',
+                borderBottom: activeRightTab === 'match' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                transition: 'var(--transition-smooth)'
+              }}>
+                    {t("Match Pool")}
                   </button>
-                  <button
-                    onClick={() => setActiveRightTab('scores')}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: activeRightTab === 'scores' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
-                      fontFamily: 'var(--font-display)',
-                      fontWeight: 700,
-                      fontSize: '0.95rem',
-                      padding: '8px 4px',
-                      cursor: 'pointer',
-                      borderBottom: activeRightTab === 'scores' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                      transition: 'var(--transition-smooth)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    Live Scores
+                  <button onClick={() => setActiveRightTab('scores')} style={{
+                background: 'transparent',
+                border: 'none',
+                color: activeRightTab === 'scores' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                padding: '8px 4px',
+                cursor: 'pointer',
+                borderBottom: activeRightTab === 'scores' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                transition: 'var(--transition-smooth)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                    {t("Live Scores")}
                     <span className="live-dot"></span>
                   </button>
-                  <button
-                    onClick={() => setActiveRightTab('history')}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: activeRightTab === 'history' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
-                      fontFamily: 'var(--font-display)',
-                      fontWeight: 700,
-                      fontSize: '0.95rem',
-                      padding: '8px 4px',
-                      cursor: 'pointer',
-                      borderBottom: activeRightTab === 'history' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                      transition: 'var(--transition-smooth)'
-                    }}
-                  >
-                    My History
+                  <button onClick={() => setActiveRightTab('history')} style={{
+                background: 'transparent',
+                border: 'none',
+                color: activeRightTab === 'history' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                padding: '8px 4px',
+                cursor: 'pointer',
+                borderBottom: activeRightTab === 'history' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                transition: 'var(--transition-smooth)'
+              }}>
+                    {t("My History")}
                   </button>
                 </div>
 
                 {activeRightTab === 'match' && (() => {
-                  const totalVotes = teamAVotes + teamBVotes + teamDrawVotes;
-                  const percentageA = totalVotes > 0 ? ((teamAVotes / totalVotes) * 100).toFixed(0) : '33';
-                  const percentageDraw = totalVotes > 0 ? ((teamDrawVotes / totalVotes) * 100).toFixed(0) : '33';
-                  const percentageB = totalVotes > 0 ? ((teamBVotes / totalVotes) * 100).toFixed(0) : '34';
-
-                  const widthA = totalVotes > 0 ? (teamAVotes / totalVotes) * 100 : 33.3;
-                  const widthDraw = totalVotes > 0 ? (teamDrawVotes / totalVotes) * 100 : 33.3;
-                  const widthB = totalVotes > 0 ? (teamBVotes / totalVotes) * 100 : 33.4;
-
-                  return (
-                    <>
+              const totalVotes = teamAVotes + teamBVotes + teamDrawVotes;
+              const percentageA = totalVotes > 0 ? (teamAVotes / totalVotes * 100).toFixed(0) : '33';
+              const percentageDraw = totalVotes > 0 ? (teamDrawVotes / totalVotes * 100).toFixed(0) : '33';
+              const percentageB = totalVotes > 0 ? (teamBVotes / totalVotes * 100).toFixed(0) : '34';
+              const widthA = totalVotes > 0 ? teamAVotes / totalVotes * 100 : 33.3;
+              const widthDraw = totalVotes > 0 ? teamDrawVotes / totalVotes * 100 : 33.3;
+              const widthB = totalVotes > 0 ? teamBVotes / totalVotes * 100 : 33.4;
+              return <>
                       <div className="jackpot-display">
-                        <div className="swap-label">TOTAL ACCUMULATED JACKPOT</div>
-                        <div className="jackpot-val">{jackpot.toFixed(4)} OKB</div>
-                        <div className="jackpot-val-grush" style={{ fontSize: '1.2rem', color: '#ff00aa', marginTop: '4px', fontWeight: 'bold' }}>
-                          + {grushJackpot.toLocaleString(undefined, { maximumFractionDigits: 2 })} GRUSH
+                        <div className="swap-label">{t("TOTAL ACCUMULATED JACKPOT")}</div>
+                        <div className="jackpot-val">{jackpot.toFixed(4)} {t("OKB")}</div>
+                        <div className="jackpot-val-grush" style={{
+                    fontSize: '1.2rem',
+                    color: '#ff00aa',
+                    marginTop: '4px',
+                    fontWeight: 'bold'
+                  }}>
+                          + {grushJackpot.toLocaleString(undefined, {
+                      maximumFractionDigits: 2
+                    })} {t("GRUSH")}
                         </div>
-                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
-                          ≈ ${(jackpot * 60 + grushJackpot * 0.05).toLocaleString(undefined, { maximumFractionDigits: 2 })} USD
+                        <div style={{
+                    fontSize: '0.8rem',
+                    color: 'rgba(255,255,255,0.4)',
+                    marginTop: '4px'
+                  }}>
+                          ≈ ${(jackpot * 60 + grushJackpot * 0.05).toLocaleString(undefined, {
+                      maximumFractionDigits: 2
+                    })} {t("USD")}
                         </div>
                       </div>
 
                       <div className="predict-bar-container">
-                        <div className="swap-label">Prediction Volume Split</div>
+                        <div className="swap-label">{t("Prediction Volume Split")}</div>
 
                         <div className={`team-row ${prediction === 1 ? 'selected' : ''}`} onClick={() => handlePredictionChange(1)}>
                           <div className="team-meta">
-                            <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} className="team-flag" style={{ width: '20px', height: '14px', borderRadius: '2px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)' }} />
+                            <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} className="team-flag" style={{
+                        width: '20px',
+                        height: '14px',
+                        borderRadius: '2px',
+                        objectFit: 'cover',
+                        border: '1px solid rgba(255,255,255,0.15)'
+                      }} />
                             <span className="team-name">{activeMatch.teamA}</span>
                           </div>
-                          <span className="team-odds">{teamAVotes.toFixed(1)} OKB ({percentageA}%)</span>
+                          <span className="team-odds">{teamAVotes.toFixed(1)} {t("OKB (")}{percentageA}%)</span>
                         </div>
 
                         <div className={`team-row ${prediction === 3 ? 'selected' : ''}`} onClick={() => handlePredictionChange(3)}>
                           <div className="team-meta">
-                            <span style={{ fontSize: '1.1rem', marginRight: '8px' }}>🤝</span>
-                            <span className="team-name">Draw</span>
+                            <span style={{
+                        fontSize: '1.1rem',
+                        marginRight: '8px'
+                      }}>🤝</span>
+                            <span className="team-name">{t("Draw")}</span>
                           </div>
-                          <span className="team-odds">{teamDrawVotes.toFixed(1)} OKB ({percentageDraw}%)</span>
+                          <span className="team-odds">{teamDrawVotes.toFixed(1)} {t("OKB (")}{percentageDraw}%)</span>
                         </div>
 
                         <div className={`team-row ${prediction === 2 ? 'selected' : ''}`} onClick={() => handlePredictionChange(2)}>
                           <div className="team-meta">
-                            <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} className="team-flag" style={{ width: '20px', height: '14px', borderRadius: '2px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)' }} />
+                            <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} className="team-flag" style={{
+                        width: '20px',
+                        height: '14px',
+                        borderRadius: '2px',
+                        objectFit: 'cover',
+                        border: '1px solid rgba(255,255,255,0.15)'
+                      }} />
                             <span className="team-name">{activeMatch.teamB}</span>
                           </div>
-                          <span className="team-odds">{teamBVotes.toFixed(1)} OKB ({percentageB}%)</span>
+                          <span className="team-odds">{teamBVotes.toFixed(1)} {t("OKB (")}{percentageB}%)</span>
                         </div>
 
-                        <div className="odds-progress-wrap" style={{ display: 'flex', height: '8px', borderRadius: '4px' }}>
-                          <div
-                            style={{
-                              width: `${widthA}%`,
-                              height: '100%',
-                              background: 'var(--color-primary)',
-                              transition: 'width 0.5s ease'
-                            }}
-                          />
-                          <div
-                            style={{
-                              width: `${widthDraw}%`,
-                              height: '100%',
-                              background: 'rgba(255, 255, 255, 0.35)',
-                              transition: 'width 0.5s ease'
-                            }}
-                          />
-                          <div
-                            style={{
-                              width: `${widthB}%`,
-                              height: '100%',
-                              background: '#ff007a',
-                              transition: 'width 0.5s ease'
-                            }}
-                          />
+                        <div className="odds-progress-wrap" style={{
+                    display: 'flex',
+                    height: '8px',
+                    borderRadius: '4px'
+                  }}>
+                          <div style={{
+                      width: `${widthA}%`,
+                      height: '100%',
+                      background: 'var(--color-primary)',
+                      transition: 'width 0.5s ease'
+                    }} />
+                          <div style={{
+                      width: `${widthDraw}%`,
+                      height: '100%',
+                      background: 'rgba(255, 255, 255, 0.35)',
+                      transition: 'width 0.5s ease'
+                    }} />
+                          <div style={{
+                      width: `${widthB}%`,
+                      height: '100%',
+                      background: '#ff007a',
+                      transition: 'width 0.5s ease'
+                    }} />
                         </div>
                       </div>
                       {/* Console Logs */}
-                      <div style={{ marginTop: '24px' }}>
-                        <div className="swap-label">Transaction Console Logs</div>
+                      <div style={{
+                  marginTop: '24px'
+                }}>
+                        <div className="swap-label">{t("Transaction Console Logs")}</div>
                         <div className="console-logs">
-                          {logs.map((log, index) => (
-                            <div key={index} className={`log-entry ${log.includes('GOAL') ? 'goal' : ''}`}>
+                          {logs.map((log, index) => <div key={index} className={`log-entry ${log.includes('GOAL') ? 'goal' : ''}`}>
                               {log}
-                            </div>
-                          ))}
+                            </div>)}
                         </div>
                       </div>
-                    </>
-                  );
-                })()}
+                    </>;
+            })()}
 
                 {activeRightTab === 'scores' && (() => {
-                  const todayStart = new Date();
-                  todayStart.setHours(0,0,0,0);
-                  const todayStartMs = todayStart.getTime();
-
-                  const tomorrowEnd = new Date();
-                  tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
-                  tomorrowEnd.setHours(23,59,59,999);
-                  const tomorrowEndMs = tomorrowEnd.getTime();
-
-                  const live = liveMatches.filter(m => m.isLive && m.minute !== 'FT').sort((a, b) => a.startTime - b.startTime);
-                  const upcoming = liveMatches.filter(m => {
-                    if (m.isLive || m.minute === 'FT') return false;
-                    return m.startTime >= todayStartMs && m.startTime <= tomorrowEndMs;
-                  }).sort((a, b) => a.startTime - b.startTime);
-                  const displayMatches = [...live, ...upcoming];
-
-                  return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      {displayMatches.map((m) => {
-                        const isSelected = activeMatch.id === m.id;
-                        const isActiveOnChain = getNumericMatchId(m.id) === onChainActiveId && onChainActiveId > 0n;
-                        return (
-                          <div
-                            key={m.id}
-                            onClick={() => handleSelectMatchUI(m)}
-                            style={{
-                              background: isSelected ? 'rgba(157, 255, 0, 0.03)' : 'rgba(255,255,255,0.02)',
-                              padding: '16px',
-                              borderRadius: '12px',
-                              border: isSelected ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.05)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              cursor: 'pointer',
-                              transition: 'var(--transition-smooth)'
-                            }}
-                          >
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <img
-                                  src={getFlagUrl(m.flagA)}
-                                  alt={m.teamA}
-                                  style={{
-                                    width: '20px',
-                                    height: '14px',
-                                    objectFit: 'cover',
-                                    borderRadius: '2px',
-                                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                                    display: 'inline-block'
-                                  }}
-                                />
-                                <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamA}</span>
-                                <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreA}</span>
+              const todayStart = new Date();
+              todayStart.setHours(0, 0, 0, 0);
+              const todayStartMs = todayStart.getTime();
+              const tomorrowEnd = new Date();
+              tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
+              tomorrowEnd.setHours(23, 59, 59, 999);
+              const tomorrowEndMs = tomorrowEnd.getTime();
+              const live = liveMatches.filter(m => m.isLive && m.minute !== 'FT').sort((a, b) => a.startTime - b.startTime);
+              const upcoming = liveMatches.filter(m => {
+                if (m.isLive || m.minute === 'FT') return false;
+                return m.startTime >= todayStartMs && m.startTime <= tomorrowEndMs;
+              }).sort((a, b) => a.startTime - b.startTime);
+              const displayMatches = [...live, ...upcoming];
+              return <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px'
+              }}>
+                      {displayMatches.map(m => {
+                  const isSelected = activeMatch.id === m.id;
+                  const isActiveOnChain = getNumericMatchId(m.id) === onChainActiveId && onChainActiveId > 0n;
+                  return <div key={m.id} onClick={() => handleSelectMatchUI(m)} style={{
+                    background: isSelected ? 'rgba(157, 255, 0, 0.03)' : 'rgba(255,255,255,0.02)',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: isSelected ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.05)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'var(--transition-smooth)'
+                  }}>
+                            <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                      flex: 1
+                    }}>
+                              <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}>
+                                <img src={getFlagUrl(m.flagA)} alt={m.teamA} style={{
+                          width: '20px',
+                          height: '14px',
+                          objectFit: 'cover',
+                          borderRadius: '2px',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          display: 'inline-block'
+                        }} />
+                                <span style={{
+                          fontWeight: 600,
+                          fontSize: '0.9rem',
+                          color: isSelected ? 'var(--color-primary)' : '#fff'
+                        }}>{m.teamA}</span>
+                                <span style={{
+                          marginLeft: 'auto',
+                          fontWeight: 700,
+                          color: 'var(--color-primary)'
+                        }}>{m.scoreA}</span>
                               </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <img
-                                  src={getFlagUrl(m.flagB)}
-                                  alt={m.teamB}
-                                  style={{
-                                    width: '20px',
-                                    height: '14px',
-                                    objectFit: 'cover',
-                                    borderRadius: '2px',
-                                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                                    display: 'inline-block'
-                                  }}
-                                />
-                                <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isSelected ? 'var(--color-primary)' : '#fff' }}>{m.teamB}</span>
-                                <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--color-primary)' }}>{m.scoreB}</span>
+                              <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}>
+                                <img src={getFlagUrl(m.flagB)} alt={m.teamB} style={{
+                          width: '20px',
+                          height: '14px',
+                          objectFit: 'cover',
+                          borderRadius: '2px',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          display: 'inline-block'
+                        }} />
+                                <span style={{
+                          fontWeight: 600,
+                          fontSize: '0.9rem',
+                          color: isSelected ? 'var(--color-primary)' : '#fff'
+                        }}>{m.teamB}</span>
+                                <span style={{
+                          marginLeft: 'auto',
+                          fontWeight: 700,
+                          color: 'var(--color-primary)'
+                        }}>{m.scoreB}</span>
                               </div>
                             </div>
 
-                            <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '16px', marginLeft: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '80px' }}>
-                              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: (m.isLive && m.minute !== 'FT') ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)' }}>
+                            <div style={{
+                      borderLeft: '1px solid rgba(255,255,255,0.08)',
+                      paddingLeft: '16px',
+                      marginLeft: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minWidth: '80px'
+                    }}>
+                              <span style={{
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        color: m.isLive && m.minute !== 'FT' ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)'
+                      }}>
                                 {m.isLive || m.minute === 'FT' ? m.minute : formatLocalTime(m.startTime)}
                               </span>
-                              {m.isLive && m.minute !== 'FT' ? (
-                                <span
-                                  style={{
-                                    fontSize: '0.65rem',
-                                    color: '#ff3344',
-                                    textTransform: 'uppercase',
-                                    fontWeight: 700,
-                                    marginTop: '4px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                  }}
-                                >
-                                  <span style={{ width: '4px', height: '4px', backgroundColor: '#ff3344', borderRadius: '50%', display: 'inline-block', animation: 'live-pulse 1.2s infinite' }}></span>
-                                  LIVE
-                                </span>
-                              ) : m.minute === 'FT' ? (
-                                <span
-                                  style={{
-                                    fontSize: '0.65rem',
-                                    color: 'rgba(255, 255, 255, 0.4)',
-                                    marginTop: '4px',
-                                    textAlign: 'center',
-                                    fontWeight: 500,
-                                    whiteSpace: 'nowrap'
-                                  }}
-                                >
-                                  {m.scoreA > m.scoreB
-                                    ? `${m.teamA} Won`
-                                    : m.scoreB > m.scoreA
-                                      ? `${m.teamB} Won`
-                                      : 'Draw'}
-                                </span>
-                              ) : (
-                                <span
-                                  style={{
-                                    fontSize: '0.65rem',
-                                    color: '#00e5ff',
-                                    marginTop: '4px',
-                                    textAlign: 'center',
-                                    fontWeight: 600,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px'
-                                  }}
-                                >
-                                  Upcoming
-                                </span>
-                              )}
-                              {isActiveOnChain ? (
-                                <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 700, marginTop: '6px', background: 'rgba(157, 255, 0, 0.12)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
-                                  ON-CHAIN
-                                </span>
-                              ) : (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleActivateMatchOnChain(m);
-                                  }}
-                                  style={{
-                                    fontSize: '0.65rem',
-                                    background: 'rgba(255, 255, 255, 0.05)',
-                                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                                    color: '#fff',
-                                    padding: '3px 8px',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    marginTop: '6px',
-                                    transition: 'all 0.2s',
-                                    fontWeight: 600
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.target.style.background = 'var(--color-primary)';
-                                    e.target.style.color = '#000';
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.target.style.background = 'rgba(255, 255, 255, 0.05)';
-                                    e.target.style.color = '#fff';
-                                  }}
-                                >
-                                  Activate
-                                </button>
-                              )}
+                              {m.isLive && m.minute !== 'FT' ? <span style={{
+                        fontSize: '0.65rem',
+                        color: '#ff3344',
+                        textTransform: 'uppercase',
+                        fontWeight: 700,
+                        marginTop: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                                  <span style={{
+                          width: '4px',
+                          height: '4px',
+                          backgroundColor: '#ff3344',
+                          borderRadius: '50%',
+                          display: 'inline-block',
+                          animation: 'live-pulse 1.2s infinite'
+                        }}></span>
+                                  {t("LIVE")}
+                                </span> : m.minute === 'FT' ? <span style={{
+                        fontSize: '0.65rem',
+                        color: 'rgba(255, 255, 255, 0.4)',
+                        marginTop: '4px',
+                        textAlign: 'center',
+                        fontWeight: 500,
+                        whiteSpace: 'nowrap'
+                      }}>
+                                  {m.scoreA > m.scoreB ? `${m.teamA} Won` : m.scoreB > m.scoreA ? `${m.teamB} Won` : 'Draw'}
+                                </span> : <span style={{
+                        fontSize: '0.65rem',
+                        color: '#00e5ff',
+                        marginTop: '4px',
+                        textAlign: 'center',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                                  {t("Upcoming")}
+                                </span>}
+                              {isActiveOnChain ? <span style={{
+                        fontSize: '0.65rem',
+                        color: 'var(--color-primary)',
+                        fontWeight: 700,
+                        marginTop: '6px',
+                        background: 'rgba(157, 255, 0, 0.12)',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        textTransform: 'uppercase'
+                      }}>
+                                  {t("ON-CHAIN")}
+                                </span> : <button onClick={e => {
+                        e.stopPropagation();
+                        handleActivateMatchOnChain(m);
+                      }} style={{
+                        fontSize: '0.65rem',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        color: '#fff',
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        marginTop: '6px',
+                        transition: 'all 0.2s',
+                        fontWeight: 600
+                      }} onMouseEnter={e => {
+                        e.target.style.background = 'var(--color-primary)';
+                        e.target.style.color = '#000';
+                      }} onMouseLeave={e => {
+                        e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                        e.target.style.color = '#fff';
+                      }}>
+                                  {t("Activate")}
+                                </button>}
                             </div>
-                          </div>
-                        );
-                      })}
+                          </div>;
+                })}
 
-                      <button
-                        onClick={() => setCurrentView('match-center')}
-                        style={{
-                          marginTop: '8px',
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid rgba(255, 255, 255, 0.15)',
-                          borderRadius: '8px',
-                          padding: '12px 16px',
-                          color: 'var(--color-primary)',
-                          fontFamily: 'var(--font-display)',
-                          fontWeight: 700,
-                          fontSize: '0.85rem',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px',
-                          transition: 'var(--transition-smooth)'
-                        }}
-                        onMouseEnter={(e) => e.target.style.background = 'rgba(157, 255, 0, 0.1)'}
-                        onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
-                      >
-                        View All Matches in Match Center 🏆 →
+                      <button onClick={() => setCurrentView('match-center')} style={{
+                  marginTop: '8px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  color: 'var(--color-primary)',
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'var(--transition-smooth)'
+                }} onMouseEnter={e => e.target.style.background = 'rgba(157, 255, 0, 0.1)'} onMouseLeave={e => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}>
+                        {t("View All Matches in Match Center 🏆 →")}
                       </button>
-                    </div>
-                  );
-                })()}{activeRightTab === 'history' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <h4 style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
-                      Your Simulation Logs
+                    </div>;
+            })()}{activeRightTab === 'history' && <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+                    <h4 style={{
+                fontSize: '0.9rem',
+                color: '#fff',
+                marginBottom: '8px',
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+                paddingBottom: '8px'
+              }}>
+                      {t("Your Simulation Logs")}
                     </h4>
-                    {history.length === 0 ? (
-                      <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '24px 0' }}>
-                        No predictions recorded yet. Run a shootout strike to start!
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
-                        {history.map((h) => (
-                          <div
-                            key={h.id}
-                            style={{
-                              background: 'rgba(255,255,255,0.02)',
-                              border: '1px solid rgba(255,255,255,0.05)',
-                              borderRadius: '8px',
-                              padding: '10px 12px',
-                              fontSize: '0.78rem',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '6px'
-                            }}
-                          >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ fontWeight: 600, color: '#fff' }}>{h.match}</span>
-                              <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>{h.timestamp}</span>
+                    {history.length === 0 ? <div style={{
+                fontSize: '0.8rem',
+                color: 'rgba(255,255,255,0.4)',
+                textAlign: 'center',
+                padding: '24px 0'
+              }}>
+                        {t("No predictions recorded yet. Run a shootout strike to start!")}
+                      </div> : <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                maxHeight: '350px',
+                overflowY: 'auto',
+                paddingRight: '4px'
+              }}>
+                        {history.map(h => <div key={h.id} style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  border: '1px solid rgba(255,255,255,0.05)',
+                  borderRadius: '8px',
+                  padding: '10px 12px',
+                  fontSize: '0.78rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}>
+                            <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                              <span style={{
+                      fontWeight: 600,
+                      color: '#fff'
+                    }}>{h.match}</span>
+                              <span style={{
+                      fontSize: '0.7rem',
+                      color: 'rgba(255,255,255,0.4)'
+                    }}>{h.timestamp}</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
                               <span>
-                                Predicted: <strong style={{ color: 'var(--color-primary)' }}>{h.prediction}</strong>
+                                {t("Predicted:")} <strong style={{
+                        color: 'var(--color-primary)'
+                      }}>{h.prediction}</strong>
                               </span>
-                              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: h.result.includes('GOAL') ? 'var(--color-secondary)' : 'var(--color-danger)' }}>
+                              <span style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: h.result.includes('GOAL') ? 'var(--color-secondary)' : 'var(--color-danger)'
+                    }}>
                                 {h.result}
                               </span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '4px', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>
-                              <span>Size: {h.amount}</span>
-                              <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Jackpot Share Allocation</span>
+                            <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid rgba(255,255,255,0.03)',
+                    paddingTop: '4px',
+                    fontSize: '0.7rem',
+                    color: 'rgba(255,255,255,0.4)'
+                  }}>
+                              <span>{t("Size:")} {h.amount}</span>
+                              <span style={{
+                      color: 'var(--color-primary)',
+                      fontWeight: 600
+                    }}>{t("Jackpot Share Allocation")}</span>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                          </div>)}
+                      </div>}
+                  </div>}
               </div>
 
               {/* VIP Access Pass */}
-              <div className="card-bezel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="card-bezel" style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
                 <div>
-                  <h3 className="panel-title" style={{ color: 'var(--color-primary)', textShadow: '0 0 10px rgba(157,255,0,0.3)' }}>
+                  <h3 className="panel-title" style={{
+                color: 'var(--color-primary)',
+                textShadow: '0 0 10px rgba(157,255,0,0.3)'
+              }}>
                     <Award size={20} />
-                    GoalRush Access Pass
+                    {t("GoalRush Access Pass")}
                   </h3>
-                  <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginBottom: '8px', lineHeight: '1.4' }}>
-                    Guarantees exclusive gated access to VIP prediction pools and zero-fee token swaps.
+                  <p style={{
+                fontSize: '0.85rem',
+                color: 'rgba(255,255,255,0.7)',
+                marginBottom: '8px',
+                lineHeight: '1.4'
+              }}>
+                    {t("Guarantees exclusive gated access to VIP prediction pools and zero-fee token swaps.")}
                   </p>
                 </div>
                 
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px', position: 'relative' }}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(circle at center, rgba(157,255,0,0.2) 0%, transparent 70%)', filter: 'blur(20px)', zIndex: 0 }}></div>
-                  <img 
-                    src="/access-pass.png" 
-                    alt="GoalRush Access Pass" 
-                    style={{ 
-                      width: '100%', 
-                      maxWidth: '300px', 
-                      borderRadius: '16px', 
-                      boxShadow: '0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(157,255,0,0.15)', 
-                      border: '1px solid rgba(157,255,0,0.3)',
-                      zIndex: 1,
-                      position: 'relative'
-                    }} 
-                  />
+                <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginBottom: '8px',
+              position: 'relative'
+            }}>
+                  <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'radial-gradient(circle at center, rgba(157,255,0,0.2) 0%, transparent 70%)',
+                filter: 'blur(20px)',
+                zIndex: 0
+              }}></div>
+                  <img src="/access-pass.png" alt="GoalRush Access Pass" style={{
+                width: '100%',
+                maxWidth: '300px',
+                borderRadius: '16px',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(157,255,0,0.15)',
+                border: '1px solid rgba(157,255,0,0.3)',
+                zIndex: 1,
+                position: 'relative'
+              }} />
                 </div>
                 
-                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(0,0,0,0.4)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px' }}>Supply</span>
-                    <span style={{ fontSize: '1.15rem', fontWeight: 'bold', color: '#fff' }}>{accessPassSupply} / 1000</span>
+                <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              background: 'rgba(0,0,0,0.4)',
+              padding: '16px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.08)'
+            }}>
+                  <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px'
+              }}>
+                    <span style={{
+                  fontSize: '0.75rem',
+                  color: 'rgba(255,255,255,0.5)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px'
+                }}>{t("Supply")}</span>
+                    <span style={{
+                  fontSize: '1.15rem',
+                  fontWeight: 'bold',
+                  color: '#fff'
+                }}>{accessPassSupply} / 1000</span>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px' }}>Mint Price</span>
-                    <span style={{ fontSize: '1.15rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>$10</span>
-                    <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }}>
+                  <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+                alignItems: 'flex-end'
+              }}>
+                    <span style={{
+                  fontSize: '0.75rem',
+                  color: 'rgba(255,255,255,0.5)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px'
+                }}>{t("Mint Price")}</span>
+                    <span style={{
+                  fontSize: '1.15rem',
+                  fontWeight: 'bold',
+                  color: 'var(--color-primary)'
+                }}>$10</span>
+                    <span style={{
+                  fontSize: '0.78rem',
+                  color: 'rgba(255,255,255,0.5)'
+                }}>
                       {grushPriceUsd ? `≈ ${Math.ceil(10 / grushPriceUsd).toLocaleString()} $GRUSH` : 'Loading price...'}
                     </span>
                   </div>
                 </div>
 
                 {/* Mint Status Notification */}
-                  {mintStatus && (
-                    <div style={{
-                      padding: '10px',
-                      background: 'rgba(0, 229, 255, 0.05)',
-                      border: '1px solid rgba(0, 229, 255, 0.15)',
-                      borderRadius: '8px',
-                      fontSize: '0.8rem',
-                      color: 'var(--color-secondary)',
-                      textAlign: 'center',
-                      fontFamily: 'var(--font-mono)'
-                    }}>
-                      <div className="badge-dot" style={{ display: 'inline-block', marginRight: '6px', background: 'var(--color-secondary)', boxShadow: '0 0 6px var(--color-secondary)' }}></div>
+                  {mintStatus && <div style={{
+              padding: '10px',
+              background: 'rgba(0, 229, 255, 0.05)',
+              border: '1px solid rgba(0, 229, 255, 0.15)',
+              borderRadius: '8px',
+              fontSize: '0.8rem',
+              color: 'var(--color-secondary)',
+              textAlign: 'center',
+              fontFamily: 'var(--font-mono)'
+            }}>
+                      <div className="badge-dot" style={{
+                display: 'inline-block',
+                marginRight: '6px',
+                background: 'var(--color-secondary)',
+                boxShadow: '0 0 6px var(--color-secondary)'
+              }}></div>
                       {mintStatus}
-                    </div>
-                  )}
-                <button 
-                  className="btn-primary" 
-                  style={{ 
-                    padding: '16px', 
-                    fontSize: '1.1rem', 
-                    fontWeight: '800', 
-                    borderRadius: '12px', 
-                    marginTop: '4px',
-                    boxShadow: '0 0 20px rgba(157,255,0,0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px'
-                  }}
-                  onClick={handleMintAccessPass} disabled={isMintingCard}
-                >
+                    </div>}
+                <button className="btn-primary" style={{
+              padding: '16px',
+              fontSize: '1.1rem',
+              fontWeight: '800',
+              borderRadius: '12px',
+              marginTop: '4px',
+              boxShadow: '0 0 20px rgba(157,255,0,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }} onClick={handleMintAccessPass} disabled={isMintingCard}>
                   <Award size={18} fill="currentColor" /> {isMintingCard ? 'Minting...' : walletConnected ? 'Mint Access Pass' : 'Connect to Mint'}
                 </button>
               </div>
@@ -6350,915 +7016,1735 @@ export default function App() {
           </section>
 
           {/* Leaderboards */}
-          <section id="leaderboard" className="card-bezel" style={{ marginBottom: '64px' }}>
+          <section id="leaderboard" className="card-bezel" style={{
+        marginBottom: '64px'
+      }}>
             <h3 className="panel-title">
-              <Flame size={20} style={{ color: 'var(--color-primary)' }} />
-              Tournament Goal Leaderboard
+              <Flame size={20} style={{
+            color: 'var(--color-primary)'
+          }} />
+              {t("Tournament Goal Leaderboard")}
             </h3>
-            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '20px' }}>
-              Top creators and swappers registered on OKX X Layer during the tournament.
+            <p style={{
+          fontSize: '0.85rem',
+          color: 'rgba(255,255,255,0.5)',
+          marginBottom: '20px'
+        }}>
+              {t("Top creators and swappers registered on OKX X Layer during the tournament.")}
             </p>
 
-            {!scanState.done && (
-              <div style={{
-                fontSize: '0.82rem',
-                color: '#9dff00',
-                background: 'rgba(157, 255, 0, 0.05)',
-                border: '1px solid rgba(157, 255, 0, 0.15)',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                marginBottom: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                fontFamily: 'system-ui, -apple-system, sans-serif'
-              }}>
-                <span style={{ fontSize: '1rem' }}>⚡</span>
-                <span style={{ fontWeight: '500' }}>
-                  Syncing on-chain predictions: {Math.min(99, Math.floor(((scanState.current - 62494373) / Math.max(1, scanState.total - 62494373)) * 100))}% complete (indexing blocks {scanState.current.toLocaleString()} of {scanState.total.toLocaleString()})
+            {!scanState.done && <div style={{
+          fontSize: '0.82rem',
+          color: '#9dff00',
+          background: 'rgba(157, 255, 0, 0.05)',
+          border: '1px solid rgba(157, 255, 0, 0.15)',
+          padding: '10px 14px',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontFamily: 'system-ui, -apple-system, sans-serif'
+        }}>
+                <span style={{
+            fontSize: '1rem'
+          }}>⚡</span>
+                <span style={{
+            fontWeight: '500'
+          }}>
+                  {t("Syncing on-chain predictions:")} {Math.min(99, Math.floor((scanState.current - 62494373) / Math.max(1, scanState.total - 62494373) * 100))}{t("% complete (indexing blocks")} {scanState.current.toLocaleString()} {t("of")} {scanState.total.toLocaleString()})
                 </span>
-              </div>
-            )}
+              </div>}
 
             <div className="leaderboard-compact-list">
-                {leaderboardData.length > 0 ? (
-                  leaderboardData.map((row, idx) => {
-                    const isCurrentUser = walletConnected && userAddress && row.address.toLowerCase() === userAddress.toLowerCase();
-                    const rankColor = idx === 0 ? 'var(--color-primary)' : idx === 1 ? '#c0c0c0' : idx === 2 ? '#cd7f32' : 'rgba(255,255,255,0.4)';
-                    // Generate a deterministic hex color from the address
-                    const avatarColor1 = `#${row.address.slice(2, 8)}`;
-                    const avatarColor2 = `#${row.address.slice(-6)}`;
-                    
-                    return (
-                      <div key={row.address} className={`leaderboard-compact-row ${isCurrentUser ? 'is-current-user' : ''}`}>
-                        <div className="compact-rank" style={{ color: rankColor }}>
+                {leaderboardData.length > 0 ? leaderboardData.map((row, idx) => {
+            const isCurrentUser = walletConnected && userAddress && row.address.toLowerCase() === userAddress.toLowerCase();
+            const rankColor = idx === 0 ? 'var(--color-primary)' : idx === 1 ? '#c0c0c0' : idx === 2 ? '#cd7f32' : 'rgba(255,255,255,0.4)';
+            // Generate a deterministic hex color from the address
+            const avatarColor1 = `#${row.address.slice(2, 8)}`;
+            const avatarColor2 = `#${row.address.slice(-6)}`;
+            return <div key={row.address} className={`leaderboard-compact-row ${isCurrentUser ? 'is-current-user' : ''}`}>
+                        <div className="compact-rank" style={{
+                color: rankColor
+              }}>
                           {idx + 1}
                         </div>
                         <div className="compact-user-info">
-                          <div className="compact-avatar" style={{ background: `linear-gradient(135deg, ${avatarColor1}, ${avatarColor2})` }}></div>
+                          <div className="compact-avatar" style={{
+                  background: `linear-gradient(135deg, ${avatarColor1}, ${avatarColor2})`
+                }}></div>
                           <div className="compact-address">
                             {row.address.slice(0, 6)}...{row.address.slice(-4)}
-                            {isCurrentUser && <span className="compact-badge-my">MY</span>}
+                            {isCurrentUser && <span className="compact-badge-my">{t("MY")}</span>}
                           </div>
                         </div>
                         
                         <div className="compact-stats">
                           <div className="stat-col hide-mobile">
-                            <span className="compact-stat-primary" style={{ color: 'var(--color-secondary)', whiteSpace: 'nowrap' }}>{row.claimed.toFixed(4)} OKB <span className="desktop-only-text" style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.4)'}}>CLAIMED</span></span>
-                            {row.grushClaimed > 0 && <span className="compact-stat-secondary" style={{whiteSpace: 'nowrap'}}>⚽ {row.grushClaimed.toLocaleString()} GRUSH <span className="desktop-only-text" style={{fontSize:'0.6rem'}}>CLAIMED</span></span>}
+                            <span className="compact-stat-primary" style={{
+                    color: 'var(--color-secondary)',
+                    whiteSpace: 'nowrap'
+                  }}>{row.claimed.toFixed(4)} {t("OKB")} <span className="desktop-only-text" style={{
+                      fontSize: '0.65rem',
+                      color: 'rgba(255,255,255,0.4)'
+                    }}>{t("CLAIMED")}</span></span>
+                            {row.grushClaimed > 0 && <span className="compact-stat-secondary" style={{
+                    whiteSpace: 'nowrap'
+                  }}>⚽ {row.grushClaimed.toLocaleString()} {t("GRUSH")} <span className="desktop-only-text" style={{
+                      fontSize: '0.6rem'
+                    }}>{t("CLAIMED")}</span></span>}
                           </div>
                           <div className="stat-col">
-                            <span className="compact-stat-primary" style={{ color: 'var(--color-primary)', whiteSpace: 'nowrap' }}>{row.volume.toFixed(4)} OKB <span className="desktop-only-text" style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.4)'}}>VOL</span></span>
-                            {row.grushVolume > 0 && <span className="compact-stat-secondary" style={{whiteSpace: 'nowrap'}}>⚽ {row.grushVolume.toLocaleString()} GRUSH <span className="desktop-only-text" style={{fontSize:'0.6rem'}}>VOL</span></span>}
+                            <span className="compact-stat-primary" style={{
+                    color: 'var(--color-primary)',
+                    whiteSpace: 'nowrap'
+                  }}>{row.volume.toFixed(4)} {t("OKB")} <span className="desktop-only-text" style={{
+                      fontSize: '0.65rem',
+                      color: 'rgba(255,255,255,0.4)'
+                    }}>{t("VOL")}</span></span>
+                            {row.grushVolume > 0 && <span className="compact-stat-secondary" style={{
+                    whiteSpace: 'nowrap'
+                  }}>⚽ {row.grushVolume.toLocaleString()} {t("GRUSH")} <span className="desktop-only-text" style={{
+                      fontSize: '0.6rem'
+                    }}>{t("VOL")}</span></span>}
                           </div>
                           <div className="stat-col stat-col-right">
-                            <span className="compact-stat-primary" style={{ color: '#fff', fontSize: '1.1rem', whiteSpace: 'nowrap', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                               {row.goals} <span style={{fontSize:'0.75rem',color:'rgba(255,255,255,0.5)'}}>Goals</span>
+                            <span className="compact-stat-primary" style={{
+                    color: '#fff',
+                    fontSize: '1.1rem',
+                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
+                  }}>
+                               {row.goals} <span style={{
+                      fontSize: '0.75rem',
+                      color: 'rgba(255,255,255,0.5)'
+                    }}>{t("Goals")}</span>
                             </span>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="leaderboard-empty">
-                    No active swappers recorded yet. Swap & predict to become the first on the board!
-                  </div>
-                )}
+                      </div>;
+          }) : <div className="leaderboard-empty">
+                    {t("No active swappers recorded yet. Swap & predict to become the first on the board!")}
+                  </div>}
               </div>
             </section>
 
-        </>
-      )}
+        </>}
 
       {currentView === 'match-center' && (() => {
-        if (!liveMatches || liveMatches.length === 0) {
-          return (
-            <div style={{ marginTop: '32px', textAlign: 'center', padding: '60px', color: 'rgba(255,255,255,0.4)', background: 'var(--color-surface)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ fontSize: '1.2rem', marginBottom: '8px', color: 'rgba(255,255,255,0.7)' }}>No Matches Available</div>
-              <div>Connecting to live matches database...</div>
-            </div>
-          );
-        }
-
-        const isWorldCupMatch = (m) => {
-          const comp = m.competition?.toLowerCase() || '';
-          return comp.includes('world cup') || comp.includes('fifa');
-        };
-
-        const categoryMatches = liveMatches.filter(m => {
+      if (!liveMatches || liveMatches.length === 0) {
+        return <div style={{
+          marginTop: '32px',
+          textAlign: 'center',
+          padding: '60px',
+          color: 'rgba(255,255,255,0.4)',
+          background: 'var(--color-surface)',
+          borderRadius: '12px',
+          border: '1px solid rgba(255,255,255,0.05)'
+        }}>
+              <div style={{
+            fontSize: '1.2rem',
+            marginBottom: '8px',
+            color: 'rgba(255,255,255,0.7)'
+          }}>{t("No Matches Available")}</div>
+              <div>{t("Connecting to live matches database...")}</div>
+            </div>;
+      }
+      const isWorldCupMatch = m => {
+        const comp = m.competition?.toLowerCase() || '';
+        return comp.includes('world cup') || comp.includes('fifa');
+      };
+      const categoryMatches = liveMatches.filter(m => {
+        const isWC = isWorldCupMatch(m);
+        return competitionCategory === 'world-cup' ? isWC : !isWC;
+      });
+      const selectedMatch = categoryMatches.find(m => m.id === selectedMatchCenterId) || categoryMatches[0];
+      const filteredMatches = categoryMatches.filter(m => {
+        if (matchFilter === 'live') return m.isLive && m.minute !== 'FT';
+        if (matchFilter === 'completed') return m.minute === 'FT';
+        if (matchFilter === 'upcoming') return !m.isLive && m.minute !== 'FT';
+        return true;
+      });
+      const liveGroup = filteredMatches.filter(m => m.isLive && m.minute !== 'FT');
+      const todayUpcomingGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date === TODAY_LABEL);
+      const tomorrowGroup = filteredMatches.filter(m => m.date === TOMORROW_LABEL && !m.isLive && m.minute !== 'FT');
+      const completedGroup = filteredMatches.filter(m => m.minute === 'FT');
+      const upcomingFutureGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date !== TODAY_LABEL && m.date !== TOMORROW_LABEL);
+      const handleCategoryChange = category => {
+        setCompetitionCategory(category);
+        const targetMatches = liveMatches.filter(m => {
           const isWC = isWorldCupMatch(m);
-          return competitionCategory === 'world-cup' ? isWC : !isWC;
+          return category === 'world-cup' ? isWC : !isWC;
         });
-
-        const selectedMatch = categoryMatches.find(m => m.id === selectedMatchCenterId) || categoryMatches[0];
-        const filteredMatches = categoryMatches.filter(m => {
-          if (matchFilter === 'live') return m.isLive && m.minute !== 'FT';
-          if (matchFilter === 'completed') return m.minute === 'FT';
-          if (matchFilter === 'upcoming') return !m.isLive && m.minute !== 'FT';
-          return true;
-        });
-
-        const liveGroup = filteredMatches.filter(m => m.isLive && m.minute !== 'FT');
-        const todayUpcomingGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date === TODAY_LABEL);
-        const tomorrowGroup = filteredMatches.filter(m => m.date === TOMORROW_LABEL && !m.isLive && m.minute !== 'FT');
-        const completedGroup = filteredMatches.filter(m => m.minute === 'FT');
-        const upcomingFutureGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date !== TODAY_LABEL && m.date !== TOMORROW_LABEL);
-
-        const handleCategoryChange = (category) => {
-          setCompetitionCategory(category);
-          const targetMatches = liveMatches.filter(m => {
-            const isWC = isWorldCupMatch(m);
-            return category === 'world-cup' ? isWC : !isWC;
-          });
-          if (targetMatches.length > 0) {
-            setSelectedMatchCenterId(targetMatches[0].id);
-          } else {
-            setSelectedMatchCenterId(null);
-          }
-        };
-
-        return (
-          <div style={{ marginTop: '32px' }}>
-            <section className="match-center-header" style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '2.5rem' }}>{competitionCategory === 'world-cup' ? '🏆' : '⚽'}</span>
+        if (targetMatches.length > 0) {
+          setSelectedMatchCenterId(targetMatches[0].id);
+        } else {
+          setSelectedMatchCenterId(null);
+        }
+      };
+      return <div style={{
+        marginTop: '32px'
+      }}>
+            <section className="match-center-header" style={{
+          marginBottom: '32px'
+        }}>
+              <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '20px'
+          }}>
+                <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+                  <span style={{
+                fontSize: '2.5rem'
+              }}>{competitionCategory === 'world-cup' ? '🏆' : '⚽'}</span>
                   <div>
-                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 800, background: 'linear-gradient(135deg, #fff 0%, var(--color-primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    <h2 style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '2.2rem',
+                  fontWeight: 800,
+                  background: 'linear-gradient(135deg, #fff 0%, var(--color-primary) 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
                       {competitionCategory === 'world-cup' ? 'World Cup Match Hub' : 'Leagues & Cups Hub'}
                     </h2>
-                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '4px' }}>
-                      {competitionCategory === 'world-cup'
-                        ? 'Real-time match scoring, tactical formations, and decentralized prediction jackpot pools for FIFA World Cup.'
-                        : 'Real-time fixtures, predictions, and stats for the major domestic leagues and continental cups.'}
+                    <p style={{
+                  color: 'rgba(255,255,255,0.5)',
+                  fontSize: '0.9rem',
+                  marginTop: '4px'
+                }}>
+                      {competitionCategory === 'world-cup' ? 'Real-time match scoring, tactical formations, and decentralized prediction jackpot pools for FIFA World Cup.' : 'Real-time fixtures, predictions, and stats for the major domestic leagues and continental cups.'}
                     </p>
                   </div>
                 </div>
 
                 {/* Competition Segmented Tabs */}
-                <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <button
-                    onClick={() => handleCategoryChange('world-cup')}
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      transition: 'all 0.2s',
-                      background: competitionCategory === 'world-cup' ? 'var(--color-primary)' : 'transparent',
-                      color: competitionCategory === 'world-cup' ? '#000' : 'rgba(255,255,255,0.6)'
-                    }}
-                  >
-                    🏆 FIFA World Cup
+                <div style={{
+              display: 'flex',
+              background: 'rgba(255,255,255,0.03)',
+              padding: '4px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.05)'
+            }}>
+                  <button onClick={() => handleCategoryChange('world-cup')} style={{
+                padding: '8px 16px',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                transition: 'all 0.2s',
+                background: competitionCategory === 'world-cup' ? 'var(--color-primary)' : 'transparent',
+                color: competitionCategory === 'world-cup' ? '#000' : 'rgba(255,255,255,0.6)'
+              }}>
+                    {t("🏆 FIFA World Cup")}
                   </button>
-                  <button
-                    onClick={() => handleCategoryChange('club')}
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      transition: 'all 0.2s',
-                      background: competitionCategory === 'club' ? 'var(--color-primary)' : 'transparent',
-                      color: competitionCategory === 'club' ? '#000' : 'rgba(255,255,255,0.6)'
-                    }}
-                  >
-                    ⚽ Leagues & Cups
+                  <button onClick={() => handleCategoryChange('club')} style={{
+                padding: '8px 16px',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                transition: 'all 0.2s',
+                background: competitionCategory === 'club' ? 'var(--color-primary)' : 'transparent',
+                color: competitionCategory === 'club' ? '#000' : 'rgba(255,255,255,0.6)'
+              }}>
+                    {t("⚽ Leagues & Cups")}
                   </button>
                 </div>
               </div>
             </section>
 
             <div className="match-center-container">
-              {categoryMatches.length === 0 ? (
-                <div style={{ flex: 1, textAlign: 'center', padding: '60px', color: 'rgba(255,255,255,0.4)', background: 'var(--color-surface)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', marginTop: '16px' }}>
-                  <div style={{ fontSize: '1.2rem', marginBottom: '8px', color: 'rgba(255,255,255,0.7)' }}>No matches active today</div>
-                  <div>Domestic leagues schedule is currently offline. Check back later!</div>
-                </div>
-              ) : (
-                <>
+              {categoryMatches.length === 0 ? <div style={{
+            flex: 1,
+            textAlign: 'center',
+            padding: '60px',
+            color: 'rgba(255,255,255,0.4)',
+            background: 'var(--color-surface)',
+            borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.05)',
+            marginTop: '16px'
+          }}>
+                  <div style={{
+              fontSize: '1.2rem',
+              marginBottom: '8px',
+              color: 'rgba(255,255,255,0.7)'
+            }}>{t("No matches active today")}</div>
+                  <div>{t("Domestic leagues schedule is currently offline. Check back later!")}</div>
+                </div> : <>
                   <div className="match-center-left">
                     <div className="match-filter-tabs">
-                      <button onClick={() => setMatchFilter('all')} className={`match-filter-btn ${matchFilter === 'all' ? 'active' : ''}`}>All</button>
-                      <button onClick={() => setMatchFilter('live')} className={`match-filter-btn ${matchFilter === 'live' ? 'active' : ''} live-tab`}>Live 🔴</button>
-                      <button onClick={() => setMatchFilter('upcoming')} className={`match-filter-btn ${matchFilter === 'upcoming' ? 'active' : ''}`}>Upcoming</button>
-                      <button onClick={() => setMatchFilter('completed')} className={`match-filter-btn ${matchFilter === 'completed' ? 'active' : ''}`}>Completed</button>
+                      <button onClick={() => setMatchFilter('all')} className={`match-filter-btn ${matchFilter === 'all' ? 'active' : ''}`}>{t("All")}</button>
+                      <button onClick={() => setMatchFilter('live')} className={`match-filter-btn ${matchFilter === 'live' ? 'active' : ''} live-tab`}>{t("Live 🔴")}</button>
+                      <button onClick={() => setMatchFilter('upcoming')} className={`match-filter-btn ${matchFilter === 'upcoming' ? 'active' : ''}`}>{t("Upcoming")}</button>
+                      <button onClick={() => setMatchFilter('completed')} className={`match-filter-btn ${matchFilter === 'completed' ? 'active' : ''}`}>{t("Completed")}</button>
                     </div>
 
-                    {liveGroup.length > 0 && (
-                      <>
-                        <div className="match-group-header">Live Matches 🔴</div>
+                    {liveGroup.length > 0 && <>
+                        <div className="match-group-header">{t("Live Matches 🔴")}</div>
                         {liveGroup.map(m => renderMatchCard(m))}
-                      </>
-                    )}
+                      </>}
 
-                    {todayUpcomingGroup.length > 0 && (
-                      <>
-                        <div className="match-group-header">Today - Upcoming ({TODAY_LABEL})</div>
+                    {todayUpcomingGroup.length > 0 && <>
+                        <div className="match-group-header">{t("Today - Upcoming (")}{TODAY_LABEL})</div>
                         {todayUpcomingGroup.map(m => renderMatchCard(m))}
-                      </>
-                    )}
+                      </>}
 
-                    {tomorrowGroup.length > 0 && (
-                      <>
-                        <div className="match-group-header">Tomorrow ({TOMORROW_LABEL})</div>
+                    {tomorrowGroup.length > 0 && <>
+                        <div className="match-group-header">{t("Tomorrow (")}{TOMORROW_LABEL})</div>
                         {tomorrowGroup.map(m => renderMatchCard(m))}
-                      </>
-                    )}
+                      </>}
 
-                    {upcomingFutureGroup.length > 0 && (
-                      <>
-                        <div className="match-group-header">Upcoming Fixtures</div>
+                    {upcomingFutureGroup.length > 0 && <>
+                        <div className="match-group-header">{t("Upcoming Fixtures")}</div>
                         {upcomingFutureGroup.map(m => renderMatchCard(m))}
-                      </>
-                    )}
+                      </>}
 
-                    {completedGroup.length > 0 && (
-                      <>
-                        <div className="match-group-header">Completed Matches (FT)</div>
+                    {completedGroup.length > 0 && <>
+                        <div className="match-group-header">{t("Completed Matches (FT)")}</div>
                         {completedGroup.map(m => renderMatchCard(m))}
-                      </>
-                    )}
+                      </>}
 
-                    {filteredMatches.length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.4)', background: 'var(--color-surface)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        No matches found for the selected filter.
-                      </div>
-                    )}
+                    {filteredMatches.length === 0 && <div style={{
+                textAlign: 'center',
+                padding: '40px',
+                color: 'rgba(255,255,255,0.4)',
+                background: 'var(--color-surface)',
+                borderRadius: '12px',
+                border: '1px solid rgba(255,255,255,0.05)'
+              }}>
+                        {t("No matches found for the selected filter.")}
+                      </div>}
                   </div>
 
                   <div className="match-center-right">
                     {selectedMatch && renderMatchHubDetails(selectedMatch)}
                   </div>
-                </>
-              )}
+                </>}
             </div>
-          </div>
-        );
-      })()}
+          </div>;
+    })()}
 
 
 
-      {currentView === 'okx-ai' && (
-        <div style={{ marginTop: '32px' }}>
+      {currentView === 'okx-ai' && <div style={{
+      marginTop: '32px'
+    }}>
           {/* Header Banner */}
-          <section className="match-center-header" style={{ marginBottom: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '2.5rem' }}>🤖</span>
+          <section className="match-center-header" style={{
+        marginBottom: '32px'
+      }}>
+            <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+              <span style={{
+            fontSize: '2.5rem'
+          }}>🤖</span>
               <div>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 800, background: 'linear-gradient(135deg, #fff 0%, var(--color-primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  OKX.AI Portal
+                <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '2.2rem',
+              fontWeight: 800,
+              background: 'linear-gradient(135deg, #fff 0%, var(--color-primary) 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
+                  {t("OKX.AI Portal")}
                 </h2>
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '4px' }}>
-                  Welcome to the Agentic Economy. Interact with the OKX.AI marketplace, list agents as service providers, or arbitrate disputes.
+                <p style={{
+              color: 'rgba(255,255,255,0.5)',
+              fontSize: '0.9rem',
+              marginTop: '4px'
+            }}>
+                  {t("Welcome to the Agentic Economy. Interact with the OKX.AI marketplace, list agents as service providers, or arbitrate disputes.")}
                 </p>
               </div>
             </div>
           </section>
 
           {/* Role Showcase Grid */}
-          <div className="okx-roles-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+          <div className="okx-roles-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '24px',
+        marginBottom: '32px'
+      }}>
             {/* User Card */}
-            <div className="card-bezel okx-role-card" style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <User size={24} style={{ color: 'var(--color-secondary)' }} />
-                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Task User</h3>
+            <div className="card-bezel okx-role-card" style={{
+          padding: '24px'
+        }}>
+              <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px'
+          }}>
+                <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+                  <User size={24} style={{
+                color: 'var(--color-secondary)'
+              }} />
+                  <h3 style={{
+                margin: 0,
+                fontSize: '1.25rem',
+                fontWeight: 700
+              }}>{t("Task User")}</h3>
                 </div>
-                <span className={`badge-xlayer ${isRegisteredUser ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', padding: '4px 10px' }}>
+                <span className={`badge-xlayer ${isRegisteredUser ? 'active-badge' : ''}`} style={{
+              fontSize: '0.75rem',
+              padding: '4px 10px'
+            }}>
                   {isRegisteredUser ? '● Connected ID' : '○ Unregistered'}
                 </span>
               </div>
-              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: '1.5', marginBottom: '16px' }}>
-                Hire specialized AI agents to complete on-chain task requests (auditing, trading, analysis). Fund secure escrow smart contracts on X Layer.
+              <p style={{
+            fontSize: '0.85rem',
+            color: 'rgba(255,255,255,0.6)',
+            lineHeight: '1.5',
+            marginBottom: '16px'
+          }}>
+                {t("Hire specialized AI agents to complete on-chain task requests (auditing, trading, analysis). Fund secure escrow smart contracts on X Layer.")}
               </p>
-              <div style={{ background: '#020405', padding: '10px', borderRadius: '6px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                prompt: Register me as a User on OKX.AI
+              <div style={{
+            background: '#020405',
+            padding: '10px',
+            borderRadius: '6px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.75rem',
+            color: 'rgba(255,255,255,0.4)',
+            marginBottom: '16px',
+            border: '1px solid rgba(255,255,255,0.05)'
+          }}>
+                {t("prompt: Register me as a User on OKX.AI")}
               </div>
-              <button 
-                onClick={() => handleRunTerminalCommand('register-user')} 
-                className="btn-secondary" 
-                style={{ width: '100%', padding: '8px', fontSize: '0.85rem', justifyContent: 'center', cursor: 'pointer' }}
-              >
-                Register Identity
+              <button onClick={() => handleRunTerminalCommand('register-user')} className="btn-secondary" style={{
+            width: '100%',
+            padding: '8px',
+            fontSize: '0.85rem',
+            justifyContent: 'center',
+            cursor: 'pointer'
+          }}>
+                {t("Register Identity")}
               </button>
             </div>
 
             {/* ASP Card */}
-            <div className="card-bezel okx-role-card" style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Cpu size={24} style={{ color: 'var(--color-primary)' }} />
-                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Service Provider (ASP)</h3>
+            <div className="card-bezel okx-role-card" style={{
+          padding: '24px'
+        }}>
+              <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px'
+          }}>
+                <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+                  <Cpu size={24} style={{
+                color: 'var(--color-primary)'
+              }} />
+                  <h3 style={{
+                margin: 0,
+                fontSize: '1.25rem',
+                fontWeight: 700
+              }}>{t("Service Provider (ASP)")}</h3>
                 </div>
-                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', padding: '4px 10px', borderColor: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)', color: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)' }}>
+                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{
+              fontSize: '0.75rem',
+              padding: '4px 10px',
+              borderColor: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)',
+              color: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)'
+            }}>
                   {isRegisteredASP ? `● ${GOALRUSH_ASP_STATUS} (${GOALRUSH_ASP_ID})` : '○ Not registered'}
                 </span>
               </div>
-              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: '1.5', marginBottom: '16px' }}>
-                List your AI agent services in the OKX.AI directory. Fulfill automated tasks or custom-negotiated predictions and earn payout fees.
+              <p style={{
+            fontSize: '0.85rem',
+            color: 'rgba(255,255,255,0.6)',
+            lineHeight: '1.5',
+            marginBottom: '16px'
+          }}>
+                {t("List your AI agent services in the OKX.AI directory. Fulfill automated tasks or custom-negotiated predictions and earn payout fees.")}
               </p>
-              <div style={{ background: '#020405', padding: '10px', borderRadius: '6px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                prompt: GoalRush ASP is registered as an A2MCP service on OKX.AI
+              <div style={{
+            background: '#020405',
+            padding: '10px',
+            borderRadius: '6px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.75rem',
+            color: 'rgba(255,255,255,0.4)',
+            marginBottom: '16px',
+            border: '1px solid rgba(255,255,255,0.05)'
+          }}>
+                {t("prompt: GoalRush ASP is registered as an A2MCP service on OKX.AI")}
               </div>
-              <button 
-                onClick={() => handleRunTerminalCommand('register-asp')} 
-                className="btn-primary" 
-                style={{ width: '100%', padding: '8px', fontSize: '0.85rem', justifyContent: 'center', cursor: 'pointer' }}
-              >
-                Register GoalRush Agent
+              <button onClick={() => handleRunTerminalCommand('register-asp')} className="btn-primary" style={{
+            width: '100%',
+            padding: '8px',
+            fontSize: '0.85rem',
+            justifyContent: 'center',
+            cursor: 'pointer'
+          }}>
+                {t("Register GoalRush Agent")}
               </button>
             </div>
 
             {/* Evaluator Card */}
-            <div className="card-bezel okx-role-card" style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <ShieldCheck size={24} style={{ color: 'var(--color-accent)' }} />
-                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Dispute Evaluator</h3>
+            <div className="card-bezel okx-role-card" style={{
+          padding: '24px'
+        }}>
+              <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px'
+          }}>
+                <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+                  <ShieldCheck size={24} style={{
+                color: 'var(--color-accent)'
+              }} />
+                  <h3 style={{
+                margin: 0,
+                fontSize: '1.25rem',
+                fontWeight: 700
+              }}>{t("Dispute Evaluator")}</h3>
                 </div>
-                <span className={`badge-xlayer ${isRegisteredEvaluator ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', padding: '4px 10px', borderColor: 'var(--color-accent)', color: 'var(--color-accent)' }}>
+                <span className={`badge-xlayer ${isRegisteredEvaluator ? 'active-badge' : ''}`} style={{
+              fontSize: '0.75rem',
+              padding: '4px 10px',
+              borderColor: 'var(--color-accent)',
+              color: 'var(--color-accent)'
+            }}>
                   {isRegisteredEvaluator ? '● Staked & Online' : '○ Off-duty'}
                 </span>
               </div>
-              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: '1.5', marginBottom: '16px' }}>
-                Stake at least 100 OKB to act as an arbitrator. Review evidence to resolve user/agent contract disputes. Earn 5% of bounties on correct verdicts.
+              <p style={{
+            fontSize: '0.85rem',
+            color: 'rgba(255,255,255,0.6)',
+            lineHeight: '1.5',
+            marginBottom: '16px'
+          }}>
+                {t("Stake at least 100 OKB to act as an arbitrator. Review evidence to resolve user/agent contract disputes. Earn 5% of bounties on correct verdicts.")}
               </p>
-              <div style={{ background: '#020405', padding: '10px', borderRadius: '6px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                prompt: Register me as an Evaluator on OKX.AI
+              <div style={{
+            background: '#020405',
+            padding: '10px',
+            borderRadius: '6px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.75rem',
+            color: 'rgba(255,255,255,0.4)',
+            marginBottom: '16px',
+            border: '1px solid rgba(255,255,255,0.05)'
+          }}>
+                {t("prompt: Register me as an Evaluator on OKX.AI")}
               </div>
-              <button 
-                onClick={() => handleRunTerminalCommand('register-evaluator')} 
-                className="btn-secondary" 
-                style={{ width: '100%', padding: '8px', fontSize: '0.85rem', justifyContent: 'center', cursor: 'pointer' }}
-              >
-                Stake & Activate
+              <button onClick={() => handleRunTerminalCommand('register-evaluator')} className="btn-secondary" style={{
+            width: '100%',
+            padding: '8px',
+            fontSize: '0.85rem',
+            justifyContent: 'center',
+            cursor: 'pointer'
+          }}>
+                {t("Stake & Activate")}
               </button>
             </div>
           </div>
 
           {/* Terminal and Interactive Command Center */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '32px', marginBottom: '32px' }}>
-            <div className="card-bezel okx-terminal-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 className="panel-title" style={{ margin: 0 }}>
-                  <TerminalIcon size={20} style={{ color: 'var(--color-secondary)' }} />
-                  Onchain OS Agent Console
+          <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr',
+        gap: '32px',
+        marginBottom: '32px'
+      }}>
+            <div className="card-bezel okx-terminal-card" style={{
+          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
+              <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+                <h3 className="panel-title" style={{
+              margin: 0
+            }}>
+                  <TerminalIcon size={20} style={{
+                color: 'var(--color-secondary)'
+              }} />
+                  {t("Onchain OS Agent Console")}
                 </h3>
-                <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)' }}>
-                  Session: X-LAYER-TESTNET
+                <span style={{
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font-mono)',
+              color: 'rgba(255,255,255,0.4)'
+            }}>
+                  {t("Session: X-LAYER-TESTNET")}
                 </span>
               </div>
 
               {/* Terminal Screen */}
-              <div 
-                className="okx-terminal-screen" 
-                style={{ 
-                  background: '#010304', 
-                  border: '1px solid rgba(255,255,255,0.08)', 
-                  borderRadius: '8px', 
-                  padding: '16px', 
-                  height: '240px', 
-                  overflowY: 'auto', 
-                  fontFamily: 'var(--font-mono)', 
-                  fontSize: '0.85rem', 
-                  lineHeight: '1.5',
-                  color: '#00ff66',
-                  boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8)'
-                }}
-              >
-                {terminalHistory.map((line, idx) => (
-                  <div key={idx} style={{ minHeight: '18px', color: line.startsWith('>') ? 'var(--color-secondary)' : line.includes('SUCCESS') || line.includes('CONFIRMED') ? 'var(--color-primary)' : line.includes('Warning') || line.includes('Error') ? 'var(--color-danger)' : '#a3b5c0' }}>
+              <div className="okx-terminal-screen" style={{
+            background: '#010304',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '8px',
+            padding: '16px',
+            height: '240px',
+            overflowY: 'auto',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.85rem',
+            lineHeight: '1.5',
+            color: '#00ff66',
+            boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8)'
+          }}>
+                {terminalHistory.map((line, idx) => <div key={idx} style={{
+              minHeight: '18px',
+              color: line.startsWith('>') ? 'var(--color-secondary)' : line.includes('SUCCESS') || line.includes('CONFIRMED') ? 'var(--color-primary)' : line.includes('Warning') || line.includes('Error') ? 'var(--color-danger)' : '#a3b5c0'
+            }}>
                     {line}
-                  </div>
-                ))}
-                {isTerminalLoading && (
-                  <div className="terminal-loading-dots" style={{ color: 'var(--color-secondary)' }}>
-                    Fulfilling request...
-                  </div>
-                )}
+                  </div>)}
+                {isTerminalLoading && <div className="terminal-loading-dots" style={{
+              color: 'var(--color-secondary)'
+            }}>
+                    {t("Fulfilling request...")}
+                  </div>}
               </div>
 
               {/* Console Inputs */}
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <input
-                  type="text"
-                  value={terminalInput}
-                  onChange={(e) => setTerminalInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleRunTerminalCommand(terminalInput)}
-                  placeholder="Type an Onchain OS prompt (e.g. status, help)..."
-                  style={{
-                    flex: 1,
-                    background: 'rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: '8px',
-                    padding: '12px 16px',
-                    color: '#fff',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.9rem',
-                    outline: 'none'
-                  }}
-                />
-                <button
-                  onClick={() => handleRunTerminalCommand(terminalInput)}
-                  className="btn-primary"
-                  style={{ padding: '0 24px', cursor: 'pointer' }}
-                >
-                  <Send size={16} /> Run
+              <div style={{
+            display: 'flex',
+            gap: '12px'
+          }}>
+                <input type="text" value={terminalInput} onChange={e => setTerminalInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleRunTerminalCommand(terminalInput)} placeholder={t("Type an Onchain OS prompt (e.g. status, help)...")} style={{
+              flex: 1,
+              background: 'rgba(0,0,0,0.4)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              color: '#fff',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.9rem',
+              outline: 'none'
+            }} />
+                <button onClick={() => handleRunTerminalCommand(terminalInput)} className="btn-primary" style={{
+              padding: '0 24px',
+              cursor: 'pointer'
+            }}>
+                  <Send size={16} /> {t("Run")}
                 </button>
               </div>
 
               {/* Quick Actions Footer */}
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px' }}>
-                <button onClick={() => handleRunTerminalCommand('help')} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.75rem', cursor: 'pointer' }}>help</button>
-                <button onClick={() => handleRunTerminalCommand('npx skills add okx/onchainos-skills')} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.75rem', cursor: 'pointer' }}>install skills pack</button>
-                <button onClick={() => handleRunTerminalCommand('status')} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.75rem', cursor: 'pointer' }}>check status</button>
-                <button onClick={() => handleRunTerminalCommand('clear')} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.75rem', color: 'var(--color-danger)', borderColor: 'rgba(255, 51, 68, 0.2)', cursor: 'pointer' }}>clear logs</button>
+              <div style={{
+            display: 'flex',
+            gap: '8px',
+            flexWrap: 'wrap',
+            borderTop: '1px solid rgba(255,255,255,0.05)',
+            paddingTop: '12px'
+          }}>
+                <button onClick={() => handleRunTerminalCommand('help')} className="btn-secondary" style={{
+              padding: '6px 12px',
+              fontSize: '0.75rem',
+              cursor: 'pointer'
+            }}>{t("help")}</button>
+                <button onClick={() => handleRunTerminalCommand('npx skills add okx/onchainos-skills')} className="btn-secondary" style={{
+              padding: '6px 12px',
+              fontSize: '0.75rem',
+              cursor: 'pointer'
+            }}>{t("install skills pack")}</button>
+                <button onClick={() => handleRunTerminalCommand('status')} className="btn-secondary" style={{
+              padding: '6px 12px',
+              fontSize: '0.75rem',
+              cursor: 'pointer'
+            }}>{t("check status")}</button>
+                <button onClick={() => handleRunTerminalCommand('clear')} className="btn-secondary" style={{
+              padding: '6px 12px',
+              fontSize: '0.75rem',
+              color: 'var(--color-danger)',
+              borderColor: 'rgba(255, 51, 68, 0.2)',
+              cursor: 'pointer'
+            }}>{t("clear logs")}</button>
               </div>
             </div>
           </div>
 
           {/* Service Provider & Arbitration Section Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: isRegisteredEvaluator ? '1fr 1fr' : '1fr', gap: '32px', marginBottom: '64px' }}>
+          <div style={{
+        display: 'grid',
+        gridTemplateColumns: isRegisteredEvaluator ? '1fr 1fr' : '1fr',
+        gap: '32px',
+        marginBottom: '64px'
+      }}>
             
             {/* ASP Service Hub details */}
-            <div className="card-bezel okx-asp-dashboard" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 className="panel-title" style={{ margin: 0 }}>
-                  <Cpu size={20} style={{ color: 'var(--color-primary)' }} />
-                  GoalRush ASP Console
+            <div className="card-bezel okx-asp-dashboard" style={{
+          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
+              <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+                <h3 className="panel-title" style={{
+              margin: 0
+            }}>
+                  <Cpu size={20} style={{
+                color: 'var(--color-primary)'
+              }} />
+                  {t("GoalRush ASP Console")}
                 </h3>
-                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{ fontSize: '0.75rem', borderColor: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)', color: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)' }}>
+                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{
+              fontSize: '0.75rem',
+              borderColor: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)',
+              color: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)'
+            }}>
                   {isRegisteredASP ? `● ${GOALRUSH_ASP_STATUS.toUpperCase()} (${GOALRUSH_ASP_ID})` : '○ OFFLINE'}
                 </span>
               </div>
 
-              {!isRegisteredASP ? (
-                <div style={{ textAlign: 'center', padding: '40px 20px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.08)' }}>
-                  <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', marginBottom: '16px' }}>
-                    Register the GoalRush Swarm Predictor as an Agent Service Provider (ASP) to launch your sports oracle API services.
+              {!isRegisteredASP ? <div style={{
+            textAlign: 'center',
+            padding: '40px 20px',
+            background: 'rgba(0,0,0,0.2)',
+            borderRadius: '8px',
+            border: '1px dashed rgba(255,255,255,0.08)'
+          }}>
+                  <p style={{
+              color: 'rgba(255,255,255,0.4)',
+              fontSize: '0.9rem',
+              marginBottom: '16px'
+            }}>
+                    {t("Register the GoalRush Swarm Predictor as an Agent Service Provider (ASP) to launch your sports oracle API services.")}
                   </p>
-                  <button onClick={() => handleRunTerminalCommand('register-asp')} className="btn-primary" style={{ display: 'inline-flex', margin: '0 auto', cursor: 'pointer' }}>
-                    Activate Provider Portal
+                  <button onClick={() => handleRunTerminalCommand('register-asp')} className="btn-primary" style={{
+              display: 'inline-flex',
+              margin: '0 auto',
+              cursor: 'pointer'
+            }}>
+                    {t("Activate Provider Portal")}
                   </button>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ background: 'rgba(157, 255, 0, 0.08)', padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(157, 255, 0, 0.25)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.85rem' }}>
+                </div> : <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+                  <div style={{
+              background: 'rgba(157, 255, 0, 0.08)',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              border: '1px solid rgba(157, 255, 0, 0.25)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}>
+                    <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                color: 'var(--color-primary)',
+                fontWeight: 600,
+                fontSize: '0.85rem'
+              }}>
                       <CheckCircle size={16} />
-                      <span>Listing submitted to OKX.AI review (Agent ID: {GOALRUSH_ASP_ID})</span>
+                      <span>{t("Listing submitted to OKX.AI review (Agent ID:")} {GOALRUSH_ASP_ID})</span>
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.4' }}>
-                      The GoalRush ASP is registered on-chain and submitted for OKX.AI review. Paid API calls must pass the x402 payment middleware before the prediction route runs.
+                    <span style={{
+                fontSize: '0.75rem',
+                color: 'rgba(255,255,255,0.7)',
+                lineHeight: '1.4'
+              }}>
+                      {t("The GoalRush ASP is registered on-chain and submitted for OKX.AI review. Paid API calls must pass the x402 payment middleware before the prediction route runs.")}
                     </span>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Fee rate</span>
-                      <strong style={{ fontSize: '1.2rem', color: 'var(--color-primary)', fontFamily: 'var(--font-mono)' }}>{GOALRUSH_ASP_FEE}</strong>
-                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', display: 'block', marginTop: '2px' }}>charged per paid API call</span>
+                  <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '16px'
+            }}>
+                    <div style={{
+                background: 'rgba(255,255,255,0.02)',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.05)'
+              }}>
+                      <span style={{
+                  fontSize: '0.75rem',
+                  color: 'rgba(255,255,255,0.4)',
+                  display: 'block'
+                }}>{t("Fee rate")}</span>
+                      <strong style={{
+                  fontSize: '1.2rem',
+                  color: 'var(--color-primary)',
+                  fontFamily: 'var(--font-mono)'
+                }}>{GOALRUSH_ASP_FEE}</strong>
+                      <span style={{
+                  fontSize: '0.7rem',
+                  color: 'rgba(255,255,255,0.3)',
+                  display: 'block',
+                  marginTop: '2px'
+                }}>{t("charged per paid API call")}</span>
                     </div>
-                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Total Earnings</span>
-                      <strong style={{ fontSize: '1.2rem', color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)' }}>{agentStats.totalEarnings} USDT</strong>
-                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', display: 'block', marginTop: '2px' }}>{agentStats.totalCalls} API calls served</span>
+                    <div style={{
+                background: 'rgba(255,255,255,0.02)',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.05)'
+              }}>
+                      <span style={{
+                  fontSize: '0.75rem',
+                  color: 'rgba(255,255,255,0.4)',
+                  display: 'block'
+                }}>{t("Total Earnings")}</span>
+                      <strong style={{
+                  fontSize: '1.2rem',
+                  color: 'var(--color-secondary)',
+                  fontFamily: 'var(--font-mono)'
+                }}>{agentStats.totalEarnings} {t("USDT")}</strong>
+                      <span style={{
+                  fontSize: '0.7rem',
+                  color: 'rgba(255,255,255,0.3)',
+                  display: 'block',
+                  marginTop: '2px'
+                }}>{agentStats.totalCalls} {t("API calls served")}</span>
                     </div>
                   </div>
 
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.85rem' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: '4px' }}>Registered API Endpoint (A2MCP)</span>
-                    <code style={{ color: 'var(--color-secondary)', fontFamily: 'var(--font-mono)', wordBreak: 'break-all' }}>{BACKEND_API_BASE}/predict</code>
+                  <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              padding: '12px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.05)',
+              fontSize: '0.85rem'
+            }}>
+                    <span style={{
+                color: 'rgba(255,255,255,0.4)',
+                display: 'block',
+                marginBottom: '4px'
+              }}>{t("Registered API Endpoint (A2MCP)")}</span>
+                    <code style={{
+                color: 'var(--color-secondary)',
+                fontFamily: 'var(--font-mono)',
+                wordBreak: 'break-all'
+              }}>{BACKEND_API_BASE}{t("/predict")}</code>
                   </div>
 
                   <div>
-                    <h4 style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '8px', fontWeight: 600 }}>Active Prediction Fulfillments</h4>
-                    <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+                    <h4 style={{
+                fontSize: '0.9rem',
+                color: '#fff',
+                marginBottom: '8px',
+                fontWeight: 600
+              }}>{t("Active Prediction Fulfillments")}</h4>
+                    <div style={{
+                overflowX: 'auto'
+              }}>
+                      <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '0.8rem',
+                  textAlign: 'left'
+                }}>
                         <thead>
-                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
-                            <th style={{ padding: '8px 4px' }}>Client</th>
-                            <th style={{ padding: '8px 4px' }}>Match</th>
-                            <th style={{ padding: '8px 4px' }}>Prediction</th>
-                            <th style={{ padding: '8px 4px' }}>Status</th>
+                          <tr style={{
+                      borderBottom: '1px solid rgba(255,255,255,0.08)',
+                      color: 'rgba(255,255,255,0.4)'
+                    }}>
+                            <th style={{
+                        padding: '8px 4px'
+                      }}>{t("Client")}</th>
+                            <th style={{
+                        padding: '8px 4px'
+                      }}>{t("Match")}</th>
+                            <th style={{
+                        padding: '8px 4px'
+                      }}>{t("Prediction")}</th>
+                            <th style={{
+                        padding: '8px 4px'
+                      }}>{t("Status")}</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {isLoadingFulfillments && agentFulfillments.length === 0 ? (
-                            <tr>
-                              <td colSpan="4" style={{ padding: '16px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
-                                Loading prediction jobs from DB...
+                          {isLoadingFulfillments && agentFulfillments.length === 0 ? <tr>
+                              <td colSpan="4" style={{
+                        padding: '16px',
+                        textAlign: 'center',
+                        color: 'rgba(255,255,255,0.4)'
+                      }}>
+                                {t("Loading prediction jobs from DB...")}
                               </td>
-                            </tr>
-                          ) : agentFulfillments.length === 0 ? (
-                            <tr>
-                              <td colSpan="4" style={{ padding: '16px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
-                                No active prediction jobs. Select a match below to test.
+                            </tr> : agentFulfillments.length === 0 ? <tr>
+                              <td colSpan="4" style={{
+                        padding: '16px',
+                        textAlign: 'center',
+                        color: 'rgba(255,255,255,0.4)'
+                      }}>
+                                {t("No active prediction jobs. Select a match below to test.")}
                               </td>
-                            </tr>
-                          ) : (
-                            agentFulfillments.map((f, i) => {
-                              const isFinished = f.match_status === 'FINISHED';
-                              return (
-                                <tr key={f.id || i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                  <td style={{ padding: '8px 4px', fontFamily: 'var(--font-mono)' }}>{f.wallet.slice(0, 10)}...</td>
-                                  <td style={{ padding: '8px 4px' }}>{f.home_team} vs {f.away_team}</td>
-                                  <td style={{ padding: '8px 4px', color: 'var(--color-primary)', textTransform: 'uppercase' }}>{f.prediction}</td>
-                                  <td style={{ padding: '8px 4px', color: isFinished ? 'var(--color-primary)' : '#ffaa00' }}>
+                            </tr> : agentFulfillments.map((f, i) => {
+                      const isFinished = f.match_status === 'FINISHED';
+                      return <tr key={f.id || i} style={{
+                        borderBottom: '1px solid rgba(255,255,255,0.04)'
+                      }}>
+                                  <td style={{
+                          padding: '8px 4px',
+                          fontFamily: 'var(--font-mono)'
+                        }}>{f.wallet.slice(0, 10)}...</td>
+                                  <td style={{
+                          padding: '8px 4px'
+                        }}>{f.home_team} vs {f.away_team}</td>
+                                  <td style={{
+                          padding: '8px 4px',
+                          color: 'var(--color-primary)',
+                          textTransform: 'uppercase'
+                        }}>{f.prediction}</td>
+                                  <td style={{
+                          padding: '8px 4px',
+                          color: isFinished ? 'var(--color-primary)' : '#ffaa00'
+                        }}>
                                     {isFinished ? 'Delivered' : 'Evaluating'}
                                   </td>
-                                </tr>
-                              );
-                            })
-                          )}
+                                </tr>;
+                    })}
                         </tbody>
                       </table>
                     </div>
                   </div>
 
-                  <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.08)', margin: '16px 0' }} />
+                  <hr style={{
+              border: 'none',
+              borderTop: '1px solid rgba(255,255,255,0.08)',
+              margin: '16px 0'
+            }} />
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <h4 style={{ fontSize: '0.95rem', color: 'var(--color-primary)', margin: '0 0 4px 0', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+                    <h4 style={{
+                fontSize: '0.95rem',
+                color: 'var(--color-primary)',
+                margin: '0 0 4px 0',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
                       <Activity size={16} />
-                      Live AI Swarm Prediction Tester
+                      {t("Live AI Swarm Prediction Tester")}
                     </h4>
-                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', margin: 0 }}>
-                      Send a real-time request to the GoalRush consensus swarm to predict an outcome using current news sentiment.
+                    <p style={{
+                color: 'rgba(255,255,255,0.5)',
+                fontSize: '0.75rem',
+                margin: 0
+              }}>
+                      {t("Send a real-time request to the GoalRush consensus swarm to predict an outcome using current news sentiment.")}
                     </p>
 
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                      <select
-                        value={selectedPredictMatchId}
-                        onChange={(e) => setSelectedPredictMatchId(e.target.value)}
-                        style={{
-                          flex: 1,
-                          background: 'rgba(0,0,0,0.5)',
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          color: '#fff',
-                          padding: '8px 12px',
-                          borderRadius: '6px',
-                          fontSize: '0.85rem',
-                          fontFamily: 'inherit',
-                          outline: 'none'
-                        }}
-                      >
-                        <option value="">-- Select Active Match --</option>
-                        {liveMatches.map((m) => (
-                          <option key={m.id} value={m.dbId || m.id}>
+                    <div style={{
+                display: 'flex',
+                gap: '12px',
+                alignItems: 'center'
+              }}>
+                      <select value={selectedPredictMatchId} onChange={e => setSelectedPredictMatchId(e.target.value)} style={{
+                  flex: 1,
+                  background: 'rgba(0,0,0,0.5)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#fff',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  fontFamily: 'inherit',
+                  outline: 'none'
+                }}>
+                        <option value="">{t("-- Select Active Match --")}</option>
+                        {liveMatches.map(m => <option key={m.id} value={m.dbId || m.id}>
                             {m.teamA} vs {m.teamB} ({m.minute})
-                          </option>
-                        ))}
+                          </option>)}
                       </select>
 
-                      <button
-                        onClick={handleQueryPrediction}
-                        disabled={isQueryingPredict || !selectedPredictMatchId}
-                        className="btn-primary"
-                        style={{
-                          padding: '8px 16px',
-                          fontSize: '0.85rem',
-                          height: '38px',
-                          whiteSpace: 'nowrap',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}
-                      >
-                        {isQueryingPredict ? (
-                          <>
-                            <span className="terminal-loading-dots">Swarm Voting</span>
-                          </>
-                        ) : (
-                          <>
+                      <button onClick={handleQueryPrediction} disabled={isQueryingPredict || !selectedPredictMatchId} className="btn-primary" style={{
+                  padding: '8px 16px',
+                  fontSize: '0.85rem',
+                  height: '38px',
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                        {isQueryingPredict ? <>
+                            <span className="terminal-loading-dots">{t("Swarm Voting")}</span>
+                          </> : <>
                             <Send size={14} />
-                            Query Swarm
-                          </>
-                        )}
+                            {t("Query Swarm")}
+                          </>}
                       </button>
                     </div>
 
-                    {predictError && (
-                      <div style={{ color: '#ff3344', fontSize: '0.8rem', background: 'rgba(255,51,68,0.05)', padding: '8px', borderRadius: '4px', border: '1px solid rgba(255,51,68,0.15)' }}>
-                        <strong>Error:</strong> {predictError}
-                      </div>
-                    )}
+                    {predictError && <div style={{
+                color: '#ff3344',
+                fontSize: '0.8rem',
+                background: 'rgba(255,51,68,0.05)',
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid rgba(255,51,68,0.15)'
+              }}>
+                        <strong>{t("Error:")}</strong> {predictError}
+                      </div>}
 
-                    {predictResult && (
-                      <div style={{ background: 'rgba(0,0,0,0.4)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(157, 255, 0, 0.15)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '6px' }}>
-                          <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>Swarm Verdict</span>
-                          <strong style={{ fontSize: '0.85rem', color: 'var(--color-primary)' }}>{predictResult.prediction}</strong>
+                    {predictResult && <div style={{
+                background: 'rgba(0,0,0,0.4)',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid rgba(157, 255, 0, 0.15)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}>
+                        <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                  paddingBottom: '6px'
+                }}>
+                          <span style={{
+                    fontSize: '0.8rem',
+                    color: 'rgba(255,255,255,0.4)'
+                  }}>{t("Swarm Verdict")}</span>
+                          <strong style={{
+                    fontSize: '0.85rem',
+                    color: 'var(--color-primary)'
+                  }}>{predictResult.prediction}</strong>
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>
-                          <strong>Reasoning:</strong> {predictResult.reasoning}
+                        <div style={{
+                  fontSize: '0.75rem',
+                  color: 'rgba(255,255,255,0.7)',
+                  lineHeight: 1.4
+                }}>
+                          <strong>{t("Reasoning:")}</strong> {predictResult.reasoning}
                         </div>
-                        <div style={{ display: 'flex', gap: '12px', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
-                          <span>Votes:</span>
-                          {Object.entries(predictResult.tally).map(([team, count]) => (
-                            <span key={team}><strong>{team}</strong>: {count}</span>
-                          ))}
+                        <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                  fontSize: '0.7rem',
+                  color: 'rgba(255,255,255,0.4)',
+                  marginTop: '4px'
+                }}>
+                          <span>{t("Votes:")}</span>
+                          {Object.entries(predictResult.tally).map(([team, count]) => <span key={team}><strong>{team}</strong>: {count}</span>)}
                         </div>
-                      </div>
-                    )}
+                      </div>}
                   </div>
-                </div>
-              )}
+                </div>}
             </div>
 
             {/* Evaluator Arbitration Simulator */}
-            {isRegisteredEvaluator && (
-              <div className="card-bezel okx-evaluator-dashboard" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h3 className="panel-title" style={{ margin: 0 }}>
-                    <ShieldCheck size={20} style={{ color: 'var(--color-accent)' }} />
-                    Evaluator Dispute Court
+            {isRegisteredEvaluator && <div className="card-bezel okx-evaluator-dashboard" style={{
+          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
+                <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+                  <h3 className="panel-title" style={{
+              margin: 0
+            }}>
+                    <ShieldCheck size={20} style={{
+                color: 'var(--color-accent)'
+              }} />
+                    {t("Evaluator Dispute Court")}
                   </h3>
-                  <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)' }}>
-                    Acc: {evaluatorAccuracy}%
+                  <span style={{
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font-mono)',
+              color: 'rgba(255,255,255,0.4)'
+            }}>
+                    {t("Acc:")} {evaluatorAccuracy}%
                   </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                    <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Staked</span>
-                    <strong style={{ fontSize: '1rem', color: '#fff', fontFamily: 'var(--font-mono)' }}>{evaluatorStaked} OKB</strong>
+                <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '12px'
+          }}>
+                  <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              padding: '10px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.05)',
+              textAlign: 'center'
+            }}>
+                    <span style={{
+                fontSize: '0.7rem',
+                color: 'rgba(255,255,255,0.4)',
+                display: 'block'
+              }}>{t("Staked")}</span>
+                    <strong style={{
+                fontSize: '1rem',
+                color: '#fff',
+                fontFamily: 'var(--font-mono)'
+              }}>{evaluatorStaked} {t("OKB")}</strong>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                    <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Earned</span>
-                    <strong style={{ fontSize: '1rem', color: 'var(--color-primary)', fontFamily: 'var(--font-mono)' }}>+{evaluatorBounties} OKB</strong>
+                  <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              padding: '10px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.05)',
+              textAlign: 'center'
+            }}>
+                    <span style={{
+                fontSize: '0.7rem',
+                color: 'rgba(255,255,255,0.4)',
+                display: 'block'
+              }}>{t("Earned")}</span>
+                    <strong style={{
+                fontSize: '1rem',
+                color: 'var(--color-primary)',
+                fontFamily: 'var(--font-mono)'
+              }}>+{evaluatorBounties} {t("OKB")}</strong>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                    <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Slashed</span>
-                    <strong style={{ fontSize: '1rem', color: 'var(--color-danger)', fontFamily: 'var(--font-mono)' }}>-{evaluatorSlashed} OKB</strong>
+                  <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              padding: '10px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.05)',
+              textAlign: 'center'
+            }}>
+                    <span style={{
+                fontSize: '0.7rem',
+                color: 'rgba(255,255,255,0.4)',
+                display: 'block'
+              }}>{t("Slashed")}</span>
+                    <strong style={{
+                fontSize: '1rem',
+                color: 'var(--color-danger)',
+                fontFamily: 'var(--font-mono)'
+              }}>-{evaluatorSlashed} {t("OKB")}</strong>
                   </div>
                 </div>
 
                 {/* Staking Increase controls */}
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>Adjust Staked Deposit:</span>
-                  <button onClick={() => setEvaluatorStaked(prev => prev + 50)} className="btn-secondary" style={{ padding: '4px 8px', fontSize: '0.75rem', cursor: 'pointer' }}>+50 OKB</button>
-                  <button onClick={() => setEvaluatorStaked(prev => Math.max(100, prev - 50))} className="btn-secondary" style={{ padding: '4px 8px', fontSize: '0.75rem', cursor: 'pointer' }}>-50 OKB</button>
+                <div style={{
+            display: 'flex',
+            gap: '8px',
+            alignItems: 'center'
+          }}>
+                  <span style={{
+              fontSize: '0.8rem',
+              color: 'rgba(255,255,255,0.6)'
+            }}>{t("Adjust Staked Deposit:")}</span>
+                  <button onClick={() => setEvaluatorStaked(prev => prev + 50)} className="btn-secondary" style={{
+              padding: '4px 8px',
+              fontSize: '0.75rem',
+              cursor: 'pointer'
+            }}>{t("+50 OKB")}</button>
+                  <button onClick={() => setEvaluatorStaked(prev => Math.max(100, prev - 50))} className="btn-secondary" style={{
+              padding: '4px 8px',
+              fontSize: '0.75rem',
+              cursor: 'pointer'
+            }}>{t("-50 OKB")}</button>
                 </div>
 
                 {/* Cases List */}
                 <div>
-                  <h4 style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '8px', fontWeight: 600 }}>Assigned Dispute Pool</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {mockDisputes.map((item, idx) => (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          setSelectedCaseIndex(idx);
-                          setArbitrationResult(null);
-                        }}
-                        className={`team-row ${selectedCaseIndex === idx ? 'selected' : ''}`}
-                        style={{ padding: '10px 14px', width: '100%', textDecoration: 'none', color: '#fff', background: selectedCaseIndex === idx ? 'rgba(255, 92, 0, 0.08)' : 'rgba(255,255,255,0.02)', borderColor: selectedCaseIndex === idx ? 'var(--color-accent)' : 'rgba(255,255,255,0.05)', display: 'block', borderStyle: 'solid', borderWidth: '1px', borderRadius: '8px', textAlign: 'left', cursor: 'pointer', transition: 'var(--transition-smooth)' }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                          <span style={{ fontWeight: 600, fontSize: '0.8rem' }}>{item.id} &middot; {item.task.slice(0, 32)}...</span>
-                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--color-primary)' }}>{item.bounty} OKB</span>
+                  <h4 style={{
+              fontSize: '0.9rem',
+              color: '#fff',
+              marginBottom: '8px',
+              fontWeight: 600
+            }}>{t("Assigned Dispute Pool")}</h4>
+                  <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+                    {mockDisputes.map((item, idx) => <button key={item.id} onClick={() => {
+                setSelectedCaseIndex(idx);
+                setArbitrationResult(null);
+              }} className={`team-row ${selectedCaseIndex === idx ? 'selected' : ''}`} style={{
+                padding: '10px 14px',
+                width: '100%',
+                textDecoration: 'none',
+                color: '#fff',
+                background: selectedCaseIndex === idx ? 'rgba(255, 92, 0, 0.08)' : 'rgba(255,255,255,0.02)',
+                borderColor: selectedCaseIndex === idx ? 'var(--color-accent)' : 'rgba(255,255,255,0.05)',
+                display: 'block',
+                borderStyle: 'solid',
+                borderWidth: '1px',
+                borderRadius: '8px',
+                textAlign: 'left',
+                cursor: 'pointer',
+                transition: 'var(--transition-smooth)'
+              }}>
+                        <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  alignItems: 'center'
+                }}>
+                          <span style={{
+                    fontWeight: 600,
+                    fontSize: '0.8rem'
+                  }}>{item.id} &middot; {item.task.slice(0, 32)}...</span>
+                          <span style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.75rem',
+                    color: 'var(--color-primary)'
+                  }}>{item.bounty} {t("OKB")}</span>
                         </div>
-                      </button>
-                    ))}
+                      </button>)}
                   </div>
                 </div>
 
                 {/* Case File Details Panel */}
                 {selectedCaseIndex !== null && (() => {
-                  const activeCase = mockDisputes[selectedCaseIndex];
-                  return (
-                    <div style={{ background: '#020405', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '6px', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>
-                        <strong>Case File:</strong> {activeCase.id} | Client: {activeCase.user} vs Provider: {activeCase.asp}
+            const activeCase = mockDisputes[selectedCaseIndex];
+            return <div style={{
+              background: '#020405',
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: '8px',
+              padding: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+                      <div style={{
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                paddingBottom: '6px',
+                fontSize: '0.8rem',
+                color: 'rgba(255,255,255,0.4)'
+              }}>
+                        <strong>{t("Case File:")}</strong> {activeCase.id} {t("| Client:")} {activeCase.user} {t("vs Provider:")} {activeCase.asp}
                       </div>
-                      <div style={{ fontSize: '0.8rem', lineHeight: '1.4' }}>
-                        <span style={{ color: 'var(--color-danger)', fontWeight: 600, display: 'block', marginBottom: '2px' }}>User Complaint:</span>
-                        <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0 }}>"{activeCase.complaint}"</p>
+                      <div style={{
+                fontSize: '0.8rem',
+                lineHeight: '1.4'
+              }}>
+                        <span style={{
+                  color: 'var(--color-danger)',
+                  fontWeight: 600,
+                  display: 'block',
+                  marginBottom: '2px'
+                }}>{t("User Complaint:")}</span>
+                        <p style={{
+                  color: 'rgba(255,255,255,0.7)',
+                  margin: 0
+                }}>"{activeCase.complaint}"</p>
                       </div>
-                      <div style={{ fontSize: '0.8rem', lineHeight: '1.4' }}>
-                        <span style={{ color: 'var(--color-secondary)', fontWeight: 600, display: 'block', marginBottom: '2px' }}>ASP Delivery Log:</span>
-                        <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0 }}>"{activeCase.delivery}"</p>
+                      <div style={{
+                fontSize: '0.8rem',
+                lineHeight: '1.4'
+              }}>
+                        <span style={{
+                  color: 'var(--color-secondary)',
+                  fontWeight: 600,
+                  display: 'block',
+                  marginBottom: '2px'
+                }}>{t("ASP Delivery Log:")}</span>
+                        <p style={{
+                  color: 'rgba(255,255,255,0.7)',
+                  margin: 0
+                }}>"{activeCase.delivery}"</p>
                       </div>
 
                       {/* Vote selection */}
-                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ fontSize: '0.75rem', color: '#ffcc00' }}>
-                          ⚠️ Submit your vote. Majority vote wins. Wrong vote slashes 1.00 OKB.
+                      <div style={{
+                borderTop: '1px solid rgba(255,255,255,0.05)',
+                paddingTop: '10px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}>
+                        <div style={{
+                  fontSize: '0.75rem',
+                  color: '#ffcc00'
+                }}>
+                          {t("⚠️ Submit your vote. Majority vote wins. Wrong vote slashes 1.00 OKB.")}
                         </div>
-                        {isResolvingCase ? (
-                          <div style={{ textAlign: 'center', padding: '8px', color: 'var(--color-accent)', fontSize: '0.8rem', fontWeight: 600 }}>
-                            ⌛ Collecting evaluator consensus signatures...
-                          </div>
-                        ) : arbitrationResult ? (
-                          <div style={{ 
-                            padding: '8px', 
-                            borderRadius: '6px', 
-                            fontSize: '0.85rem', 
-                            background: arbitrationResult.success ? 'rgba(157, 255, 0, 0.05)' : 'rgba(255, 51, 68, 0.05)', 
-                            border: `1px solid ${arbitrationResult.success ? 'var(--color-primary)' : 'var(--color-danger)'}`,
-                            color: arbitrationResult.success ? 'var(--color-primary)' : 'var(--color-danger)' 
-                          }}>
+                        {isResolvingCase ? <div style={{
+                  textAlign: 'center',
+                  padding: '8px',
+                  color: 'var(--color-accent)',
+                  fontSize: '0.8rem',
+                  fontWeight: 600
+                }}>
+                            {t("⌛ Collecting evaluator consensus signatures...")}
+                          </div> : arbitrationResult ? <div style={{
+                  padding: '8px',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  background: arbitrationResult.success ? 'rgba(157, 255, 0, 0.05)' : 'rgba(255, 51, 68, 0.05)',
+                  border: `1px solid ${arbitrationResult.success ? 'var(--color-primary)' : 'var(--color-danger)'}`,
+                  color: arbitrationResult.success ? 'var(--color-primary)' : 'var(--color-danger)'
+                }}>
                             {arbitrationResult.message}
-                            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginTop: '6px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '4px' }}>
-                              <strong>Verdict logic:</strong> {activeCase.rational}
+                            <div style={{
+                    fontSize: '0.75rem',
+                    color: 'rgba(255,255,255,0.5)',
+                    marginTop: '6px',
+                    borderTop: '1px solid rgba(255,255,255,0.08)',
+                    paddingTop: '4px'
+                  }}>
+                              <strong>{t("Verdict logic:")}</strong> {activeCase.rational}
                             </div>
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', gap: '10px' }}>
-                            <button
-                              onClick={() => handleArbitrationVote('user')}
-                              className="btn-secondary"
-                              style={{ flex: 1, padding: '8px', fontSize: '0.8rem', borderColor: 'var(--color-danger)', color: 'var(--color-danger)', background: 'rgba(255, 51, 68, 0.05)', justifyContent: 'center', cursor: 'pointer' }}
-                            >
-                              Support User
+                          </div> : <div style={{
+                  display: 'flex',
+                  gap: '10px'
+                }}>
+                            <button onClick={() => handleArbitrationVote('user')} className="btn-secondary" style={{
+                    flex: 1,
+                    padding: '8px',
+                    fontSize: '0.8rem',
+                    borderColor: 'var(--color-danger)',
+                    color: 'var(--color-danger)',
+                    background: 'rgba(255, 51, 68, 0.05)',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}>
+                              {t("Support User")}
                             </button>
-                            <button
-                              onClick={() => handleArbitrationVote('asp')}
-                              className="btn-secondary"
-                              style={{ flex: 1, padding: '8px', fontSize: '0.8rem', borderColor: 'var(--color-primary)', color: 'var(--color-primary)', background: 'rgba(157, 255, 0, 0.05)', justifyContent: 'center', cursor: 'pointer' }}
-                            >
-                              Support ASP
+                            <button onClick={() => handleArbitrationVote('asp')} className="btn-secondary" style={{
+                    flex: 1,
+                    padding: '8px',
+                    fontSize: '0.8rem',
+                    borderColor: 'var(--color-primary)',
+                    color: 'var(--color-primary)',
+                    background: 'rgba(157, 255, 0, 0.05)',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}>
+                              {t("Support ASP")}
                             </button>
-                          </div>
-                        )}
+                          </div>}
                       </div>
-                    </div>
-                  );
-                })()}
+                    </div>;
+          })()}
 
-              </div>
-            )}
+              </div>}
 
           </div>
 
-        </div>
-      )}
+        </div>}
 
-      {currentView === 'about' && (
-        <div style={{ marginTop: '32px' }}>
-          <section className="match-center-header" style={{ marginBottom: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '2.5rem' }}>ℹ️</span>
+      {currentView === 'about' && <div style={{
+      marginTop: '32px'
+    }}>
+          <section className="match-center-header" style={{
+        marginBottom: '32px'
+      }}>
+            <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+              <span style={{
+            fontSize: '2.5rem'
+          }}>ℹ️</span>
               <div>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 800, background: 'linear-gradient(135deg, #fff 0%, var(--color-primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>GoalRush Hub</h2>
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '4px' }}>Learn about GoalRush Uniswap V4 hook architecture, utility tokens, NFT collectibles, and developer tools.</p>
+                <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '2.2rem',
+              fontWeight: 800,
+              background: 'linear-gradient(135deg, #fff 0%, var(--color-primary) 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>{t("GoalRush Hub")}</h2>
+                <p style={{
+              color: 'rgba(255,255,255,0.5)',
+              fontSize: '0.9rem',
+              marginTop: '4px'
+            }}>{t("Learn about GoalRush Uniswap V4 hook architecture, utility tokens, NFT collectibles, and developer tools.")}</p>
               </div>
             </div>
           </section>
 
           {/* Tab Selection */}
-          <div className="match-filter-tabs" style={{ marginBottom: '24px' }}>
-            <button onClick={() => setAboutSubTab('overview')} className={`match-filter-btn ${aboutSubTab === 'overview' ? 'active' : ''}`}>Overview</button>
-            <button onClick={() => setAboutSubTab('whitepaper')} className={`match-filter-btn ${aboutSubTab === 'whitepaper' ? 'active' : ''}`}>Whitepaper</button>
-            <button onClick={() => setAboutSubTab('contracts')} className={`match-filter-btn ${aboutSubTab === 'contracts' ? 'active' : ''}`}>Smart Contracts</button>
-            <button onClick={() => setAboutSubTab('deployment')} className={`match-filter-btn ${aboutSubTab === 'deployment' ? 'active' : ''}`}>Deployment Guide</button>
+          <div className="match-filter-tabs" style={{
+        marginBottom: '24px'
+      }}>
+            <button onClick={() => setAboutSubTab('overview')} className={`match-filter-btn ${aboutSubTab === 'overview' ? 'active' : ''}`}>{t("Overview")}</button>
+            <button onClick={() => setAboutSubTab('whitepaper')} className={`match-filter-btn ${aboutSubTab === 'whitepaper' ? 'active' : ''}`}>{t("Whitepaper")}</button>
+            <button onClick={() => setAboutSubTab('contracts')} className={`match-filter-btn ${aboutSubTab === 'contracts' ? 'active' : ''}`}>{t("Smart Contracts")}</button>
+            <button onClick={() => setAboutSubTab('deployment')} className={`match-filter-btn ${aboutSubTab === 'deployment' ? 'active' : ''}`}>{t("Deployment Guide")}</button>
           </div>
 
-          {aboutSubTab === 'overview' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <section className="card-bezel" style={{ padding: '24px' }}>
-                <h3 className="panel-title" style={{ marginTop: 0 }}>
-                  <Award size={20} style={{ color: 'var(--color-primary)' }} /> About GoalRush
+          {aboutSubTab === 'overview' && <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px'
+      }}>
+              <section className="card-bezel" style={{
+          padding: '24px'
+        }}>
+                <h3 className="panel-title" style={{
+            marginTop: 0
+          }}>
+                  <Award size={20} style={{
+              color: 'var(--color-primary)'
+            }} /> {t("About GoalRush")}
                 </h3>
-                <p style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', marginBottom: '24px' }}>
-                  GoalRush is a decentralized sports prediction protocol built natively on OKX X Layer. It leverages the cutting-edge capabilities of <strong>Uniswap V4 Hooks</strong> to seamlessly combine yield, sports prediction jackpots, and gamified swap fee rebates directly within decentralized trading pools.
+                <p style={{
+            fontSize: '0.95rem',
+            color: 'rgba(255,255,255,0.8)',
+            lineHeight: '1.6',
+            marginBottom: '24px'
+          }}>
+                  {t("GoalRush is a decentralized sports prediction protocol built natively on OKX X Layer. It leverages the cutting-edge capabilities of")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to seamlessly combine yield, sports prediction jackpots, and gamified swap fee rebates directly within decentralized trading pools.")}
                 </p>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      ⚽ Prediction Jackpot
+                <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '24px'
+          }}>
+                  <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              padding: '20px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.05)'
+            }}>
+                    <h4 style={{
+                fontWeight: 600,
+                fontSize: '1.05rem',
+                color: 'var(--color-primary)',
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                      {t("⚽ Prediction Jackpot")}
                     </h4>
-                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
-                      Pick a result and fund it with OKB or GRUSH through the prediction router. Only transferred assets count toward the claimable jackpot; observed swap volume is informational.
+                    <p style={{
+                fontSize: '0.82rem',
+                color: 'rgba(255,255,255,0.5)',
+                lineHeight: '1.5',
+                marginBottom: '8px'
+              }}>
+                      {t("Pick a result and fund it with OKB or GRUSH through the prediction router. Only transferred assets count toward the claimable jackpot; observed swap volume is informational.")}
                     </p>
-                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
-                      <strong>Claim Rules:</strong> Once the match is resolved on-chain, winners pull their winnings proportionally: <code>(Your Swap Volume / Total Winning Team Volume) * Total Jackpot Pool</code>.
+                    <div style={{
+                borderTop: '1px solid rgba(255,255,255,0.05)',
+                paddingTop: '8px',
+                fontSize: '0.75rem',
+                color: 'rgba(255,255,255,0.4)',
+                lineHeight: '1.4'
+              }}>
+                      <strong>{t("Claim Rules:")}</strong> {t("Once the match is resolved on-chain, winners pull their winnings proportionally:")} <code>{t("(Your Swap Volume / Total Winning Team Volume) * Total Jackpot Pool")}</code>.
                     </div>
                   </div>
 
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      🏆 Boosts & Multipliers
+                  <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              padding: '20px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.05)'
+            }}>
+                    <h4 style={{
+                fontWeight: 600,
+                fontSize: '1.05rem',
+                color: 'var(--color-primary)',
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                      {t("🏆 Boosts & Multipliers")}
                     </h4>
-                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
-                      Top users with higher <strong>in-game goals scored</strong>, more <strong>GRUSH token holdings</strong>, and larger <strong>prediction volume</strong> receive ecosystem multipliers.
+                    <p style={{
+                fontSize: '0.82rem',
+                color: 'rgba(255,255,255,0.5)',
+                lineHeight: '1.5',
+                marginBottom: '8px'
+              }}>
+                      {t("Top users with higher")} <strong>{t("in-game goals scored")}</strong>{t(", more")} <strong>{t("GRUSH token holdings")}</strong>{t(", and larger")} <strong>{t("prediction volume")}</strong> {t("receive ecosystem multipliers.")}
                     </p>
-                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
-                      <strong>Reward weight:</strong> Your leaderboard status directly boosts your reward share weights in the pools and future drops, rewarding the most active members.
+                    <div style={{
+                borderTop: '1px solid rgba(255,255,255,0.05)',
+                paddingTop: '8px',
+                fontSize: '0.75rem',
+                color: 'rgba(255,255,255,0.4)',
+                lineHeight: '1.4'
+              }}>
+                      <strong>{t("Reward weight:")}</strong> {t("Your leaderboard status directly boosts your reward share weights in the pools and future drops, rewarding the most active members.")}
                     </div>
                   </div>
 
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      📡 Live Match Integration
+                  <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              padding: '20px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.05)'
+            }}>
+                    <h4 style={{
+                fontWeight: 600,
+                fontSize: '1.05rem',
+                color: 'var(--color-primary)',
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                      {t("📡 Live Match Integration")}
                     </h4>
-                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
-                      Choose from real-world matches in the Live Scores feed. Anyone can select a fixture, and the contract owner can instantiate it directly onto the contract with a single click.
+                    <p style={{
+                fontSize: '0.82rem',
+                color: 'rgba(255,255,255,0.5)',
+                lineHeight: '1.5',
+                marginBottom: '8px'
+              }}>
+                      {t("Choose from real-world matches in the Live Scores feed. Anyone can select a fixture, and the contract owner can instantiate it directly onto the contract with a single click.")}
                     </p>
-                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
-                      <strong>Real-Time Updates:</strong> Live matches load automatically. Simply click any match in the feed to set it as the target prediction match in the swap widget.
+                    <div style={{
+                borderTop: '1px solid rgba(255,255,255,0.05)',
+                paddingTop: '8px',
+                fontSize: '0.75rem',
+                color: 'rgba(255,255,255,0.4)',
+                lineHeight: '1.4'
+              }}>
+                      <strong>{t("Real-Time Updates:")}</strong> {t("Live matches load automatically. Simply click any match in the feed to set it as the target prediction match in the swap widget.")}
                     </div>
                   </div>
 
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      🖼️ ERC-721 Player NFTs
+                  <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              padding: '20px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.05)'
+            }}>
+                    <h4 style={{
+                fontWeight: 600,
+                fontSize: '1.05rem',
+                color: 'var(--color-primary)',
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                      {t("🖼️ ERC-721 Player NFTs")}
                     </h4>
-                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
-                      Generate custom holographic player cards using your prediction volume statistics. Mint them as permanent, fully-tradable ERC-721 NFTs on the X Layer blockchain!
+                    <p style={{
+                fontSize: '0.82rem',
+                color: 'rgba(255,255,255,0.5)',
+                lineHeight: '1.5',
+                marginBottom: '8px'
+              }}>
+                      {t("Generate custom holographic player cards using your prediction volume statistics. Mint them as permanent, fully-tradable ERC-721 NFTs on the X Layer blockchain!")}
                     </p>
-                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
-                      <strong>Mint Pricing:</strong> Mint for a small gas fee of 0.002 OKB or spend 10 GRUSH utility tokens. Tradable on the OKX NFT Marketplace.
+                    <div style={{
+                borderTop: '1px solid rgba(255,255,255,0.05)',
+                paddingTop: '8px',
+                fontSize: '0.75rem',
+                color: 'rgba(255,255,255,0.4)',
+                lineHeight: '1.4'
+              }}>
+                      <strong>{t("Mint Pricing:")}</strong> {t("Mint for a small gas fee of 0.002 OKB or spend 10 GRUSH utility tokens. Tradable on the OKX NFT Marketplace.")}
                     </div>
                   </div>
 
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      ⚡ Goal Rush Rebate
+                  <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              padding: '20px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.05)'
+            }}>
+                    <h4 style={{
+                fontWeight: 600,
+                fontSize: '1.05rem',
+                color: 'var(--color-primary)',
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                      {t("⚡ Goal Rush Rebate")}
                     </h4>
-                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5' }}>
-                      The hook records a pseudo-random goal event at a configurable rate. The current contract emits an event but does not transfer an automatic fee rebate; the penalty shootout is simulation-based.
+                    <p style={{
+                fontSize: '0.82rem',
+                color: 'rgba(255,255,255,0.5)',
+                lineHeight: '1.5'
+              }}>
+                      {t("The hook records a pseudo-random goal event at a configurable rate. The current contract emits an event but does not transfer an automatic fee rebate; the penalty shootout is simulation-based.")}
                     </p>
                   </div>
 
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      🔗 X Layer Integration
+                  <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              padding: '20px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.05)'
+            }}>
+                    <h4 style={{
+                fontWeight: 600,
+                fontSize: '1.05rem',
+                color: 'var(--color-primary)',
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                      {t("🔗 X Layer Integration")}
                     </h4>
-                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5' }}>
-                      Deployed on OKX X Layer Mainnet, GoalRush utilizes high-speed block confirmation times and ultra-low gas fees. Swappers experience instant transaction feedback on penalty shootouts and minimal fee overhead.
+                    <p style={{
+                fontSize: '0.82rem',
+                color: 'rgba(255,255,255,0.5)',
+                lineHeight: '1.5'
+              }}>
+                      {t("Deployed on OKX X Layer Mainnet, GoalRush utilizes high-speed block confirmation times and ultra-low gas fees. Swappers experience instant transaction feedback on penalty shootouts and minimal fee overhead.")}
                     </p>
                   </div>
 
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(157, 255, 0, 0.3)' }}>
-                    <h4 style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      🧠 Autonomous AGI Agent
+                  <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              padding: '20px',
+              borderRadius: '12px',
+              border: '1px solid rgba(157, 255, 0, 0.3)'
+            }}>
+                    <h4 style={{
+                fontWeight: 600,
+                fontSize: '1.05rem',
+                color: 'var(--color-primary)',
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                      {t("🧠 Autonomous AGI Agent")}
                     </h4>
-                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '8px' }}>
-                      GoalRush is the premier execution sandbox for Open AGI. A decentralized Llama-3 agent actively monitors live sports news, predicts outcomes, and trades autonomously on our smart contracts.
+                    <p style={{
+                fontSize: '0.82rem',
+                color: 'rgba(255,255,255,0.5)',
+                lineHeight: '1.5',
+                marginBottom: '8px'
+              }}>
+                      {t("GoalRush is the premier execution sandbox for Open AGI. A decentralized Llama-3 agent actively monitors live sports news, predicts outcomes, and trades autonomously on our smart contracts.")}
                     </p>
-                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}>
-                      <strong>Security:</strong> Protected by a Hard Boundary Architecture, preventing prompt-injection wallet hacks.
+                    <div style={{
+                borderTop: '1px solid rgba(255,255,255,0.05)',
+                paddingTop: '8px',
+                fontSize: '0.75rem',
+                color: 'rgba(255,255,255,0.4)',
+                lineHeight: '1.4'
+              }}>
+                      <strong>{t("Security:")}</strong> {t("Protected by a Hard Boundary Architecture, preventing prompt-injection wallet hacks.")}
                     </div>
                   </div>
                 </div>
               </section>
-            </div>
-          )}
+            </div>}
 
-          {aboutSubTab === 'whitepaper' && (
-            <section className="card-bezel" style={{ padding: '24px' }}>
-              <div className="whitepaper-content" style={{ padding: 0 }}>
-                <div className="whitepaper-section" style={{ textAlign: 'center', marginBottom: '40px' }}>
-                  <h1 style={{ fontFamily: 'var(--font-heading)', color: '#fff', fontSize: '2rem', marginBottom: '8px' }}>GOALRUSH WHITEPAPER</h1>
-                  <p style={{ color: 'var(--color-primary)', fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '2px' }}>
-                    Sports Prediction Engine Powered by Uniswap V4
+          {aboutSubTab === 'whitepaper' && <section className="card-bezel" style={{
+        padding: '24px'
+      }}>
+              <div className="whitepaper-content" style={{
+          padding: 0
+        }}>
+                <div className="whitepaper-section" style={{
+            textAlign: 'center',
+            marginBottom: '40px'
+          }}>
+                  <h1 style={{
+              fontFamily: 'var(--font-heading)',
+              color: '#fff',
+              fontSize: '2rem',
+              marginBottom: '8px'
+            }}>{t("GOALRUSH WHITEPAPER")}</h1>
+                  <p style={{
+              color: 'var(--color-primary)',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '2px'
+            }}>
+                    {t("Sports Prediction Engine Powered by Uniswap V4")}
                   </p>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '16px', fontSize: '0.8rem', opacity: 0.6 }}>
-                    <span>Published: June 2026</span>
+                  <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '20px',
+              marginTop: '16px',
+              fontSize: '0.8rem',
+              opacity: 0.6
+            }}>
+                    <span>{t("Published: June 2026")}</span>
                     <span>•</span>
-                    <span>Version: 1.0.2</span>
+                    <span>{t("Version: 1.0.2")}</span>
                     <span>•</span>
-                    <span>Chain: OKX X Layer Mainnet</span>
+                    <span>{t("Chain: OKX X Layer Mainnet")}</span>
                   </div>
                 </div>
 
                 <div className="whitepaper-section">
-                  <h2>1. Executive Summary</h2>
+                  <h2>{t("1. Executive Summary")}</h2>
                   <p>
-                    GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the <strong>OKX X Layer Mainnet</strong>, GoalRush utilizes custom <strong>Uniswap V4 Hooks</strong> to route prediction ticket purchases directly through AMM swap events.
+                    {t("GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the")} <strong>{t("OKX X Layer Mainnet")}</strong>{t(", GoalRush utilizes custom")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to route prediction ticket purchases directly through AMM swap events.")}
                   </p>
-                  <p style={{ marginTop: '12px' }}>
-                    By turning trade volumes into prediction tickets and goalie shootout challenges, GoalRush creates a self-sustaining gamified ecosystem. Holders of the <strong>GRUSH</strong> utility token receive structural gameplay advantages (such as penalty strike success boosts) and unique visual profiles within the application, encouraging organic demand and token retention.
+                  <p style={{
+              marginTop: '12px'
+            }}>
+                    {t("By turning trade volumes into prediction tickets and goalie shootout challenges, GoalRush creates a self-sustaining gamified ecosystem. Holders of the")} <strong>{t("GRUSH")}</strong> {t("utility token receive structural gameplay advantages (such as penalty strike success boosts) and unique visual profiles within the application, encouraging organic demand and token retention.")}
                   </p>
                 </div>
 
                 <div className="whitepaper-section">
-                  <h2>2. Architecture & Uniswap V4 Hook Design</h2>
+                  <h2>{t("2. Architecture & Uniswap V4 Hook Design")}</h2>
                   <p>
-                    GoalRush integrates directly with Uniswap V4's lifecycle callback hooks to trigger off-chain events and on-chain prediction entries. The core of this system is the <code>WorldCupGoalRushHook</code> contract.
+                    {t("GoalRush integrates directly with Uniswap V4's lifecycle callback hooks to trigger off-chain events and on-chain prediction entries. The core of this system is the")} <code>{t("WorldCupGoalRushHook")}</code> {t("contract.")}
                   </p>
 
-                  <h3>2.1 The beforeSwap Callback</h3>
+                  <h3>{t("2.1 The beforeSwap Callback")}</h3>
                   <p>
-                    When a user initiates a prediction transaction via the dashboard:
+                    {t("When a user initiates a prediction transaction via the dashboard:")}
                   </p>
                   <ul>
-                    <li>The swap parameters and prediction selection (Team A vs Team B) are compiled and sent to the hook.</li>
-                    <li>The <code>beforeSwap</code> callback extracts the prediction payload (e.g. <code>hookData</code>).</li>
-                    <li>The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native OKB sent directly into the <strong>Match Jackpot Pool</strong>.</li>
+                    <li>{t("The swap parameters and prediction selection (Team A vs Team B) are compiled and sent to the hook.")}</li>
+                    <li>{t("The")} <code>{t("beforeSwap")}</code> {t("callback extracts the prediction payload (e.g.")} <code>{t("hookData")}</code>).</li>
+                    <li>{t("The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native OKB sent directly into the")} <strong>{t("Match Jackpot Pool")}</strong>.</li>
                   </ul>
 
-                  <div className="whitepaper-diagram-box" style={{ background: '#000', border: '1px solid rgba(255,255,255,0.05)', padding: '16px', borderRadius: '8px', fontFamily: 'var(--font-mono)', fontSize: '0.78rem', margin: '16px 0', lineHeight: '1.4' }}>
+                  <div className="whitepaper-diagram-box" style={{
+              background: '#000',
+              border: '1px solid rgba(255,255,255,0.05)',
+              padding: '16px',
+              borderRadius: '8px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.78rem',
+              margin: '16px 0',
+              lineHeight: '1.4'
+            }}>
                     {"User Swap Initiated"} <br />
                     {"  │"}<br />
                     {"  ▼"}<br />
@@ -7272,33 +8758,64 @@ export default function App() {
                     {"  └──► Locks OKB value in Jackpot Pool"}<br />
                   </div>
 
-                  <h3>2.2 The afterSwap Callback & Shootout Rebates</h3>
+                  <h3>{t("2.2 The afterSwap Callback & Shootout Rebates")}</h3>
                   <p>
-                    Following the completion of the swap, the <code>afterSwap</code> callback is executed. This initiates a goalkeeper save/shootout simulation. If the user successfully scores a goal against the automated goalkeeper, they are rewarded with a <strong>Fee Rebate</strong>:
+                    {t("Following the completion of the swap, the")} <code>{t("afterSwap")}</code> {t("callback is executed. This initiates a goalkeeper save/shootout simulation. If the user successfully scores a goal against the automated goalkeeper, they are rewarded with a")} <strong>{t("Fee Rebate")}</strong>:
                   </p>
                   <ul>
-                    <li><strong>Standard Players:</strong> Have a base 50% probability of scoring a goal.</li>
-                    <li><strong>GRUSH Token Holders:</strong> Holding GRUSH tokens activates the **VIP Shooter Perk**, increasing the success rate to <strong>75%</strong> and applying a custom green glow to their UI.</li>
-                    <li>On a successful score, a rebate payout (simulated from the pool's accumulated hook fees) is emitted back to the swapper.</li>
+                    <li><strong>{t("Standard Players:")}</strong> {t("Have a base 50% probability of scoring a goal.")}</li>
+                    <li><strong>{t("GRUSH Token Holders:")}</strong> {t("Holding GRUSH tokens activates the **VIP Shooter Perk**, increasing the success rate to")} <strong>75%</strong> {t("and applying a custom green glow to their UI.")}</li>
+                    <li>{t("On a successful score, a rebate payout (simulated from the pool's accumulated hook fees) is emitted back to the swapper.")}</li>
                   </ul>
                 </div>
 
                 <div className="whitepaper-section">
-                  <h2>3. Game Mechanics & Jackpot Resolution</h2>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '12px' }}>
-                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <h3 style={{ marginTop: 0 }}>Accumulating the Jackpot</h3>
-                      <p style={{ fontSize: '0.85rem' }}>
-                        Every shootout prediction ticket locks native OKB directly inside the Hook contract. Unlike standard prediction markets with high fee cuts, GoalRush allocates 100% of the user-submitted amount directly into the Match Jackpot Pool, creating massive pools for key matches.
+                  <h2>{t("3. Game Mechanics & Jackpot Resolution")}</h2>
+                  <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '20px',
+              marginTop: '12px'
+            }}>
+                    <div style={{
+                background: 'rgba(255,255,255,0.02)',
+                padding: '16px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.05)'
+              }}>
+                      <h3 style={{
+                  marginTop: 0
+                }}>{t("Accumulating the Jackpot")}</h3>
+                      <p style={{
+                  fontSize: '0.85rem'
+                }}>
+                        {t("Every shootout prediction ticket locks native OKB directly inside the Hook contract. Unlike standard prediction markets with high fee cuts, GoalRush allocates 100% of the user-submitted amount directly into the Match Jackpot Pool, creating massive pools for key matches.")}
                       </p>
                     </div>
-                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <h3 style={{ marginTop: 0 }}>Claiming the Pool</h3>
-                      <p style={{ fontSize: '0.85rem' }}>
-                        Once the real-world match is resolved, the oracle updates the winner on-chain. Users who predicted the winning team can call <code>claimJackpot</code>. The contract automatically calculates their proportional share:
+                    <div style={{
+                background: 'rgba(255,255,255,0.02)',
+                padding: '16px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.05)'
+              }}>
+                      <h3 style={{
+                  marginTop: 0
+                }}>{t("Claiming the Pool")}</h3>
+                      <p style={{
+                  fontSize: '0.85rem'
+                }}>
+                        {t("Once the real-world match is resolved, the oracle updates the winner on-chain. Users who predicted the winning team can call")} <code>{t("claimJackpot")}</code>{t(". The contract automatically calculates their proportional share:")}
                         <br />
-                        <code style={{ display: 'block', margin: '8px 0', padding: '4px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
-                          Payout = (UserBet * TotalJackpot) / WinnerTotalVolume
+                        <code style={{
+                    display: 'block',
+                    margin: '8px 0',
+                    padding: '4px',
+                    background: 'rgba(0,0,0,0.3)',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    fontFamily: 'var(--font-mono)'
+                  }}>
+                          {t("Payout = (UserBet * TotalJackpot) / WinnerTotalVolume")}
                         </code>
                       </p>
                     </div>
@@ -7306,91 +8823,145 @@ export default function App() {
                 </div>
 
                 <div className="whitepaper-section">
-                  <h2>4. The GRUSH Utility Token</h2>
+                  <h2>{t("4. The GRUSH Utility Token")}</h2>
                   <p>
-                    To maximize compliance with hackathon regulations and foster permissionless market listing, the <strong>GRUSH</strong> token was launched on the <strong>Eulr.fun</strong> bonding curve platform.
+                    {t("To maximize compliance with hackathon regulations and foster permissionless market listing, the")} <strong>{t("GRUSH")}</strong> {t("token was launched on the")} <strong>{t("Eulr.fun")}</strong> {t("bonding curve platform.")}
                   </p>
                   <ul>
-                    <li><strong>Contract Address:</strong> <code>0x422fe165b2da990d18c6dca944b11dcd61519671</code></li>
-                    <li><strong>Real-Time Balance Checks:</strong> The dApp performs on-chain queries to verify if the connected wallet holds GRUSH.</li>
-                    <li><strong>VIP Highlights:</strong> Holding any amount of GRUSH applies neon-green aesthetic text shadows to the player's dashboard profile and registers them as a premium member in the prediction logs.</li>
+                    <li><strong>{t("Contract Address:")}</strong> <code>{t("0x422fe165b2da990d18c6dca944b11dcd61519671")}</code></li>
+                    <li><strong>{t("Real-Time Balance Checks:")}</strong> {t("The dApp performs on-chain queries to verify if the connected wallet holds GRUSH.")}</li>
+                    <li><strong>{t("VIP Highlights:")}</strong> {t("Holding any amount of GRUSH applies neon-green aesthetic text shadows to the player's dashboard profile and registers them as a premium member in the prediction logs.")}</li>
                   </ul>
                 </div>
 
-                <div className="whitepaper-section" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px' }}>
-                  <h2>5. Open AGI Execution Layer</h2>
+                <div className="whitepaper-section" style={{
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            paddingTop: '20px'
+          }}>
+                  <h2>{t("5. Open AGI Execution Layer")}</h2>
                   <p>
-                    GoalRush operates as a secure execution sandbox for an Autonomous Open AGI Agent. Integrating open-source LLMs (like Llama-3) with decentralized finance presents significant prompt-injection security risks. GoalRush mitigates this using a <strong>Hard Boundary Execution Architecture</strong>.
+                    {t("GoalRush operates as a secure execution sandbox for an Autonomous Open AGI Agent. Integrating open-source LLMs (like Llama-3) with decentralized finance presents significant prompt-injection security risks. GoalRush mitigates this using a")} <strong>{t("Hard Boundary Execution Architecture")}</strong>.
                   </p>
-                  <p style={{ marginTop: '12px' }}>
-                    The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded OKB transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.
+                  <p style={{
+              marginTop: '12px'
+            }}>
+                    {t("The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded OKB transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.")}
                   </p>
-                  <p style={{ marginTop: '12px' }}>
-                    <strong>Event-Driven Stealth Operation:</strong> The agent operates entirely behind the scenes without exposing its logs to the frontend UI. Rather than inefficiently polling for updates, the swarm is purely event-driven: it wakes up precisely when a match is activated on-chain to place its prediction, and triggers instantly when a match is resolved to autonomously claim its jackpot winnings.
+                  <p style={{
+              marginTop: '12px'
+            }}>
+                    <strong>{t("Event-Driven Stealth Operation:")}</strong> {t("The agent operates entirely behind the scenes without exposing its logs to the frontend UI. Rather than inefficiently polling for updates, the swarm is purely event-driven: it wakes up precisely when a match is activated on-chain to place its prediction, and triggers instantly when a match is resolved to autonomously claim its jackpot winnings.")}
                   </p>
                 </div>
 
-                <div className="whitepaper-section" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px' }}>
-                  <h2>6. Security & Verification</h2>
+                <div className="whitepaper-section" style={{
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            paddingTop: '20px'
+          }}>
+                  <h2>{t("6. Security & Verification")}</h2>
                   <p>
-                    The GoalRush codebase has undergone a complete security check to ensure transparency and prevent loss of user funds:
+                    {t("The GoalRush codebase has undergone a complete security check to ensure transparency and prevent loss of user funds:")}
                   </p>
-                  <ol style={{ paddingLeft: '20px' }}>
-                    <li><strong>Strict OKX Wallet Isolation:</strong> Connection is locked to the official OKX wallet to prevent phishing or multi-wallet collisions.</li>
-                    <li><strong>Non-Custodial Design:</strong> The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.</li>
-                    <li><strong>Eulr-fun Bonding Safety:</strong> Real token swaps happen permissionlessly on Euler, shielding the dApp simulator from token vault vulnerabilities.</li>
+                  <ol style={{
+              paddingLeft: '20px'
+            }}>
+                    <li><strong>{t("Strict OKX Wallet Isolation:")}</strong> {t("Connection is locked to the official OKX wallet to prevent phishing or multi-wallet collisions.")}</li>
+                    <li><strong>{t("Non-Custodial Design:")}</strong> {t("The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.")}</li>
+                    <li><strong>{t("Eulr-fun Bonding Safety:")}</strong> {t("Real token swaps happen permissionlessly on Euler, shielding the dApp simulator from token vault vulnerabilities.")}</li>
                   </ol>
                 </div>
               </div>
-            </section>
-          )}
+            </section>}
 
-          {aboutSubTab === 'contracts' && (
-            <section className="code-section">
-              <h3 className="panel-title" style={{ marginTop: 0 }}>
-                <Code size={20} style={{ color: 'var(--color-primary)' }} /> Smart Contract Repository
+          {aboutSubTab === 'contracts' && <section className="code-section">
+              <h3 className="panel-title" style={{
+          marginTop: 0
+        }}>
+                <Code size={20} style={{
+            color: 'var(--color-primary)'
+          }} /> {t("Smart Contract Repository")}
               </h3>
-              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '20px' }}>
-                Inspect the Solidity hook logic, ERC-721 collectible contracts, and deploy pipelines prepared for OKX X Layer.
+              <p style={{
+          fontSize: '0.85rem',
+          color: 'rgba(255,255,255,0.5)',
+          marginBottom: '20px'
+        }}>
+                {t("Inspect the Solidity hook logic, ERC-721 collectible contracts, and deploy pipelines prepared for OKX X Layer.")}
               </p>
 
-              <div className="tabs-header" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+              <div className="tabs-header" style={{
+          display: 'flex',
+          gap: '8px',
+          flexWrap: 'wrap',
+          marginBottom: '16px'
+        }}>
                 <button className={`tab-button ${activeTab === 'collectible' ? 'active' : ''}`} onClick={() => setActiveTab('collectible')}>
-                  AccessPass.sol
+                  {t("AccessPass.sol")}
                 </button>
                 <button className={`tab-button ${activeTab === 'hook' ? 'active' : ''}`} onClick={() => setActiveTab('hook')}>
-                  WorldCupGoalRushHook.sol
+                  {t("WorldCupGoalRushHook.sol")}
                 </button>
                 <button className={`tab-button ${activeTab === 'mock' ? 'active' : ''}`} onClick={() => setActiveTab('mock')}>
-                  MockPoolManager.sol
+                  {t("MockPoolManager.sol")}
                 </button>
                 <button className={`tab-button ${activeTab === 'deploy' ? 'active' : ''}`} onClick={() => setActiveTab('deploy')}>
-                  deploy.js
+                  {t("deploy.js")}
                 </button>
               </div>
 
               <div className="code-viewer-container">
-                <div className="code-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span className="code-lang" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>SOLIDITY</span>
-                  <button
-                    className="btn-copy"
-                    onClick={() => {
-                      const textMap = {
-                        collectible: collectibleSolidityCode,
-                        hook: currentHookSolidityCode,
-                        mock: mockManagerCode,
-                        deploy: deployScriptCode
-                      };
-                      copyCode(textMap[activeTab] || '');
-                    }}
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-                  >
-                    <Copy size={12} /> Copy Code
+                <div className="code-header" style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: 'rgba(255,255,255,0.03)',
+            padding: '12px 16px',
+            borderBottom: '1px solid rgba(255,255,255,0.08)'
+          }}>
+                  <span className="code-lang" style={{
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              color: 'rgba(255,255,255,0.6)'
+            }}>{t("SOLIDITY")}</span>
+                  <button className="btn-copy" onClick={() => {
+              const textMap = {
+                collectible: collectibleSolidityCode,
+                hook: currentHookSolidityCode,
+                mock: mockManagerCode,
+                deploy: deployScriptCode
+              };
+              copyCode(textMap[activeTab] || '');
+            }} style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: '#fff',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+                    <Copy size={12} /> {t("Copy Code")}
                   </button>
                 </div>
 
-                <pre className="code-pre" style={{ margin: 0, padding: '20px', background: '#000', borderRadius: '0 0 12px 12px', overflowX: 'auto', maxHeight: '500px', overflowY: 'auto' }}>
-                  <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: '#00ff66', lineHeight: '1.5' }}>
+                <pre className="code-pre" style={{
+            margin: 0,
+            padding: '20px',
+            background: '#000',
+            borderRadius: '0 0 12px 12px',
+            overflowX: 'auto',
+            maxHeight: '500px',
+            overflowY: 'auto'
+          }}>
+                  <code style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.82rem',
+              color: '#00ff66',
+              lineHeight: '1.5'
+            }}>
                     {activeTab === 'collectible' && collectibleSolidityCode}
                     {activeTab === 'hook' && currentHookSolidityCode}
                     {activeTab === 'mock' && mockManagerCode}
@@ -7398,198 +8969,424 @@ export default function App() {
                   </code>
                 </pre>
               </div>
-            </section>
-          )}
+            </section>}
 
-          {aboutSubTab === 'deployment' && (
-            <section className="card-bezel" style={{ padding: '24px' }}>
-              <h3 className="panel-title" style={{ marginTop: 0 }}>
-                <Cpu size={20} style={{ color: 'var(--color-primary)' }} /> Deploying on X Layer Mainnet
+          {aboutSubTab === 'deployment' && <section className="card-bezel" style={{
+        padding: '24px'
+      }}>
+              <h3 className="panel-title" style={{
+          marginTop: 0
+        }}>
+                <Cpu size={20} style={{
+            color: 'var(--color-primary)'
+          }} /> {t("Deploying on X Layer Mainnet")}
               </h3>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', marginTop: '16px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <div style={{ background: 'var(--color-primary-glow)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: 'var(--color-primary)', fontWeight: 'bold', flexShrink: 0, justifyContent: 'center' }}>1</div>
+              <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '32px',
+          marginTop: '16px'
+        }}>
+                <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+                  <div style={{
+              display: 'flex',
+              gap: '12px'
+            }}>
+                    <div style={{
+                background: 'var(--color-primary-glow)',
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyCenter: 'center',
+                color: 'var(--color-primary)',
+                fontWeight: 'bold',
+                flexShrink: 0,
+                justifyContent: 'center'
+              }}>1</div>
                     <div>
-                      <h4 style={{ fontWeight: 600, fontSize: '0.95rem' }}>Compile with Hardhat</h4>
-                      <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Use Solidity compiler 0.8.24 and enable viaIR to resolve stack-too-deep errors during metadata compilation.</p>
+                      <h4 style={{
+                  fontWeight: 600,
+                  fontSize: '0.95rem'
+                }}>{t("Compile with Hardhat")}</h4>
+                      <p style={{
+                  fontSize: '0.8rem',
+                  color: 'rgba(255,255,255,0.5)'
+                }}>{t("Use Solidity compiler 0.8.24 and enable viaIR to resolve stack-too-deep errors during metadata compilation.")}</p>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <div style={{ background: 'var(--color-primary-glow)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: 'var(--color-primary)', fontWeight: 'bold', flexShrink: 0, justifyContent: 'center' }}>2</div>
+                  <div style={{
+              display: 'flex',
+              gap: '12px'
+            }}>
+                    <div style={{
+                background: 'var(--color-primary-glow)',
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyCenter: 'center',
+                color: 'var(--color-primary)',
+                fontWeight: 'bold',
+                flexShrink: 0,
+                justifyContent: 'center'
+              }}>2</div>
                     <div>
-                      <h4 style={{ fontWeight: 600, fontSize: '0.95rem' }}>Address Mining</h4>
-                      <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Uniswap V4 hooks require the deployed address to match flag prefixes. Use address mining tools to find the proper salt for CREATE2.</p>
+                      <h4 style={{
+                  fontWeight: 600,
+                  fontSize: '0.95rem'
+                }}>{t("Address Mining")}</h4>
+                      <p style={{
+                  fontSize: '0.8rem',
+                  color: 'rgba(255,255,255,0.5)'
+                }}>{t("Uniswap V4 hooks require the deployed address to match flag prefixes. Use address mining tools to find the proper salt for CREATE2.")}</p>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <div style={{ background: 'var(--color-primary-glow)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: 'var(--color-primary)', fontWeight: 'bold', flexShrink: 0, justifyContent: 'center' }}>3</div>
+                  <div style={{
+              display: 'flex',
+              gap: '12px'
+            }}>
+                    <div style={{
+                background: 'var(--color-primary-glow)',
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyCenter: 'center',
+                color: 'var(--color-primary)',
+                fontWeight: 'bold',
+                flexShrink: 0,
+                justifyContent: 'center'
+              }}>3</div>
                     <div>
-                      <h4 style={{ fontWeight: 600, fontSize: '0.95rem' }}>Verify on X Layer Explorer</h4>
-                      <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Submit contracts to OKX Link/Explorer for public verification using ABI-encoded initialization parameters.</p>
+                      <h4 style={{
+                  fontWeight: 600,
+                  fontSize: '0.95rem'
+                }}>{t("Verify on X Layer Explorer")}</h4>
+                      <p style={{
+                  fontSize: '0.8rem',
+                  color: 'rgba(255,255,255,0.5)'
+                }}>{t("Submit contracts to OKX Link/Explorer for public verification using ABI-encoded initialization parameters.")}</p>
                     </div>
                   </div>
                 </div>
 
-                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <h4 style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <AlertTriangle size={16} style={{ color: 'var(--color-primary)' }} />
-                    X Layer RPC Information
+                <div style={{
+            background: 'rgba(255,255,255,0.02)',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.05)'
+          }}>
+                  <h4 style={{
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              marginBottom: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+                    <AlertTriangle size={16} style={{
+                color: 'var(--color-primary)'
+              }} />
+                    {t("X Layer RPC Information")}
                   </h4>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem' }}>
-                    <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>Network Name</span>
-                      <span>X Layer Mainnet</span>
+                  <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              fontSize: '0.8rem'
+            }}>
+                    <div style={{
+                display: 'flex',
+                justifySelf: 'stretch',
+                justifyContent: 'space-between'
+              }}>
+                      <span style={{
+                  color: 'rgba(255,255,255,0.5)'
+                }}>{t("Network Name")}</span>
+                      <span>{t("X Layer Mainnet")}</span>
                     </div>
-                    <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>RPC URL</span>
-                      <span style={{ fontFamily: 'var(--font-mono)' }}>https://rpc.xlayer.tech</span>
+                    <div style={{
+                display: 'flex',
+                justifySelf: 'stretch',
+                justifyContent: 'space-between'
+              }}>
+                      <span style={{
+                  color: 'rgba(255,255,255,0.5)'
+                }}>{t("RPC URL")}</span>
+                      <span style={{
+                  fontFamily: 'var(--font-mono)'
+                }}>{t("https://rpc.xlayer.tech")}</span>
                     </div>
-                    <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>Chain ID</span>
-                      <span style={{ fontFamily: 'var(--font-mono)' }}>196</span>
+                    <div style={{
+                display: 'flex',
+                justifySelf: 'stretch',
+                justifyContent: 'space-between'
+              }}>
+                      <span style={{
+                  color: 'rgba(255,255,255,0.5)'
+                }}>{t("Chain ID")}</span>
+                      <span style={{
+                  fontFamily: 'var(--font-mono)'
+                }}>196</span>
                     </div>
-                    <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>Currency Symbol</span>
-                      <span>OKB</span>
+                    <div style={{
+                display: 'flex',
+                justifySelf: 'stretch',
+                justifyContent: 'space-between'
+              }}>
+                      <span style={{
+                  color: 'rgba(255,255,255,0.5)'
+                }}>{t("Currency Symbol")}</span>
+                      <span>{t("OKB")}</span>
                     </div>
-                    <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>Block Explorer</span>
-                      <span style={{ color: 'var(--color-primary)' }}>https://www.okx.com/explorer/xlayer</span>
+                    <div style={{
+                display: 'flex',
+                justifySelf: 'stretch',
+                justifyContent: 'space-between'
+              }}>
+                      <span style={{
+                  color: 'rgba(255,255,255,0.5)'
+                }}>{t("Block Explorer")}</span>
+                      <span style={{
+                  color: 'var(--color-primary)'
+                }}>{t("https://www.okx.com/explorer/xlayer")}</span>
                     </div>
                   </div>
                 </div>
 
-                <div style={{ background: 'rgba(157, 255, 0, 0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(157, 255, 0, 0.15)' }}>
-                  <h4 style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)' }}>
+                <div style={{
+            background: 'rgba(157, 255, 0, 0.02)',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(157, 255, 0, 0.15)'
+          }}>
+                  <h4 style={{
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              marginBottom: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              color: 'var(--color-primary)'
+            }}>
                     <Flame size={16} />
-                    Token & NFT Deployment
+                    {t("Token & NFT Deployment")}
                   </h4>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.8rem' }}>
+                  <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              fontSize: '0.8rem'
+            }}>
                     <div>
-                      <strong style={{ color: 'var(--color-secondary)' }}>GoalRushCollectible (ERC-721) NFT</strong>
-                      <p style={{ color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px' }}>
-                        Deploys a premium tradable NFT allowing user mints for OKB/GRUSH:
-                        <code style={{ display: 'block', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '4px', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>npx hardhat run scripts/deploy-collectible.cjs --network xlayerMainnet</code>
+                      <strong style={{
+                  color: 'var(--color-secondary)'
+                }}>{t("GoalRushCollectible (ERC-721) NFT")}</strong>
+                      <p style={{
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  marginTop: '4px'
+                }}>
+                        {t("Deploys a premium tradable NFT allowing user mints for OKB/GRUSH:")}
+                        <code style={{
+                    display: 'block',
+                    background: 'rgba(0,0,0,0.3)',
+                    padding: '4px',
+                    borderRadius: '4px',
+                    marginTop: '4px',
+                    fontFamily: 'var(--font-mono)'
+                  }}>{t("npx hardhat run scripts/deploy-collectible.cjs --network xlayerMainnet")}</code>
                       </p>
                     </div>
-                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '8px' }}>
-                      <strong style={{ color: 'var(--color-primary)' }}>GoalRushToken (GRUSH) ERC-20</strong>
-                      <p style={{ color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px' }}>
-                        Create token + bonding curve on Eulr.fun or deploy natively using:
-                        <code style={{ display: 'block', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '4px', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>npx hardhat run scripts/deploy-token.cjs --network xlayerMainnet</code>
+                    <div style={{
+                borderTop: '1px solid rgba(255,255,255,0.08)',
+                paddingTop: '8px'
+              }}>
+                      <strong style={{
+                  color: 'var(--color-primary)'
+                }}>{t("GoalRushToken (GRUSH) ERC-20")}</strong>
+                      <p style={{
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  marginTop: '4px'
+                }}>
+                        {t("Create token + bonding curve on Eulr.fun or deploy natively using:")}
+                        <code style={{
+                    display: 'block',
+                    background: 'rgba(0,0,0,0.3)',
+                    padding: '4px',
+                    borderRadius: '4px',
+                    marginTop: '4px',
+                    fontFamily: 'var(--font-mono)'
+                  }}>{t("npx hardhat run scripts/deploy-token.cjs --network xlayerMainnet")}</code>
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
-            </section>
-          )}
-        </div>
-      )}
+            </section>}
+        </div>}
 
       {/* Simulated X / Twitter OAuth login popup modal */}
-      {isConnectingTwitter && (
-        <div className="oauth-modal-backdrop">
+      {isConnectingTwitter && <div className="oauth-modal-backdrop">
           <div className="oauth-modal-box">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Twitter size={20} style={{ color: 'var(--color-secondary)' }} />
-                <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Authorize GoalRush</span>
+            <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '14px'
+        }}>
+              <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+                <Twitter size={20} style={{
+              color: 'var(--color-secondary)'
+            }} />
+                <span style={{
+              fontWeight: 'bold',
+              fontSize: '1.1rem'
+            }}>{t("Authorize GoalRush")}</span>
               </div>
-              <button 
-                onClick={() => setIsConnectingTwitter(false)}
-                style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}
-              >
+              <button onClick={() => setIsConnectingTwitter(false)} style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'rgba(255,255,255,0.4)',
+            cursor: 'pointer'
+          }}>
                 <X size={16} />
               </button>
             </div>
             
-            <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.6)', lineHeight: '1.4', marginBottom: '16px' }}>
-              GoalRush is requesting permission to access your public profile picture and read public engagement metrics. No write permissions requested.
+            <p style={{
+          fontSize: '0.82rem',
+          color: 'rgba(255,255,255,0.6)',
+          lineHeight: '1.4',
+          marginBottom: '16px'
+        }}>
+              {t("GoalRush is requesting permission to access your public profile picture and read public engagement metrics. No write permissions requested.")}
             </p>
 
             <div className="oauth-loading-steps">
               <div className={`oauth-step ${authPopupStep === 1 ? 'active' : authPopupStep > 1 ? 'done' : ''}`}>
                 <div className="oauth-step-dot"></div>
-                <span>Step 1: Connecting X.com secure API...</span>
+                <span>{t("Step 1: Connecting X.com secure API...")}</span>
               </div>
               <div className={`oauth-step ${authPopupStep === 2 ? 'active' : authPopupStep > 2 ? 'done' : ''}`}>
                 <div className="oauth-step-dot"></div>
-                <span>Step 2: Resolving Twitter handle @{twitterUsername}...</span>
+                <span>{t("Step 2: Resolving Twitter handle @")}{twitterUsername}...</span>
               </div>
               <div className={`oauth-step ${authPopupStep === 3 ? 'active' : authPopupStep > 3 ? 'done' : ''}`}>
                 <div className="oauth-step-dot"></div>
-                <span>Step 3: Fetching avatar from unavatar.io CDN...</span>
+                <span>{t("Step 3: Fetching avatar from unavatar.io CDN...")}</span>
               </div>
               <div className={`oauth-step ${authPopupStep === 4 ? 'active' : authPopupStep > 4 ? 'done' : ''}`}>
                 <div className="oauth-step-dot"></div>
-                <span>Step 4: Compiling card metadata and stats...</span>
+                <span>{t("Step 4: Compiling card metadata and stats...")}</span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0', alignItems: 'center' }}>
-              <div className="badge-dot" style={{ animation: 'spin-slow 2s linear infinite', marginRight: '8px' }}></div>
-              <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)' }}>
+            <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          padding: '10px 0',
+          alignItems: 'center'
+        }}>
+              <div className="badge-dot" style={{
+            animation: 'spin-slow 2s linear infinite',
+            marginRight: '8px'
+          }}></div>
+              <span style={{
+            fontSize: '0.78rem',
+            color: 'rgba(255,255,255,0.4)'
+          }}>
                 {authPopupStep === 4 ? 'Finalizing holographic layout...' : 'Processing connection request...'}
               </span>
             </div>
           </div>
-        </div>
-      )}
+        </div>}
 
-      {showWhitepaper && (
-        <div className="whitepaper-modal-overlay" onClick={() => setShowWhitepaper(false)}>
-          <div className="whitepaper-modal-container" onClick={(e) => e.stopPropagation()}>
+      {showWhitepaper && <div className="whitepaper-modal-overlay" onClick={() => setShowWhitepaper(false)}>
+          <div className="whitepaper-modal-container" onClick={e => e.stopPropagation()}>
             <button className="whitepaper-close-btn" onClick={() => setShowWhitepaper(false)}>
               <X size={18} />
             </button>
             <img src="/whitepaper-banner.png" alt="GoalRush Whitepaper" className="whitepaper-header-banner" />
 
             <div className="whitepaper-content">
-              <div className="whitepaper-section" style={{ textAlign: 'center', marginBottom: '40px' }}>
-                <h1 style={{ fontFamily: 'var(--font-heading)', color: '#fff', fontSize: '2.2rem', marginBottom: '8px' }}>GOALRUSH WHITEPAPER</h1>
-                <p style={{ color: 'var(--color-primary)', fontSize: '1rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '2px' }}>
-                  Sports Prediction Engine Powered by Uniswap V4
+              <div className="whitepaper-section" style={{
+            textAlign: 'center',
+            marginBottom: '40px'
+          }}>
+                <h1 style={{
+              fontFamily: 'var(--font-heading)',
+              color: '#fff',
+              fontSize: '2.2rem',
+              marginBottom: '8px'
+            }}>{t("GOALRUSH WHITEPAPER")}</h1>
+                <p style={{
+              color: 'var(--color-primary)',
+              fontSize: '1rem',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '2px'
+            }}>
+                  {t("Sports Prediction Engine Powered by Uniswap V4")}
                 </p>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '16px', fontSize: '0.8rem', opacity: 0.6 }}>
-                  <span>Published: June 2026</span>
+                <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '20px',
+              marginTop: '16px',
+              fontSize: '0.8rem',
+              opacity: 0.6
+            }}>
+                  <span>{t("Published: June 2026")}</span>
                   <span>•</span>
-                  <span>Version: 1.0.2</span>
+                  <span>{t("Version: 1.0.2")}</span>
                   <span>•</span>
-                  <span>Chain: OKX X Layer Mainnet</span>
+                  <span>{t("Chain: OKX X Layer Mainnet")}</span>
                 </div>
               </div>
 
               <div className="whitepaper-section">
-                <h2>1. Executive Summary</h2>
+                <h2>{t("1. Executive Summary")}</h2>
                 <p>
-                  GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the <strong>OKX X Layer Mainnet</strong>, GoalRush utilizes custom <strong>Uniswap V4 Hooks</strong> to route prediction ticket purchases directly through AMM swap events.
+                  {t("GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the")} <strong>{t("OKX X Layer Mainnet")}</strong>{t(", GoalRush utilizes custom")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to route prediction ticket purchases directly through AMM swap events.")}
                 </p>
-                <p style={{ marginTop: '12px' }}>
-                  By turning trade volumes into prediction tickets and goalie shootout challenges, GoalRush creates a self-sustaining gamified ecosystem. Holders of the <strong>GRUSH</strong> utility token receive structural gameplay advantages (such as penalty strike success boosts) and unique visual profiles within the application, encouraging organic demand and token retention.
+                <p style={{
+              marginTop: '12px'
+            }}>
+                  {t("By turning trade volumes into prediction tickets and goalie shootout challenges, GoalRush creates a self-sustaining gamified ecosystem. Holders of the")} <strong>{t("GRUSH")}</strong> {t("utility token receive structural gameplay advantages (such as penalty strike success boosts) and unique visual profiles within the application, encouraging organic demand and token retention.")}
                 </p>
               </div>
 
               <div className="whitepaper-section">
-                <h2>2. Architecture & Uniswap V4 Hook Design</h2>
+                <h2>{t("2. Architecture & Uniswap V4 Hook Design")}</h2>
                 <p>
-                  GoalRush integrates directly with Uniswap V4's lifecycle callback hooks to trigger off-chain events and on-chain prediction entries. The core of this system is the <code>WorldCupGoalRushHook</code> contract.
+                  {t("GoalRush integrates directly with Uniswap V4's lifecycle callback hooks to trigger off-chain events and on-chain prediction entries. The core of this system is the")} <code>{t("WorldCupGoalRushHook")}</code> {t("contract.")}
                 </p>
 
-                <h3>2.1 The beforeSwap Callback</h3>
+                <h3>{t("2.1 The beforeSwap Callback")}</h3>
                 <p>
-                  When a user initiates a prediction transaction via the dashboard:
+                  {t("When a user initiates a prediction transaction via the dashboard:")}
                 </p>
                 <ul>
-                  <li>The swap parameters and prediction selection (Team A vs Team B) are compiled and sent to the hook.</li>
-                  <li>The <code>beforeSwap</code> callback extracts the prediction payload (e.g. <code>hookData</code>).</li>
-                  <li>The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native OKB sent directly into the <strong>Match Jackpot Pool</strong>.</li>
+                  <li>{t("The swap parameters and prediction selection (Team A vs Team B) are compiled and sent to the hook.")}</li>
+                  <li>{t("The")} <code>{t("beforeSwap")}</code> {t("callback extracts the prediction payload (e.g.")} <code>{t("hookData")}</code>).</li>
+                  <li>{t("The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native OKB sent directly into the")} <strong>{t("Match Jackpot Pool")}</strong>.</li>
                 </ul>
 
                 <div className="whitepaper-diagram-box">
@@ -7606,33 +9403,59 @@ export default function App() {
                   {"  └──► Locks OKB value in Jackpot Pool"}<br />
                 </div>
 
-                <h3>2.2 The afterSwap Callback & Shootout Rebates</h3>
+                <h3>{t("2.2 The afterSwap Callback & Shootout Rebates")}</h3>
                 <p>
-                  Following the completion of the swap, the <code>afterSwap</code> callback is executed. This initiates a goalkeeper save/shootout simulation. If the user successfully scores a goal against the automated goalkeeper, they are rewarded with a <strong>Fee Rebate</strong>:
+                  {t("Following the completion of the swap, the")} <code>{t("afterSwap")}</code> {t("callback is executed. This initiates a goalkeeper save/shootout simulation. If the user successfully scores a goal against the automated goalkeeper, they are rewarded with a")} <strong>{t("Fee Rebate")}</strong>:
                 </p>
                 <ul>
-                  <li><strong>Standard Players:</strong> Have a base 50% probability of scoring a goal.</li>
-                  <li><strong>GRUSH Token Holders:</strong> Holding GRUSH tokens activates the **VIP Shooter Perk**, increasing the success rate to <strong>75%</strong> and applying a custom green glow to their UI.</li>
-                  <li>On a successful score, a rebate payout (simulated from the pool's accumulated hook fees) is emitted back to the swapper.</li>
+                  <li><strong>{t("Standard Players:")}</strong> {t("Have a base 50% probability of scoring a goal.")}</li>
+                  <li><strong>{t("GRUSH Token Holders:")}</strong> {t("Holding GRUSH tokens activates the **VIP Shooter Perk**, increasing the success rate to")} <strong>75%</strong> {t("and applying a custom green glow to their UI.")}</li>
+                  <li>{t("On a successful score, a rebate payout (simulated from the pool's accumulated hook fees) is emitted back to the swapper.")}</li>
                 </ul>
               </div>
 
               <div className="whitepaper-section">
-                <h2>3. Game Mechanics & Jackpot Resolution</h2>
+                <h2>{t("3. Game Mechanics & Jackpot Resolution")}</h2>
                 <div className="whitepaper-grid-2">
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <h3 style={{ marginTop: 0 }}>Accumulating the Jackpot</h3>
-                    <p style={{ fontSize: '0.85rem' }}>
-                      Every shootout prediction ticket locks native OKB directly inside the Hook contract. Unlike standard prediction markets with high fee cuts, GoalRush allocates 100% of the user-submitted amount directly into the Match Jackpot Pool, creating massive pools for key matches.
+                  <div style={{
+                background: 'rgba(255,255,255,0.02)',
+                padding: '16px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.05)'
+              }}>
+                    <h3 style={{
+                  marginTop: 0
+                }}>{t("Accumulating the Jackpot")}</h3>
+                    <p style={{
+                  fontSize: '0.85rem'
+                }}>
+                      {t("Every shootout prediction ticket locks native OKB directly inside the Hook contract. Unlike standard prediction markets with high fee cuts, GoalRush allocates 100% of the user-submitted amount directly into the Match Jackpot Pool, creating massive pools for key matches.")}
                     </p>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <h3 style={{ marginTop: 0 }}>Claiming the Pool</h3>
-                    <p style={{ fontSize: '0.85rem' }}>
-                      Once the real-world match is resolved, the oracle updates the winner on-chain. Users who predicted the winning team can call <code>claimJackpot</code>. The contract automatically calculates their proportional share:
+                  <div style={{
+                background: 'rgba(255,255,255,0.02)',
+                padding: '16px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.05)'
+              }}>
+                    <h3 style={{
+                  marginTop: 0
+                }}>{t("Claiming the Pool")}</h3>
+                    <p style={{
+                  fontSize: '0.85rem'
+                }}>
+                      {t("Once the real-world match is resolved, the oracle updates the winner on-chain. Users who predicted the winning team can call")} <code>{t("claimJackpot")}</code>{t(". The contract automatically calculates their proportional share:")}
                       <br />
-                      <code style={{ display: 'block', margin: '8px 0', padding: '4px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
-                        Payout = (UserBet * TotalJackpot) / WinnerTotalVolume
+                      <code style={{
+                    display: 'block',
+                    margin: '8px 0',
+                    padding: '4px',
+                    background: 'rgba(0,0,0,0.3)',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    fontFamily: 'var(--font-mono)'
+                  }}>
+                        {t("Payout = (UserBet * TotalJackpot) / WinnerTotalVolume")}
                       </code>
                     </p>
                   </div>
@@ -7640,50 +9463,64 @@ export default function App() {
               </div>
 
               <div className="whitepaper-section">
-                <h2>4. The GRUSH Utility Token</h2>
+                <h2>{t("4. The GRUSH Utility Token")}</h2>
                 <p>
-                  To maximize compliance with hackathon regulations and foster permissionless market listing, the <strong>GRUSH</strong> token was launched on the <strong>Eulr.fun</strong> bonding curve platform.
+                  {t("To maximize compliance with hackathon regulations and foster permissionless market listing, the")} <strong>{t("GRUSH")}</strong> {t("token was launched on the")} <strong>{t("Eulr.fun")}</strong> {t("bonding curve platform.")}
                 </p>
                 <ul>
-                  <li><strong>Contract Address:</strong> <code>0x422fe165b2da990d18c6dca944b11dcd61519671</code></li>
-                  <li><strong>Real-Time Balance Checks:</strong> The dApp performs on-chain queries to verify if the connected wallet holds GRUSH.</li>
-                  <li><strong>VIP Highlights:</strong> Holding any amount of GRUSH applies neon-green aesthetic text shadows to the player's dashboard profile and registers them as a premium member in the prediction logs.</li>
+                  <li><strong>{t("Contract Address:")}</strong> <code>{t("0x422fe165b2da990d18c6dca944b11dcd61519671")}</code></li>
+                  <li><strong>{t("Real-Time Balance Checks:")}</strong> {t("The dApp performs on-chain queries to verify if the connected wallet holds GRUSH.")}</li>
+                  <li><strong>{t("VIP Highlights:")}</strong> {t("Holding any amount of GRUSH applies neon-green aesthetic text shadows to the player's dashboard profile and registers them as a premium member in the prediction logs.")}</li>
                 </ul>
               </div>
 
-              <div className="whitepaper-section" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px' }}>
-                <h2>5. Open AGI Execution Layer</h2>
+              <div className="whitepaper-section" style={{
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            paddingTop: '20px'
+          }}>
+                <h2>{t("5. Open AGI Execution Layer")}</h2>
                 <p>
-                  GoalRush operates as a secure execution sandbox for an Autonomous Open AGI Agent. Integrating open-source LLMs (like Llama-3) with decentralized finance presents significant prompt-injection security risks. GoalRush mitigates this using a <strong>Hard Boundary Execution Architecture</strong>.
+                  {t("GoalRush operates as a secure execution sandbox for an Autonomous Open AGI Agent. Integrating open-source LLMs (like Llama-3) with decentralized finance presents significant prompt-injection security risks. GoalRush mitigates this using a")} <strong>{t("Hard Boundary Execution Architecture")}</strong>.
                 </p>
-                <p style={{ marginTop: '12px' }}>
-                  The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded OKB transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.
+                <p style={{
+              marginTop: '12px'
+            }}>
+                  {t("The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded OKB transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.")}
                 </p>
-                <p style={{ marginTop: '12px' }}>
-                  <strong>Event-Driven Stealth Operation:</strong> The agent operates entirely behind the scenes without exposing its logs to the frontend UI. Rather than inefficiently polling for updates, the swarm is purely event-driven: it wakes up precisely when a match is activated on-chain to place its prediction, and triggers instantly when a match is resolved to autonomously claim its jackpot winnings.
+                <p style={{
+              marginTop: '12px'
+            }}>
+                  <strong>{t("Event-Driven Stealth Operation:")}</strong> {t("The agent operates entirely behind the scenes without exposing its logs to the frontend UI. Rather than inefficiently polling for updates, the swarm is purely event-driven: it wakes up precisely when a match is activated on-chain to place its prediction, and triggers instantly when a match is resolved to autonomously claim its jackpot winnings.")}
                 </p>
               </div>
 
-              <div className="whitepaper-section" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px' }}>
-                <h2>6. Security & Verification</h2>
+              <div className="whitepaper-section" style={{
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            paddingTop: '20px'
+          }}>
+                <h2>{t("6. Security & Verification")}</h2>
                 <p>
-                  The GoalRush codebase has undergone a complete security check to ensure transparency and prevent loss of user funds:
+                  {t("The GoalRush codebase has undergone a complete security check to ensure transparency and prevent loss of user funds:")}
                 </p>
-                <ol style={{ paddingLeft: '20px' }}>
-                  <li><strong>Strict OKX Wallet Isolation:</strong> Connection is locked to the official OKX wallet to prevent phishing or multi-wallet collisions.</li>
-                  <li><strong>Non-Custodial Design:</strong> The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.</li>
-                  <li><strong>Eulr-fun Bonding Safety:</strong> Real token swaps happen permissionlessly on Euler, shielding the dApp simulator from token vault vulnerabilities.</li>
+                <ol style={{
+              paddingLeft: '20px'
+            }}>
+                  <li><strong>{t("Strict OKX Wallet Isolation:")}</strong> {t("Connection is locked to the official OKX wallet to prevent phishing or multi-wallet collisions.")}</li>
+                  <li><strong>{t("Non-Custodial Design:")}</strong> {t("The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.")}</li>
+                  <li><strong>{t("Eulr-fun Bonding Safety:")}</strong> {t("Real token swaps happen permissionlessly on Euler, shielding the dApp simulator from token vault vulnerabilities.")}</li>
                 </ol>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>}
 
 
       {/* Protocol Info Bar */}
-      {currentView === 'dashboard' && (
-      <section className="bottom-info-bar" style={{ padding: '0 32px 32px 32px', maxWidth: '1200px', margin: '0 auto' }}>
+      {currentView === 'dashboard' && <section className="bottom-info-bar" style={{
+      padding: '0 32px 32px 32px',
+      maxWidth: '1200px',
+      margin: '0 auto'
+    }}>
 
 
               {/* Cyber Info Panel */}
@@ -7691,18 +9528,25 @@ export default function App() {
                 <div className="hero-info-card">
                   <div className="hero-info-card-header">
                     <Globe size={13} className="hero-info-card-icon" />
-                    <span>NETWORK</span>
+                    <span>{t("NETWORK")}</span>
                   </div>
-                  <div className="hero-info-card-value">OKX X Layer</div>
+                  <div className="hero-info-card-value">{t("OKX X Layer")}</div>
                 </div>
 
                 <div className="hero-info-card clickable" onClick={() => {
-                  navigator.clipboard.writeText(HOOK_ADDRESS);
-                  alert('Hook address copied to clipboard!');
-                }} style={{ borderColor: 'rgba(157, 255, 0, 0.4)', background: 'rgba(157, 255, 0, 0.03)' }}>
+          navigator.clipboard.writeText(HOOK_ADDRESS);
+          alert('Hook address copied to clipboard!');
+        }} style={{
+          borderColor: 'rgba(157, 255, 0, 0.4)',
+          background: 'rgba(157, 255, 0, 0.03)'
+        }}>
                   <div className="hero-info-card-header">
-                    <Code size={13} className="hero-info-card-icon" style={{ color: 'var(--color-primary)' }} />
-                    <span style={{ color: 'var(--color-primary)' }}>HOOK CONTRACT</span>
+                    <Code size={13} className="hero-info-card-icon" style={{
+              color: 'var(--color-primary)'
+            }} />
+                    <span style={{
+              color: 'var(--color-primary)'
+            }}>{t("HOOK CONTRACT")}</span>
                   </div>
                   <div className="hero-info-card-value font-mono">
                     {HOOK_ADDRESS.slice(0, 6)}...{HOOK_ADDRESS.slice(-4)}
@@ -7713,260 +9557,278 @@ export default function App() {
                 <div className="hero-info-card">
                   <div className="hero-info-card-header">
                     <Activity size={13} className="hero-info-card-icon" />
-                    <span>CALLBACKS</span>
+                    <span>{t("CALLBACKS")}</span>
                   </div>
-                  <div className="hero-info-card-value">Swap Triggers</div>
+                  <div className="hero-info-card-value">{t("Swap Triggers")}</div>
                 </div>
 
                 <div className="hero-info-card">
                   <div className="hero-info-card-header">
-                    <Flame size={13} className="hero-info-card-icon" style={{ color: 'var(--color-accent)' }} />
-                    <span>GOAL ODDS</span>
+                    <Flame size={13} className="hero-info-card-icon" style={{
+              color: 'var(--color-accent)'
+            }} />
+                    <span>{t("GOAL ODDS")}</span>
                   </div>
-                  <div className="hero-info-card-value">5% Chance</div>
+                  <div className="hero-info-card-value">{t("5% Chance")}</div>
                 </div>
-              </div>      </section>
-      )}
+              </div>      </section>}
 
       {/* Footer */}
-      <footer className="app-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', flexWrap: 'wrap', gap: '16px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <p>© 2026 GoalRush. Powered by Uniswap V4 & OKX X Layer.</p>
-          <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
-            <button onClick={() => setShowTerms(true)} style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline' }}>Terms of Service</button>
+      <footer className="app-footer" style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '24px 32px',
+      flexWrap: 'wrap',
+      gap: '16px'
+    }}>
+        <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px'
+      }}>
+          <p>{t("© 2026 GoalRush. Powered by Uniswap V4 & OKX X Layer.")}</p>
+          <div style={{
+          display: 'flex',
+          gap: '12px',
+          fontSize: '0.8rem',
+          color: 'rgba(255,255,255,0.4)',
+          marginTop: '4px'
+        }}>
+            <button onClick={() => setShowTerms(true)} style={{
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            color: 'inherit',
+            cursor: 'pointer',
+            fontSize: 'inherit',
+            textDecoration: 'underline'
+          }}>{t("Terms of Service")}</button>
             <span>•</span>
-            <button onClick={() => setShowPrivacy(true)} style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline' }}>Privacy Policy</button>
+            <button onClick={() => setShowPrivacy(true)} style={{
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            color: 'inherit',
+            cursor: 'pointer',
+            fontSize: 'inherit',
+            textDecoration: 'underline'
+          }}>{t("Privacy Policy")}</button>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <a
-            href="https://x.com/goalrushdotfun"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
-          >
-            <Twitter size={16} /> Twitter / X
+        <div style={{
+        display: 'flex',
+        gap: '16px',
+        alignItems: 'center'
+      }}>
+          <a href="https://x.com/goalrushdotfun" target="_blank" rel="noopener noreferrer" style={{
+          color: 'rgba(255,255,255,0.6)',
+          transition: 'color 0.2s',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          fontSize: '0.85rem'
+        }} onMouseEnter={e => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}>
+            <Twitter size={16} /> {t("Twitter / X")}
           </a>
-          <span style={{ color: 'rgba(255,255,255,0.15)' }}>|</span>
-          <a
-            href="https://t.me/+qwzA9MrSA3I2OTk9"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-secondary)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
-          >
-            <Send size={16} /> Telegram
+          <span style={{
+          color: 'rgba(255,255,255,0.15)'
+        }}>|</span>
+          <a href="https://t.me/+qwzA9MrSA3I2OTk9" target="_blank" rel="noopener noreferrer" style={{
+          color: 'rgba(255,255,255,0.6)',
+          transition: 'color 0.2s',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          fontSize: '0.85rem'
+        }} onMouseEnter={e => e.currentTarget.style.color = 'var(--color-secondary)'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}>
+            <Send size={16} /> {t("Telegram")}
           </a>
-          <span style={{ color: 'rgba(255,255,255,0.15)' }}>|</span>
-          <a
-            href="https://gitlab.com/tanizcoldz/goal-rush"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#fc6d26'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
-          >
+          <span style={{
+          color: 'rgba(255,255,255,0.15)'
+        }}>|</span>
+          <a href="https://gitlab.com/tanizcoldz/goal-rush" target="_blank" rel="noopener noreferrer" style={{
+          color: 'rgba(255,255,255,0.6)',
+          transition: 'color 0.2s',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          fontSize: '0.85rem'
+        }} onMouseEnter={e => e.currentTarget.style.color = '#fc6d26'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-              <path d="M23.955 13.587l-1.342-4.135-2.664-8.189c-.135-.423-.73-.423-.867 0L16.418 9.45H7.582L4.919 1.263C4.783.84 4.185.84 4.05 1.26L1.386 9.449.044 13.587c-.121.375.014.789.331 1.023L12 23.054l11.625-8.443c.318-.235.453-.647.33-1.024z"/>
+              <path d="M23.955 13.587l-1.342-4.135-2.664-8.189c-.135-.423-.73-.423-.867 0L16.418 9.45H7.582L4.919 1.263C4.783.84 4.185.84 4.05 1.26L1.386 9.449.044 13.587c-.121.375.014.789.331 1.023L12 23.054l11.625-8.443c.318-.235.453-.647.33-1.024z" />
             </svg>
-            GitLab
+            {t("GitLab")}
           </a>
         </div>
       </footer>
 
-      {showTerms && (
-        <div className="whitepaper-modal-overlay" onClick={() => setShowTerms(false)}>
-          <div className="whitepaper-modal-container" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
+      {showTerms && <div className="whitepaper-modal-overlay" onClick={() => setShowTerms(false)}>
+          <div className="whitepaper-modal-container" style={{
+        maxWidth: '600px'
+      }} onClick={e => e.stopPropagation()}>
             <button className="whitepaper-close-btn" onClick={() => setShowTerms(false)}>
               <X size={18} />
             </button>
-            <div className="whitepaper-content" style={{ padding: '24px' }}>
-              <h2 style={{ fontSize: '1.4rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px', marginBottom: '16px' }}>Terms of Service</h2>
-              <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '12px', opacity: 0.85 }}>
-                <p><strong>Last Updated: June 13, 2026</strong></p>
-                <p>Please read these Terms of Service carefully before interacting with the GoalRush platform. By connecting your wallet and participating, you agree to these Terms.</p>
+            <div className="whitepaper-content" style={{
+          padding: '24px'
+        }}>
+              <h2 style={{
+            fontSize: '1.4rem',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            paddingBottom: '8px',
+            marginBottom: '16px'
+          }}>{t("Terms of Service")}</h2>
+              <div style={{
+            fontSize: '0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            opacity: 0.85
+          }}>
+                <p><strong>{t("Last Updated: June 13, 2026")}</strong></p>
+                <p>{t("Please read these Terms of Service carefully before interacting with the GoalRush platform. By connecting your wallet and participating, you agree to these Terms.")}</p>
 
-                <p><strong>1. Educational & Simulation Use Only</strong></p>
-                <p>GoalRush is a proof-of-concept dApp built for the Build X Hackathon. All on-chain simulations, predictions, and games are provided for educational and gaming purposes. There is no guarantee of profits or rewards.</p>
+                <p><strong>{t("1. Educational & Simulation Use Only")}</strong></p>
+                <p>{t("GoalRush is a proof-of-concept dApp built for the Build X Hackathon. All on-chain simulations, predictions, and games are provided for educational and gaming purposes. There is no guarantee of profits or rewards.")}</p>
 
-                <p><strong>2. Assumption of Risk</strong></p>
-                <p>All transactions are executed directly by the user via their Web3 wallet (OKX Wallet) on the public X Layer blockchain. You accept full responsibility for any native OKB, gas costs, or token interactions. We have zero control over on-chain executions.</p>
+                <p><strong>{t("2. Assumption of Risk")}</strong></p>
+                <p>{t("All transactions are executed directly by the user via their Web3 wallet (OKX Wallet) on the public X Layer blockchain. You accept full responsibility for any native OKB, gas costs, or token interactions. We have zero control over on-chain executions.")}</p>
 
-                <p><strong>3. Solvency & Disclaimer</strong></p>
-                <p>GoalRush is provided "as is" and "as available" without any warranties of any kind. We are not liable for any losses, contract bugs, network downtime, or wallet service provider issues.</p>
+                <p><strong>{t("3. Solvency & Disclaimer")}</strong></p>
+                <p>{t("GoalRush is provided \"as is\" and \"as available\" without any warranties of any kind. We are not liable for any losses, contract bugs, network downtime, or wallet service provider issues.")}</p>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>}
 
       {currentView === 'news' && (() => {
-        const filteredArticles = newsCategory === 'All'
-          ? newsArticles
-          : newsArticles.filter(art => art.category === newsCategory);
-
-        return (
-          <main className="news-container-layout" id="main-content" style={{ marginTop: '32px' }}>
+      const filteredArticles = newsCategory === 'All' ? newsArticles : newsArticles.filter(art => art.category === newsCategory);
+      return <main className="news-container-layout" id="main-content" style={{
+        marginTop: '32px'
+      }}>
             {/* SEO Heading structure - Single h1 per view page */}
-            <header className="news-header-section" style={{ marginBottom: '32px' }}>
-              <span className="hero-tag">🔥 World Cup Updates</span>
-              <h1 className="news-main-title">Daily News Hub</h1>
+            <header className="news-header-section" style={{
+          marginBottom: '32px'
+        }}>
+              <span className="hero-tag">{t("🔥 World Cup Updates")}</span>
+              <h1 className="news-main-title">{t("Daily News Hub")}</h1>
               <p className="news-subtitle-text">
-                Stay ahead with the latest FIFA World Cup 2026 match reports, team news, and tournament highlights — updated automatically throughout the day.
+                {t("Stay ahead with the latest FIFA World Cup 2026 match reports, team news, and tournament highlights — updated automatically throughout the day.")}
               </p>
             </header>
 
             {/* Breaking News Ticker */}
-            {newsArticles.length > 0 && (
-              <div className="breaking-news-ticker-container">
-                <span className="ticker-label">BREAKING NEWS</span>
+            {newsArticles.length > 0 && <div className="breaking-news-ticker-container">
+                <span className="ticker-label">{t("BREAKING NEWS")}</span>
                 <div className="ticker-scroll-wrap">
                   <div className="ticker-scroll-content">
-                    {newsArticles.map((article, idx) => (
-                      <span key={article.id || idx} className="ticker-item" onClick={() => setActiveNewsArticle(article)}>
+                    {newsArticles.map((article, idx) => <span key={article.id || idx} className="ticker-item" onClick={() => setActiveNewsArticle(article)}>
                         ⚡ {article.title} &nbsp;&nbsp;&nbsp;&nbsp;&bull;&nbsp;&nbsp;&nbsp;&nbsp;
-                      </span>
-                    ))}
+                      </span>)}
                     {/* Duplicate the items to ensure seamless infinite scroll */}
-                    {newsArticles.map((article, idx) => (
-                      <span key={`dup-${article.id || idx}`} className="ticker-item" onClick={() => setActiveNewsArticle(article)}>
+                    {newsArticles.map((article, idx) => <span key={`dup-${article.id || idx}`} className="ticker-item" onClick={() => setActiveNewsArticle(article)}>
                         ⚡ {article.title} &nbsp;&nbsp;&nbsp;&nbsp;&bull;&nbsp;&nbsp;&nbsp;&nbsp;
-                      </span>
-                    ))}
+                      </span>)}
                   </div>
                 </div>
-              </div>
-            )}
+              </div>}
 
             {/* Categories Tab navigation */}
             <nav className="news-tabs-nav" aria-label="News categories">
-              {['All', 'Match Report', 'Team News'].map(cat => (
-                <button
-                  key={cat}
-                  id={`news-tab-filter-${cat.toLowerCase().replace(' ', '-')}`}
-                  onClick={() => setNewsCategory(cat)}
-                  className={`news-tab-filter-btn ${newsCategory === cat ? 'active' : ''}`}
-                >
+              {['All', 'Match Report', 'Team News'].map(cat => <button key={cat} id={`news-tab-filter-${cat.toLowerCase().replace(' ', '-')}`} onClick={() => setNewsCategory(cat)} className={`news-tab-filter-btn ${newsCategory === cat ? 'active' : ''}`}>
                   {cat === 'All' ? '📢 All News' : cat === 'Match Report' ? '⚽ Match Reports' : cat === 'Team News' ? '🏃 Team News' : '⚡ Platform Updates'}
-                </button>
-              ))}
+                </button>)}
             </nav>
 
 
-            {newsLoading && newsArticles.length === 0 ? (
-              <div className="news-loading-spinner" id="news-loader">
+            {newsLoading && newsArticles.length === 0 ? <div className="news-loading-spinner" id="news-loader">
                 <div className="spinner-glow"></div>
-                <span>Syncing World Cup RSS news feeds...</span>
-              </div>
-            ) : filteredArticles.length === 0 ? (
-              <div className="news-empty-state">
-                <span>No news articles found for this category.</span>
-              </div>
-            ) : (
-              <section className="news-articles-grid" aria-label="News articles">
+                <span>{t("Syncing World Cup RSS news feeds...")}</span>
+              </div> : filteredArticles.length === 0 ? <div className="news-empty-state">
+                <span>{t("No news articles found for this category.")}</span>
+              </div> : <section className="news-articles-grid" aria-label="News articles">
                 {/* Featured article - render first article uniquely */}
-                {newsCategory === 'All' && filteredArticles[0] && (
-                  <article className="featured-news-card" id={`news-article-featured-${filteredArticles[0].id}`}>
+                {newsCategory === 'All' && filteredArticles[0] && <article className="featured-news-card" id={`news-article-featured-${filteredArticles[0].id}`}>
                     <div className="featured-image-wrapper">
                       <img src={filteredArticles[0].image_url} alt={filteredArticles[0].title} />
-                      <span className="featured-badge">Featured Coverage</span>
+                      <span className="featured-badge">{t("Featured Coverage")}</span>
                     </div>
                     <div className="featured-content">
                       <div className="article-meta-info">
                         <span className="article-category">{filteredArticles[0].category}</span>
                         <span className="article-dot">•</span>
-                        <span>{new Date(filteredArticles[0].published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' })} ET</span>
+                        <span>{new Date(filteredArticles[0].published_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'America/New_York'
+                  })} {t("ET")}</span>
                       </div>
                       <h2 className="featured-title">{filteredArticles[0].title}</h2>
                       <p className="featured-summary">{filteredArticles[0].summary}</p>
                       <div className="article-footer-row">
-                        <span className="article-source-tag">Source: {filteredArticles[0].source}</span>
+                        <span className="article-source-tag">{t("Source:")} {filteredArticles[0].source}</span>
                         <div className="footer-actions-wrap">
-                          <button
-                            id={`like-btn-featured-${filteredArticles[0].id}`}
-                            className={`article-like-action-btn ${likedArticles.includes(filteredArticles[0].id) ? 'liked' : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleLikeArticle(filteredArticles[0].id);
-                            }}
-                          >
+                          <button id={`like-btn-featured-${filteredArticles[0].id}`} className={`article-like-action-btn ${likedArticles.includes(filteredArticles[0].id) ? 'liked' : ''}`} onClick={e => {
+                    e.stopPropagation();
+                    handleLikeArticle(filteredArticles[0].id);
+                  }}>
                             ❤️ {filteredArticles[0].likes || 0}
                           </button>
-                          <button
-                            id={`read-more-btn-featured-${filteredArticles[0].id}`}
-                            className="btn-primary"
-                            style={{ padding: '8px 16px', fontSize: '0.85rem' }}
-                            onClick={() => setActiveNewsArticle(filteredArticles[0])}
-                          >
-                            Read Article <ChevronRight size={14} />
+                          <button id={`read-more-btn-featured-${filteredArticles[0].id}`} className="btn-primary" style={{
+                    padding: '8px 16px',
+                    fontSize: '0.85rem'
+                  }} onClick={() => setActiveNewsArticle(filteredArticles[0])}>
+                            {t("Read Article")} <ChevronRight size={14} />
                           </button>
                         </div>
                       </div>
                     </div>
-                  </article>
-                )}
+                  </article>}
 
                 {/* Grid articles */}
                 <div className="regular-news-grid">
-                  {(newsCategory === 'All' ? filteredArticles.slice(1) : filteredArticles).map(article => (
-                    <article key={article.id} className="regular-news-card" id={`news-article-card-${article.id}`}>
+                  {(newsCategory === 'All' ? filteredArticles.slice(1) : filteredArticles).map(article => <article key={article.id} className="regular-news-card" id={`news-article-card-${article.id}`}>
                       <div className="card-image-wrap">
                         <img src={article.image_url} alt={article.title} />
                         <span className="category-card-badge">{article.category}</span>
                       </div>
                       <div className="card-body-content">
                         <span className="card-date-lbl">
-                          {new Date(article.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' })}
+                          {new Date(article.published_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    timeZone: 'America/New_York'
+                  })}
                         </span>
                         <h3 className="card-title-heading">{article.title}</h3>
                         <p className="card-summary-text">{article.summary}</p>
                         <div className="card-footer-flex">
-                          <button
-                            id={`like-btn-card-${article.id}`}
-                            className={`article-like-action-btn ${likedArticles.includes(article.id) ? 'liked' : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleLikeArticle(article.id);
-                            }}
-                          >
+                          <button id={`like-btn-card-${article.id}`} className={`article-like-action-btn ${likedArticles.includes(article.id) ? 'liked' : ''}`} onClick={e => {
+                    e.stopPropagation();
+                    handleLikeArticle(article.id);
+                  }}>
                             ❤️ {article.likes || 0}
                           </button>
-                          <button
-                            id={`read-more-btn-card-${article.id}`}
-                            className="btn-secondary"
-                            style={{ padding: '6px 12px', fontSize: '0.8rem', gap: '4px' }}
-                            onClick={() => setActiveNewsArticle(article)}
-                          >
-                            Read <ChevronRight size={12} />
+                          <button id={`read-more-btn-card-${article.id}`} className="btn-secondary" style={{
+                    padding: '6px 12px',
+                    fontSize: '0.8rem',
+                    gap: '4px'
+                  }} onClick={() => setActiveNewsArticle(article)}>
+                            {t("Read")} <ChevronRight size={12} />
                           </button>
                         </div>
                       </div>
-                    </article>
-                  ))}
+                    </article>)}
                 </div>
-              </section>
-            )}
+              </section>}
 
             {/* Glassmorphic Modal for Reading Full Article */}
-            {activeNewsArticle && (
-              <div
-                className="news-modal-overlay"
-                id="news-reader-modal"
-                onClick={() => setActiveNewsArticle(null)}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="modal-article-title"
-              >
-                <div className="news-modal-box" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    id="close-news-modal-btn"
-                    className="modal-close-btn"
-                    onClick={() => setActiveNewsArticle(null)}
-                    aria-label="Close article reader"
-                  >
+            {activeNewsArticle && <div className="news-modal-overlay" id="news-reader-modal" onClick={() => setActiveNewsArticle(null)} role="dialog" aria-modal="true" aria-labelledby="modal-article-title">
+                <div className="news-modal-box" onClick={e => e.stopPropagation()}>
+                  <button id="close-news-modal-btn" className="modal-close-btn" onClick={() => setActiveNewsArticle(null)} aria-label="Close article reader">
                     <X size={20} />
                   </button>
                   <div className="modal-banner-image">
@@ -7976,7 +9838,13 @@ export default function App() {
                     <div className="modal-meta-row">
                       <span className="category-card-badge">{activeNewsArticle.category}</span>
                       <span className="modal-date-tag">
-                        {new Date(activeNewsArticle.published_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' })}
+                        {new Date(activeNewsArticle.published_at).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    timeZone: 'America/New_York'
+                  })}
                       </span>
                     </div>
                     <h2 className="modal-title-h2" id="modal-article-title">{activeNewsArticle.title}</h2>
@@ -7986,98 +9854,124 @@ export default function App() {
                     </div>
                     <div className="modal-footer-row">
                       <div className="source-info">
-                        <span>Publisher: <strong>{activeNewsArticle.source}</strong></span>
+                        <span>{t("Publisher:")} <strong>{activeNewsArticle.source}</strong></span>
                       </div>
-                      <button
-                        id={`modal-like-btn-${activeNewsArticle.id}`}
-                        className={`article-like-action-btn ${likedArticles.includes(activeNewsArticle.id) ? 'liked' : ''}`}
-                        onClick={() => handleLikeArticle(activeNewsArticle.id)}
-                      >
-                        ❤️ Like Article ({activeNewsArticle.likes || 0})
+                      <button id={`modal-like-btn-${activeNewsArticle.id}`} className={`article-like-action-btn ${likedArticles.includes(activeNewsArticle.id) ? 'liked' : ''}`} onClick={() => handleLikeArticle(activeNewsArticle.id)}>
+                        {t("❤️ Like Article (")}{activeNewsArticle.likes || 0})
                       </button>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </main>
-        );
-      })()}
+              </div>}
+          </main>;
+    })()}
 
-      {showPrivacy && (
-        <div className="whitepaper-modal-overlay" onClick={() => setShowPrivacy(false)}>
-          <div className="whitepaper-modal-container" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
+      {showPrivacy && <div className="whitepaper-modal-overlay" onClick={() => setShowPrivacy(false)}>
+          <div className="whitepaper-modal-container" style={{
+        maxWidth: '600px'
+      }} onClick={e => e.stopPropagation()}>
             <button className="whitepaper-close-btn" onClick={() => setShowPrivacy(false)}>
               <X size={18} />
             </button>
-            <div className="whitepaper-content" style={{ padding: '24px' }}>
-              <h2 style={{ fontSize: '1.4rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px', marginBottom: '16px' }}>Privacy Policy</h2>
-              <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '12px', opacity: 0.85 }}>
-                <p><strong>Last Updated: June 13, 2026</strong></p>
-                <p>GoalRush is committed to protecting user privacy. Because our platform is a decentralized application, we operate differently than standard websites.</p>
+            <div className="whitepaper-content" style={{
+          padding: '24px'
+        }}>
+              <h2 style={{
+            fontSize: '1.4rem',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            paddingBottom: '8px',
+            marginBottom: '16px'
+          }}>{t("Privacy Policy")}</h2>
+              <div style={{
+            fontSize: '0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            opacity: 0.85
+          }}>
+                <p><strong>{t("Last Updated: June 13, 2026")}</strong></p>
+                <p>{t("GoalRush is committed to protecting user privacy. Because our platform is a decentralized application, we operate differently than standard websites.")}</p>
 
-                <p><strong>1. No Collection of Personal Data</strong></p>
-                <p>We do not collect, store, or process any personal identification information (PII) such as your name, email address, IP address, or physical address. There is no sign-up form or database account registration.</p>
+                <p><strong>{t("1. No Collection of Personal Data")}</strong></p>
+                <p>{t("We do not collect, store, or process any personal identification information (PII) such as your name, email address, IP address, or physical address. There is no sign-up form or database account registration.")}</p>
 
-                <p><strong>2. Blockchain Publicity</strong></p>
-                <p>Your connected wallet address, token balances, and prediction transaction details are broadcasted to the public X Layer blockchain network. This data is open-source, permanent, and accessible by anyone.</p>
+                <p><strong>{t("2. Blockchain Publicity")}</strong></p>
+                <p>{t("Your connected wallet address, token balances, and prediction transaction details are broadcasted to the public X Layer blockchain network. This data is open-source, permanent, and accessible by anyone.")}</p>
 
-                <p><strong>3. Third-Party Services</strong></p>
-                <p>When you interact with the OKX Wallet extension or the Eulr.fun bonding curve, you are subject to their respective terms and privacy policies. We do not control third-party Web3 infrastructure.</p>
+                <p><strong>{t("3. Third-Party Services")}</strong></p>
+                <p>{t("When you interact with the OKX Wallet extension or the Eulr.fun bonding curve, you are subject to their respective terms and privacy policies. We do not control third-party Web3 infrastructure.")}</p>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Floating Glassmorphic Breaking News Toast Notification */}
-      {showNewsToast && latestNewArticle && (
-        <div 
-          className="breaking-news-toast-notification" 
-          onClick={() => { setActiveNewsArticle(latestNewArticle); setShowNewsToast(false); }}
-        >
-          <div className="toast-badge">LIVE UPDATE</div>
+      {showNewsToast && latestNewArticle && <div className="breaking-news-toast-notification" onClick={() => {
+      setActiveNewsArticle(latestNewArticle);
+      setShowNewsToast(false);
+    }}>
+          <div className="toast-badge">{t("LIVE UPDATE")}</div>
           <div className="toast-body">
             <h4 className="toast-title">{latestNewArticle.title}</h4>
             <p className="toast-text">{latestNewArticle.summary.slice(0, 85)}...</p>
           </div>
-          <button 
-            className="toast-close-btn" 
-            onClick={(e) => { e.stopPropagation(); setShowNewsToast(false); }}
-          >
+          <button className="toast-close-btn" onClick={e => {
+        e.stopPropagation();
+        setShowNewsToast(false);
+      }}>
             &times;
           </button>
-        </div>
-      )}
+        </div>}
 
       {/* Mobile Bottom Navigation Bar */}
       <nav className="mobile-bottom-nav">
-        <button className={`bottom-nav-item ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => { setCurrentView('dashboard'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+        <button className={`bottom-nav-item ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => {
+        setCurrentView('dashboard');
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }}>
           <Home size={20} />
-          <span>Home</span>
+          <span>{t("Home")}</span>
         </button>
-        <button className={`bottom-nav-item ${currentView === 'match-center' ? 'active' : ''}`} onClick={() => { setCurrentView('match-center'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+        <button className={`bottom-nav-item ${currentView === 'match-center' ? 'active' : ''}`} onClick={() => {
+        setCurrentView('match-center');
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }}>
           <Activity size={20} />
-          <span>Matches</span>
+          <span>{t("Matches")}</span>
         </button>
         <button className={`bottom-nav-item ${currentView === 'news' ? 'active' : ''}`} onClick={() => setCurrentView('news')}>
           <Globe size={20} />
-          <span>News</span>
+          <span>{t("News")}</span>
         </button>
-        <button className={`bottom-nav-item ${currentView === 'leaderboard' ? 'active' : ''}`} onClick={() => { setCurrentView('leaderboard'); setTimeout(() => document.getElementById('leaderboard')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>
+        <button className={`bottom-nav-item ${currentView === 'leaderboard' ? 'active' : ''}`} onClick={() => {
+        setCurrentView('leaderboard');
+        setTimeout(() => document.getElementById('leaderboard')?.scrollIntoView({
+          behavior: 'smooth'
+        }), 100);
+      }}>
           <Award size={20} />
-          <span>Ranks</span>
+          <span>{t("Ranks")}</span>
         </button>
-        <button className={`bottom-nav-item ${currentView === 'okx-ai' ? 'active' : ''}`} onClick={() => { setCurrentView('okx-ai'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+        <button className={`bottom-nav-item ${currentView === 'okx-ai' ? 'active' : ''}`} onClick={() => {
+        setCurrentView('okx-ai');
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }}>
           <Cpu size={20} />
-          <span>OKX.AI</span>
+          <span>{t("OKX.AI")}</span>
         </button>
         <button className={`bottom-nav-item ${currentView === 'about' ? 'active' : ''}`} onClick={() => setCurrentView('about')}>
           <HelpCircle size={20} />
-          <span>About</span>
+          <span>{t("About")}</span>
         </button>
       </nav>
-    </div>
-  )
+    </div>;
 }
-

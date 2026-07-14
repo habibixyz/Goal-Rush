@@ -248,7 +248,7 @@ input:focus-visible {
   gap: 48px;
 }
 
-@media (max-width: 968px) {
+@media (max-width: 1024px) {
   .hero-section {
     flex-direction: column;
     text-align: center;
@@ -304,7 +304,7 @@ input:focus-visible {
   gap: 16px;
 }
 
-@media (max-width: 968px) {
+@media (max-width: 1024px) {
   .hero-actions {
     justify-content: center;
   }
@@ -884,7 +884,7 @@ input:focus-visible {
   overflow: hidden;
 }
 
-@media (max-width: 968px) {
+@media (max-width: 1024px) {
   .hackathon-hero-container {
     display: flex;
     flex-direction: column-reverse;
@@ -4535,7 +4535,7 @@ input:focus-visible {
   padding-top: 20px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .desktop-nav {
     display: none !important;
   }
@@ -4562,7 +4562,7 @@ input:focus-visible {
   display: none;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .mobile-bottom-nav {
     display: flex;
     position: fixed;
@@ -4607,7 +4607,7 @@ input:focus-visible {
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .mobile-wallet-nav .nav-actions {
     flex-direction: row !important;
     flex-wrap: nowrap !important;
@@ -4641,7 +4641,7 @@ input:focus-visible {
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   /* Fix the disconnect button stretching */
   .mobile-wallet-nav .wallet-connected-wrapper > button {
     flex: 0 0 auto !important;
@@ -4666,7 +4666,7 @@ input:focus-visible {
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .mobile-wallet-nav .badge-xlayer {
     padding: 6px 12px !important;
     font-size: 0.65rem !important;
@@ -4926,7 +4926,7 @@ input:focus-visible {
   align-items: flex-end;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .compact-stats {
     gap: 16px !important;
   }

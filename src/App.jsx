@@ -827,6 +827,31 @@ export default function App() {
   const [grushPriceUsd, setGrushPriceUsd] = useState(null);
   const [viewedCard, setViewedCard] = useState(null); // For viewing other users' cards from gallery
 
+  // Copy-Trade AI Swarm states
+  const [aiSignal, setAiSignal] = useState({ loading: false, data: null, error: null });
+  const [showSwarmExplainer, setShowSwarmExplainer] = useState(false);
+  const [isCopyTradeSynced, setIsCopyTradeSynced] = useState(false);
+  const [copyTradeStrategy, setCopyTradeStrategy] = useState('consensus');
+
+  useEffect(() => {
+    if (!activeMatch || !activeMatch.id) return;
+    const fetchAISignal = async () => {
+      setAiSignal({ loading: true, data: null, error: null });
+      try {
+        const res = await fetch(`${BACKEND_API_BASE}/agent/signal/${activeMatch.id}`);
+        const data = await res.json();
+        if (data.success && data.data) {
+          setAiSignal({ loading: false, data: data.data, error: null });
+        } else {
+          setAiSignal({ loading: false, data: null, error: data.error || 'Signal generation failed' });
+        }
+      } catch (err) {
+        setAiSignal({ loading: false, data: null, error: err.message });
+      }
+    };
+    fetchAISignal();
+  }, [activeMatch?.id]);
+
   // OKX.AI Hub state variables
   const [evaluatorStaked, setEvaluatorStaked] = useState(100);
   const [evaluatorAccuracy, setEvaluatorAccuracy] = useState(94);
@@ -2478,6 +2503,107 @@ export default function App() {
               height: '100%'
             }}></div>
             </div>
+          </div>
+
+          {/* Copy-Trade AI Swarm Banner Card */}
+          <div style={{
+            marginTop: '16px',
+            marginBottom: '16px',
+            background: 'linear-gradient(135deg, rgba(0, 229, 255, 0.08) 0%, rgba(157, 255, 0, 0.08) 100%)',
+            border: '1px solid rgba(0, 229, 255, 0.25)',
+            borderRadius: '12px',
+            padding: '14px 16px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-primary)' }}>
+                <Cpu size={16} />
+                <span>{t("Copy-Trade AI Swarm")}</span>
+                {isCopyTradeSynced && (
+                  <span style={{ fontSize: '0.65rem', background: '#9dff00', color: '#000', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
+                    {t("🤖 AI Swarm Synced")}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setShowSwarmExplainer(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#00e5ff',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontWeight: 600,
+                  textDecoration: 'underline'
+                }}
+              >
+                <HelpCircle size={13} />
+                {t("How the Swarm Works")}
+              </button>
+            </div>
+
+            {aiSignal.loading ? (
+              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', padding: '6px 0' }}>
+                ⚡ Consulting Groq Consensus Models (Llama-3.1, Llama-3.3, Qwen-32b)...
+              </div>
+            ) : aiSignal.data ? (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 0' }}>
+                  <div style={{ fontSize: '0.85rem' }}>
+                    <span style={{ color: 'rgba(255,255,255,0.6)' }}>AI Verdict: </span>
+                    <strong style={{ color: '#fff', fontSize: '0.95rem' }}>{aiSignal.data.prediction_name}</strong>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', background: 'rgba(0,229,255,0.15)', color: '#00e5ff', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
+                    {aiSignal.data.confidence}% {t("Consensus Confidence")}
+                  </div>
+                </div>
+
+                <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', margin: '4px 0 10px 0', lineHeight: 1.3 }}>
+                  {aiSignal.data.reasoning.length > 140 ? aiSignal.data.reasoning.substring(0, 140) + '...' : aiSignal.data.reasoning}
+                </p>
+
+                <button
+                  onClick={() => {
+                    let code = aiSignal.data.prediction_code;
+                    handlePredictionChange(code);
+                    setIsCopyTradeSynced(true);
+                    setSwapAmount('0.001');
+                    addLog(`⚡ Copy-Traded AI Pick: ${aiSignal.data.prediction_name} (${aiSignal.data.confidence}% Confidence)`);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: isCopyTradeSynced ? 'rgba(157, 255, 0, 0.2)' : 'linear-gradient(135deg, #00e5ff 0%, #9dff00 100%)',
+                    color: isCopyTradeSynced ? '#9dff00' : '#000',
+                    border: isCopyTradeSynced ? '1px solid #9dff00' : 'none',
+                    borderRadius: '6px',
+                    fontWeight: 800,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <Flame size={14} />
+                  {isCopyTradeSynced ? t("🤖 AI Swarm Synced") : `${t("Copy AI Pick")} (${aiSignal.data.prediction_name})`}
+                </button>
+
+                <div style={{ marginTop: '10px', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'flex-start', gap: '4px', lineHeight: 1.25 }}>
+                  <AlertTriangle size={12} style={{ color: '#ffaa00', shrink: 0, marginTop: '1px' }} />
+                  <span>{t("Not Financial Advice (NFA). AI prediction signals are generated for entertainment and research purposes. On-chain prediction markets carry risk. Always DYOR.")}</span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>
+                {aiSignal.error || "Signal offline"}
+              </div>
+            )}
           </div>
 
           {m.minute === 'FT' ? (() => {
@@ -9971,5 +10097,92 @@ export default function App() {
           <span>{t("About")}</span>
         </button>
       </nav>
+
+      {/* How the Swarm Works Modal */}
+      {showSwarmExplainer && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.85)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#12141d',
+            border: '1px solid rgba(0, 229, 255, 0.3)',
+            borderRadius: '16px',
+            maxWidth: '520px',
+            width: '100%',
+            padding: '24px',
+            color: '#fff',
+            boxShadow: '0 0 40px rgba(0, 229, 255, 0.2)',
+            position: 'relative'
+          }}>
+            <button
+              onClick={() => setShowSwarmExplainer(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.5)',
+                cursor: 'pointer'
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+              <Cpu size={24} style={{ color: '#00e5ff' }} />
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>{t("How the Swarm Works")}</h3>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: '16px' }}>
+              GoalRush utilizes a multi-agent consensus engine to evaluate football fixtures without human emotional bias. Here is the 3-step pipeline behind every AI prediction signal:
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--color-primary)', marginBottom: '4px' }}>
+                  1. 📡 News & Form Ingestion
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
+                  Crawlee agents fetch real-time injury reports, team statistics, and news feeds continuously.
+                </div>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#00e5ff', marginBottom: '4px' }}>
+                  2. 🤖 3-LLM Consensus Voting
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
+                  Three independent LLMs (Llama-3.1-8B, Llama-3.3-70B, Qwen-32B) evaluate tactical matchups and vote on Home, Away, or Draw.
+                </div>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#ff007a', marginBottom: '4px' }}>
+                  3. ⛓️ Smart Contract Execution
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
+                  When a user clicks Copy-Trade, the consensus pick is populated into the Uniswap V4 hookData transaction payload on OKX X Layer.
+                </div>
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(255, 170, 0, 0.1)', border: '1px solid rgba(255, 170, 0, 0.3)', padding: '12px', borderRadius: '8px', fontSize: '0.75rem', color: '#ffaa00', lineHeight: 1.4 }}>
+              <strong>⚠️ Non-Financial Advice (NFA) Disclaimer:</strong> AI models operate on statistical probabilities and cannot guarantee sports outcomes. Prediction markets involve financial risk. Never stake more than you can afford to lose. Always perform your own research (DYOR).
+            </div>
+          </div>
+        </div>
+      )}
     </div>;
 }

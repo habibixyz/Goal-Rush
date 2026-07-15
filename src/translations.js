@@ -992,7 +992,14 @@ export const translations = {
     "Network Name": "네트워크 이름",
     "RPC URL": "RPC URL",
     "Chain ID": "체인 ID",
-    "Copy Code": "코드 복사"
+    "Copy Code": "코드 복사",
+    "Copy-Trade AI Swarm": "AI 스웜 카피트레이딩",
+    "Copy AI Pick": "AI 픽 복사",
+    "🤖 AI Swarm Synced": "🤖 AI 스웜 동기화됨",
+    "Consensus Confidence": "합의 신뢰도",
+    "How the Swarm Works": "스웜 작동 방식",
+    "Not Financial Advice (NFA). AI prediction signals are generated for entertainment and research purposes. On-chain prediction markets carry risk. Always DYOR.": "금융 조언이 아닙니다(NFA). AI 예측 신호는 오락 및 연구 목적으로 생성됩니다. 온체인 예측 시장은 위험을 동반합니다. 항상 DYOR하세요.",
+    "3-Step Autonomous Pipeline": "3단계 자율 파이프라인"
   }
 };
 

@@ -44,9 +44,11 @@ pnpm-debug.log*
 logs/
 *.pid
 
-# Scratch files
+# Scratch files & local data storage
 scratch/
 backend/src/test-crawlee.cjs
+backend/storage/
+backend/data/*.db
 
 # Keep a redacted configuration template in version control
 !.env.example

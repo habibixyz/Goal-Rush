@@ -834,11 +834,14 @@ export default function App() {
   const [copyTradeStrategy, setCopyTradeStrategy] = useState('consensus');
 
   useEffect(() => {
-    if (!activeMatch || !activeMatch.id) return;
+    if (!activeMatch) return;
     const fetchAISignal = async () => {
       setAiSignal({ loading: true, data: null, error: null });
       try {
-        const res = await fetch(`${BACKEND_API_BASE}/agent/signal/${activeMatch.id}`);
+        const homeParam = encodeURIComponent(activeMatch.teamA || '');
+        const awayParam = encodeURIComponent(activeMatch.teamB || '');
+        const matchIdParam = activeMatch.id || 'current';
+        const res = await fetch(`${BACKEND_API_BASE}/agent/signal/${matchIdParam}?home_team=${homeParam}&away_team=${awayParam}`);
         const data = await res.json();
         if (data.success && data.data) {
           setAiSignal({ loading: false, data: data.data, error: null });
@@ -850,7 +853,7 @@ export default function App() {
       }
     };
     fetchAISignal();
-  }, [activeMatch?.id]);
+  }, [activeMatch?.id, activeMatch?.teamA, activeMatch?.teamB]);
 
   // OKX.AI Hub state variables
   const [evaluatorStaked, setEvaluatorStaked] = useState(100);
@@ -2545,7 +2548,7 @@ export default function App() {
               </button>
             </div>
 
-            {aiSignal.loading ? (
+            {aiSignal.loading || (aiSignal.data && (aiSignal.data.home_team !== m.teamA && aiSignal.data.away_team !== m.teamB)) ? (
               <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', padding: '6px 0' }}>
                 ⚡ Consulting Groq Consensus Models (Llama-3.1, Llama-3.3, Qwen-32b)...
               </div>

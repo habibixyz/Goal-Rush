@@ -501,13 +501,22 @@ router.get('/agent/predictions', (req, res) => {
 router.get('/agent/signal/:matchId', async (req, res) => {
   try {
     const matchId = req.params.matchId;
-    const match = db.getMatchById(matchId);
-    if (!match) {
-      return res.status(404).json({ success: false, error: 'Match not found' });
-    }
+    let match = db.getMatchById(matchId);
 
-    const teamA = match.home_team;
-    const teamB = match.away_team;
+    let teamA = req.query.home_team || (match ? match.home_team : null);
+    let teamB = req.query.away_team || (match ? match.away_team : null);
+
+    // If team names not found directly, search DB matches or set reasonable defaults
+    if (!teamA || !teamB) {
+      const allMatches = db.getAllMatches(100);
+      const foundMatch = allMatches.find(m => m.id === matchId);
+      if (foundMatch) {
+        teamA = foundMatch.home_team;
+        teamB = foundMatch.away_team;
+      } else {
+        return res.status(404).json({ success: false, error: 'Match teams not specified' });
+      }
+    }
 
     // Fetch recent news context and filter specifically for Team A or Team B
     const recentNews = db.getNewsArticles(15);

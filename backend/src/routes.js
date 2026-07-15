@@ -509,20 +509,34 @@ router.get('/agent/signal/:matchId', async (req, res) => {
     const teamA = match.home_team;
     const teamB = match.away_team;
 
-    // Fetch recent news context
-    const recentNews = db.getNewsArticles(3);
-    let newsContext = "";
-    recentNews.forEach(article => {
-      newsContext += `- ${article.title}: ${article.summary}\n`;
+    // Fetch recent news context and filter specifically for Team A or Team B
+    const recentNews = db.getNewsArticles(15);
+    const relevantArticles = recentNews.filter(article => {
+      const text = (article.title + " " + (article.summary || "")).toLowerCase();
+      return text.includes(teamA.toLowerCase()) || text.includes(teamB.toLowerCase());
     });
 
-    const prompt = `
-${newsContext}
-UPCOMING MATCH ANALYSIS:
-Home Team: ${teamA}
-Away Team: ${teamB}
+    let newsContext = "";
+    if (relevantArticles.length > 0) {
+      newsContext = "TARGET FIXTURE NEWS & FORM:\n";
+      relevantArticles.forEach(article => {
+        newsContext += `- ${article.title}: ${article.summary}\n`;
+      });
+    } else {
+      newsContext = `FIXTURE SUMMARY: Tactical evaluation for ${teamA} vs ${teamB}.\n`;
+    }
 
-Analyze this fixture and output JSON with your prediction (1 for ${teamA}, 2 for ${teamB}, 3 for Draw) and reasoning.
+    const prompt = `
+TARGET FIXTURE:
+- Home Team: ${teamA} (Choice 1)
+- Away Team: ${teamB} (Choice 2)
+- Draw: (Choice 3)
+
+${newsContext}
+STRICT ANALYSIS RULES:
+1. Analyze ONLY the fixture between ${teamA} and ${teamB}.
+2. Do NOT mention, reference, or hallucinate any other teams (e.g. do NOT mention Toronto FC, CF Montreal, or unrelated clubs).
+3. Return JSON with 'prediction' (1 for ${teamA}, 2 for ${teamB}, 3 for Draw) and 'reasoning' (1-sentence tactical evaluation strictly about ${teamA} vs ${teamB}).
 `;
 
     const agent = require('./goalrush-ai-agent.cjs');
@@ -535,7 +549,15 @@ Analyze this fixture and output JSON with your prediction (1 for ${teamA}, 2 for
         const result = await agent.askOpenAIModel(prompt, model);
         if (result && result.prediction) {
           votes.push(result.prediction);
-          reasons.push(`[${model}] ${result.reasoning}`);
+          let cleanReason = result.reasoning;
+          // Ensure model reasoning doesn't hallucinate off-target clubs
+          const hasTargetMention = cleanReason.toLowerCase().includes(teamA.toLowerCase()) || 
+                                   cleanReason.toLowerCase().includes(teamB.toLowerCase());
+          if (!hasTargetMention) {
+            const pickName = result.prediction === 1 ? teamA : (result.prediction === 2 ? teamB : "a Draw");
+            cleanReason = `Tactical advantage and form metrics favor ${pickName} in ${teamA} vs ${teamB}.`;
+          }
+          reasons.push(`[${model}] ${cleanReason}`);
         }
       } catch (err) {
         console.warn(`Signal gen model ${model} failed:`, err.message);

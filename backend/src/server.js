@@ -13,6 +13,7 @@ const routes = require('./routes');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+app.set('trust proxy', true);
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
@@ -27,8 +28,8 @@ async function configureX402Payments(app) {
   // Real OKX Agentic Wallet address on X Layer (chain 196)
   const payTo = process.env.X402_RECEIVER_ADDRESS || '0xd96c9899b4d48c02efbd88dc22252a60dc6ee38d';
   const network = process.env.X402_NETWORK || 'eip155:196';
-  // Real USDT contract on X Layer mainnet
-  const asset = process.env.X402_ASSET || '0x1E4a5963aBFD975d8c9021ce480b42188849D41d';
+  // Official USDT0 contract on X Layer mainnet
+  const asset = process.env.X402_ASSET || '0x779ded0c9e1022225f8e0630b35a9b54be713736';
   const price = process.env.X402_PRICE || '0.005';
   const facilitatorUrl = process.env.X402_FACILITATOR_URL || 'https://facilitator.payai.network';
 
@@ -47,7 +48,7 @@ async function configureX402Payments(app) {
           amount: tokenAmount,
           asset: asset,
           extra: {
-            name: 'USDT',
+            name: 'USD₮0',
             version: '1',
             assetTransferMethod: 'permit2'
           }

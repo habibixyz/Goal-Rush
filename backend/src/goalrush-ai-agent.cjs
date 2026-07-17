@@ -55,45 +55,52 @@ async function askOpenAIModel(prompt, modelName) {
     throw new Error("GROQ_API_KEY is missing from .env");
   }
 
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${GROQ_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model: modelName,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert sports data analyst AI part of a Consensus Swarm. You MUST respond with ONLY a valid JSON object containing exactly two keys: 'prediction' (Number: 1 for Home, 2 for Away, 3 for Draw) and 'reasoning' (String: a 1-sentence tactical explanation)."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      temperature: 0.2,
-    })
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Groq API Error: ${response.status} ${errText}`);
-  }
-
-  const data = await response.json();
-  const answer = data.choices[0].message.content.trim();
-  
   try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: modelName,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert sports data analyst AI part of a Consensus Swarm. You MUST respond with ONLY a valid JSON object containing exactly two keys: 'prediction' (Number: 1 for Home, 2 for Away, 3 for Draw) and 'reasoning' (String: a 1-sentence tactical explanation)."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.2,
+      })
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Groq API Error: ${response.status} ${errText}`);
+    }
+
+    const data = await response.json();
+    const answer = data.choices[0].message.content.trim();
+    
     const parsed = JSON.parse(answer);
     if (![1, 2, 3].includes(parsed.prediction)) {
        throw new Error("Invalid prediction number");
     }
     return parsed;
   } catch (e) {
-    throw new Error(`AI returned invalid JSON: "${answer}"`);
+    clearTimeout(timeoutId);
+    throw new Error(`AI model error: ${e.message}`);
   }
 }
 

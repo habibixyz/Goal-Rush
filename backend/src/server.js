@@ -25,27 +25,8 @@ async function configureX402Payments(app) {
     return;
   }
 
-  // Intercept 402 responses to ensure x402 JSON challenge is present in BOTH header and body
-  app.use((req, res, next) => {
-    const origSetHeader = res.setHeader;
-    res.setHeader = function(name, val) {
-      if (name.toLowerCase() === 'payment-required') {
-        try {
-          res.locals.x402Challenge = JSON.parse(Buffer.from(val, 'base64').toString('utf8'));
-        } catch(e){}
-      }
-      return origSetHeader.apply(this, arguments);
-    };
-
-    const origSend = res.send;
-    res.send = function(body) {
-      if (res.statusCode === 402 && res.locals.x402Challenge) {
-        return origSend.call(this, JSON.stringify(res.locals.x402Challenge));
-      }
-      return origSend.apply(this, arguments);
-    };
-    next();
-  });
+  // The @x402/express middleware handles x402 challenge generation properly.
+  // We don't need manual interceptors that might break standard compliance.
 
   // Real OKX Agentic Wallet address on X Layer (chain 196)
   const payTo = process.env.X402_RECEIVER_ADDRESS || '0xd96c9899b4d48c02efbd88dc22252a60dc6ee38d';

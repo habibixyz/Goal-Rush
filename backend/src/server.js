@@ -14,7 +14,11 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.set('trust proxy', true);
-app.use(cors({ origin: '*' }));
+app.use(cors({
+  origin: '*',
+  exposedHeaders: ['PAYMENT-REQUIRED', 'WWW-Authenticate'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-PAYMENT', 'PAYMENT-SIGNATURE', 'x-api-key', 'x-admin-secret']
+}));
 app.use(express.json());
 
 // ─── Routes ───────────────────────────────────────────────
@@ -89,6 +93,19 @@ async function configureX402Payments(app) {
             }
           ],
           description: 'GoalRush consensus soccer match prediction — OKX.AI ASP #4564.',
+          mimeType: 'application/json'
+        },
+        'GET /api/agent/signal/:matchId': {
+          accepts: [
+            {
+              scheme: 'exact',
+              price,
+              network,
+              asset,
+              payTo
+            }
+          ],
+          description: 'GoalRush AI Swarm Consensus Signal — OKX.AI ASP #4564.',
           mimeType: 'application/json'
         }
       },

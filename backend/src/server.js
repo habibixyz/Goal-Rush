@@ -67,50 +67,37 @@ async function configureX402Payments(app) {
     const resourceServer = new x402ResourceServer(facilitatorClient)
       .register(network, evmScheme);
 
-    app.use(paymentMiddleware(
-      {
-        'POST /api/predict': {
-          accepts: [
-            {
-              scheme: 'exact',
-              price,
-              network,
-              asset,
-              payTo
-            }
-          ],
-          description: 'GoalRush consensus soccer match prediction — OKX.AI ASP #4564.',
-          mimeType: 'application/json'
+      app.use(paymentMiddleware(
+        {
+          'POST /api/predict': {
+            accepts: [
+              {
+                scheme: 'exact',
+                price,
+                network,
+                asset,
+                payTo
+              }
+            ],
+            description: 'GoalRush consensus soccer match prediction — OKX.AI ASP #4564.',
+            mimeType: 'application/json'
+          },
+          'GET /api/predict': {
+            accepts: [
+              {
+                scheme: 'exact',
+                price,
+                network,
+                asset,
+                payTo
+              }
+            ],
+            description: 'GoalRush consensus soccer match prediction — OKX.AI ASP #4564.',
+            mimeType: 'application/json'
+          }
         },
-        'GET /api/predict': {
-          accepts: [
-            {
-              scheme: 'exact',
-              price,
-              network,
-              asset,
-              payTo
-            }
-          ],
-          description: 'GoalRush consensus soccer match prediction — OKX.AI ASP #4564.',
-          mimeType: 'application/json'
-        },
-        'GET /api/agent/signal/:matchId': {
-          accepts: [
-            {
-              scheme: 'exact',
-              price,
-              network,
-              asset,
-              payTo
-            }
-          ],
-          description: 'GoalRush AI Swarm Consensus Signal — OKX.AI ASP #4564.',
-          mimeType: 'application/json'
-        }
-      },
-      resourceServer
-    ));
+        resourceServer
+      ));
 
     console.log(`[x402] Protecting GET & POST /api/predict — network=${network} asset=${asset} price=${price} payTo=${payTo}`);
   } catch (err) {

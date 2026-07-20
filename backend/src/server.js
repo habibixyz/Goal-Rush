@@ -21,90 +21,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// ─── Routes ───────────────────────────────────────────────
-async function configureX402Payments(app) {
-  const enabled = process.env.X402_ENABLED !== 'false';
-  if (!enabled) {
-    console.warn('[x402] Payment protection disabled by X402_ENABLED=false');
-    return;
-  }
-
-  // The @x402/express middleware handles x402 challenge generation properly.
-  // We don't need manual interceptors that might break standard compliance.
-
-  // Real OKX Agentic Wallet address on X Layer (chain 196)
-  const payTo = process.env.X402_RECEIVER_ADDRESS || '0xd96c9899b4d48c02efbd88dc22252a60dc6ee38d';
-  const network = process.env.X402_NETWORK || 'eip155:196';
-  // Official USDT0 contract on X Layer mainnet
-  const asset = process.env.X402_ASSET || '0x779ded0c9e1022225f8e0630b35a9b54be713736';
-  const price = process.env.X402_PRICE || '0.005';
-  const facilitatorUrl = process.env.X402_FACILITATOR_URL || 'https://facilitator.payai.network';
-
-  try {
-    const { paymentMiddleware, x402ResourceServer } = await import('@x402/express');
-    const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    const { ExactEvmScheme } = await import('@x402/evm/exact/server');
-
-    const facilitatorClient = new HTTPFacilitatorClient({ url: facilitatorUrl });
-    const evmScheme = new ExactEvmScheme();
-    evmScheme.registerMoneyParser(async (amount, net) => {
-      if (net === 'eip155:196' || net === 'eip155:1952') {
-        const decimals = 6; // USDT has 6 decimals
-        const tokenAmount = (amount * Math.pow(10, decimals)).toFixed(0);
-        return {
-          amount: tokenAmount,
-          asset: asset,
-          extra: {
-            name: 'USD₮0',
-            version: '1',
-            assetTransferMethod: 'permit2'
-          }
-        };
-      }
-      return null;
-    });
-
-    const resourceServer = new x402ResourceServer(facilitatorClient)
-      .register(network, evmScheme);
-
-      app.use(paymentMiddleware(
-        {
-          'POST /api/predict': {
-            accepts: [
-              {
-                scheme: 'exact',
-                price,
-                network,
-                asset,
-                payTo
-              }
-            ],
-            description: 'GoalRush consensus soccer match prediction — OKX.AI ASP #4564.',
-            mimeType: 'application/json'
-          },
-          'GET /api/predict': {
-            accepts: [
-              {
-                scheme: 'exact',
-                price,
-                network,
-                asset,
-                payTo
-              }
-            ],
-            description: 'GoalRush consensus soccer match prediction — OKX.AI ASP #4564.',
-            mimeType: 'application/json'
-          }
-        },
-        resourceServer
-      ));
-
-    console.log(`[x402] Protecting GET & POST /api/predict — network=${network} asset=${asset} price=${price} payTo=${payTo}`);
-  } catch (err) {
-    console.error('[x402] Failed to initialize payment middleware:', err.message);
-    console.error('[x402] The /api/predict endpoint will NOT be payment-protected.');
-  }
-}
+const { configureX402Payments } = require('./x402-config');
 
 // Health check
 app.get('/', (req, res) => {
@@ -135,6 +52,12 @@ async function boot() {
   await db.init();
   await configureX402Payments(app);
   app.use('/api', routes);
+
+  // Global error handler
+  app.use((err, req, res, next) => {
+    console.error('[SERVER ERROR]', err.message, err.stack);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  });
 
   // Start on-chain keeper (auto-activates & resolves matches on X Layer)
   startKeeper(cron);

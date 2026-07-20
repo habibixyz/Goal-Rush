@@ -358,16 +358,6 @@ async function handlePredictRequest(req, res) {
       }
     }
 
-    // A2A / Platform testing fast-path to prevent timeouts
-    if (req.body?.msgType === 'a2a-agent-chat' || req.body?.test === true || req.query?.test === 'true' || req.body?.ping || req.query?.ping) {
-      return res.json({
-        success: true,
-        service: "GoalRush Consensus Soccer Prediction Swarm (ASP #4564)",
-        message: "A2A Endpoint reachable. Service is healthy and ready to accept tasks.",
-        timestamp: new Date().toISOString()
-      });
-    }
-
     let match_id = req.body?.match_id || req.body?.matchId || req.query?.match_id || req.query?.matchId;
     const clientWallet = req.body?.clientAddress || req.body?.wallet
       || req.query?.clientAddress || req.query?.wallet

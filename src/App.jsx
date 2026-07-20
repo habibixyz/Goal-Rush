@@ -1223,9 +1223,13 @@ export default function App() {
   }, []);
   useEffect(() => {
     fetchGrushPrice();
-    const interval = setInterval(fetchGrushPrice, 60000);
+    fetchAccessPassSupply();
+    const interval = setInterval(() => {
+      fetchGrushPrice();
+      fetchAccessPassSupply();
+    }, 30000);
     return () => clearInterval(interval);
-  }, [fetchGrushPrice]);
+  }, [fetchGrushPrice, fetchAccessPassSupply]);
   const fetchRecentCards = useCallback(async () => {
     try {
       const response = await fetch(`${BACKEND_API_BASE}/cards?limit=10`);
@@ -1549,6 +1553,7 @@ export default function App() {
       addLog(`[Access Pass] Successfully minted! TX: ${tx.hash.slice(0, 14)}...`);
       alert('🎉 Successfully minted your GoalRush VIP Access Pass!');
       updateGrushBalance(userAddress);
+      fetchAccessPassSupply();
     } catch (err) {
       console.error(err);
       const reason = parseRevertReason(err);

@@ -20,6 +20,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-PAYMENT', 'PAYMENT-SIGNATURE', 'x-api-key', 'x-admin-secret']
 }));
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '../public')));
 
 const { configureX402Payments } = require('./x402-config');
 

@@ -152,6 +152,14 @@ The `/api/predict` route handler is protected by the official `@x402/express` mi
 * **Default Facilitator**: `https://facilitator.payai.network`
 * **Live Endpoint**: `https://goal-rush-backend-production.up.railway.app/api/predict`
 
+### 3. UX Real-Time Sync & Auto-Transitioning
+* **15-Second Sync Interval**: REST polling continuously syncs real-world score updates (`scoreA`, `scoreB`), minute displays, and status flags alongside WebSocket event feeds.
+* **Auto-Transitioning**: When an active match finishes (`FT` / `resolved`), the UI automatically transitions to the next upcoming match object to ensure uninterrupted player engagement.
+
+### 4. Code Quality & Security Standards
+* **Linting & Formatting**: Enforced via ESLint (`.eslintrc.cjs`) and Prettier (`.prettierrc`) with automated scripts `npm run lint` and `npm run format`.
+* **Resilience & Fault Tolerance**: Express backend includes a global uncaught exception error handler preventing process crashes, and modularized x402 payment validation logic (`backend/src/x402-config.js`).
+
 ---
 
 ## 🌐 Deploying to OKX X Layer

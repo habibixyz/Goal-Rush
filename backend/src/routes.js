@@ -1,8 +1,27 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
 const db = require('./db');
 const { fetchAndStoreMatches, fetchWorldCupNews } = require('./fetcher');
 const { resolveMatchManually } = require('./resolver');
+
+router.get('/access-pass.png', (req, res) => {
+  const candidates = [
+    path.join(__dirname, '../public/access-pass.png'),
+    path.join(__dirname, 'public/access-pass.png'),
+    path.join(__dirname, '../../public/access-pass.png'),
+    path.join(process.cwd(), 'public/access-pass.png'),
+    path.join(process.cwd(), 'backend/public/access-pass.png'),
+    path.join(process.cwd(), 'backend/src/public/access-pass.png')
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      return res.sendFile(c);
+    }
+  }
+  res.status(404).send('Image not found');
+});
 
 // ── GET /api/matches/live ─────────────────────────────────
 router.get('/matches/live', (req, res) => {

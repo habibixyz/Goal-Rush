@@ -112,7 +112,8 @@ router.post('/predictions', (req, res) => {
 // Manual resolution (protect this with ADMIN_SECRET env var)
 router.post('/admin/resolve', async (req, res) => {
   const secret = req.headers['x-admin-secret'];
-  if (secret !== process.env.ADMIN_SECRET) {
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (!adminSecret || secret !== adminSecret) {
     return res.status(403).json({ success: false, error: 'Unauthorized' });
   }
   try {
@@ -203,6 +204,19 @@ router.get('/metadata/:username', async (req, res) => {
     }
 
     // Generate a simple but aesthetic SVG representing the player card
+    const escapeXml = (unsafe) => (unsafe || '').toString().replace(/[<>&"']/g, (c) => {
+      switch (c) {
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '&': return '&amp;';
+        case '"': return '&quot;';
+        case "'": return '&apos;';
+        default: return c;
+      }
+    });
+    const safeUsername = escapeXml(card.username);
+    const safePosition = escapeXml(card.position);
+
     const svgString = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600">
       <defs>
@@ -219,8 +233,8 @@ router.get('/metadata/:username', async (req, res) => {
       <rect width="100%" height="100%" fill="url(#glow)" rx="20" />
       <rect x="10" y="10" width="380" height="580" fill="none" stroke="${card.card_type === 'legendary' ? '#ffaa00' : '#ffd700'}" stroke-width="4" rx="15" />
       
-      <text x="50" y="100" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="#ffffff">${card.overall}</text>
-      <text x="50" y="140" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="${card.card_type === 'legendary' ? '#ffaa00' : '#ffd700'}">${card.position}</text>
+      <text x="50" y="100" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="#ffffff">${Number(card.overall) || 0}</text>
+      <text x="50" y="140" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="${card.card_type === 'legendary' ? '#ffaa00' : '#ffd700'}">${safePosition}</text>
       
       <circle cx="200" cy="250" r="80" fill="#2a2d3d" stroke="${card.card_type === 'legendary' ? '#ffaa00' : '#ffd700'}" stroke-width="4"/>
       

@@ -145,13 +145,14 @@ function getLiveMatches() {
 }
 
 function getUpcomingMatches(hours = 48) {
+  const safeHours = Math.max(1, Math.min(720, parseInt(hours) || 48));
   return db.prepare(`
     SELECT * FROM matches
     WHERE status = 'SCHEDULED'
       AND kickoff_utc >= datetime('now')
-      AND kickoff_utc <= datetime('now', '+${hours} hours')
+      AND kickoff_utc <= datetime('now', '+' || ? || ' hours')
     ORDER BY kickoff_utc
-  `).all();
+  `).all(safeHours.toString());
 }
 
 function getFinishedUnresolved() {

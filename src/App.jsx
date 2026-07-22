@@ -8626,9 +8626,9 @@ export default function App() {
               fontSize: '0.8rem',
               opacity: 0.6
             }}>
-                    <span>{t("Published: June 2026")}</span>
+                    <span>{t("Published: July 2026")}</span>
                     <span>•</span>
-                    <span>{t("Version: 1.0.2")}</span>
+                    <span>{t("Version: 2.0.0")}</span>
                     <span>•</span>
                     <span>{t("Chain: Robinhood Chain Mainnet")}</span>
                   </div>
@@ -8716,7 +8716,7 @@ export default function App() {
                       <p style={{
                   fontSize: '0.85rem'
                 }}>
-                        {t("Every shootout prediction ticket locks native ETH directly inside the Hook contract. Unlike standard prediction markets with high fee cuts, GoalRush allocates 100% of the user-submitted amount directly into the Match Jackpot Pool, creating massive pools for key matches.")}
+                        {t("Every shootout prediction ticket locks native ETH directly inside the Hook contract. GoalRush implements a low 2% platform fee on claim payouts, meaning 98% of the jackpot volume is distributed directly to the winners and 2% is allocated to protocol treasury for server, keeper bot, and platform maintenance.")}
                       </p>
                     </div>
                     <div style={{
@@ -8797,7 +8797,7 @@ export default function App() {
                   <ol style={{
               paddingLeft: '20px'
             }}>
-                    <li><strong>{t("Strict Robinhood Wallet Isolation:")}</strong> {t("Connection is locked to the official Robinhood wallet to prevent phishing or multi-wallet collisions.")}</li>
+                    <li><strong>{t("Multi-Wallet Compatibility:")}</strong> {t("Seamless connection support for all major EVM wallets including Rabby, MetaMask, Phantom, Zerion, and OKX Wallet, automatically prioritizing the official Robinhood Wallet if installed.")}</li>
                     <li><strong>{t("Non-Custodial Design:")}</strong> {t("The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.")}</li>
                     <li><strong>{t("Real-Time Sync & Seamless Transitions:")}</strong> {t("Match states poll seamlessly every 15 seconds with automated transition to upcoming matches when games conclude.")}</li>
                     <li><strong>{t("Eulr-fun Bonding Safety:")}</strong> {t("Real token swaps happen permissionlessly on Euler, shielding the dApp simulator from token vault vulnerabilities.")}</li>
@@ -9287,9 +9287,9 @@ export default function App() {
               fontSize: '0.8rem',
               opacity: 0.6
             }}>
-                  <span>{t("Published: June 2026")}</span>
+                  <span>{t("Published: July 2026")}</span>
                   <span>•</span>
-                  <span>{t("Version: 1.0.2")}</span>
+                  <span>{t("Version: 2.0.0")}</span>
                   <span>•</span>
                   <span>{t("Chain: Robinhood Chain Mainnet")}</span>
                 </div>
@@ -9363,7 +9363,7 @@ export default function App() {
                     <p style={{
                   fontSize: '0.85rem'
                 }}>
-                      {t("Every shootout prediction ticket locks native ETH directly inside the Hook contract. Unlike standard prediction markets with high fee cuts, GoalRush allocates 100% of the user-submitted amount directly into the Match Jackpot Pool, creating massive pools for key matches.")}
+                      {t("Every shootout prediction ticket locks native ETH directly inside the Hook contract. GoalRush implements a low 2% platform fee on claim payouts, meaning 98% of the jackpot volume is distributed directly to the winners and 2% is allocated to protocol treasury for server, keeper bot, and platform maintenance.")}
                     </p>
                   </div>
                   <div style={{
@@ -9444,7 +9444,7 @@ export default function App() {
                 <ol style={{
               paddingLeft: '20px'
             }}>
-                  <li><strong>{t("Strict Robinhood Wallet Isolation:")}</strong> {t("Connection is locked to the official Robinhood wallet to prevent phishing or multi-wallet collisions.")}</li>
+                  <li><strong>{t("Multi-Wallet Compatibility:")}</strong> {t("Seamless connection support for all major EVM wallets including Rabby, MetaMask, Phantom, Zerion, and OKX Wallet, automatically prioritizing the official Robinhood Wallet if installed.")}</li>
                   <li><strong>{t("Non-Custodial Design:")}</strong> {t("The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.")}</li>
                   <li><strong>{t("Real-Time Sync & Seamless Transitions:")}</strong> {t("Match states poll seamlessly every 15 seconds with automated transition to upcoming matches when games conclude.")}</li>
                   <li><strong>{t("Eulr-fun Bonding Safety:")}</strong> {t("Real token swaps happen permissionlessly on Euler, shielding the dApp simulator from token vault vulnerabilities.")}</li>

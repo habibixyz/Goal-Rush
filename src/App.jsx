@@ -621,22 +621,27 @@ const getCleanAbbreviation = (teamName, flagCode) => {
   return teamName?.slice(0, 3).toUpperCase() || 'UN';
 };
 
-// Helper to get the correct Robinhood Wallet provider strictly
 const getProvider = () => {
   if (typeof window !== 'undefined') {
-    // 1. Check direct okxwallet injector
-    if (window.okxwallet) return window.okxwallet;
-
-    // 2. Check if window.ethereum is Robinhood Wallet
+    // 1. If Robinhood Wallet is explicitly injected, prioritize it
     if (window.ethereum) {
       if (window.ethereum.isRobinhoodWallet) return window.ethereum;
-
-      // 3. Handle multi-provider injection setups (e.g. Robinhood + MetaMask coexistence)
       if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
         const robinhood = window.ethereum.providers.find(p => p.isRobinhoodWallet);
         if (robinhood) return robinhood;
       }
     }
+
+    // 2. Fallback to other major injected wallets (Rabby, Phantom, Zerion, MetaMask, OKX)
+    if (window.ethereum) {
+      if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
+        return window.ethereum.providers[0];
+      }
+      return window.ethereum;
+    }
+
+    if (window.okxwallet) return window.okxwallet;
+    if (window.phantom?.ethereum) return window.phantom.ethereum;
   }
   return null;
 };

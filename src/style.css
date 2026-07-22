@@ -887,7 +887,7 @@ input:focus-visible {
 @media (max-width: 1024px) {
   .protocol-hero-container {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     padding: 30px 0;
     gap: 32px;
   }
@@ -895,6 +895,13 @@ input:focus-visible {
     display: none !important;
   }
 }
+
+@media (max-width: 768px) {
+  .protocol-right {
+    display: none !important;
+  }
+}
+
 
 .protocol-left {
   display: flex;

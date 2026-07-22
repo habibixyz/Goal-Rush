@@ -5687,14 +5687,9 @@ export default function App() {
 
         {/* Cyber-Matrix Right Column */}
         <div className="protocol-right">
-          <div className="ascii-ball-wrapper">
-            <div className="ascii-code-graphic" style={{ fontSize: '2.5rem', letterSpacing: '0.1em', lineHeight: '1.4', color: 'rgba(255,255,255,0.85)', textAlign: 'center', userSelect: 'none' }}>
-              ⚽
-            </div>
-            <div className="ascii-glow-effect"></div>
-            <div className="interactive-3d-overlay">
-              <SoccerBall3D />
-            </div>
+          <div className="ascii-glow-effect"></div>
+          <div className="interactive-3d-overlay">
+            <SoccerBall3D />
           </div>
         </div>
       </section>
@@ -7222,7 +7217,7 @@ export default function App() {
 
 
 
-    {currentView === 'robinhood-ai' && <div style={{
+    {false && <div style={{
       marginTop: '32px'
     }}>
       {/* Header Banner */}
@@ -9857,16 +9852,7 @@ export default function App() {
         <Award size={20} />
         <span>{t("Ranks")}</span>
       </button>
-      <button className={`bottom-nav-item ${currentView === 'robinhood-ai' ? 'active' : ''}`} onClick={() => {
-        setCurrentView('robinhood-ai');
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
-      }}>
-        <Cpu size={20} />
-        <span>{t("GoalRush")}</span>
-      </button>
+
       <button className={`bottom-nav-item ${currentView === 'about' ? 'active' : ''}`} onClick={() => setCurrentView('about')}>
         <HelpCircle size={20} />
         <span>{t("About")}</span>

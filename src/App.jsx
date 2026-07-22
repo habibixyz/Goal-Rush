@@ -1263,7 +1263,7 @@ export default function App() {
 
     // Card tier/type
     let card_type = 'gold';
-    if (overall >= 94 || hash % 20 === 0) card_type = 'legendary';else if (overall >= 88) card_type = 'diamond';else if (overall >= 80) card_type = 'gold';else if (overall >= 74) card_type = 'silver';else card_type = 'bronze';
+    if (overall >= 94 || hash % 20 === 0) card_type = 'legendary'; else if (overall >= 88) card_type = 'diamond'; else if (overall >= 80) card_type = 'gold'; else if (overall >= 74) card_type = 'silver'; else card_type = 'bronze';
 
     // List of VIP influencers who automatically get Legendary cards for marketing and virality
     const vipInfluencers = ['waleswoosh', 'chillpill', 'vitalik', 'elonmusk', 'cz_binance', 'sandeepnailwal', 'cobie', 'ansem', 'gainzy', 'rovercrc'];
@@ -1331,32 +1331,32 @@ export default function App() {
     // Play transition sound (muted by default without interaction but exists for polish)
     const audio = new Audio('/sounds/switch.mp3');
     audio.volume = 0.1;
-    audio.play().catch(() => {});
+    audio.play().catch(() => { });
   };
 
   // Auto-switch to next upcoming match when current one finishes
   const hasAutoSwitchedRef = useRef(null);
-  
+
   useEffect(() => {
     if (!activeMatch || activeMatch.id === 10) return;
-    
+
     const isFinished = activeMatch.minute === 'FT' || activeMatch.resolved;
-    
+
     if (isFinished && hasAutoSwitchedRef.current !== activeMatch.id) {
-       hasAutoSwitchedRef.current = activeMatch.id;
-       
-       const nextM = liveMatchesRef.current.find(m => m.isLive && m.minute !== 'FT' && m.id !== activeMatch.id) ||
-                     liveMatchesRef.current.find(m => !m.isLive && m.minute !== 'FT' && !m.resolved && m.id !== activeMatch.id);
-                     
-       if (nextM) {
-          const t = setTimeout(() => {
-             // Only auto-switch if we are still on the finished match
-             if (activeMatchRef.current && activeMatchRef.current.id === activeMatch.id) {
-                 handleSelectMatchUI(nextM);
-             }
-          }, 4000); // 4 second delay to allow viewing the FT status briefly
-          return () => clearTimeout(t);
-       }
+      hasAutoSwitchedRef.current = activeMatch.id;
+
+      const nextM = liveMatchesRef.current.find(m => m.isLive && m.minute !== 'FT' && m.id !== activeMatch.id) ||
+        liveMatchesRef.current.find(m => !m.isLive && m.minute !== 'FT' && !m.resolved && m.id !== activeMatch.id);
+
+      if (nextM) {
+        const t = setTimeout(() => {
+          // Only auto-switch if we are still on the finished match
+          if (activeMatchRef.current && activeMatchRef.current.id === activeMatch.id) {
+            handleSelectMatchUI(nextM);
+          }
+        }, 4000); // 4 second delay to allow viewing the FT status briefly
+        return () => clearTimeout(t);
+      }
     }
   }, [activeMatch.id, activeMatch.minute, activeMatch.resolved]);
 
@@ -2144,7 +2144,7 @@ export default function App() {
       transition: 'var(--transition-smooth)',
       position: 'relative'
     }}>
-        {isSelected && <div style={{
+      {isSelected && <div style={{
         position: 'absolute',
         left: 0,
         top: '15%',
@@ -2154,31 +2154,31 @@ export default function App() {
         borderRadius: '0 4px 4px 0'
       }}></div>}
 
-        <div style={{
+      <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-          <div style={{
+        <div style={{
           display: 'flex',
           flexDirection: 'column',
           gap: '8px',
           flex: 1,
           minWidth: 0
         }}>
-            <div style={{
+          <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
           }}>
-              <img src={getFlagUrl(m.flagA)} alt={m.teamA} style={{
+            <img src={getFlagUrl(m.flagA)} alt={m.teamA} style={{
               width: '18px',
               height: '12px',
               objectFit: 'cover',
               borderRadius: '1px',
               border: '1px solid rgba(255,255,255,0.1)'
             }} />
-              <span style={{
+            <span style={{
               fontSize: '0.85rem',
               fontWeight: 600,
               color: isSelected ? 'var(--color-primary)' : '#fff',
@@ -2186,7 +2186,7 @@ export default function App() {
               overflow: 'hidden',
               textOverflow: 'ellipsis'
             }}>{m.teamA}</span>
-              <span style={{
+            <span style={{
               marginLeft: 'auto',
               fontSize: '0.9rem',
               fontWeight: 700,
@@ -2195,20 +2195,20 @@ export default function App() {
               textAlign: 'right',
               fontVariantNumeric: 'tabular-nums'
             }}>{m.scoreA}</span>
-            </div>
-            <div style={{
+          </div>
+          <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
           }}>
-              <img src={getFlagUrl(m.flagB)} alt={m.teamB} style={{
+            <img src={getFlagUrl(m.flagB)} alt={m.teamB} style={{
               width: '18px',
               height: '12px',
               objectFit: 'cover',
               borderRadius: '1px',
               border: '1px solid rgba(255,255,255,0.1)'
             }} />
-              <span style={{
+            <span style={{
               fontSize: '0.85rem',
               fontWeight: 600,
               color: isSelected ? 'var(--color-primary)' : '#fff',
@@ -2216,7 +2216,7 @@ export default function App() {
               overflow: 'hidden',
               textOverflow: 'ellipsis'
             }}>{m.teamB}</span>
-              <span style={{
+            <span style={{
               marginLeft: 'auto',
               fontSize: '0.9rem',
               fontWeight: 700,
@@ -2225,17 +2225,17 @@ export default function App() {
               textAlign: 'right',
               fontVariantNumeric: 'tabular-nums'
             }}>{m.scoreB}</span>
-            </div>
           </div>
+        </div>
 
-          <div style={{
+        <div style={{
           borderLeft: '1px solid rgba(255,255,255,0.08)',
           height: '36px',
           margin: '0 16px',
           flexShrink: 0
         }}></div>
 
-          <div style={{
+        <div style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -2245,15 +2245,15 @@ export default function App() {
           flexShrink: 0,
           textAlign: 'center'
         }}>
-            <span style={{
+          <span style={{
             fontSize: '0.75rem',
             fontWeight: 700,
             color: m.isLive && m.minute !== 'FT' ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)',
             fontVariantNumeric: 'tabular-nums'
           }}>
-              {m.isLive || m.minute === 'FT' ? m.minute : formatLocalTime(m.startTime)}
-            </span>
-            {m.isLive && m.minute !== 'FT' ? <span style={{
+            {m.isLive || m.minute === 'FT' ? m.minute : formatLocalTime(m.startTime)}
+          </span>
+          {m.isLive && m.minute !== 'FT' ? <span style={{
             fontSize: '0.6rem',
             color: '#ff3344',
             fontWeight: 700,
@@ -2262,31 +2262,31 @@ export default function App() {
             alignItems: 'center',
             gap: '4px'
           }}>
-                <span className="live-pulse-dot" style={{
+            <span className="live-pulse-dot" style={{
               width: '4px',
               height: '4px',
               background: '#ff3344',
               borderRadius: '50%',
               display: 'inline-block'
             }}></span>
-                {t("LIVE")}
-              </span> : m.minute === 'FT' ? <span style={{
+            {t("LIVE")}
+          </span> : m.minute === 'FT' ? <span style={{
             fontSize: '0.55rem',
             color: 'rgba(255,255,255,0.4)',
             marginTop: '2px',
             fontWeight: 600,
             whiteSpace: 'nowrap'
           }}>
-                {m.scoreA > m.scoreB ? `${getCleanAbbreviation(m.teamA, m.flagA)} Won` : m.scoreB > m.scoreA ? `${getCleanAbbreviation(m.teamB, m.flagB)} Won` : 'Draw'}
-              </span> : <span style={{
+            {m.scoreA > m.scoreB ? `${getCleanAbbreviation(m.teamA, m.flagA)} Won` : m.scoreB > m.scoreA ? `${getCleanAbbreviation(m.teamB, m.flagB)} Won` : 'Draw'}
+          </span> : <span style={{
             fontSize: '0.6rem',
             color: 'var(--color-secondary)',
             marginTop: '2px',
             fontWeight: 600
           }}>{t("Upcoming")}</span>}
-          </div>
         </div>
-      </div>;
+      </div>
+    </div>;
   };
   const renderMatchHubDetails = m => {
     const isMainActive = activeMatch.id === m.id;
@@ -2306,8 +2306,8 @@ export default function App() {
       flexDirection: 'column',
       gap: '24px'
     }}>
-        <div className="match-hub-header">
-          <div style={{
+      <div className="match-hub-header">
+        <div style={{
           fontSize: '0.75rem',
           fontWeight: 700,
           color: 'rgba(255,255,255,0.4)',
@@ -2315,40 +2315,40 @@ export default function App() {
           letterSpacing: '1.5px',
           marginBottom: '8px'
         }}>
-            {formatLocalDate(m.startTime)} • {m.stadium.split(',')[0]}
-          </div>
-
-          <div className="match-hub-teams">
-            <div className="match-hub-team-col">
-              <img src={getFlagUrl(m.flagA)} alt={m.teamA} className="match-hub-team-flag" />
-              <span className="match-hub-team-name">{m.teamA}</span>
-            </div>
-
-            <div className="match-hub-score-wrap">
-              <span className="match-hub-score">{m.scoreA} - {m.scoreB}</span>
-              <span className={`match-hub-minute ${m.isLive && m.minute !== 'FT' ? 'live' : ''}`}>
-                {m.minute === 'FT' ? `FULL TIME (FT) • ${m.scoreA > m.scoreB ? `${m.teamA} Won` : m.scoreB > m.scoreA ? `${m.teamB} Won` : 'Draw'}` : m.isLive && m.minute !== 'FT' ? `LIVE ${m.minute}` : 'UPCOMING'}
-              </span>
-            </div>
-
-            <div className="match-hub-team-col">
-              <img src={getFlagUrl(m.flagB)} alt={m.teamB} className="match-hub-team-flag" />
-              <span className="match-hub-team-name">{m.teamB}</span>
-            </div>
-          </div>
-
-          {(m.scorersA && m.scorersA.length > 0 || m.scorersB && m.scorersB.length > 0) && <div className="match-hub-scorers">
-              <div className="scorer-list">
-                {m.scorersA?.map((sc, i) => <div key={i} className="scorer-item">⚽ {sc}</div>)}
-              </div>
-              <div className="scorer-list right">
-                {m.scorersB?.map((sc, i) => <div key={i} className="scorer-item">{sc} ⚽</div>)}
-              </div>
-            </div>}
+          {formatLocalDate(m.startTime)} • {m.stadium.split(',')[0]}
         </div>
 
-        <div className="card-bezel">
-          <div style={{
+        <div className="match-hub-teams">
+          <div className="match-hub-team-col">
+            <img src={getFlagUrl(m.flagA)} alt={m.teamA} className="match-hub-team-flag" />
+            <span className="match-hub-team-name">{m.teamA}</span>
+          </div>
+
+          <div className="match-hub-score-wrap">
+            <span className="match-hub-score">{m.scoreA} - {m.scoreB}</span>
+            <span className={`match-hub-minute ${m.isLive && m.minute !== 'FT' ? 'live' : ''}`}>
+              {m.minute === 'FT' ? `FULL TIME (FT) • ${m.scoreA > m.scoreB ? `${m.teamA} Won` : m.scoreB > m.scoreA ? `${m.teamB} Won` : 'Draw'}` : m.isLive && m.minute !== 'FT' ? `LIVE ${m.minute}` : 'UPCOMING'}
+            </span>
+          </div>
+
+          <div className="match-hub-team-col">
+            <img src={getFlagUrl(m.flagB)} alt={m.teamB} className="match-hub-team-flag" />
+            <span className="match-hub-team-name">{m.teamB}</span>
+          </div>
+        </div>
+
+        {(m.scorersA && m.scorersA.length > 0 || m.scorersB && m.scorersB.length > 0) && <div className="match-hub-scorers">
+          <div className="scorer-list">
+            {m.scorersA?.map((sc, i) => <div key={i} className="scorer-item">⚽ {sc}</div>)}
+          </div>
+          <div className="scorer-list right">
+            {m.scorersB?.map((sc, i) => <div key={i} className="scorer-item">{sc} ⚽</div>)}
+          </div>
+        </div>}
+      </div>
+
+      <div className="card-bezel">
+        <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -2356,7 +2356,7 @@ export default function App() {
           borderBottom: '1px solid rgba(255,255,255,0.06)',
           paddingBottom: '12px'
         }}>
-            <h4 style={{
+          <h4 style={{
             fontFamily: 'var(--font-display)',
             fontSize: '1rem',
             fontWeight: 700,
@@ -2364,9 +2364,9 @@ export default function App() {
             alignItems: 'center',
             gap: '8px'
           }}>
-              {t("🎯 Prediction Jackpot Pool")}
-            </h4>
-            {isActiveOnChain ? <span style={{
+            {t("🎯 Prediction Jackpot Pool")}
+          </h4>
+          {isActiveOnChain ? <span style={{
             fontSize: '0.65rem',
             background: 'rgba(157, 255, 0, 0.15)',
             color: 'var(--color-primary)',
@@ -2376,8 +2376,8 @@ export default function App() {
             fontWeight: 700,
             textTransform: 'uppercase'
           }}>
-                {t("Active On-Chain")}
-              </span> : <button onClick={() => handleActivateMatchOnChain(m)} style={{
+            {t("Active On-Chain")}
+          </span> : <button onClick={() => handleActivateMatchOnChain(m)} style={{
             fontSize: '0.65rem',
             background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid rgba(255, 255, 255, 0.15)',
@@ -2394,212 +2394,212 @@ export default function App() {
             e.target.style.background = 'rgba(255, 255, 255, 0.05)';
             e.target.style.color = '#fff';
           }}>
-                {t("Set Active On-Chain")}
-              </button>}
-          </div>
+            {t("Set Active On-Chain")}
+          </button>}
+        </div>
 
-          <div style={{
+        <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
           gap: '16px',
           marginBottom: '20px'
         }}>
-            <div style={{
+          <div style={{
             background: 'rgba(255,255,255,0.02)',
             padding: '12px',
             borderRadius: '8px',
             border: '1px solid rgba(255,255,255,0.05)'
           }}>
-              <div style={{
+            <div style={{
               fontSize: '0.7rem',
               color: 'rgba(255,255,255,0.4)',
               textTransform: 'uppercase',
               marginBottom: '4px'
             }}>{t("Jackpot Size")}</div>
-              <div style={{
+            <div style={{
               fontSize: '1.25rem',
               fontWeight: 800,
               color: 'var(--color-secondary)'
             }}>{displayJackpot.toFixed(4)} {t("ETH")}</div>
-              <div style={{
+            <div style={{
               fontSize: '0.7rem',
               color: 'rgba(255,255,255,0.3)'
             }}>≈ ${(displayJackpot * 60).toFixed(2)} {t("USD")}</div>
-            </div>
-            <div style={{
+          </div>
+          <div style={{
             background: 'rgba(255,255,255,0.02)',
             padding: '12px',
             borderRadius: '8px',
             border: '1px solid rgba(255,255,255,0.05)'
           }}>
-              <div style={{
+            <div style={{
               fontSize: '0.7rem',
               color: 'rgba(255,255,255,0.4)',
               textTransform: 'uppercase',
               marginBottom: '4px'
             }}>{t("Prediction Volume")}</div>
-              <div style={{
+            <div style={{
               fontSize: '1.25rem',
               fontWeight: 800,
               color: '#fff'
             }}>{totalVotes.toFixed(4)} {t("ETH")}</div>
-              <div style={{
+            <div style={{
               fontSize: '0.7rem',
               color: 'rgba(255,255,255,0.3)'
             }}>{t("Total user tickets")}</div>
-            </div>
           </div>
+        </div>
 
-          <div style={{
+        <div style={{
           display: 'flex',
           flexDirection: 'column',
           gap: '8px'
         }}>
-            <div style={{
+          <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             fontSize: '0.8rem'
           }}>
-              <span style={{
+            <span style={{
               fontWeight: 600,
               color: 'var(--color-primary)'
             }}>{m.teamA} ({percentA}%)</span>
-              <span style={{
+            <span style={{
               fontWeight: 600,
               color: 'rgba(255, 255, 255, 0.5)'
             }}>{t("Draw (")}{percentDraw}%)</span>
-              <span style={{
+            <span style={{
               fontWeight: 600,
               color: '#ff007a'
             }}>{m.teamB} ({percentB}%)</span>
-            </div>
-            <div style={{
+          </div>
+          <div style={{
             height: '8px',
             background: 'rgba(255,255,255,0.05)',
             borderRadius: '99px',
             overflow: 'hidden',
             display: 'flex'
           }}>
-              <div style={{
+            <div style={{
               width: `${percentA}%`,
               background: 'var(--color-primary)',
               height: '100%'
             }}></div>
-              <div style={{
+            <div style={{
               width: `${percentDraw}%`,
               background: 'rgba(255, 255, 255, 0.35)',
               height: '100%'
             }}></div>
-              <div style={{
+            <div style={{
               width: `${percentB}%`,
               background: '#ff007a',
               height: '100%'
             }}></div>
+          </div>
+        </div>
+
+        {/* Copy-Trade AI Swarm Banner Card */}
+        <div style={{
+          marginTop: '16px',
+          marginBottom: '16px',
+          background: 'linear-gradient(135deg, rgba(0, 229, 255, 0.08) 0%, rgba(157, 255, 0, 0.08) 100%)',
+          border: '1px solid rgba(0, 229, 255, 0.25)',
+          borderRadius: '12px',
+          padding: '14px 16px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-primary)' }}>
+              <Cpu size={16} />
+              <span>{t("Copy-Trade AI Swarm")}</span>
+              {isCopyTradeSynced && (
+                <span style={{ fontSize: '0.65rem', background: '#9dff00', color: '#000', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
+                  {t("🤖 AI Swarm Synced")}
+                </span>
+              )}
             </div>
+            <button
+              onClick={() => setShowSwarmExplainer(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#00e5ff',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: 600,
+                textDecoration: 'underline'
+              }}
+            >
+              <HelpCircle size={13} />
+              {t("How the Swarm Works")}
+            </button>
           </div>
 
-          {/* Copy-Trade AI Swarm Banner Card */}
-          <div style={{
-            marginTop: '16px',
-            marginBottom: '16px',
-            background: 'linear-gradient(135deg, rgba(0, 229, 255, 0.08) 0%, rgba(157, 255, 0, 0.08) 100%)',
-            border: '1px solid rgba(0, 229, 255, 0.25)',
-            borderRadius: '12px',
-            padding: '14px 16px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-primary)' }}>
-                <Cpu size={16} />
-                <span>{t("Copy-Trade AI Swarm")}</span>
-                {isCopyTradeSynced && (
-                  <span style={{ fontSize: '0.65rem', background: '#9dff00', color: '#000', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
-                    {t("🤖 AI Swarm Synced")}
-                  </span>
-                )}
+          {aiSignal.loading || (aiSignal.data && (aiSignal.data.home_team !== m.teamA && aiSignal.data.away_team !== m.teamB)) ? (
+            <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', padding: '6px 0' }}>
+              ⚡ Consulting Groq Consensus Models (Llama-3.1, Llama-3.3, Qwen-32b)...
+            </div>
+          ) : aiSignal.data ? (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 0' }}>
+                <div style={{ fontSize: '0.85rem' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.6)' }}>AI Verdict: </span>
+                  <strong style={{ color: '#fff', fontSize: '0.95rem' }}>{aiSignal.data.prediction_name}</strong>
+                </div>
+                <div style={{ fontSize: '0.8rem', background: 'rgba(0,229,255,0.15)', color: '#00e5ff', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
+                  {aiSignal.data.confidence}% {t("Consensus Confidence")}
+                </div>
               </div>
+
+              <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', margin: '4px 0 10px 0', lineHeight: 1.3 }}>
+                {aiSignal.data.reasoning.length > 140 ? aiSignal.data.reasoning.substring(0, 140) + '...' : aiSignal.data.reasoning}
+              </p>
+
               <button
-                onClick={() => setShowSwarmExplainer(true)}
+                onClick={() => {
+                  let code = aiSignal.data.prediction_code;
+                  handlePredictionChange(code);
+                  setIsCopyTradeSynced(true);
+                  setSwapAmount('0.001');
+                  addLog(`⚡ Copy-Traded AI Pick: ${aiSignal.data.prediction_name} (${aiSignal.data.confidence}% Confidence)`);
+                }}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#00e5ff',
-                  fontSize: '0.75rem',
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: isCopyTradeSynced ? 'rgba(157, 255, 0, 0.2)' : 'linear-gradient(135deg, #00e5ff 0%, #9dff00 100%)',
+                  color: isCopyTradeSynced ? '#9dff00' : '#000',
+                  border: isCopyTradeSynced ? '1px solid #9dff00' : 'none',
+                  borderRadius: '6px',
+                  fontWeight: 800,
+                  fontSize: '0.8rem',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px',
-                  fontWeight: 600,
-                  textDecoration: 'underline'
+                  justifyContent: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s'
                 }}
               >
-                <HelpCircle size={13} />
-                {t("How the Swarm Works")}
+                <Flame size={14} />
+                {isCopyTradeSynced ? t("🤖 AI Swarm Synced") : `${t("Copy AI Pick")} (${aiSignal.data.prediction_name})`}
               </button>
+
+              <div style={{ marginTop: '10px', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'flex-start', gap: '4px', lineHeight: 1.25 }}>
+                <AlertTriangle size={12} style={{ color: '#ffaa00', shrink: 0, marginTop: '1px' }} />
+                <span>{t("Not Financial Advice (NFA). AI prediction signals are generated for entertainment and research purposes. On-chain prediction markets carry risk. Always DYOR.")}</span>
+              </div>
             </div>
+          ) : (
+            <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>
+              {aiSignal.error || "Signal offline"}
+            </div>
+          )}
+        </div>
 
-            {aiSignal.loading || (aiSignal.data && (aiSignal.data.home_team !== m.teamA && aiSignal.data.away_team !== m.teamB)) ? (
-              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', padding: '6px 0' }}>
-                ⚡ Consulting Groq Consensus Models (Llama-3.1, Llama-3.3, Qwen-32b)...
-              </div>
-            ) : aiSignal.data ? (
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 0' }}>
-                  <div style={{ fontSize: '0.85rem' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.6)' }}>AI Verdict: </span>
-                    <strong style={{ color: '#fff', fontSize: '0.95rem' }}>{aiSignal.data.prediction_name}</strong>
-                  </div>
-                  <div style={{ fontSize: '0.8rem', background: 'rgba(0,229,255,0.15)', color: '#00e5ff', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
-                    {aiSignal.data.confidence}% {t("Consensus Confidence")}
-                  </div>
-                </div>
-
-                <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', margin: '4px 0 10px 0', lineHeight: 1.3 }}>
-                  {aiSignal.data.reasoning.length > 140 ? aiSignal.data.reasoning.substring(0, 140) + '...' : aiSignal.data.reasoning}
-                </p>
-
-                <button
-                  onClick={() => {
-                    let code = aiSignal.data.prediction_code;
-                    handlePredictionChange(code);
-                    setIsCopyTradeSynced(true);
-                    setSwapAmount('0.001');
-                    addLog(`⚡ Copy-Traded AI Pick: ${aiSignal.data.prediction_name} (${aiSignal.data.confidence}% Confidence)`);
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    background: isCopyTradeSynced ? 'rgba(157, 255, 0, 0.2)' : 'linear-gradient(135deg, #00e5ff 0%, #9dff00 100%)',
-                    color: isCopyTradeSynced ? '#9dff00' : '#000',
-                    border: isCopyTradeSynced ? '1px solid #9dff00' : 'none',
-                    borderRadius: '6px',
-                    fontWeight: 800,
-                    fontSize: '0.8rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <Flame size={14} />
-                  {isCopyTradeSynced ? t("🤖 AI Swarm Synced") : `${t("Copy AI Pick")} (${aiSignal.data.prediction_name})`}
-                </button>
-
-                <div style={{ marginTop: '10px', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'flex-start', gap: '4px', lineHeight: 1.25 }}>
-                  <AlertTriangle size={12} style={{ color: '#ffaa00', shrink: 0, marginTop: '1px' }} />
-                  <span>{t("Not Financial Advice (NFA). AI prediction signals are generated for entertainment and research purposes. On-chain prediction markets carry risk. Always DYOR.")}</span>
-                </div>
-              </div>
-            ) : (
-              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>
-                {aiSignal.error || "Signal offline"}
-              </div>
-            )}
-          </div>
-
-          {m.minute === 'FT' ? (() => {
+        {m.minute === 'FT' ? (() => {
           if (!walletConnected) {
             return <div style={{
               marginTop: '20px',
@@ -2612,8 +2612,8 @@ export default function App() {
               fontSize: '0.85rem',
               fontWeight: 600
             }}>
-                  {t("Match Ended ⚽")}
-                </div>;
+              {t("Match Ended ⚽")}
+            </div>;
           }
           if (!centerMatchPredictions) {
             return <div style={{
@@ -2626,8 +2626,8 @@ export default function App() {
               color: 'rgba(255,255,255,0.4)',
               fontSize: '0.85rem'
             }}>
-                  {t("Checking claim eligibility on-chain...")}
-                </div>;
+              {t("Checking claim eligibility on-chain...")}
+            </div>;
           }
           const winnerIndex = centerMatchPredictions.winner;
           const predOnWinner = centerMatchPredictions[winnerIndex];
@@ -2646,8 +2646,8 @@ export default function App() {
               fontSize: '0.85rem',
               fontWeight: 600
             }}>
-                  {t("Match Ended ⚽")}
-                </div>;
+              {t("Match Ended ⚽")}
+            </div>;
           }
           const okbClaimed = predOnWinner?.okbClaimed;
           const grushClaimed = predOnWinner?.grushClaimed;
@@ -2656,7 +2656,7 @@ export default function App() {
           const hasUnclaimed = okbNeedClaim || grushNeedClaim;
           if (hasUnclaimed) {
             return <>
-                  <button onClick={() => {
+              <button onClick={() => {
                 handleSelectMatchUI(m);
                 setCurrentView('dashboard');
                 setTimeout(() => {
@@ -2671,9 +2671,9 @@ export default function App() {
                 fontWeight: 'bold',
                 boxShadow: '0 0 15px rgba(157, 255, 0, 0.4)'
               }}>
-                    {t("View Match & Claim Winnings on Dashboard 🏆")}
-                  </button>
-                  <div style={{
+                {t("View Match & Claim Winnings on Dashboard 🏆")}
+              </button>
+              <div style={{
                 fontSize: '0.75rem',
                 color: 'var(--color-primary)',
                 marginTop: '8px',
@@ -2681,9 +2681,9 @@ export default function App() {
                 lineHeight: '1.4',
                 fontWeight: 600
               }}>
-                    {t("🎉 You won! Click above to claim your ETH/GRUSH rewards on the dashboard.")}
-                  </div>
-                </>;
+                {t("🎉 You won! Click above to claim your ETH/GRUSH rewards on the dashboard.")}
+              </div>
+            </>;
           } else {
             return <div style={{
               marginTop: '20px',
@@ -2696,8 +2696,8 @@ export default function App() {
               fontSize: '0.85rem',
               fontWeight: 700
             }}>
-                  {t("All Winnings Claimed ✅")}
-                </div>;
+              {t("All Winnings Claimed ✅")}
+            </div>;
           }
         })() : <button onClick={() => {
           handleSelectMatchUI(m);
@@ -2713,270 +2713,270 @@ export default function App() {
           color: '#000',
           fontWeight: 'bold'
         }}>
-              {t("Predict Match Winner & Play Shootout! ⚽")}
-            </button>}
+          {t("Predict Match Winner & Play Shootout! ⚽")}
+        </button>}
+      </div>
+
+      {/* ─── LIVE MICRO-PREDICTION MARKETS ─── */}
+      <div style={{
+        background: 'linear-gradient(145deg, rgba(12,12,16,0.95) 0%, rgba(20,26,20,0.98) 100%)',
+        border: '1px solid rgba(157,255,0,0.12)',
+        borderRadius: '16px',
+        overflow: 'hidden',
+        backdropFilter: 'blur(20px)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)'
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: '14px 18px',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: 'rgba(157,255,0,0.03)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1rem' }}>⚡</span>
+            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.95rem', color: '#fff', letterSpacing: '0.3px' }}>Live Micro-Markets</span>
+            {m.isLive && m.minute !== 'FT' && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.6rem', background: 'rgba(255,51,68,0.15)', color: '#ff3344', border: '1px solid rgba(255,51,68,0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <span style={{ width: '5px', height: '5px', background: '#ff3344', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></span>
+                LIVE
+              </span>
+            )}
+          </div>
+          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>Min stake: 0.0001 ETH</span>
         </div>
 
-        {/* ─── LIVE MICRO-PREDICTION MARKETS ─── */}
-        <div style={{
-          background: 'linear-gradient(145deg, rgba(12,12,16,0.95) 0%, rgba(20,26,20,0.98) 100%)',
-          border: '1px solid rgba(157,255,0,0.12)',
-          borderRadius: '16px',
-          overflow: 'hidden',
-          backdropFilter: 'blur(20px)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)'
-        }}>
-          {/* Header */}
-          <div style={{
-            padding: '14px 18px',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'rgba(157,255,0,0.03)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '1rem' }}>⚡</span>
-              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.95rem', color: '#fff', letterSpacing: '0.3px' }}>Live Micro-Markets</span>
-              {m.isLive && m.minute !== 'FT' && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.6rem', background: 'rgba(255,51,68,0.15)', color: '#ff3344', border: '1px solid rgba(255,51,68,0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  <span style={{ width: '5px', height: '5px', background: '#ff3344', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></span>
-                  LIVE
-                </span>
-              )}
-            </div>
-            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>Min stake: 0.0001 ETH</span>
-          </div>
-
-          {/* Markets Grid */}
-          <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {[
-              { key: 'next_goal', icon: '⚽', label: 'Next Goal', options: [{ label: m.teamA, color: 'var(--color-primary)', odds: '1.85' }, { label: 'No Goal', color: 'rgba(255,255,255,0.5)', odds: '2.10' }, { label: m.teamB, color: '#ff007a', odds: '2.40' }] },
-              { key: 'next_corner', icon: '🚩', label: 'Next Corner', options: [{ label: m.teamA, color: 'var(--color-primary)', odds: '1.70' }, { label: m.teamB, color: '#ff007a', odds: '2.05' }] },
-              { key: 'next_card', icon: '🟨', label: 'Next Card', options: [{ label: m.teamA + ' Player', color: '#ffaa00', odds: '2.20' }, { label: m.teamB + ' Player', color: '#ff3344', odds: '1.95' }] },
-              { key: 'halftime', icon: '🕐', label: 'Half-Time Result', options: [{ label: m.teamA, color: 'var(--color-primary)', odds: '2.30' }, { label: 'Draw', color: 'rgba(255,255,255,0.5)', odds: '2.00' }, { label: m.teamB, color: '#ff007a', odds: '3.10' }] },
-              { key: 'over_under', icon: '📊', label: 'Over/Under 2.5 Goals', options: [{ label: 'Over 2.5', color: '#00e5ff', odds: '1.90' }, { label: 'Under 2.5', color: '#ff007a', odds: '1.95' }] },
-              { key: 'next_scorer', icon: '🌟', label: 'Next Scorer (Team)', options: [{ label: m.teamA, color: 'var(--color-primary)', odds: '1.75' }, { label: m.teamB, color: '#ff007a', odds: '2.25' }] }
-            ].map(market => {
-              const betKey = `${m.id}_${market.key}`;
-              const cartItem = betSlip.find(item => item.matchId === m.id && item.marketKey === market.key);
-              const picked = cartItem ? cartItem.optionLabel : null;
-              const placed = placedBets[betKey];
-              return (
-                <div key={market.key} style={{
-                  background: picked ? 'rgba(157,255,0,0.04)' : 'rgba(255,255,255,0.02)',
-                  border: picked ? '1px solid rgba(157,255,0,0.2)' : '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: '12px',
-                  padding: '12px 14px',
-                  transition: 'all 0.2s'
-                }}>
-                  {/* Market Row Header */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                      <span style={{ fontSize: '0.85rem' }}>{market.icon}</span>
-                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.2px' }}>{market.label}</span>
-                    </div>
-                    {placed && (
-                      <span style={{ fontSize: '0.6rem', background: 'rgba(157,255,0,0.15)', color: 'var(--color-primary)', border: '1px solid rgba(157,255,0,0.3)', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>PLACED ✓</span>
-                    )}
+        {/* Markets Grid */}
+        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {[
+            { key: 'next_goal', icon: '⚽', label: 'Next Goal', options: [{ label: m.teamA, color: 'var(--color-primary)', odds: '1.85' }, { label: 'No Goal', color: 'rgba(255,255,255,0.5)', odds: '2.10' }, { label: m.teamB, color: '#ff007a', odds: '2.40' }] },
+            { key: 'next_corner', icon: '🚩', label: 'Next Corner', options: [{ label: m.teamA, color: 'var(--color-primary)', odds: '1.70' }, { label: m.teamB, color: '#ff007a', odds: '2.05' }] },
+            { key: 'next_card', icon: '🟨', label: 'Next Card', options: [{ label: m.teamA + ' Player', color: '#ffaa00', odds: '2.20' }, { label: m.teamB + ' Player', color: '#ff3344', odds: '1.95' }] },
+            { key: 'halftime', icon: '🕐', label: 'Half-Time Result', options: [{ label: m.teamA, color: 'var(--color-primary)', odds: '2.30' }, { label: 'Draw', color: 'rgba(255,255,255,0.5)', odds: '2.00' }, { label: m.teamB, color: '#ff007a', odds: '3.10' }] },
+            { key: 'over_under', icon: '📊', label: 'Over/Under 2.5 Goals', options: [{ label: 'Over 2.5', color: '#00e5ff', odds: '1.90' }, { label: 'Under 2.5', color: '#ff007a', odds: '1.95' }] },
+            { key: 'next_scorer', icon: '🌟', label: 'Next Scorer (Team)', options: [{ label: m.teamA, color: 'var(--color-primary)', odds: '1.75' }, { label: m.teamB, color: '#ff007a', odds: '2.25' }] }
+          ].map(market => {
+            const betKey = `${m.id}_${market.key}`;
+            const cartItem = betSlip.find(item => item.matchId === m.id && item.marketKey === market.key);
+            const picked = cartItem ? cartItem.optionLabel : null;
+            const placed = placedBets[betKey];
+            return (
+              <div key={market.key} style={{
+                background: picked ? 'rgba(157,255,0,0.04)' : 'rgba(255,255,255,0.02)',
+                border: picked ? '1px solid rgba(157,255,0,0.2)' : '1px solid rgba(255,255,255,0.06)',
+                borderRadius: '12px',
+                padding: '12px 14px',
+                transition: 'all 0.2s'
+              }}>
+                {/* Market Row Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                    <span style={{ fontSize: '0.85rem' }}>{market.icon}</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.2px' }}>{market.label}</span>
                   </div>
-
-                  {/* Odds Buttons */}
-                  <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
-                    {market.options.map(opt => {
-                      const isChosen = picked === opt.label;
-                      return (
-                        <button
-                          key={opt.label}
-                          disabled={placed}
-                          onClick={() => {
-                            if (!placed) {
-                              if (isChosen) {
-                                handleBetSlipRemove(m.id, market.key);
-                              } else {
-                                handleBetSlipAdd(m, market.key, market.label, opt.label, opt.odds);
-                              }
-                            }
-                          }}
-                          style={{
-                            flex: 1,
-                            minWidth: '80px',
-                            padding: '9px 10px',
-                            background: isChosen
-                              ? `linear-gradient(135deg, ${opt.color}22 0%, ${opt.color}11 100%)`
-                              : 'rgba(255,255,255,0.03)',
-                            border: isChosen
-                              ? `1px solid ${opt.color}`
-                              : '1px solid rgba(255,255,255,0.08)',
-                            borderRadius: '9px',
-                            cursor: placed ? 'default' : 'pointer',
-                            transition: 'all 0.18s',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: '3px',
-                            opacity: placed && !isChosen ? 0.45 : 1
-                          }}
-                        >
-                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: isChosen ? opt.color : 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{opt.label}</span>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 900, color: isChosen ? opt.color : '#fff', fontVariantNumeric: 'tabular-nums' }}>{opt.odds}</span>
-                          <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>odds</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {placed && (
+                    <span style={{ fontSize: '0.6rem', background: 'rgba(157,255,0,0.15)', color: 'var(--color-primary)', border: '1px solid rgba(157,255,0,0.3)', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>PLACED ✓</span>
+                  )}
                 </div>
-              );
-            })}
-          </div>
 
-          {/* Bet Slip (Cart) */}
-          {betSlip.length > 0 && (
-            <div style={{
-              background: 'rgba(0,0,0,0.3)',
-              borderTop: '1px solid rgba(255,255,255,0.08)',
-              padding: '16px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.85rem', color: 'var(--color-primary)' }}>
-                  📋 BET SLIP ({betSlip.length})
-                </span>
-                <button
-                  onClick={() => setBetSlip([])}
-                  style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
-                >
-                  Clear Slip
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
-                {betSlip.map(item => (
-                  <div key={`${item.matchId}_${item.marketKey}`} style={{
-                    background: 'rgba(255,255,255,0.02)',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                    borderRadius: '8px',
-                    padding: '8px 12px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{item.marketLabel}</div>
-                      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                        {item.optionLabel} <span style={{ color: 'var(--color-primary)', marginLeft: '4px' }}>@{item.odds}</span>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <input
-                        type="number"
-                        step="0.001"
-                        min="0.0001"
-                        value={item.stake}
-                        onChange={(e) => updateBetSlipStake(item.matchId, item.marketKey, e.target.value)}
-                        style={{
-                          width: '90px',
-                          background: 'rgba(0,0,0,0.4)',
-                          border: '1px solid rgba(255,255,255,0.15)',
-                          borderRadius: '4px',
-                          padding: '4px 6px',
-                          color: '#fff',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          textAlign: 'right'
-                        }}
-                      />
-                      <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>ETH</span>
+                {/* Odds Buttons */}
+                <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
+                  {market.options.map(opt => {
+                    const isChosen = picked === opt.label;
+                    return (
                       <button
-                        onClick={() => handleBetSlipRemove(item.matchId, item.marketKey)}
-                        style={{ background: 'none', border: 'none', color: '#ff3344', fontSize: '0.9rem', cursor: 'pointer', padding: '0 4px' }}
+                        key={opt.label}
+                        disabled={placed}
+                        onClick={() => {
+                          if (!placed) {
+                            if (isChosen) {
+                              handleBetSlipRemove(m.id, market.key);
+                            } else {
+                              handleBetSlipAdd(m, market.key, market.label, opt.label, opt.odds);
+                            }
+                          }
+                        }}
+                        style={{
+                          flex: 1,
+                          minWidth: '80px',
+                          padding: '9px 10px',
+                          background: isChosen
+                            ? `linear-gradient(135deg, ${opt.color}22 0%, ${opt.color}11 100%)`
+                            : 'rgba(255,255,255,0.03)',
+                          border: isChosen
+                            ? `1px solid ${opt.color}`
+                            : '1px solid rgba(255,255,255,0.08)',
+                          borderRadius: '9px',
+                          cursor: placed ? 'default' : 'pointer',
+                          transition: 'all 0.18s',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '3px',
+                          opacity: placed && !isChosen ? 0.45 : 1
+                        }}
                       >
-                        ×
+                        <span style={{ fontSize: '0.68rem', fontWeight: 700, color: isChosen ? opt.color : 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{opt.label}</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 900, color: isChosen ? opt.color : '#fff', fontVariantNumeric: 'tabular-nums' }}>{opt.odds}</span>
+                        <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>odds</span>
                       </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Total Summary */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '10px' }}>
-                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Total Stake:</span>
-                <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--color-primary)' }}>
-                  {betSlip.reduce((sum, item) => sum + parseFloat(item.stake || '0'), 0).toFixed(4)} ETH
-                </span>
-              </div>
-
-              {betSlipStatus && (
-                <div style={{
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  textAlign: 'center',
-                  background: betSlipStatus.tone === 'success' ? 'rgba(157,255,0,0.12)' : betSlipStatus.tone === 'pending' ? 'rgba(0,229,255,0.1)' : 'rgba(255,51,68,0.1)',
-                  color: betSlipStatus.tone === 'success' ? 'var(--color-primary)' : betSlipStatus.tone === 'pending' ? '#00e5ff' : '#ff3344',
-                  border: `1px solid ${betSlipStatus.tone === 'success' ? 'rgba(157,255,0,0.25)' : betSlipStatus.tone === 'pending' ? 'rgba(0,229,255,0.25)' : 'rgba(255,51,68,0.25)'}`
-                }}>
-                  {betSlipStatus.message}
+                    );
+                  })}
                 </div>
-              )}
+              </div>
+            );
+          })}
+        </div>
 
+        {/* Bet Slip (Cart) */}
+        {betSlip.length > 0 && (
+          <div style={{
+            background: 'rgba(0,0,0,0.3)',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            padding: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.85rem', color: 'var(--color-primary)' }}>
+                📋 BET SLIP ({betSlip.length})
+              </span>
               <button
-                onClick={placeBatchBets}
-                disabled={isSubmittingBets}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  background: 'linear-gradient(135deg, var(--color-primary) 0%, #00e5ff 100%)',
-                  color: '#000',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: 800,
-                  fontSize: '0.8rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  boxShadow: '0 4px 16px rgba(157,255,0,0.2)'
-                }}
+                onClick={() => setBetSlip([])}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
               >
-                {isSubmittingBets ? t("Submitting Transactions...") : `⚡ ${t("Place Bets via Robinhood")}`}
+                Clear Slip
               </button>
             </div>
-          )}
 
-          {/* Footer */}
-          <div style={{
-            padding: '10px 18px',
-            borderTop: '1px solid rgba(255,255,255,0.05)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'rgba(0,0,0,0.2)'
-          }}>
-            <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>Micro-bets settle on-chain after full time. NFA.</span>
-            <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 700, letterSpacing: '0.3px' }}>Robinhood Chain ⚡</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
+              {betSlip.map(item => (
+                <div key={`${item.matchId}_${item.marketKey}`} style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{item.marketLabel}</div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      {item.optionLabel} <span style={{ color: 'var(--color-primary)', marginLeft: '4px' }}>@{item.odds}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <input
+                      type="number"
+                      step="0.001"
+                      min="0.0001"
+                      value={item.stake}
+                      onChange={(e) => updateBetSlipStake(item.matchId, item.marketKey, e.target.value)}
+                      style={{
+                        width: '90px',
+                        background: 'rgba(0,0,0,0.4)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        borderRadius: '4px',
+                        padding: '4px 6px',
+                        color: '#fff',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        textAlign: 'right'
+                      }}
+                    />
+                    <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>ETH</span>
+                    <button
+                      onClick={() => handleBetSlipRemove(item.matchId, item.marketKey)}
+                      style={{ background: 'none', border: 'none', color: '#ff3344', fontSize: '0.9rem', cursor: 'pointer', padding: '0 4px' }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Total Summary */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '10px' }}>
+              <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Total Stake:</span>
+              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--color-primary)' }}>
+                {betSlip.reduce((sum, item) => sum + parseFloat(item.stake || '0'), 0).toFixed(4)} ETH
+              </span>
+            </div>
+
+            {betSlipStatus && (
+              <div style={{
+                padding: '8px 12px',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                textAlign: 'center',
+                background: betSlipStatus.tone === 'success' ? 'rgba(157,255,0,0.12)' : betSlipStatus.tone === 'pending' ? 'rgba(0,229,255,0.1)' : 'rgba(255,51,68,0.1)',
+                color: betSlipStatus.tone === 'success' ? 'var(--color-primary)' : betSlipStatus.tone === 'pending' ? '#00e5ff' : '#ff3344',
+                border: `1px solid ${betSlipStatus.tone === 'success' ? 'rgba(157,255,0,0.25)' : betSlipStatus.tone === 'pending' ? 'rgba(0,229,255,0.25)' : 'rgba(255,51,68,0.25)'}`
+              }}>
+                {betSlipStatus.message}
+              </div>
+            )}
+
+            <button
+              onClick={placeBatchBets}
+              disabled={isSubmittingBets}
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: 'linear-gradient(135deg, var(--color-primary) 0%, #00e5ff 100%)',
+                color: '#000',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 800,
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                boxShadow: '0 4px 16px rgba(157,255,0,0.2)'
+              }}
+            >
+              {isSubmittingBets ? t("Submitting Transactions...") : `⚡ ${t("Place Bets via Robinhood")}`}
+            </button>
           </div>
+        )}
+
+        {/* Footer */}
+        <div style={{
+          padding: '10px 18px',
+          borderTop: '1px solid rgba(255,255,255,0.05)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: 'rgba(0,0,0,0.2)'
+        }}>
+          <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>Micro-bets settle on-chain after full time. NFA.</span>
+          <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 700, letterSpacing: '0.3px' }}>Robinhood Chain ⚡</span>
         </div>
+      </div>
 
 
 
-        <div className="match-venue-card">
-          <div className="venue-icon-wrap">
-            🏟️
-          </div>
-          <div className="venue-details">
-            <div className="venue-name">{m.stadium}</div>
-            <div className="venue-meta">{t("Capacity:")} {m.capacity} {t("• City:")} {m.city}</div>
-            <div className="venue-meta" style={{
+      <div className="match-venue-card">
+        <div className="venue-icon-wrap">
+          🏟️
+        </div>
+        <div className="venue-details">
+          <div className="venue-name">{m.stadium}</div>
+          <div className="venue-meta">{t("Capacity:")} {m.capacity} {t("• City:")} {m.city}</div>
+          <div className="venue-meta" style={{
             marginTop: '2px'
           }}>{t("Referee:")} <strong>{m.referee}</strong></div>
-          </div>
         </div>
-      </div>;
+      </div>
+    </div>;
   };
   const [history, setHistory] = useState(() => {
     const saved = localStorage.getItem('goalrush_history');
@@ -3031,7 +3031,7 @@ export default function App() {
                         timeZone: 'America/New_York'
                       }) + ' ET';
                     }
-                  } catch (e) {}
+                  } catch (e) { }
                 }
                 let dateDisplay = 'TBD';
                 try {
@@ -3043,7 +3043,7 @@ export default function App() {
                       timeZone: 'America/New_York'
                     }).format(matchDate);
                   }
-                } catch (e) {}
+                } catch (e) { }
                 const homeName = match.home_team || match.homeTeam && match.homeTeam.name || 'Unknown';
                 const awayName = match.away_team || match.awayTeam && match.awayTeam.name || 'Unknown';
                 return {
@@ -3891,8 +3891,15 @@ export default function App() {
             console.warn("Failed to fetch activeMatchId on initialization:", activeIdErr);
           }
         }
-        const activeIdFromContract = await hookContract.activeMatchId();
-        setOnChainActiveId(activeIdFromContract);
+        // --- Safely fetch active match ID from contract ---
+        let activeIdFromContract = 0n;
+        try {
+          activeIdFromContract = await hookContract.activeMatchId();
+          setOnChainActiveId(activeIdFromContract);
+        } catch (activeIdErr) {
+          console.warn("[fetchOnChainData] Could not fetch activeMatchId (contract may be unreachable):", activeIdErr?.code || activeIdErr?.message || activeIdErr);
+          setOnChainActiveId(0n);
+        }
         const numericId = getNumericMatchId(currentId);
         console.log("[fetchOnChainData] currentId:", currentId, "numericId:", numericId.toString(), "activeIdFromContract:", activeIdFromContract.toString());
 
@@ -3936,17 +3943,25 @@ export default function App() {
             }
             const totalJackpotWei = effectiveMatchData[7] || effectiveMatchData.totalJackpot || 0n;
             // ETH predictions are held by the Router contract - check both
-            const hookBalance = await rpcProvider.getBalance(hookAddress);
-            const routerBalance = await rpcProvider.getBalance(routerAddress);
-            const combinedBalance = hookBalance + routerBalance;
-            const displayJackpot = combinedBalance > totalJackpotWei ? combinedBalance : totalJackpotWei;
-            setJackpot(Number(ethers.formatEther(displayJackpot)));
-            const volA = await hookContract.teamPredictionVolume(effectiveNumericId, 1);
-            const volB = await hookContract.teamPredictionVolume(effectiveNumericId, 2);
-            const volDraw = await hookContract.teamPredictionVolume(effectiveNumericId, 3);
-            setTeamAVotes(Number(ethers.formatEther(volA)));
-            setTeamBVotes(Number(ethers.formatEther(volB)));
-            setTeamDrawVotes(Number(ethers.formatEther(volDraw)));
+            try {
+              const hookBalance = await rpcProvider.getBalance(hookAddress);
+              const routerBalance = await rpcProvider.getBalance(routerAddress);
+              const combinedBalance = hookBalance + routerBalance;
+              const displayJackpot = combinedBalance > totalJackpotWei ? combinedBalance : totalJackpotWei;
+              setJackpot(Number(ethers.formatEther(displayJackpot)));
+            } catch (_) {
+              setJackpot(Number(ethers.formatEther(totalJackpotWei)));
+            }
+            try {
+              const volA = await hookContract.teamPredictionVolume(effectiveNumericId, 1);
+              const volB = await hookContract.teamPredictionVolume(effectiveNumericId, 2);
+              const volDraw = await hookContract.teamPredictionVolume(effectiveNumericId, 3);
+              setTeamAVotes(Number(ethers.formatEther(volA)));
+              setTeamBVotes(Number(ethers.formatEther(volB)));
+              setTeamDrawVotes(Number(ethers.formatEther(volDraw)));
+            } catch (_) {
+              setTeamAVotes(0); setTeamBVotes(0); setTeamDrawVotes(0);
+            }
 
             // Read GRUSH jackpot - check both new and old Hook contracts
             try {
@@ -4487,8 +4502,8 @@ export default function App() {
 
       // 1. Encode ExactInputSingleParams
       const swapParams = abiCoder.encode(["tuple(tuple(address,address,uint24,int24,address),bool,uint128,uint128,bytes)"], [[[V4_POOL_KEY.currency0, V4_POOL_KEY.currency1, V4_POOL_KEY.fee, V4_POOL_KEY.tickSpacing, V4_POOL_KEY.hooks], true,
-      // zeroForOne: ETH → GRUSH
-      amountIn, minAmountOut, "0x" // empty hookData
+        // zeroForOne: ETH → GRUSH
+        amountIn, minAmountOut, "0x" // empty hookData
       ]]);
 
       // 2. Encode SETTLE_ALL params: (currency, maxAmount)
@@ -4668,7 +4683,7 @@ export default function App() {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
           }));
-        } catch (e) {}
+        } catch (e) { }
       } else {
         addLog(`🎉 Transaction confirmed! Match jackpot successfully funded with ${parsedAmount} ETH.`);
         setJackpot(prev => prev + parsedAmount);
@@ -5152,8 +5167,8 @@ export default function App() {
     alert('Code copied to clipboard!');
   };
   const renderNavLinks = (isSidebar = false) => <ul className={isSidebar ? "sidebar-nav-links" : "nav-links"}>
-      <li>
-        <button onClick={() => {
+    <li>
+      <button onClick={() => {
         setCurrentView('dashboard');
         window.scrollTo({
           top: 0,
@@ -5161,27 +5176,27 @@ export default function App() {
         });
         if (isSidebar) setIsMobileMenuOpen(false);
       }} className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`}>
-          {t("Dashboard")}
-        </button>
-      </li>
-      <li>
-        <button onClick={() => {
+        {t("Dashboard")}
+      </button>
+    </li>
+    <li>
+      <button onClick={() => {
         setCurrentView('match-center');
         if (isSidebar) setIsMobileMenuOpen(false);
       }} className={`nav-btn ${currentView === 'match-center' ? 'active' : ''}`}>
-          {t("Matches")}
-        </button>
-      </li>
-      <li>
-        <button onClick={() => {
+        {t("Matches")}
+      </button>
+    </li>
+    <li>
+      <button onClick={() => {
         setCurrentView('news');
         if (isSidebar) setIsMobileMenuOpen(false);
       }} className={`nav-btn ${currentView === 'news' ? 'active' : ''}`}>
-          {t("News")}
-        </button>
-      </li>
-      <li>
-        <button onClick={() => {
+        {t("News")}
+      </button>
+    </li>
+    <li>
+      <button onClick={() => {
         setCurrentView('leaderboard');
         setTimeout(() => {
           document.getElementById('leaderboard')?.scrollIntoView({
@@ -5190,28 +5205,28 @@ export default function App() {
         }, 100);
         if (isSidebar) setIsMobileMenuOpen(false);
       }} className={`nav-btn ${currentView === 'leaderboard' ? 'active' : ''}`}>
-          {t("Leaderboard")}
-        </button>
-      </li>
+        {t("Leaderboard")}
+      </button>
+    </li>
 
-      <li>
-        <button onClick={() => {
+    <li>
+      <button onClick={() => {
         setCurrentView('about');
         if (isSidebar) setIsMobileMenuOpen(false);
       }} className={`nav-btn ${currentView === 'about' ? 'active' : ''}`}>
-          {t("Docs")}
-        </button>
-      </li>
-    </ul>;
+        {t("Docs")}
+      </button>
+    </li>
+  </ul>;
   const renderWalletActions = (isSidebar = false) => <div className={isSidebar ? "sidebar-wallet-actions" : "nav-actions"}>
-      <div className="lang-selector-container" style={{
+    <div className="lang-selector-container" style={{
       position: 'relative',
       display: 'flex',
       alignItems: 'center',
       marginRight: '1rem',
       zIndex: 100
     }}>
-        <button className="lang-selector-btn" onClick={() => setShowLangMenu(!showLangMenu)} style={{
+      <button className="lang-selector-btn" onClick={() => setShowLangMenu(!showLangMenu)} style={{
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
@@ -5223,16 +5238,16 @@ export default function App() {
         cursor: 'pointer',
         backdropFilter: 'blur(10px)'
       }}>
-          <Globe size={16} />
-          <span style={{
+        <Globe size={16} />
+        <span style={{
           fontSize: '14px',
           fontWeight: '500'
         }}>{lang.toUpperCase()}</span>
-          <ChevronDown size={14} style={{
+        <ChevronDown size={14} style={{
           opacity: 0.7
         }} />
-        </button>
-        {showLangMenu && <div className="lang-menu" style={{
+      </button>
+      {showLangMenu && <div className="lang-menu" style={{
         position: 'absolute',
         top: 'calc(100% + 8px)',
         right: 0,
@@ -5246,7 +5261,7 @@ export default function App() {
         display: 'flex',
         flexDirection: 'column'
       }}>
-            <button onClick={() => handleLangChange('en')} style={{
+        <button onClick={() => handleLangChange('en')} style={{
           background: 'transparent',
           border: 'none',
           color: '#fff',
@@ -5255,7 +5270,7 @@ export default function App() {
           cursor: 'pointer',
           opacity: lang === 'en' ? 1 : 0.6
         }}>{t("English (EN)")}</button>
-            <button onClick={() => handleLangChange('ja')} style={{
+        <button onClick={() => handleLangChange('ja')} style={{
           background: 'transparent',
           border: 'none',
           color: '#fff',
@@ -5264,7 +5279,7 @@ export default function App() {
           cursor: 'pointer',
           opacity: lang === 'ja' ? 1 : 0.6
         }}>{t("日本語 (JA)")}</button>
-            <button onClick={() => handleLangChange('ko')} style={{
+        <button onClick={() => handleLangChange('ko')} style={{
           background: 'transparent',
           border: 'none',
           color: '#fff',
@@ -5273,26 +5288,26 @@ export default function App() {
           cursor: 'pointer',
           opacity: lang === 'ko' ? 1 : 0.6
         }}>{t("한국어 (KO)")}</button>
-          </div>}
-      </div>
-  
-      {chainId !== null ? chainId === 4663 ? <div className="badge-robinhood" style={{
+      </div>}
+    </div>
+
+    {chainId !== null ? chainId === 4663 ? <div className="badge-robinhood" style={{
       color: 'var(--color-primary)'
     }}>
-            <span className="badge-dot" style={{
+      <span className="badge-dot" style={{
         backgroundColor: 'var(--color-primary)',
         boxShadow: '0 0 8px var(--color-primary)'
       }}></span>
-            <span className="badge-text">{t("Robinhood Chain Mainnet")}</span>
-          </div> : chainId === 195 ? <div className="badge-robinhood" style={{
+      <span className="badge-text">{t("Robinhood Chain Mainnet")}</span>
+    </div> : chainId === 195 ? <div className="badge-robinhood" style={{
       color: '#ffcc00'
     }}>
-            <span className="badge-dot" style={{
+      <span className="badge-dot" style={{
         backgroundColor: '#ffcc00',
         boxShadow: '0 0 8px #ffcc00'
       }}></span>
-            <span className="badge-text">{t("Robinhood Chain Testnet")}</span>
-          </div> : <button className="badge-robinhood" onClick={() => {
+      <span className="badge-text">{t("Robinhood Chain Testnet")}</span>
+    </div> : <button className="badge-robinhood" onClick={() => {
       handleSwitchNetwork();
       if (isSidebar) setIsMobileMenuOpen(false);
     }} style={{
@@ -5301,21 +5316,21 @@ export default function App() {
       borderColor: '#ff3344',
       color: '#ff3344'
     }}>
-            <AlertTriangle size={12} />
-            <span className="badge-text">{t("Switch Network")}</span>
-          </button> : <div className="badge-robinhood">
-          <span className="badge-dot" style={{
+      <AlertTriangle size={12} />
+      <span className="badge-text">{t("Switch Network")}</span>
+    </button> : <div className="badge-robinhood">
+      <span className="badge-dot" style={{
         backgroundColor: '#666'
       }}></span>
-          <span className="badge-text">{t("Not Connected")}</span>
-        </div>}
+      <span className="badge-text">{t("Not Connected")}</span>
+    </div>}
 
-      {walletConnected ? <div className="wallet-connected-wrapper" style={isSidebar ? {
+    {walletConnected ? <div className="wallet-connected-wrapper" style={isSidebar ? {
       flexDirection: 'column',
       width: '100%',
       gap: '8px'
     } : {}}>
-          <div className="btn-secondary text-glow-green" style={{
+      <div className="btn-secondary text-glow-green" style={{
         padding: '8px 16px',
         fontSize: '0.9rem',
         display: 'flex',
@@ -5326,15 +5341,15 @@ export default function App() {
         background: 'rgba(157, 255, 0, 0.05)',
         width: isSidebar ? '100%' : 'auto'
       }}>
-            <User size={14} />
-            <span className="wallet-text-full">
-              {t("Connected:")} {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
-            </span>
-            <span className="wallet-text-compact">
-              {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
-            </span>
-          </div>
-          <button className="btn-secondary btn-disconnect" onClick={() => {
+        <User size={14} />
+        <span className="wallet-text-full">
+          {t("Connected:")} {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
+        </span>
+        <span className="wallet-text-compact">
+          {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
+        </span>
+      </div>
+      <button className="btn-secondary btn-disconnect" onClick={() => {
         handleDisconnectWallet();
         if (isSidebar) setIsMobileMenuOpen(false);
       }} style={{
@@ -5351,10 +5366,10 @@ export default function App() {
         transition: 'var(--transition-smooth)',
         width: isSidebar ? '100%' : 'auto'
       }}>
-            <LogOut size={14} />
-            <span className="btn-disconnect-text">{t("Disconnect")}</span>
-          </button>
-        </div> : <div style={{
+        <LogOut size={14} />
+        <span className="btn-disconnect-text">{t("Disconnect")}</span>
+      </button>
+    </div> : <div style={{
       display: 'flex',
       gap: '8px',
       flexDirection: isSidebar ? 'column' : 'row',
@@ -5363,7 +5378,7 @@ export default function App() {
       flexWrap: 'wrap',
       justifyContent: 'center'
     }}>
-          {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && <button type="button" onClick={() => {
+      {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && <button type="button" onClick={() => {
         setWalletConnected(true);
         setUserAddress('0xae1b810ffb88855ffd967dc274d9ba4fadd21990');
         setUserBalance('0.1500');
@@ -5384,9 +5399,9 @@ export default function App() {
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-              {t("Simulate Wallet 🧪")}
-            </button>}
-          <button className="btn-primary" onClick={() => {
+        {t("Simulate Wallet 🧪")}
+      </button>}
+      <button className="btn-primary" onClick={() => {
         handleConnectWallet();
         if (isSidebar) setIsMobileMenuOpen(false);
       }} style={{
@@ -5399,10 +5414,10 @@ export default function App() {
         display: 'flex',
         alignItems: 'center'
       }}>
-            {t("Connect Wallet")}
-          </button>
-        </div>}
-    </div>;
+        {t("Connect Wallet")}
+      </button>
+    </div>}
+  </div>;
 
   // GoalRush Mock Dispute Cases
   const mockDisputes = [{
@@ -5473,7 +5488,7 @@ export default function App() {
             const decoded = JSON.parse(atob(paymentHeader));
             const opt = decoded.accepts ? decoded.accepts[0] : decoded;
             paymentInfo = ` Network: ${opt.network || 'eip155:4663'}, Asset: ${opt.asset || GOALRUSH_ASP_ASSET}, Price: ${opt.price || '0.005'}`;
-          } catch (e) {/* ignore decode error */}
+          } catch (e) {/* ignore decode error */ }
         }
         setPredictError(`Payment required (${GOALRUSH_ASP_FEE}).${paymentInfo} Use an GoalRush / Onchain OS agent to execute the paid A2MCP call.`);
         setTerminalHistory(prev => [...prev, `HTTP 402 — Payment Required: ${GOALRUSH_ASP_FEE}`, `Network: ${GOALRUSH_ASP_NETWORK}`, `Asset (USDT): ${GOALRUSH_ASP_ASSET}`, 'This endpoint is gated by the Robinhood Agent Payments Protocol (@x402/express).', 'Use an Onchain OS agent client to make the paid A2MCP call.']);
@@ -5552,26 +5567,26 @@ export default function App() {
     }, 2000);
   };
   return <div className="app-wrapper">
-      <a className="skip-link" href="#dashboard">{t("Skip to prediction dashboard")}</a>
-      <div className="bg-ambient-glow"></div>
-      {/* Header / Navbar */}
-      <header className="navbar">
-        <div className="logo-wrap">
-          <span className="logo-icon">⚽</span>
-          <h1 className="logo-text">{t("GoalRush")}</h1>
-        </div>
-        <nav className="desktop-nav">
-          {renderNavLinks(false)}
-        </nav>
-        <div className="mobile-wallet-nav">
-          {renderWalletActions(false)}
-        </div>
-      </header>
+    <a className="skip-link" href="#dashboard">{t("Skip to prediction dashboard")}</a>
+    <div className="bg-ambient-glow"></div>
+    {/* Header / Navbar */}
+    <header className="navbar">
+      <div className="logo-wrap">
+        <span className="logo-icon">⚽</span>
+        <h1 className="logo-text">{t("GoalRush")}</h1>
+      </div>
+      <nav className="desktop-nav">
+        {renderNavLinks(false)}
+      </nav>
+      <div className="mobile-wallet-nav">
+        {renderWalletActions(false)}
+      </div>
+    </header>
 
-      {(currentView === 'dashboard' || currentView === 'leaderboard') && <>
-          {/* protocol Hero Section */}
-          <section className="protocol-hero-container">
-            <div className="protocol-left" style={{
+    {(currentView === 'dashboard' || currentView === 'leaderboard') && <>
+      {/* protocol Hero Section */}
+      <section className="protocol-hero-container">
+        <div className="protocol-left" style={{
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
@@ -5579,31 +5594,31 @@ export default function App() {
           paddingRight: '20px',
           paddingLeft: '16px'
         }}>
-              <div style={{
+          <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '16px',
             marginBottom: '8px'
           }}>
-                <img src="/logo.png?v=2" alt="Goal Rush Logo" style={{
+            <img src="/logo.png?v=2" alt="Goal Rush Logo" style={{
               height: '84px',
               width: 'auto',
               display: 'block',
               mixBlendMode: 'screen',
               filter: 'drop-shadow(0 0 12px rgba(157, 255, 0, 0.4)) contrast(1.2)'
             }} />
-                <h1 className="animated-hero-text" style={{
+            <h1 className="animated-hero-text" style={{
               fontSize: 'clamp(3rem, 6vw, 5rem)',
               fontWeight: 900,
               margin: 0,
               lineHeight: 1,
               letterSpacing: '-1.5px'
             }}>
-                  {t("GoalRush")}
-                </h1>
-              </div>
-              
-              <p className="protocol-desc" style={{
+              {t("GoalRush")}
+            </h1>
+          </div>
+
+          <p className="protocol-desc" style={{
             fontSize: '1.25rem',
             lineHeight: '1.6',
             color: 'rgba(255, 255, 255, 0.8)',
@@ -5611,12 +5626,12 @@ export default function App() {
             margin: 0,
             fontWeight: 400
           }}>
-                {t("The premier decentralized sports prediction experience on")} <strong style={{
+            {t("The premier decentralized sports prediction experience on")} <strong style={{
               color: '#fff'
             }}>{t("Robinhood Chain")}</strong>{t(". Fund a match pick through the prediction router, follow live fixtures, and play a cosmetic penalty challenge after confirmation.")}
-              </p>
-              
-              <div className="security-status-card desktop-security-card" role="note" aria-label="Protocol security status" style={{
+          </p>
+
+          <div className="security-status-card desktop-security-card" role="note" aria-label="Protocol security status" style={{
             maxWidth: '620px',
             background: 'rgba(0,0,0,0.4)',
             backdropFilter: 'blur(10px)',
@@ -5625,29 +5640,29 @@ export default function App() {
             alignItems: 'center',
             gap: '16px'
           }}>
-                <div className="security-status-icon" style={{
+            <div className="security-status-icon" style={{
               background: 'rgba(157, 255, 0, 0.1)',
               flexShrink: 0
             }}><ShieldCheck size={24} style={{
-                color: 'var(--color-primary)'
-              }} /></div>
-                <div style={{
+              color: 'var(--color-primary)'
+            }} /></div>
+            <div style={{
               flex: 1
             }}>
-                  <strong style={{
+              <strong style={{
                 fontSize: '1rem',
                 color: '#fff',
                 letterSpacing: '0.5px'
               }}>{t("Robinhood Mainnet Live · Verified Contracts")}</strong>
-                  <span style={{
+              <span style={{
                 fontSize: '0.85rem',
                 color: 'rgba(255,255,255,0.5)',
                 display: 'block',
                 marginTop: '4px',
                 lineHeight: '1.4'
               }}>{t("GoalRush smart contracts (Hook & Prediction Router) are live on Robinhood Chain Mainnet. Match predictions and jackpot payouts execute on-chain with non-reentrant security & owner emergency withdraw safeguards.")}</span>
-                </div>
-                <a href={`https://robinhoodchain.blockscout.com/address/${HOOK_ADDRESS}`} target="_blank" rel="noopener noreferrer" style={{
+            </div>
+            <a href={`https://robinhoodchain.blockscout.com/address/${HOOK_ADDRESS}`} target="_blank" rel="noopener noreferrer" style={{
               padding: '8px 16px',
               background: 'rgba(255,255,255,0.05)',
               borderRadius: '8px',
@@ -5659,120 +5674,120 @@ export default function App() {
               display: 'flex',
               alignItems: 'center'
             }}>
-                  {t("View Explorer")} <ExternalLink size={14} style={{
+              {t("View Explorer")} <ExternalLink size={14} style={{
                 marginLeft: '6px'
               }} />
-                </a>
-              </div>
-              
-              
+            </a>
+          </div>
 
+
+
+        </div>
+
+
+        {/* Cyber-Matrix Right Column */}
+        <div className="protocol-right">
+          <div className="ascii-ball-wrapper">
+            <div className="ascii-code-graphic" style={{ fontSize: '2.5rem', letterSpacing: '0.1em', lineHeight: '1.4', color: 'rgba(255,255,255,0.85)', textAlign: 'center', userSelect: 'none' }}>
+              ⚽
             </div>
-
-
-            {/* Cyber-Matrix Right Column */}
-            <div className="protocol-right">
-              <div className="ascii-ball-wrapper">
-                <div className="ascii-code-graphic">
-                  {asciiArtText}
-                </div>
-                <div className="ascii-glow-effect"></div>
-                <div className="interactive-3d-overlay">
-                  <SoccerBall3D />
-                </div>
-              </div>
+            <div className="ascii-glow-effect"></div>
+            <div className="interactive-3d-overlay">
+              <SoccerBall3D />
             </div>
-          </section>
+          </div>
+        </div>
+      </section>
 
-          {/* Interactive Dashboard / Simulator */}
-          <section id="dashboard" className="dashboard-grid">
-            {/* Left Side: Soccer Pitch Simulation */}
-            <div className="card-bezel" style={{
+      {/* Interactive Dashboard / Simulator */}
+      <section id="dashboard" className="dashboard-grid">
+        {/* Left Side: Soccer Pitch Simulation */}
+        <div className="card-bezel" style={{
           display: 'flex',
           flexDirection: 'column',
           gap: '16px'
         }}>
-              <div>
-                <h3 className="panel-title">
-                  <TerminalIcon size={20} style={{
+          <div>
+            <h3 className="panel-title">
+              <TerminalIcon size={20} style={{
                 color: 'var(--color-primary)'
               }} />
-                  {t("GoalRush Pitch Simulator")}
-                </h3>
-                <p style={{
+              {t("GoalRush Pitch Simulator")}
+            </h3>
+            <p style={{
               fontSize: '0.85rem',
               color: 'rgba(255,255,255,0.5)',
               marginBottom: '12px'
             }}>
-                  {t("Submit a funded prediction through the router, then play the cosmetic shootout while the on-chain result remains verifiable.")}
-                </p>
-              </div>
+              {t("Submit a funded prediction through the router, then play the cosmetic shootout while the on-chain result remains verifiable.")}
+            </p>
+          </div>
 
-              <div className="pitch-container">
-                {shootoutStatus && <div className="shootout-overlay">
-                    <div className="shootout-text-main">{shootoutStatus}</div>
-                  </div>}
-                <div className="pitch-lines"></div>
-                <div className="pitch-midline"></div>
-                <div className="pitch-midcircle"></div>
-                <div className="pitch-box-left"></div>
-                <div className="pitch-box-right"></div>
-                <div className="goal-post-left"></div>
-                <div className="goal-post-right"></div>
+          <div className="pitch-container">
+            {shootoutStatus && <div className="shootout-overlay">
+              <div className="shootout-text-main">{shootoutStatus}</div>
+            </div>}
+            <div className="pitch-lines"></div>
+            <div className="pitch-midline"></div>
+            <div className="pitch-midcircle"></div>
+            <div className="pitch-box-left"></div>
+            <div className="pitch-box-right"></div>
+            <div className="goal-post-left"></div>
+            <div className="goal-post-right"></div>
 
-                {/* Score overlay */}
-                <div className="pitch-score-overlay">
-                  <span style={{
+            {/* Score overlay */}
+            <div className="pitch-score-overlay">
+              <span style={{
                 color: 'var(--color-primary)'
               }}>{t("SWAPPER:")} {userScore}</span>
-                  <span>vs</span>
-                  <span style={{
+              <span>vs</span>
+              <span style={{
                 color: 'var(--color-danger)'
               }}>{t("GK:")} {opponentScore}</span>
-                </div>
+            </div>
 
-                {/* Goal Flash */}
-                <div className={`pitch-goal-flash ${showGoalFlash ? 'active' : ''}`}>
-                  <div className="pitch-goal-text">{t("GOAL!!")}</div>
-                </div>
+            {/* Goal Flash */}
+            <div className={`pitch-goal-flash ${showGoalFlash ? 'active' : ''}`}>
+              <div className="pitch-goal-text">{t("GOAL!!")}</div>
+            </div>
 
-                <div className="pitch-ball" style={{
+            <div className="pitch-ball" style={{
               left: `${ballPos.x}%`,
               top: `${ballPos.y}%`,
               transform: 'translate(-50%, -50%)',
               animation: isStriking ? 'spin-slow 0.4s linear infinite' : 'none'
             }}>
-                  ⚽
-                </div>
+              ⚽
+            </div>
 
-                {/* Goalkeeper */}
-                <div className="pitch-player opponent" style={{
+            {/* Goalkeeper */}
+            <div className="pitch-player opponent" style={{
               left: `${gkPos.x}%`,
               top: `${gkPos.y}%`,
               transform: 'translate(-50%, -50%)'
             }}>
-                  GK
-                </div>
+              GK
+            </div>
 
-                {/* Swapper / Player */}
-                <div className="pitch-player" style={{
+            {/* Swapper / Player */}
+            <div className="pitch-player" style={{
               left: `${playerPos.x}%`,
               top: `${playerPos.y}%`,
               transform: 'translate(-50%, -50%)'
             }}>
-                  P
-                </div>
-              </div>
+              P
+            </div>
+          </div>
 
-              {/* Swap Box */}
-              <form className="swap-widget" onSubmit={handleSwapAndStrike}>
-                {/* Token Selector */}
-                <div style={{
+          {/* Swap Box */}
+          <form className="swap-widget" onSubmit={handleSwapAndStrike}>
+            {/* Token Selector */}
+            <div style={{
               display: 'flex',
               gap: '8px',
               marginBottom: '16px'
             }}>
-                  <button type="button" onClick={() => {
+              <button type="button" onClick={() => {
                 setSelectedToken('ETH');
                 setSwapAmount('0.001');
               }} className={`btn-secondary ${selectedToken === 'ETH' ? 'active' : ''}`} style={{
@@ -5787,9 +5802,9 @@ export default function App() {
                 cursor: 'pointer',
                 transition: 'all 0.2s'
               }} disabled={isStriking}>
-                    {t("native ETH")}
-                  </button>
-                  <button type="button" onClick={() => {
+                {t("native ETH")}
+              </button>
+              <button type="button" onClick={() => {
                 setSelectedToken('USDG');
                 setSwapAmount('1');
               }} className={`btn-secondary ${selectedToken === 'USDG' ? 'active' : ''}`} style={{
@@ -5804,107 +5819,107 @@ export default function App() {
                 cursor: 'pointer',
                 transition: 'all 0.2s'
               }} disabled={isStriking}>
-                    {t("USDG (Robinhood Dollar)")}
-                  </button>
-                </div>
+                {t("USDG (Robinhood Dollar)")}
+              </button>
+            </div>
 
-                <div className="swap-input-row">
-                  <div className="swap-input-container">
-                    <div className="swap-label">{t("Prediction Size (Ticket Cost)")}</div>
-                    <div style={{
+            <div className="swap-input-row">
+              <div className="swap-input-container">
+                <div className="swap-label">{t("Prediction Size (Ticket Cost)")}</div>
+                <div style={{
                   display: 'flex',
                   alignItems: 'center'
                 }}>
-                      <input type="number" value={swapAmount} onChange={e => setSwapAmount(e.target.value)} className="swap-input" disabled={isStriking} step={selectedToken === 'USDG' ? '1' : '0.0001'} min={selectedToken === 'USDG' ? '1' : '0.0001'} />
-                      <span style={{
+                  <input type="number" value={swapAmount} onChange={e => setSwapAmount(e.target.value)} className="swap-input" disabled={isStriking} step={selectedToken === 'USDG' ? '1' : '0.0001'} min={selectedToken === 'USDG' ? '1' : '0.0001'} />
+                  <span style={{
                     fontWeight: 700,
                     fontSize: '0.9rem',
                     color: '#fff'
                   }}>{selectedToken}</span>
-                    </div>
-                    <div style={{
+                </div>
+                <div style={{
                   display: 'flex',
                   gap: '6px',
                   marginTop: '8px'
                 }}>
-                      {selectedToken === 'USDG' ? <>
-                          <button type="button" onClick={() => setSwapAmount('1')} className="btn-secondary" style={{
+                  {selectedToken === 'USDG' ? <>
+                    <button type="button" onClick={() => setSwapAmount('1')} className="btn-secondary" style={{
                       padding: '2px 8px',
                       fontSize: '0.65rem',
                       minWidth: 'auto',
                       cursor: 'pointer'
                     }} disabled={isStriking}>{t("1 USDG")}</button>
-                          <button type="button" onClick={() => setSwapAmount('10')} className="btn-secondary" style={{
+                    <button type="button" onClick={() => setSwapAmount('10')} className="btn-secondary" style={{
                       padding: '2px 8px',
                       fontSize: '0.65rem',
                       minWidth: 'auto',
                       cursor: 'pointer'
                     }} disabled={isStriking}>{t("10 USDG")}</button>
-                          <button type="button" onClick={() => setSwapAmount('50')} className="btn-secondary" style={{
+                    <button type="button" onClick={() => setSwapAmount('50')} className="btn-secondary" style={{
                       padding: '2px 8px',
                       fontSize: '0.65rem',
                       minWidth: 'auto',
                       cursor: 'pointer'
                     }} disabled={isStriking}>{t("50 USDG")}</button>
-                        </> : <>
-                          <button type="button" onClick={() => setSwapAmount('0.0001')} className="btn-secondary" style={{
+                  </> : <>
+                    <button type="button" onClick={() => setSwapAmount('0.0001')} className="btn-secondary" style={{
                       padding: '2px 8px',
                       fontSize: '0.65rem',
                       minWidth: 'auto',
                       cursor: 'pointer'
                     }} disabled={isStriking}>{t("0.0001 ETH")}</button>
-                          <button type="button" onClick={() => setSwapAmount('0.001')} className="btn-secondary" style={{
+                    <button type="button" onClick={() => setSwapAmount('0.001')} className="btn-secondary" style={{
                       padding: '2px 8px',
                       fontSize: '0.65rem',
                       minWidth: 'auto',
                       cursor: 'pointer'
                     }} disabled={isStriking}>{t("0.001 ETH")}</button>
-                          <button type="button" onClick={() => setSwapAmount('0.01')} className="btn-secondary" style={{
+                    <button type="button" onClick={() => setSwapAmount('0.01')} className="btn-secondary" style={{
                       padding: '2px 8px',
                       fontSize: '0.65rem',
                       minWidth: 'auto',
                       cursor: 'pointer'
                     }} disabled={isStriking}>{t("0.01 ETH")}</button>
-                        </>}
-                    </div>
-                  </div>
+                  </>}
+                </div>
+              </div>
 
-                  <div className="swap-input-container">
-                    <div className="swap-label" style={{
+              <div className="swap-input-container">
+                <div className="swap-label" style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   width: '100%'
                 }}>
-                      <span>{t("Jackpot Share Weight")}</span>
-                      <span style={{
+                  <span>{t("Jackpot Share Weight")}</span>
+                  <span style={{
                     fontSize: '0.7rem',
                     color: 'rgba(255,255,255,0.4)',
                     fontWeight: 'normal'
                   }}>
-                        {t("100% of prediction tokens fund the match jackpot pool")}
-                      </span>
-                    </div>
-                    <div style={{
+                    {t("100% of prediction tokens fund the match jackpot pool")}
+                  </span>
+                </div>
+                <div style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between'
                 }}>
-                      <span className="swap-input" style={{
+                  <span className="swap-input" style={{
                     opacity: 0.8
                   }}>
-                        {parseFloat(swapAmount) ? parseFloat(swapAmount).toFixed(selectedToken === 'USDG' ? 0 : 4) : '0'}
-                      </span>
-                      <span style={{
+                    {parseFloat(swapAmount) ? parseFloat(swapAmount).toFixed(selectedToken === 'USDG' ? 0 : 4) : '0'}
+                  </span>
+                  <span style={{
                     fontWeight: 700,
                     fontSize: '0.9rem',
                     color: 'var(--color-primary)'
                   }}>{selectedToken}</span>
-                    </div>
-                  </div>
                 </div>
+              </div>
+            </div>
 
-                {/* ─── WINNER-ONLY CLAIM PANEL ─────────────────────────────────────
+            {/* ─── WINNER-ONLY CLAIM PANEL ─────────────────────────────────────
                     Rules (applies to ALL on-chain matches, now and future):
                     • Not resolved yet → nothing shown (let them predict / wait)
                     • Resolved + user won + unclaimed → show Claim button(s)
@@ -5912,14 +5927,14 @@ export default function App() {
                     • Resolved + user lost → nothing shown (no clutter, no shame)
                     • No prediction / wallet not connected → nothing shown
                  ─────────────────────────────────────────────────────────────── */}
-                {isSelectedMatchOnChain && walletConnected && userPredictions && activeMatch.resolved && activeMatch.winner > 0 && (parseFloat(userPredictions[activeMatch.winner]?.okbAmount) > 0 || parseFloat(userPredictions[activeMatch.winner]?.grushAmount) > 0) && <div style={{
+            {isSelectedMatchOnChain && walletConnected && userPredictions && activeMatch.resolved && activeMatch.winner > 0 && (parseFloat(userPredictions[activeMatch.winner]?.okbAmount) > 0 || parseFloat(userPredictions[activeMatch.winner]?.grushAmount) > 0) && <div style={{
               marginTop: '14px',
               display: 'flex',
               flexDirection: 'column',
               gap: '10px'
             }}>
-                    {/* ETH Claim */}
-                    {parseFloat(userPredictions[activeMatch.winner]?.okbAmount) > 0 && (userPredictions[activeMatch.winner]?.okbClaimed ? <div style={{
+              {/* ETH Claim */}
+              {parseFloat(userPredictions[activeMatch.winner]?.okbAmount) > 0 && (userPredictions[activeMatch.winner]?.okbClaimed ? <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -5932,8 +5947,8 @@ export default function App() {
                 fontWeight: 600,
                 color: 'var(--color-primary)'
               }}>
-                          {t("✅ ETH Jackpot claimed")}
-                        </div> : <button type="button" id="claim-eth-jackpot-btn" onClick={handleClaimJackpot} className="swap-btn" style={{
+                {t("✅ ETH Jackpot claimed")}
+              </div> : <button type="button" id="claim-eth-jackpot-btn" onClick={handleClaimJackpot} className="swap-btn" style={{
                 background: 'linear-gradient(135deg, #00e5ff 0%, #9dff00 100%)',
                 color: '#000',
                 fontWeight: 800,
@@ -5941,10 +5956,10 @@ export default function App() {
                 boxShadow: '0 0 20px rgba(0, 229, 255, 0.35)',
                 letterSpacing: '0.3px'
               }}>
-                          {t("💰 Claim ETH Jackpot ·")} {parseFloat(userPredictions[activeMatch.winner]?.okbAmount).toFixed(4)} {t("ETH")}
-                        </button>)}
-                    {/* GRUSH Claim */}
-                    {parseFloat(userPredictions[activeMatch.winner]?.grushAmount) > 0 && (userPredictions[activeMatch.winner]?.grushClaimed ? <div style={{
+                {t("💰 Claim ETH Jackpot ·")} {parseFloat(userPredictions[activeMatch.winner]?.okbAmount).toFixed(4)} {t("ETH")}
+              </button>)}
+              {/* GRUSH Claim */}
+              {parseFloat(userPredictions[activeMatch.winner]?.grushAmount) > 0 && (userPredictions[activeMatch.winner]?.grushClaimed ? <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -5957,8 +5972,8 @@ export default function App() {
                 fontWeight: 600,
                 color: 'var(--color-secondary)'
               }}>
-                          {t("✅ GRUSH Jackpot claimed")}
-                        </div> : <button type="button" id="claim-grush-jackpot-btn" onClick={handleClaimGrushJackpot} className="swap-btn" style={{
+                {t("✅ GRUSH Jackpot claimed")}
+              </div> : <button type="button" id="claim-grush-jackpot-btn" onClick={handleClaimGrushJackpot} className="swap-btn" style={{
                 background: 'linear-gradient(135deg, #9dff00 0%, #c6ff00 100%)',
                 color: '#000',
                 fontWeight: 800,
@@ -5966,16 +5981,16 @@ export default function App() {
                 boxShadow: '0 0 20px rgba(157, 255, 0, 0.35)',
                 letterSpacing: '0.3px'
               }}>
-                          {t("⚽ Claim GRUSH Jackpot ·")} {parseFloat(userPredictions[activeMatch.winner]?.grushAmount).toFixed(0)} {t("GRUSH")}
-                        </button>)}
-                  </div>}
+                {t("⚽ Claim GRUSH Jackpot ·")} {parseFloat(userPredictions[activeMatch.winner]?.grushAmount).toFixed(0)} {t("GRUSH")}
+              </button>)}
+            </div>}
 
 
-                {/* ─── CHECK PAST MATCH CLAIMS ─── */}
-                {walletConnected && <div style={{
+            {/* ─── CHECK PAST MATCH CLAIMS ─── */}
+            {walletConnected && <div style={{
               marginTop: '14px'
             }}>
-                    <button type="button" onClick={() => setShowPastClaimChecker(p => !p)} style={{
+              <button type="button" onClick={() => setShowPastClaimChecker(p => !p)} style={{
                 width: '100%',
                 background: 'none',
                 border: '1px solid rgba(255,255,255,0.1)',
@@ -5990,14 +6005,14 @@ export default function App() {
                 fontWeight: 600,
                 transition: 'all 0.2s'
               }}>
-                      <span>{t("🔍 Check Past Match Claims")}</span>
-                      <span style={{
+                <span>{t("🔍 Check Past Match Claims")}</span>
+                <span style={{
                   transform: showPastClaimChecker ? 'rotate(180deg)' : 'rotate(0)',
                   transition: 'transform 0.2s'
                 }}>▼</span>
-                    </button>
+              </button>
 
-                    {showPastClaimChecker && <div style={{
+              {showPastClaimChecker && <div style={{
                 marginTop: '8px',
                 padding: '14px',
                 background: 'rgba(255,255,255,0.02)',
@@ -6007,20 +6022,20 @@ export default function App() {
                 flexDirection: 'column',
                 gap: '10px'
               }}>
-                        <div style={{
+                <div style={{
                   fontSize: '0.75rem',
                   color: 'rgba(255,255,255,0.5)'
                 }}>
-                          {t("Select a past match or enter its ID to check your prediction & claim status:")}
-                        </div>
+                  {t("Select a past match or enter its ID to check your prediction & claim status:")}
+                </div>
 
-                        {/* Quick-select past matches */}
-                        <div style={{
+                {/* Quick-select past matches */}
+                <div style={{
                   display: 'flex',
                   gap: '6px',
                   flexWrap: 'wrap'
                 }}>
-                          {knownPastMatches.map(pm => <button key={pm.matchId} type="button" onClick={() => {
+                  {knownPastMatches.map(pm => <button key={pm.matchId} type="button" onClick={() => {
                     setPastMatchInput(pm.matchId);
                     handleCheckPastClaim(pm.matchId);
                   }} className="btn-secondary" style={{
@@ -6029,16 +6044,16 @@ export default function App() {
                     cursor: 'pointer',
                     minWidth: 'auto'
                   }}>
-                              {pm.label}
-                            </button>)}
-                        </div>
+                    {pm.label}
+                  </button>)}
+                </div>
 
-                        {/* Manual ID input */}
-                        <div style={{
+                {/* Manual ID input */}
+                <div style={{
                   display: 'flex',
                   gap: '6px'
                 }}>
-                          <input type="text" value={pastMatchInput} onChange={e => setPastMatchInput(e.target.value)} placeholder={t("Match ID (e.g. espn_760432)")} style={{
+                  <input type="text" value={pastMatchInput} onChange={e => setPastMatchInput(e.target.value)} placeholder={t("Match ID (e.g. espn_760432)")} style={{
                     flex: 1,
                     background: 'rgba(255,255,255,0.05)',
                     border: '1px solid rgba(255,255,255,0.12)',
@@ -6049,77 +6064,77 @@ export default function App() {
                     fontFamily: 'var(--font-mono)',
                     outline: 'none'
                   }} onKeyDown={e => e.key === 'Enter' && handleCheckPastClaim(pastMatchInput)} />
-                          <button type="button" onClick={() => handleCheckPastClaim(pastMatchInput)} className="btn-primary" disabled={pastClaimLoading} style={{
+                  <button type="button" onClick={() => handleCheckPastClaim(pastMatchInput)} className="btn-primary" disabled={pastClaimLoading} style={{
                     padding: '8px 14px',
                     fontSize: '0.78rem',
                     minWidth: 'auto'
                   }}>
-                            {pastClaimLoading ? '...' : 'Check'}
-                          </button>
-                        </div>
+                    {pastClaimLoading ? '...' : 'Check'}
+                  </button>
+                </div>
 
-                        {/* Result display */}
-                        {pastClaimResult && <div style={{
+                {/* Result display */}
+                {pastClaimResult && <div style={{
                   padding: '12px',
                   borderRadius: '8px',
                   background: pastClaimResult.error ? 'rgba(255,50,50,0.06)' : 'rgba(255,255,255,0.03)',
                   border: `1px solid ${pastClaimResult.error ? 'rgba(255,50,50,0.2)' : 'rgba(255,255,255,0.1)'}`,
                   fontSize: '0.82rem'
                 }}>
-                            {pastClaimResult.error ? <div style={{
+                  {pastClaimResult.error ? <div style={{
                     color: 'rgba(255,100,100,0.9)'
                   }}>{pastClaimResult.error}</div> : <div style={{
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '8px'
                   }}>
-                                <div style={{
+                    <div style={{
                       color: '#fff',
                       fontWeight: 700
                     }}>
-                                  {pastClaimResult.teamA} vs {pastClaimResult.teamB}
-                                </div>
-                                <div style={{
+                      {pastClaimResult.teamA} vs {pastClaimResult.teamB}
+                    </div>
+                    <div style={{
                       color: 'rgba(255,255,255,0.6)',
                       fontSize: '0.78rem'
                     }}>
-                                  {t("Status:")} {pastClaimResult.resolved ? <span style={{
+                      {t("Status:")} {pastClaimResult.resolved ? <span style={{
                         color: 'var(--color-primary)'
                       }}>{t("Resolved · Winner:")} {pastClaimResult.winner === 1 ? pastClaimResult.teamA : pastClaimResult.winner === 2 ? pastClaimResult.teamB : pastClaimResult.winner === 3 ? 'Draw' : 'None'}</span> : <span style={{
                         color: '#ffb300'
                       }}>{t("Not resolved yet")}</span>}
-                                </div>
-                                <div style={{
+                    </div>
+                    <div style={{
                       color: 'rgba(255,255,255,0.6)',
                       fontSize: '0.78rem'
                     }}>
-                                  {t("Jackpot:")} {parseFloat(pastClaimResult.jackpot).toFixed(4)} {t("ETH")}
-                                </div>
+                      {t("Jackpot:")} {parseFloat(pastClaimResult.jackpot).toFixed(4)} {t("ETH")}
+                    </div>
 
-                                {!pastClaimResult.hasPrediction ? <div style={{
+                    {!pastClaimResult.hasPrediction ? <div style={{
                       color: 'rgba(255,255,255,0.45)',
                       fontSize: '0.78rem',
                       fontStyle: 'italic'
                     }}>
-                                    {t("No prediction found from your wallet on this match.")}
-                                  </div> : <>
-                                    <div style={{
+                      {t("No prediction found from your wallet on this match.")}
+                    </div> : <>
+                      <div style={{
                         color: 'rgba(255,255,255,0.7)',
                         fontSize: '0.78rem'
                       }}>
-                                      {t("Your pick:")} <strong style={{
+                        {t("Your pick:")} <strong style={{
                           color: '#fff'
                         }}>{pastClaimResult.predictedTeam === 1 ? pastClaimResult.teamA : pastClaimResult.predictedTeam === 2 ? pastClaimResult.teamB : 'Draw'}</strong>
-                                      {parseFloat(pastClaimResult.okbAmount) > 0 && ` · ${parseFloat(pastClaimResult.okbAmount).toFixed(4)} ETH`}
-                                      {parseFloat(pastClaimResult.grushAmount) > 0 && ` · ${parseFloat(pastClaimResult.grushAmount).toFixed(0)} GRUSH`}
-                                    </div>
+                        {parseFloat(pastClaimResult.okbAmount) > 0 && ` · ${parseFloat(pastClaimResult.okbAmount).toFixed(4)} ETH`}
+                        {parseFloat(pastClaimResult.grushAmount) > 0 && ` · ${parseFloat(pastClaimResult.grushAmount).toFixed(0)} GRUSH`}
+                      </div>
 
-                                    {pastClaimResult.isWinner ? <div style={{
+                      {pastClaimResult.isWinner ? <div style={{
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '6px'
                       }}>
-                                        {parseFloat(pastClaimResult.okbAmount) > 0 && (pastClaimResult.okbClaimed ? <div style={{
+                        {parseFloat(pastClaimResult.okbAmount) > 0 && (pastClaimResult.okbClaimed ? <div style={{
                           color: 'var(--color-primary)',
                           fontWeight: 600,
                           fontSize: '0.8rem'
@@ -6129,7 +6144,7 @@ export default function App() {
                           fontWeight: 800,
                           fontSize: '0.9rem'
                         }}>{t("💰 Claim ETH Jackpot")}</button>)}
-                                        {parseFloat(pastClaimResult.grushAmount) > 0 && (pastClaimResult.grushClaimed ? <div style={{
+                        {parseFloat(pastClaimResult.grushAmount) > 0 && (pastClaimResult.grushClaimed ? <div style={{
                           color: 'var(--color-secondary)',
                           fontWeight: 600,
                           fontSize: '0.8rem'
@@ -6139,54 +6154,54 @@ export default function App() {
                           fontWeight: 800,
                           fontSize: '0.9rem'
                         }}>{t("⚽ Claim GRUSH Jackpot")}</button>)}
-                                      </div> : pastClaimResult.resolved ? <div style={{
+                      </div> : pastClaimResult.resolved ? <div style={{
                         color: 'rgba(255,255,255,0.4)',
                         fontSize: '0.78rem'
                       }}>
-                                        {t("No winning prediction on this match.")}
-                                      </div> : null}
-                                  </>}
-                              </div>}
-                          </div>}
-                      </div>}
+                        {t("No winning prediction on this match.")}
+                      </div> : null}
+                    </>}
                   </div>}
+                </div>}
+              </div>}
+            </div>}
 
-                {typeof activeMatch.id === 'string' && activeMatch.id.startsWith('api-') ? <div style={{
+            {typeof activeMatch.id === 'string' && activeMatch.id.startsWith('api-') ? <div style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '12px',
               marginTop: '12px'
             }}>
-                    <div style={{
+              <div style={{
                 background: 'rgba(0, 229, 255, 0.04)',
                 border: '1px solid rgba(0, 229, 255, 0.25)',
                 borderRadius: '12px',
                 padding: '16px',
                 textAlign: 'center'
               }}>
-                      <h4 style={{
+                <h4 style={{
                   color: 'var(--color-secondary)',
                   margin: '0 0 8px 0',
                   fontSize: '1rem',
                   fontWeight: 700
                 }}>{t("🌍 REAL-TIME LIVE TRACKING")}</h4>
-                      <p style={{
+                <p style={{
                   color: 'rgba(255, 255, 255, 0.85)',
                   fontSize: '0.85rem',
                   margin: 0
                 }}>
-                        {t("This match is a live fixture fetched in real-time from the football API.")}
-                      </p>
-                      <p style={{
+                  {t("This match is a live fixture fetched in real-time from the football API.")}
+                </p>
+                <p style={{
                   color: 'rgba(255, 255, 255, 0.5)',
                   fontSize: '0.75rem',
                   marginTop: '8px',
                   marginBottom: 0
                 }}>
-                        {t("Predictions and shootout games are available only on contract-active Tournament matches.")}
-                      </p>
-                    </div>
-                    <button type="button" onClick={() => {
+                  {t("Predictions and shootout games are available only on contract-active Tournament matches.")}
+                </p>
+              </div>
+              <button type="button" onClick={() => {
                 if (activeOnChainMatchRef.current) {
                   handleSelectMatchUI(activeOnChainMatchRef.current);
                 } else {
@@ -6201,44 +6216,44 @@ export default function App() {
                 color: '#000',
                 fontWeight: 'bold'
               }}>
-                      {t("Switch to Active Prediction Match ⚽")}
-                    </button>
-                  </div> : activeMatch.resolved || activeMatch.minute === 'FT' || isSelectedMatchOnChain && activeMatch.resolved ? <div style={{
+                {t("Switch to Active Prediction Match ⚽")}
+              </button>
+            </div> : activeMatch.resolved || activeMatch.minute === 'FT' || isSelectedMatchOnChain && activeMatch.resolved ? <div style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '12px',
               marginTop: '12px'
             }}>
-                      <div style={{
+              <div style={{
                 background: 'rgba(157, 255, 0, 0.04)',
                 border: '1px solid rgba(157, 255, 0, 0.25)',
                 borderRadius: '12px',
                 padding: '16px',
                 textAlign: 'center'
               }}>
-                        <h4 style={{
+                <h4 style={{
                   color: 'var(--color-primary)',
                   margin: '0 0 8px 0',
                   fontSize: '1rem',
                   fontWeight: 700
                 }}>{t("🏆 MATCH STATUS")}</h4>
-                        <p style={{
+                <p style={{
                   color: 'rgba(255, 255, 255, 0.85)',
                   fontSize: '0.85rem',
                   margin: 0
                 }}>
-                          <strong>{activeMatch.teamA}</strong> {activeMatch.scoreA ?? '?'} – {activeMatch.scoreB ?? '?'} <strong>{activeMatch.teamB}</strong>
-                        </p>
-                        <p style={{
+                  <strong>{activeMatch.teamA}</strong> {activeMatch.scoreA ?? '?'} – {activeMatch.scoreB ?? '?'} <strong>{activeMatch.teamB}</strong>
+                </p>
+                <p style={{
                   color: 'rgba(255, 255, 255, 0.7)',
                   fontSize: '0.8rem',
                   marginTop: '6px',
                   marginBottom: 0
                 }}>
-                          {t("Result:")} <strong style={{
+                  {t("Result:")} <strong style={{
                     color: 'var(--color-secondary)'
                   }}>
-                            {(() => {
+                    {(() => {
                       if (isSelectedMatchOnChain) {
                         if (!activeMatch.resolved) return 'Pending Resolution';
                         return activeMatch.winner === 1 ? `${activeMatch.teamA} Wins` : activeMatch.winner === 2 ? `${activeMatch.teamB} Wins` : 'Draw';
@@ -6251,20 +6266,20 @@ export default function App() {
                         return 'Draw';
                       }
                     })()}
-                          </strong>
-                        </p>
-                        <p style={{
+                  </strong>
+                </p>
+                <p style={{
                   color: 'rgba(255, 255, 255, 0.4)',
                   fontSize: '0.72rem',
                   marginTop: '8px',
                   marginBottom: 0
                 }}>
-                          {isSelectedMatchOnChain ? `On-chain Match · Jackpot: ${jackpot.toFixed(4)} ETH` : 'This is a local simulation match. On-chain claims require the contract-active match.'}
-                        </p>
-                      </div>
-                      {/* Claim buttons handled by winner-only panel above */}
+                  {isSelectedMatchOnChain ? `On-chain Match · Jackpot: ${jackpot.toFixed(4)} ETH` : 'This is a local simulation match. On-chain claims require the contract-active match.'}
+                </p>
+              </div>
+              {/* Claim buttons handled by winner-only panel above */}
 
-                    <button type="button" onClick={() => {
+              <button type="button" onClick={() => {
                 const liveM = liveMatchesRef.current.find(m => m.isLive && m.minute !== 'FT');
                 const upcomingM = liveMatchesRef.current.find(m => !m.isLive && m.minute !== 'FT' && m.id !== activeMatch.id);
                 if (liveM) {
@@ -6280,44 +6295,44 @@ export default function App() {
                 fontWeight: 'bold',
                 border: '1px solid rgba(255,255,255,0.15)'
               }}>
-                      {t("Switch to Live/Upcoming Match ⚽")}
-                    </button>
-                  </div> : !activeMatch.isLive && activeMatch.minute !== 'FT' && activeMatch.startTime && activeMatch.startTime - Date.now() > 24 * 60 * 60 * 1000 ? <div style={{
+                {t("Switch to Live/Upcoming Match ⚽")}
+              </button>
+            </div> : !activeMatch.isLive && activeMatch.minute !== 'FT' && activeMatch.startTime && activeMatch.startTime - Date.now() > 24 * 60 * 60 * 1000 ? <div style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '12px',
               marginTop: '12px'
             }}>
-                    <div style={{
+              <div style={{
                 background: 'rgba(255, 179, 0, 0.04)',
                 border: '1px solid rgba(255, 179, 0, 0.25)',
                 borderRadius: '12px',
                 padding: '16px',
                 textAlign: 'center'
               }}>
-                      <h4 style={{
+                <h4 style={{
                   color: '#ffb300',
                   margin: '0 0 8px 0',
                   fontSize: '1rem',
                   fontWeight: 700
                 }}>{t("📅 UPCOMING MATCH")}</h4>
-                      <p style={{
+                <p style={{
                   color: 'rgba(255, 255, 255, 0.85)',
                   fontSize: '0.85rem',
                   margin: 0
                 }}>
-                        {activeMatch.teamA} vs {activeMatch.teamB} {t("starts in more than 24 hours.")}
-                      </p>
-                      <p style={{
+                  {activeMatch.teamA} vs {activeMatch.teamB} {t("starts in more than 24 hours.")}
+                </p>
+                <p style={{
                   color: 'rgba(255, 255, 255, 0.5)',
                   fontSize: '0.75rem',
                   marginTop: '8px',
                   marginBottom: 0
                 }}>
-                        {t("Predictions open 24 hours before kickoff. Switch to an active match below.")}
-                      </p>
-                    </div>
-                    <button type="button" onClick={() => {
+                  {t("Predictions open 24 hours before kickoff. Switch to an active match below.")}
+                </p>
+              </div>
+              <button type="button" onClick={() => {
                 const liveM = liveMatchesRef.current.find(m => m.isLive && m.minute !== 'FT');
                 const upcomingM = liveMatchesRef.current.find(m => !m.isLive && m.minute !== 'FT' && m.id !== activeMatch.id);
                 if (liveM) {
@@ -6332,22 +6347,22 @@ export default function App() {
                 color: '#000',
                 fontWeight: 'bold'
               }}>
-                      {t("Switch to Live/Upcoming Match ⚽")}
-                    </button>
-                  </div> : <>
-                    {/* Select Team Prediction */}
-                    <div style={{
+                {t("Switch to Live/Upcoming Match ⚽")}
+              </button>
+            </div> : <>
+              {/* Select Team Prediction */}
+              <div style={{
                 background: 'rgba(255,255,255,0.02)',
                 padding: '12px',
                 borderRadius: '8px',
                 border: '1px solid rgba(255,255,255,0.05)'
               }}>
-                      <div className="swap-label" style={{
+                <div className="swap-label" style={{
                   marginBottom: '8px'
                 }}>{t("Attach Match Winner Prediction (via hookData)")}</div>
-                      <div className="prediction-choice-container">
-                        <button type="button" onClick={() => handlePredictionChange(1)} className={`prediction-choice-btn ${prediction === 1 ? 'active' : ''}`} disabled={isStriking}>
-                          <span style={{
+                <div className="prediction-choice-container">
+                  <button type="button" onClick={() => handlePredictionChange(1)} className={`prediction-choice-btn ${prediction === 1 ? 'active' : ''}`} disabled={isStriking}>
+                    <span style={{
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -6355,32 +6370,32 @@ export default function App() {
                       gap: '6px',
                       fontSize: '0.85rem'
                     }}>
-                            <span style={{
+                      <span style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px'
                       }}>
-                              {activeMatch.teamA} <img src={getFlagUrl(activeMatch.flagA || getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} style={{
+                        {activeMatch.teamA} <img src={getFlagUrl(activeMatch.flagA || getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} style={{
                           width: '14px',
                           height: '10px',
                           borderRadius: '1px',
                           border: '1px solid rgba(255,255,255,0.1)'
                         }} />
-                            </span>
-                            {userPredictions && (parseFloat(userPredictions[1]?.okbAmount) > 0 || parseFloat(userPredictions[1]?.grushAmount) > 0) && <span style={{
+                      </span>
+                      {userPredictions && (parseFloat(userPredictions[1]?.okbAmount) > 0 || parseFloat(userPredictions[1]?.grushAmount) > 0) && <span style={{
                         fontSize: '0.7rem',
                         opacity: 0.9,
                         color: 'var(--color-primary)',
                         fontWeight: 600
                       }}>
-                                {t("Predicted:")} {parseFloat(userPredictions[1]?.okbAmount) > 0 ? `${parseFloat(userPredictions[1]?.okbAmount).toFixed(3)} ETH` : ''}
-                                {parseFloat(userPredictions[1]?.okbAmount) > 0 && parseFloat(userPredictions[1]?.grushAmount) > 0 ? ' + ' : ''}
-                                {parseFloat(userPredictions[1]?.grushAmount) > 0 ? `${parseFloat(userPredictions[1]?.grushAmount).toFixed(0)} GRUSH` : ''}
-                              </span>}
-                          </span>
-                        </button>
-                        <button type="button" onClick={() => handlePredictionChange(3)} className={`prediction-choice-btn ${prediction === 3 ? 'active' : ''}`} disabled={isStriking}>
-                          <span style={{
+                        {t("Predicted:")} {parseFloat(userPredictions[1]?.okbAmount) > 0 ? `${parseFloat(userPredictions[1]?.okbAmount).toFixed(3)} ETH` : ''}
+                        {parseFloat(userPredictions[1]?.okbAmount) > 0 && parseFloat(userPredictions[1]?.grushAmount) > 0 ? ' + ' : ''}
+                        {parseFloat(userPredictions[1]?.grushAmount) > 0 ? `${parseFloat(userPredictions[1]?.grushAmount).toFixed(0)} GRUSH` : ''}
+                      </span>}
+                    </span>
+                  </button>
+                  <button type="button" onClick={() => handlePredictionChange(3)} className={`prediction-choice-btn ${prediction === 3 ? 'active' : ''}`} disabled={isStriking}>
+                    <span style={{
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -6388,27 +6403,27 @@ export default function App() {
                       gap: '6px',
                       fontSize: '0.85rem'
                     }}>
-                            <span style={{
+                      <span style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px'
                       }}>
-                              {t("Draw 🤝")}
-                            </span>
-                            {userPredictions && (parseFloat(userPredictions[3]?.okbAmount) > 0 || parseFloat(userPredictions[3]?.grushAmount) > 0) && <span style={{
+                        {t("Draw 🤝")}
+                      </span>
+                      {userPredictions && (parseFloat(userPredictions[3]?.okbAmount) > 0 || parseFloat(userPredictions[3]?.grushAmount) > 0) && <span style={{
                         fontSize: '0.7rem',
                         opacity: 0.9,
                         color: 'var(--color-primary)',
                         fontWeight: 600
                       }}>
-                                {t("Predicted:")} {parseFloat(userPredictions[3]?.okbAmount) > 0 ? `${parseFloat(userPredictions[3]?.okbAmount).toFixed(3)} ETH` : ''}
-                                {parseFloat(userPredictions[3]?.okbAmount) > 0 && parseFloat(userPredictions[3]?.grushAmount) > 0 ? ' + ' : ''}
-                                {parseFloat(userPredictions[3]?.grushAmount) > 0 ? `${parseFloat(userPredictions[3]?.grushAmount).toFixed(0)} GRUSH` : ''}
-                              </span>}
-                          </span>
-                        </button>
-                        <button type="button" onClick={() => handlePredictionChange(2)} className={`prediction-choice-btn ${prediction === 2 ? 'active' : ''}`} disabled={isStriking}>
-                          <span style={{
+                        {t("Predicted:")} {parseFloat(userPredictions[3]?.okbAmount) > 0 ? `${parseFloat(userPredictions[3]?.okbAmount).toFixed(3)} ETH` : ''}
+                        {parseFloat(userPredictions[3]?.okbAmount) > 0 && parseFloat(userPredictions[3]?.grushAmount) > 0 ? ' + ' : ''}
+                        {parseFloat(userPredictions[3]?.grushAmount) > 0 ? `${parseFloat(userPredictions[3]?.grushAmount).toFixed(0)} GRUSH` : ''}
+                      </span>}
+                    </span>
+                  </button>
+                  <button type="button" onClick={() => handlePredictionChange(2)} className={`prediction-choice-btn ${prediction === 2 ? 'active' : ''}`} disabled={isStriking}>
+                    <span style={{
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -6416,70 +6431,70 @@ export default function App() {
                       gap: '6px',
                       fontSize: '0.85rem'
                     }}>
-                            <span style={{
+                      <span style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px'
                       }}>
-                              {activeMatch.teamB} <img src={getFlagUrl(activeMatch.flagB || getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} style={{
+                        {activeMatch.teamB} <img src={getFlagUrl(activeMatch.flagB || getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} style={{
                           width: '14px',
                           height: '10px',
                           borderRadius: '1px',
                           border: '1px solid rgba(255,255,255,0.1)'
                         }} />
-                            </span>
-                            {userPredictions && (parseFloat(userPredictions[2]?.okbAmount) > 0 || parseFloat(userPredictions[2]?.grushAmount) > 0) && <span style={{
+                      </span>
+                      {userPredictions && (parseFloat(userPredictions[2]?.okbAmount) > 0 || parseFloat(userPredictions[2]?.grushAmount) > 0) && <span style={{
                         fontSize: '0.7rem',
                         opacity: 0.9,
                         color: 'var(--color-primary)',
                         fontWeight: 600
                       }}>
-                                {t("Predicted:")} {parseFloat(userPredictions[2]?.okbAmount) > 0 ? `${parseFloat(userPredictions[2]?.okbAmount).toFixed(3)} ETH` : ''}
-                                {parseFloat(userPredictions[2]?.okbAmount) > 0 && parseFloat(userPredictions[2]?.grushAmount) > 0 ? ' + ' : ''}
-                                {parseFloat(userPredictions[2]?.grushAmount) > 0 ? `${parseFloat(userPredictions[2]?.grushAmount).toFixed(0)} GRUSH` : ''}
-                              </span>}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
+                        {t("Predicted:")} {parseFloat(userPredictions[2]?.okbAmount) > 0 ? `${parseFloat(userPredictions[2]?.okbAmount).toFixed(3)} ETH` : ''}
+                        {parseFloat(userPredictions[2]?.okbAmount) > 0 && parseFloat(userPredictions[2]?.grushAmount) > 0 ? ' + ' : ''}
+                        {parseFloat(userPredictions[2]?.grushAmount) > 0 ? `${parseFloat(userPredictions[2]?.grushAmount).toFixed(0)} GRUSH` : ''}
+                      </span>}
+                    </span>
+                  </button>
+                </div>
+              </div>
 
-                    <button type={walletConnected ? "submit" : "button"} className="swap-btn" disabled={isStriking || walletConnected && chainId !== 4663} onClick={!walletConnected ? handleConnectWallet : undefined}>
-                      {isStriking ? 'Transaction in progress...' : !walletConnected ? 'Connect Wallet to Continue' : chainId !== 4663 ? 'Switch to Robinhood Chain Mainnet' : 'Review & Submit Prediction'}
-                    </button>
+              <button type={walletConnected ? "submit" : "button"} className="swap-btn" disabled={isStriking || walletConnected && chainId !== 4663} onClick={!walletConnected ? handleConnectWallet : undefined}>
+                {isStriking ? 'Transaction in progress...' : !walletConnected ? 'Connect Wallet to Continue' : chainId !== 4663 ? 'Switch to Robinhood Chain Mainnet' : 'Review & Submit Prediction'}
+              </button>
 
-                    <div className={`transaction-status ${transactionStatus.tone}`} role="status" aria-live="polite">
-                      <div className="transaction-review-grid">
-                        <span>{t("Match")}<strong>{activeMatch.teamA} vs {activeMatch.teamB}</strong></span>
-                        <span>{t("Your pick")}<strong>{prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw'}</strong></span>
-                        <span>{t("Maximum spend")}<strong>{swapAmount || '0'} {selectedToken} {t("+ gas")}</strong></span>
-                        <span>{t("Network")}<strong>{chainId === 4663 ? 'Robinhood Chain Mainnet' : 'Switch required'}</strong></span>
-                      </div>
-                      <p>{transactionStatus.message}</p>
-                      <small>{t("If your wallet marks the transaction suspicious or unsafe, cancel it. Verify the router and hook addresses independently before retrying.")}</small>
-                    </div>
-                  </>}
+              <div className={`transaction-status ${transactionStatus.tone}`} role="status" aria-live="polite">
+                <div className="transaction-review-grid">
+                  <span>{t("Match")}<strong>{activeMatch.teamA} vs {activeMatch.teamB}</strong></span>
+                  <span>{t("Your pick")}<strong>{prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw'}</strong></span>
+                  <span>{t("Maximum spend")}<strong>{swapAmount || '0'} {selectedToken} {t("+ gas")}</strong></span>
+                  <span>{t("Network")}<strong>{chainId === 4663 ? 'Robinhood Chain Mainnet' : 'Switch required'}</strong></span>
+                </div>
+                <p>{transactionStatus.message}</p>
+                <small>{t("If your wallet marks the transaction suspicious or unsafe, cancel it. Verify the router and hook addresses independently before retrying.")}</small>
+              </div>
+            </>}
 
 
-              </form>
-            </div>
+          </form>
+        </div>
 
-            {/* Right Side: Prediction Jackpot Status */}
-            <div style={{
+        {/* Right Side: Prediction Jackpot Status */}
+        <div style={{
           display: 'flex',
           flexDirection: 'column',
           gap: '32px'
         }}>
-              {/* Active Match Info */}
-              <div className="card-bezel">
-                {/* Tabs Header */}
-                <div style={{
+          {/* Active Match Info */}
+          <div className="card-bezel">
+            {/* Tabs Header */}
+            <div style={{
               display: 'flex',
               gap: '16px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
               marginBottom: '20px',
               paddingBottom: '4px'
             }}>
-                  <button onClick={() => setActiveRightTab('match')} style={{
+              <button onClick={() => setActiveRightTab('match')} style={{
                 background: 'transparent',
                 border: 'none',
                 color: activeRightTab === 'match' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
@@ -6491,9 +6506,9 @@ export default function App() {
                 borderBottom: activeRightTab === 'match' ? '2px solid var(--color-primary)' : '2px solid transparent',
                 transition: 'var(--transition-smooth)'
               }}>
-                    {t("Match Pool")}
-                  </button>
-                  <button onClick={() => setActiveRightTab('scores')} style={{
+                {t("Match Pool")}
+              </button>
+              <button onClick={() => setActiveRightTab('scores')} style={{
                 background: 'transparent',
                 border: 'none',
                 color: activeRightTab === 'scores' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
@@ -6508,10 +6523,10 @@ export default function App() {
                 alignItems: 'center',
                 gap: '6px'
               }}>
-                    {t("Live Scores")}
-                    <span className="live-dot"></span>
-                  </button>
-                  <button onClick={() => setActiveRightTab('history')} style={{
+                {t("Live Scores")}
+                <span className="live-dot"></span>
+              </button>
+              <button onClick={() => setActiveRightTab('history')} style={{
                 background: 'transparent',
                 border: 'none',
                 color: activeRightTab === 'history' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
@@ -6523,11 +6538,11 @@ export default function App() {
                 borderBottom: activeRightTab === 'history' ? '2px solid var(--color-primary)' : '2px solid transparent',
                 transition: 'var(--transition-smooth)'
               }}>
-                    {t("My History")}
-                  </button>
-                </div>
+                {t("My History")}
+              </button>
+            </div>
 
-                {activeRightTab === 'match' && (() => {
+            {activeRightTab === 'match' && (() => {
               const totalVotes = teamAVotes + teamBVotes + teamDrawVotes;
               const percentageA = totalVotes > 0 ? (teamAVotes / totalVotes * 100).toFixed(0) : '33';
               const percentageDraw = totalVotes > 0 ? (teamDrawVotes / totalVotes * 100).toFixed(0) : '33';
@@ -6536,102 +6551,102 @@ export default function App() {
               const widthDraw = totalVotes > 0 ? teamDrawVotes / totalVotes * 100 : 33.3;
               const widthB = totalVotes > 0 ? teamBVotes / totalVotes * 100 : 33.4;
               return <>
-                      <div className="jackpot-display">
-                        <div className="swap-label">{t("TOTAL ACCUMULATED JACKPOT")}</div>
-                        <div className="jackpot-val">{jackpot.toFixed(4)} {t("ETH")}</div>
-                        <div style={{
+                <div className="jackpot-display">
+                  <div className="swap-label">{t("TOTAL ACCUMULATED JACKPOT")}</div>
+                  <div className="jackpot-val">{jackpot.toFixed(4)} {t("ETH")}</div>
+                  <div style={{
                     color: 'rgba(255,255,255,0.4)',
                     marginTop: '4px'
                   }}>
-                          ≈ ${(jackpot * 3300).toLocaleString(undefined, {
+                    ≈ ${(jackpot * 3300).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2
                     })} USD
-                        </div>
-                      </div>
+                  </div>
+                </div>
 
-                      <div className="predict-bar-container">
-                        <div className="swap-label">{t("Prediction Volume Split")}</div>
+                <div className="predict-bar-container">
+                  <div className="swap-label">{t("Prediction Volume Split")}</div>
 
-                        <div className={`team-row ${prediction === 1 ? 'selected' : ''}`} onClick={() => handlePredictionChange(1)}>
-                          <div className="team-meta">
-                            <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} className="team-flag" style={{
+                  <div className={`team-row ${prediction === 1 ? 'selected' : ''}`} onClick={() => handlePredictionChange(1)}>
+                    <div className="team-meta">
+                      <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamA))} alt={activeMatch.teamA} className="team-flag" style={{
                         width: '20px',
                         height: '14px',
                         borderRadius: '2px',
                         objectFit: 'cover',
                         border: '1px solid rgba(255,255,255,0.15)'
                       }} />
-                            <span className="team-name">{activeMatch.teamA}</span>
-                          </div>
-                          <span className="team-odds">{teamAVotes.toFixed(1)} {t("ETH (")}{percentageA}%)</span>
-                        </div>
+                      <span className="team-name">{activeMatch.teamA}</span>
+                    </div>
+                    <span className="team-odds">{teamAVotes.toFixed(1)} {t("ETH (")}{percentageA}%)</span>
+                  </div>
 
-                        <div className={`team-row ${prediction === 3 ? 'selected' : ''}`} onClick={() => handlePredictionChange(3)}>
-                          <div className="team-meta">
-                            <span style={{
+                  <div className={`team-row ${prediction === 3 ? 'selected' : ''}`} onClick={() => handlePredictionChange(3)}>
+                    <div className="team-meta">
+                      <span style={{
                         fontSize: '1.1rem',
                         marginRight: '8px'
                       }}>🤝</span>
-                            <span className="team-name">{t("Draw")}</span>
-                          </div>
-                          <span className="team-odds">{teamDrawVotes.toFixed(1)} {t("ETH (")}{percentageDraw}%)</span>
-                        </div>
+                      <span className="team-name">{t("Draw")}</span>
+                    </div>
+                    <span className="team-odds">{teamDrawVotes.toFixed(1)} {t("ETH (")}{percentageDraw}%)</span>
+                  </div>
 
-                        <div className={`team-row ${prediction === 2 ? 'selected' : ''}`} onClick={() => handlePredictionChange(2)}>
-                          <div className="team-meta">
-                            <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} className="team-flag" style={{
+                  <div className={`team-row ${prediction === 2 ? 'selected' : ''}`} onClick={() => handlePredictionChange(2)}>
+                    <div className="team-meta">
+                      <img src={getFlagUrl(getTeamFifaCode(activeMatch.teamB))} alt={activeMatch.teamB} className="team-flag" style={{
                         width: '20px',
                         height: '14px',
                         borderRadius: '2px',
                         objectFit: 'cover',
                         border: '1px solid rgba(255,255,255,0.15)'
                       }} />
-                            <span className="team-name">{activeMatch.teamB}</span>
-                          </div>
-                          <span className="team-odds">{teamBVotes.toFixed(1)} {t("ETH (")}{percentageB}%)</span>
-                        </div>
+                      <span className="team-name">{activeMatch.teamB}</span>
+                    </div>
+                    <span className="team-odds">{teamBVotes.toFixed(1)} {t("ETH (")}{percentageB}%)</span>
+                  </div>
 
-                        <div className="odds-progress-wrap" style={{
+                  <div className="odds-progress-wrap" style={{
                     display: 'flex',
                     height: '8px',
                     borderRadius: '4px'
                   }}>
-                          <div style={{
+                    <div style={{
                       width: `${widthA}%`,
                       height: '100%',
                       background: 'var(--color-primary)',
                       transition: 'width 0.5s ease'
                     }} />
-                          <div style={{
+                    <div style={{
                       width: `${widthDraw}%`,
                       height: '100%',
                       background: 'rgba(255, 255, 255, 0.35)',
                       transition: 'width 0.5s ease'
                     }} />
-                          <div style={{
+                    <div style={{
                       width: `${widthB}%`,
                       height: '100%',
                       background: '#ff007a',
                       transition: 'width 0.5s ease'
                     }} />
-                        </div>
-                      </div>
-                      {/* Console Logs */}
-                      <div style={{
+                  </div>
+                </div>
+                {/* Console Logs */}
+                <div style={{
                   marginTop: '24px'
                 }}>
-                        <div className="swap-label">{t("Transaction Console Logs")}</div>
-                        <div className="console-logs">
-                          {logs.map((log, index) => <div key={index} className={`log-entry ${log.includes('GOAL') ? 'goal' : ''}`}>
-                              {log}
-                            </div>)}
-                        </div>
-                      </div>
-                    </>;
+                  <div className="swap-label">{t("Transaction Console Logs")}</div>
+                  <div className="console-logs">
+                    {logs.map((log, index) => <div key={index} className={`log-entry ${log.includes('GOAL') ? 'goal' : ''}`}>
+                      {log}
+                    </div>)}
+                  </div>
+                </div>
+              </>;
             })()}
 
-                {activeRightTab === 'scores' && (() => {
+            {activeRightTab === 'scores' && (() => {
               const todayStart = new Date();
               todayStart.setHours(0, 0, 0, 0);
               const todayStartMs = todayStart.getTime();
@@ -6650,7 +6665,7 @@ export default function App() {
                 flexDirection: 'column',
                 gap: '16px'
               }}>
-                      {displayMatches.map(m => {
+                {displayMatches.map(m => {
                   const isSelected = activeMatch.id === m.id;
                   const isActiveOnChain = getNumericMatchId(m.id) === onChainActiveId && onChainActiveId > 0n;
                   return <div key={m.id} onClick={() => handleSelectMatchUI(m)} style={{
@@ -6664,18 +6679,18 @@ export default function App() {
                     cursor: 'pointer',
                     transition: 'var(--transition-smooth)'
                   }}>
-                            <div style={{
+                    <div style={{
                       display: 'flex',
                       flexDirection: 'column',
                       gap: '8px',
                       flex: 1
                     }}>
-                              <div style={{
+                      <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px'
                       }}>
-                                <img src={getFlagUrl(m.flagA)} alt={m.teamA} style={{
+                        <img src={getFlagUrl(m.flagA)} alt={m.teamA} style={{
                           width: '20px',
                           height: '14px',
                           objectFit: 'cover',
@@ -6683,23 +6698,23 @@ export default function App() {
                           border: '1px solid rgba(255, 255, 255, 0.15)',
                           display: 'inline-block'
                         }} />
-                                <span style={{
+                        <span style={{
                           fontWeight: 600,
                           fontSize: '0.9rem',
                           color: isSelected ? 'var(--color-primary)' : '#fff'
                         }}>{m.teamA}</span>
-                                <span style={{
+                        <span style={{
                           marginLeft: 'auto',
                           fontWeight: 700,
                           color: 'var(--color-primary)'
                         }}>{m.scoreA}</span>
-                              </div>
-                              <div style={{
+                      </div>
+                      <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px'
                       }}>
-                                <img src={getFlagUrl(m.flagB)} alt={m.teamB} style={{
+                        <img src={getFlagUrl(m.flagB)} alt={m.teamB} style={{
                           width: '20px',
                           height: '14px',
                           objectFit: 'cover',
@@ -6707,20 +6722,20 @@ export default function App() {
                           border: '1px solid rgba(255, 255, 255, 0.15)',
                           display: 'inline-block'
                         }} />
-                                <span style={{
+                        <span style={{
                           fontWeight: 600,
                           fontSize: '0.9rem',
                           color: isSelected ? 'var(--color-primary)' : '#fff'
                         }}>{m.teamB}</span>
-                                <span style={{
+                        <span style={{
                           marginLeft: 'auto',
                           fontWeight: 700,
                           color: 'var(--color-primary)'
                         }}>{m.scoreB}</span>
-                              </div>
-                            </div>
+                      </div>
+                    </div>
 
-                            <div style={{
+                    <div style={{
                       borderLeft: '1px solid rgba(255,255,255,0.08)',
                       paddingLeft: '16px',
                       marginLeft: '16px',
@@ -6730,14 +6745,14 @@ export default function App() {
                       justifyContent: 'center',
                       minWidth: '80px'
                     }}>
-                              <span style={{
+                      <span style={{
                         fontSize: '0.8rem',
                         fontWeight: 600,
                         color: m.isLive && m.minute !== 'FT' ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)'
                       }}>
-                                {m.isLive || m.minute === 'FT' ? m.minute : formatLocalTime(m.startTime)}
-                              </span>
-                              {m.isLive && m.minute !== 'FT' ? <span style={{
+                        {m.isLive || m.minute === 'FT' ? m.minute : formatLocalTime(m.startTime)}
+                      </span>
+                      {m.isLive && m.minute !== 'FT' ? <span style={{
                         fontSize: '0.65rem',
                         color: '#ff3344',
                         textTransform: 'uppercase',
@@ -6747,7 +6762,7 @@ export default function App() {
                         alignItems: 'center',
                         gap: '4px'
                       }}>
-                                  <span style={{
+                        <span style={{
                           width: '4px',
                           height: '4px',
                           backgroundColor: '#ff3344',
@@ -6755,8 +6770,8 @@ export default function App() {
                           display: 'inline-block',
                           animation: 'live-pulse 1.2s infinite'
                         }}></span>
-                                  {t("LIVE")}
-                                </span> : m.minute === 'FT' ? <span style={{
+                        {t("LIVE")}
+                      </span> : m.minute === 'FT' ? <span style={{
                         fontSize: '0.65rem',
                         color: 'rgba(255, 255, 255, 0.4)',
                         marginTop: '4px',
@@ -6764,8 +6779,8 @@ export default function App() {
                         fontWeight: 500,
                         whiteSpace: 'nowrap'
                       }}>
-                                  {m.scoreA > m.scoreB ? `${m.teamA} Won` : m.scoreB > m.scoreA ? `${m.teamB} Won` : 'Draw'}
-                                </span> : <span style={{
+                        {m.scoreA > m.scoreB ? `${m.teamA} Won` : m.scoreB > m.scoreA ? `${m.teamB} Won` : 'Draw'}
+                      </span> : <span style={{
                         fontSize: '0.65rem',
                         color: '#00e5ff',
                         marginTop: '4px',
@@ -6774,9 +6789,9 @@ export default function App() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px'
                       }}>
-                                  {t("Upcoming")}
-                                </span>}
-                              {isActiveOnChain ? <span style={{
+                        {t("Upcoming")}
+                      </span>}
+                      {isActiveOnChain ? <span style={{
                         fontSize: '0.65rem',
                         color: 'var(--color-primary)',
                         fontWeight: 700,
@@ -6786,8 +6801,8 @@ export default function App() {
                         borderRadius: '4px',
                         textTransform: 'uppercase'
                       }}>
-                                  {t("ON-CHAIN")}
-                                </span> : <button onClick={e => {
+                        {t("ON-CHAIN")}
+                      </span> : <button onClick={e => {
                         e.stopPropagation();
                         handleActivateMatchOnChain(m);
                       }} style={{
@@ -6808,13 +6823,13 @@ export default function App() {
                         e.target.style.background = 'rgba(255, 255, 255, 0.05)';
                         e.target.style.color = '#fff';
                       }}>
-                                  {t("Activate")}
-                                </button>}
-                            </div>
-                          </div>;
+                        {t("Activate")}
+                      </button>}
+                    </div>
+                  </div>;
                 })}
 
-                      <button onClick={() => setCurrentView('match-center')} style={{
+                <button onClick={() => setCurrentView('match-center')} style={{
                   marginTop: '8px',
                   background: 'rgba(255, 255, 255, 0.05)',
                   border: '1px solid rgba(255, 255, 255, 0.15)',
@@ -6831,31 +6846,31 @@ export default function App() {
                   gap: '8px',
                   transition: 'var(--transition-smooth)'
                 }} onMouseEnter={e => e.target.style.background = 'rgba(157, 255, 0, 0.1)'} onMouseLeave={e => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}>
-                        {t("View All Matches in Match Center 🏆 →")}
-                      </button>
-                    </div>;
+                  {t("View All Matches in Match Center 🏆 →")}
+                </button>
+              </div>;
             })()}{activeRightTab === 'history' && <div style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '12px'
             }}>
-                    <h4 style={{
+              <h4 style={{
                 fontSize: '0.9rem',
                 color: '#fff',
                 marginBottom: '8px',
                 borderBottom: '1px solid rgba(255,255,255,0.08)',
                 paddingBottom: '8px'
               }}>
-                      {t("Your Simulation Logs")}
-                    </h4>
-                    {history.length === 0 ? <div style={{
+                {t("Your Simulation Logs")}
+              </h4>
+              {history.length === 0 ? <div style={{
                 fontSize: '0.8rem',
                 color: 'rgba(255,255,255,0.4)',
                 textAlign: 'center',
                 padding: '24px 0'
               }}>
-                        {t("No predictions recorded yet. Run a shootout strike to start!")}
-                      </div> : <div style={{
+                {t("No predictions recorded yet. Run a shootout strike to start!")}
+              </div> : <div style={{
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
@@ -6863,7 +6878,7 @@ export default function App() {
                 overflowY: 'auto',
                 paddingRight: '4px'
               }}>
-                        {history.map(h => <div key={h.id} style={{
+                {history.map(h => <div key={h.id} style={{
                   background: 'rgba(255,255,255,0.02)',
                   border: '1px solid rgba(255,255,255,0.05)',
                   borderRadius: '8px',
@@ -6873,39 +6888,39 @@ export default function App() {
                   flexDirection: 'column',
                   gap: '6px'
                 }}>
-                            <div style={{
+                  <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
                   }}>
-                              <span style={{
+                    <span style={{
                       fontWeight: 600,
                       color: '#fff'
                     }}>{h.match}</span>
-                              <span style={{
+                    <span style={{
                       fontSize: '0.7rem',
                       color: 'rgba(255,255,255,0.4)'
                     }}>{h.timestamp}</span>
-                            </div>
-                            <div style={{
+                  </div>
+                  <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
                   }}>
-                              <span>
-                                {t("Predicted:")} <strong style={{
+                    <span>
+                      {t("Predicted:")} <strong style={{
                         color: 'var(--color-primary)'
                       }}>{h.prediction}</strong>
-                              </span>
-                              <span style={{
+                    </span>
+                    <span style={{
                       fontSize: '0.75rem',
                       fontWeight: 600,
                       color: h.result.includes('GOAL') ? 'var(--color-secondary)' : 'var(--color-danger)'
                     }}>
-                                {h.result}
-                              </span>
-                            </div>
-                            <div style={{
+                      {h.result}
+                    </span>
+                  </div>
+                  <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
@@ -6914,39 +6929,39 @@ export default function App() {
                     fontSize: '0.7rem',
                     color: 'rgba(255,255,255,0.4)'
                   }}>
-                              <span>{t("Size:")} {h.amount}</span>
-                              <span style={{
+                    <span>{t("Size:")} {h.amount}</span>
+                    <span style={{
                       color: 'var(--color-primary)',
                       fontWeight: 600
                     }}>{t("Jackpot Share Allocation")}</span>
-                            </div>
-                          </div>)}
-                      </div>}
-                  </div>}
-              </div>
+                  </div>
+                </div>)}
+              </div>}
+            </div>}
+          </div>
 
-            </div>
-          </section>
+        </div>
+      </section>
 
-          {/* Leaderboards */}
-          <section id="leaderboard" className="card-bezel" style={{
+      {/* Leaderboards */}
+      <section id="leaderboard" className="card-bezel" style={{
         marginBottom: '64px'
       }}>
-            <h3 className="panel-title">
-              <Flame size={20} style={{
+        <h3 className="panel-title">
+          <Flame size={20} style={{
             color: 'var(--color-primary)'
           }} />
-              {t("Tournament Goal Leaderboard")}
-            </h3>
-            <p style={{
+          {t("Tournament Goal Leaderboard")}
+        </h3>
+        <p style={{
           fontSize: '0.85rem',
           color: 'rgba(255,255,255,0.5)',
           marginBottom: '20px'
         }}>
-              {t("Top creators and swappers registered on Robinhood Chain during the tournament.")}
-            </p>
+          {t("Top creators and swappers registered on Robinhood Chain during the tournament.")}
+        </p>
 
-            {!scanState.done && <div style={{
+        {!scanState.done && <div style={{
           fontSize: '0.82rem',
           color: '#9dff00',
           background: 'rgba(157, 255, 0, 0.05)',
@@ -6959,70 +6974,70 @@ export default function App() {
           gap: '10px',
           fontFamily: 'system-ui, -apple-system, sans-serif'
         }}>
-                <span style={{
+          <span style={{
             fontSize: '1rem'
           }}>⚡</span>
-                <span style={{
+          <span style={{
             fontWeight: '500'
           }}>
-                  {t("Syncing on-chain predictions:")} {Math.min(99, Math.floor((scanState.current - 62494373) / Math.max(1, scanState.total - 62494373) * 100))}{t("% complete (indexing blocks")} {scanState.current.toLocaleString()} {t("of")} {scanState.total.toLocaleString()})
-                </span>
-              </div>}
+            {t("Syncing on-chain predictions:")} {Math.min(99, Math.floor((scanState.current - 62494373) / Math.max(1, scanState.total - 62494373) * 100))}{t("% complete (indexing blocks")} {scanState.current.toLocaleString()} {t("of")} {scanState.total.toLocaleString()})
+          </span>
+        </div>}
 
-            <div className="leaderboard-compact-list">
-                {leaderboardData.length > 0 ? leaderboardData.map((row, idx) => {
+        <div className="leaderboard-compact-list">
+          {leaderboardData.length > 0 ? leaderboardData.map((row, idx) => {
             const isCurrentUser = walletConnected && userAddress && row.address.toLowerCase() === userAddress.toLowerCase();
             const rankColor = idx === 0 ? 'var(--color-primary)' : idx === 1 ? '#c0c0c0' : idx === 2 ? '#cd7f32' : 'rgba(255,255,255,0.4)';
             // Generate a deterministic hex color from the address
             const avatarColor1 = `#${row.address.slice(2, 8)}`;
             const avatarColor2 = `#${row.address.slice(-6)}`;
             return <div key={row.address} className={`leaderboard-compact-row ${isCurrentUser ? 'is-current-user' : ''}`}>
-                        <div className="compact-rank" style={{
+              <div className="compact-rank" style={{
                 color: rankColor
               }}>
-                          {idx + 1}
-                        </div>
-                        <div className="compact-user-info">
-                          <div className="compact-avatar" style={{
+                {idx + 1}
+              </div>
+              <div className="compact-user-info">
+                <div className="compact-avatar" style={{
                   background: `linear-gradient(135deg, ${avatarColor1}, ${avatarColor2})`
                 }}></div>
-                          <div className="compact-address">
-                            {row.address.slice(0, 6)}...{row.address.slice(-4)}
-                            {isCurrentUser && <span className="compact-badge-my">{t("MY")}</span>}
-                          </div>
-                        </div>
-                        
-                        <div className="compact-stats">
-                          <div className="stat-col hide-mobile">
-                            <span className="compact-stat-primary" style={{
+                <div className="compact-address">
+                  {row.address.slice(0, 6)}...{row.address.slice(-4)}
+                  {isCurrentUser && <span className="compact-badge-my">{t("MY")}</span>}
+                </div>
+              </div>
+
+              <div className="compact-stats">
+                <div className="stat-col hide-mobile">
+                  <span className="compact-stat-primary" style={{
                     color: 'var(--color-secondary)',
                     whiteSpace: 'nowrap'
                   }}>{row.claimed.toFixed(4)} {t("ETH")} <span className="desktop-only-text" style={{
-                      fontSize: '0.65rem',
-                      color: 'rgba(255,255,255,0.4)'
-                    }}>{t("CLAIMED")}</span></span>
-                            {row.grushClaimed > 0 && <span className="compact-stat-secondary" style={{
+                    fontSize: '0.65rem',
+                    color: 'rgba(255,255,255,0.4)'
+                  }}>{t("CLAIMED")}</span></span>
+                  {row.grushClaimed > 0 && <span className="compact-stat-secondary" style={{
                     whiteSpace: 'nowrap'
                   }}>⚽ {row.grushClaimed.toLocaleString()} {t("GRUSH")} <span className="desktop-only-text" style={{
-                      fontSize: '0.6rem'
-                    }}>{t("CLAIMED")}</span></span>}
-                          </div>
-                          <div className="stat-col">
-                            <span className="compact-stat-primary" style={{
+                    fontSize: '0.6rem'
+                  }}>{t("CLAIMED")}</span></span>}
+                </div>
+                <div className="stat-col">
+                  <span className="compact-stat-primary" style={{
                     color: 'var(--color-primary)',
                     whiteSpace: 'nowrap'
                   }}>{row.volume.toFixed(4)} {t("ETH")} <span className="desktop-only-text" style={{
-                      fontSize: '0.65rem',
-                      color: 'rgba(255,255,255,0.4)'
-                    }}>{t("VOL")}</span></span>
-                            {row.grushVolume > 0 && <span className="compact-stat-secondary" style={{
+                    fontSize: '0.65rem',
+                    color: 'rgba(255,255,255,0.4)'
+                  }}>{t("VOL")}</span></span>
+                  {row.grushVolume > 0 && <span className="compact-stat-secondary" style={{
                     whiteSpace: 'nowrap'
                   }}>⚽ {row.grushVolume.toLocaleString()} {t("GRUSH")} <span className="desktop-only-text" style={{
-                      fontSize: '0.6rem'
-                    }}>{t("VOL")}</span></span>}
-                          </div>
-                          <div className="stat-col stat-col-right">
-                            <span className="compact-stat-primary" style={{
+                    fontSize: '0.6rem'
+                  }}>{t("VOL")}</span></span>}
+                </div>
+                <div className="stat-col stat-col-right">
+                  <span className="compact-stat-primary" style={{
                     color: '#fff',
                     fontSize: '1.1rem',
                     whiteSpace: 'nowrap',
@@ -7030,23 +7045,23 @@ export default function App() {
                     flexDirection: 'column',
                     alignItems: 'center'
                   }}>
-                               {row.goals} <span style={{
+                    {row.goals} <span style={{
                       fontSize: '0.75rem',
                       color: 'rgba(255,255,255,0.5)'
                     }}>{t("Goals")}</span>
-                            </span>
-                          </div>
-                        </div>
-                      </div>;
-          }) : <div className="leaderboard-empty">
-                    {t("No active swappers recorded yet. Swap & predict to become the first on the board!")}
-                  </div>}
+                  </span>
+                </div>
               </div>
-            </section>
+            </div>;
+          }) : <div className="leaderboard-empty">
+            {t("No active swappers recorded yet. Swap & predict to become the first on the board!")}
+          </div>}
+        </div>
+      </section>
 
-        </>}
+    </>}
 
-      {currentView === 'match-center' && (() => {
+    {currentView === 'match-center' && (() => {
       if (!liveMatches || liveMatches.length === 0) {
         return <div style={{
           marginTop: '32px',
@@ -7057,13 +7072,13 @@ export default function App() {
           borderRadius: '12px',
           border: '1px solid rgba(255,255,255,0.05)'
         }}>
-              <div style={{
+          <div style={{
             fontSize: '1.2rem',
             marginBottom: '8px',
             color: 'rgba(255,255,255,0.7)'
           }}>{t("No Matches Available")}</div>
-              <div>{t("Connecting to live matches database...")}</div>
-            </div>;
+          <div>{t("Connecting to live matches database...")}</div>
+        </div>;
       }
       const categoryMatches = liveMatches;
       const selectedMatch = categoryMatches.find(m => m.id === selectedMatchCenterId) || categoryMatches[0];
@@ -7093,26 +7108,26 @@ export default function App() {
       return <div style={{
         marginTop: '32px'
       }}>
-            <section className="match-center-header" style={{
+        <section className="match-center-header" style={{
           marginBottom: '32px'
         }}>
-              <div style={{
+          <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             flexWrap: 'wrap',
             gap: '20px'
           }}>
-                <div style={{
+            <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '12px'
             }}>
-                  <span style={{
+              <span style={{
                 fontSize: '2.5rem'
               }}>⚽</span>
-                  <div>
-                    <h2 style={{
+              <div>
+                <h2 style={{
                   fontFamily: 'var(--font-display)',
                   fontSize: '2.2rem',
                   fontWeight: 800,
@@ -7120,22 +7135,22 @@ export default function App() {
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent'
                 }}>
-                      Leagues & Cups Match Hub
-                    </h2>
-                    <p style={{
+                  Leagues & Cups Match Hub
+                </h2>
+                <p style={{
                   color: 'rgba(255,255,255,0.5)',
                   fontSize: '0.9rem',
                   marginTop: '4px'
                 }}>
-                      Real-time fixtures, predictions, and stats for the major domestic leagues and continental cups.
-                    </p>
-                  </div>
-                </div>
+                  Real-time fixtures, predictions, and stats for the major domestic leagues and continental cups.
+                </p>
               </div>
-            </section>
+            </div>
+          </div>
+        </section>
 
-            <div className="match-center-container">
-              {categoryMatches.length === 0 ? <div style={{
+        <div className="match-center-container">
+          {categoryMatches.length === 0 ? <div style={{
             flex: 1,
             textAlign: 'center',
             padding: '60px',
@@ -7145,47 +7160,47 @@ export default function App() {
             border: '1px solid rgba(255,255,255,0.05)',
             marginTop: '16px'
           }}>
-                  <div style={{
+            <div style={{
               fontSize: '1.2rem',
               marginBottom: '8px',
               color: 'rgba(255,255,255,0.7)'
             }}>{t("No matches active today")}</div>
-                  <div>{t("Domestic leagues schedule is currently offline. Check back later!")}</div>
-                </div> : <>
-                  <div className="match-center-left">
-                    <div className="match-filter-tabs">
-                      <button onClick={() => setMatchFilter('all')} className={`match-filter-btn ${matchFilter === 'all' ? 'active' : ''}`}>{t("All")}</button>
-                      <button onClick={() => setMatchFilter('live')} className={`match-filter-btn ${matchFilter === 'live' ? 'active' : ''} live-tab`}>{t("Live 🔴")}</button>
-                      <button onClick={() => setMatchFilter('upcoming')} className={`match-filter-btn ${matchFilter === 'upcoming' ? 'active' : ''}`}>{t("Upcoming")}</button>
-                      <button onClick={() => setMatchFilter('completed')} className={`match-filter-btn ${matchFilter === 'completed' ? 'active' : ''}`}>{t("Completed")}</button>
-                    </div>
+            <div>{t("Domestic leagues schedule is currently offline. Check back later!")}</div>
+          </div> : <>
+            <div className="match-center-left">
+              <div className="match-filter-tabs">
+                <button onClick={() => setMatchFilter('all')} className={`match-filter-btn ${matchFilter === 'all' ? 'active' : ''}`}>{t("All")}</button>
+                <button onClick={() => setMatchFilter('live')} className={`match-filter-btn ${matchFilter === 'live' ? 'active' : ''} live-tab`}>{t("Live 🔴")}</button>
+                <button onClick={() => setMatchFilter('upcoming')} className={`match-filter-btn ${matchFilter === 'upcoming' ? 'active' : ''}`}>{t("Upcoming")}</button>
+                <button onClick={() => setMatchFilter('completed')} className={`match-filter-btn ${matchFilter === 'completed' ? 'active' : ''}`}>{t("Completed")}</button>
+              </div>
 
-                    {liveGroup.length > 0 && <>
-                        <div className="match-group-header">{t("Live Matches 🔴")}</div>
-                        {liveGroup.map(m => renderMatchCard(m))}
-                      </>}
+              {liveGroup.length > 0 && <>
+                <div className="match-group-header">{t("Live Matches 🔴")}</div>
+                {liveGroup.map(m => renderMatchCard(m))}
+              </>}
 
-                    {todayUpcomingGroup.length > 0 && <>
-                        <div className="match-group-header">{t("Today - Upcoming (")}{TODAY_LABEL})</div>
-                        {todayUpcomingGroup.map(m => renderMatchCard(m))}
-                      </>}
+              {todayUpcomingGroup.length > 0 && <>
+                <div className="match-group-header">{t("Today - Upcoming (")}{TODAY_LABEL})</div>
+                {todayUpcomingGroup.map(m => renderMatchCard(m))}
+              </>}
 
-                    {tomorrowGroup.length > 0 && <>
-                        <div className="match-group-header">{t("Tomorrow (")}{TOMORROW_LABEL})</div>
-                        {tomorrowGroup.map(m => renderMatchCard(m))}
-                      </>}
+              {tomorrowGroup.length > 0 && <>
+                <div className="match-group-header">{t("Tomorrow (")}{TOMORROW_LABEL})</div>
+                {tomorrowGroup.map(m => renderMatchCard(m))}
+              </>}
 
-                    {upcomingFutureGroup.length > 0 && <>
-                        <div className="match-group-header">{t("Upcoming Fixtures")}</div>
-                        {upcomingFutureGroup.map(m => renderMatchCard(m))}
-                      </>}
+              {upcomingFutureGroup.length > 0 && <>
+                <div className="match-group-header">{t("Upcoming Fixtures")}</div>
+                {upcomingFutureGroup.map(m => renderMatchCard(m))}
+              </>}
 
-                    {completedGroup.length > 0 && <>
-                        <div className="match-group-header">{t("Completed Matches (FT)")}</div>
-                        {completedGroup.map(m => renderMatchCard(m))}
-                      </>}
+              {completedGroup.length > 0 && <>
+                <div className="match-group-header">{t("Completed Matches (FT)")}</div>
+                {completedGroup.map(m => renderMatchCard(m))}
+              </>}
 
-                    {filteredMatches.length === 0 && <div style={{
+              {filteredMatches.length === 0 && <div style={{
                 textAlign: 'center',
                 padding: '40px',
                 color: 'rgba(255,255,255,0.4)',
@@ -7193,37 +7208,37 @@ export default function App() {
                 borderRadius: '12px',
                 border: '1px solid rgba(255,255,255,0.05)'
               }}>
-                        {t("No matches found for the selected filter.")}
-                      </div>}
-                  </div>
-
-                  <div className="match-center-right">
-                    {selectedMatch && renderMatchHubDetails(selectedMatch)}
-                  </div>
-                </>}
+                {t("No matches found for the selected filter.")}
+              </div>}
             </div>
-          </div>;
+
+            <div className="match-center-right">
+              {selectedMatch && renderMatchHubDetails(selectedMatch)}
+            </div>
+          </>}
+        </div>
+      </div>;
     })()}
 
 
 
-      {currentView === 'robinhood-ai' && <div style={{
+    {currentView === 'robinhood-ai' && <div style={{
       marginTop: '32px'
     }}>
-          {/* Header Banner */}
-          <section className="match-center-header" style={{
+      {/* Header Banner */}
+      <section className="match-center-header" style={{
         marginBottom: '32px'
       }}>
-            <div style={{
+        <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '12px'
         }}>
-              <span style={{
+          <span style={{
             fontSize: '2.5rem'
           }}>🤖</span>
-              <div>
-                <h2 style={{
+          <div>
+            <h2 style={{
               fontFamily: 'var(--font-display)',
               fontSize: '2.2rem',
               fontWeight: 800,
@@ -7231,66 +7246,66 @@ export default function App() {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent'
             }}>
-                  {t("GoalRush Portal")}
-                </h2>
-                <p style={{
+              {t("GoalRush Portal")}
+            </h2>
+            <p style={{
               color: 'rgba(255,255,255,0.5)',
               fontSize: '0.9rem',
               marginTop: '4px'
             }}>
-                  {t("Welcome to the Agentic Economy. Interact with the GoalRush marketplace, list agents as service providers, or arbitrate disputes.")}
-                </p>
-              </div>
-            </div>
-          </section>
+              {t("Welcome to the Agentic Economy. Interact with the GoalRush marketplace, list agents as service providers, or arbitrate disputes.")}
+            </p>
+          </div>
+        </div>
+      </section>
 
-          {/* Role Showcase Grid */}
-          <div className="robinhood-roles-grid" style={{
+      {/* Role Showcase Grid */}
+      <div className="robinhood-roles-grid" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
         gap: '24px',
         marginBottom: '32px'
       }}>
-            {/* User Card */}
-            <div className="card-bezel robinhood-role-card" style={{
+        {/* User Card */}
+        <div className="card-bezel robinhood-role-card" style={{
           padding: '24px'
         }}>
-              <div style={{
+          <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '16px'
           }}>
-                <div style={{
+            <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '8px'
             }}>
-                  <User size={24} style={{
+              <User size={24} style={{
                 color: 'var(--color-secondary)'
               }} />
-                  <h3 style={{
+              <h3 style={{
                 margin: 0,
                 fontSize: '1.25rem',
                 fontWeight: 700
               }}>{t("Task User")}</h3>
-                </div>
-                <span className={`badge-robinhood ${isRegisteredUser ? 'active-badge' : ''}`} style={{
+            </div>
+            <span className={`badge-robinhood ${isRegisteredUser ? 'active-badge' : ''}`} style={{
               fontSize: '0.75rem',
               padding: '4px 10px'
             }}>
-                  {isRegisteredUser ? '● Connected ID' : '○ Unregistered'}
-                </span>
-              </div>
-              <p style={{
+              {isRegisteredUser ? '● Connected ID' : '○ Unregistered'}
+            </span>
+          </div>
+          <p style={{
             fontSize: '0.85rem',
             color: 'rgba(255,255,255,0.6)',
             lineHeight: '1.5',
             marginBottom: '16px'
           }}>
-                {t("Hire specialized AI agents to complete on-chain task requests (auditing, trading, analysis). Fund secure escrow smart contracts on Robinhood Chain.")}
-              </p>
-              <div style={{
+            {t("Hire specialized AI agents to complete on-chain task requests (auditing, trading, analysis). Fund secure escrow smart contracts on Robinhood Chain.")}
+          </p>
+          <div style={{
             background: '#020405',
             padding: '10px',
             borderRadius: '6px',
@@ -7300,61 +7315,61 @@ export default function App() {
             marginBottom: '16px',
             border: '1px solid rgba(255,255,255,0.05)'
           }}>
-                {t("prompt: Register me as a User on GoalRush")}
-              </div>
-              <button onClick={() => handleRunTerminalCommand('register-user')} className="btn-secondary" style={{
+            {t("prompt: Register me as a User on GoalRush")}
+          </div>
+          <button onClick={() => handleRunTerminalCommand('register-user')} className="btn-secondary" style={{
             width: '100%',
             padding: '8px',
             fontSize: '0.85rem',
             justifyContent: 'center',
             cursor: 'pointer'
           }}>
-                {t("Register Identity")}
-              </button>
-            </div>
+            {t("Register Identity")}
+          </button>
+        </div>
 
-            {/* ASP Card */}
-            <div className="card-bezel robinhood-role-card" style={{
+        {/* ASP Card */}
+        <div className="card-bezel robinhood-role-card" style={{
           padding: '24px'
         }}>
-              <div style={{
+          <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '16px'
           }}>
-                <div style={{
+            <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '8px'
             }}>
-                  <Cpu size={24} style={{
+              <Cpu size={24} style={{
                 color: 'var(--color-primary)'
               }} />
-                  <h3 style={{
+              <h3 style={{
                 margin: 0,
                 fontSize: '1.25rem',
                 fontWeight: 700
               }}>{t("Service Provider (ASP)")}</h3>
-                </div>
-                <span className={`badge-robinhood ${isRegisteredASP ? 'active-badge' : ''}`} style={{
+            </div>
+            <span className={`badge-robinhood ${isRegisteredASP ? 'active-badge' : ''}`} style={{
               fontSize: '0.75rem',
               padding: '4px 10px',
               borderColor: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)',
               color: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)'
             }}>
-                  {isRegisteredASP ? `● ${GOALRUSH_ASP_STATUS} (${GOALRUSH_ASP_ID})` : '○ Not registered'}
-                </span>
-              </div>
-              <p style={{
+              {isRegisteredASP ? `● ${GOALRUSH_ASP_STATUS} (${GOALRUSH_ASP_ID})` : '○ Not registered'}
+            </span>
+          </div>
+          <p style={{
             fontSize: '0.85rem',
             color: 'rgba(255,255,255,0.6)',
             lineHeight: '1.5',
             marginBottom: '16px'
           }}>
-                {t("List your AI agent services in the GoalRush directory. Fulfill automated tasks or custom-negotiated predictions and earn payout fees.")}
-              </p>
-              <div style={{
+            {t("List your AI agent services in the GoalRush directory. Fulfill automated tasks or custom-negotiated predictions and earn payout fees.")}
+          </p>
+          <div style={{
             background: '#020405',
             padding: '10px',
             borderRadius: '6px',
@@ -7364,61 +7379,61 @@ export default function App() {
             marginBottom: '16px',
             border: '1px solid rgba(255,255,255,0.05)'
           }}>
-                {t("prompt: GoalRush ASP is registered as an A2MCP service on GoalRush")}
-              </div>
-              <button onClick={() => handleRunTerminalCommand('register-asp')} className="btn-primary" style={{
+            {t("prompt: GoalRush ASP is registered as an A2MCP service on GoalRush")}
+          </div>
+          <button onClick={() => handleRunTerminalCommand('register-asp')} className="btn-primary" style={{
             width: '100%',
             padding: '8px',
             fontSize: '0.85rem',
             justifyContent: 'center',
             cursor: 'pointer'
           }}>
-                {t("Register GoalRush Agent")}
-              </button>
-            </div>
+            {t("Register GoalRush Agent")}
+          </button>
+        </div>
 
-            {/* Evaluator Card */}
-            <div className="card-bezel robinhood-role-card" style={{
+        {/* Evaluator Card */}
+        <div className="card-bezel robinhood-role-card" style={{
           padding: '24px'
         }}>
-              <div style={{
+          <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '16px'
           }}>
-                <div style={{
+            <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '8px'
             }}>
-                  <ShieldCheck size={24} style={{
+              <ShieldCheck size={24} style={{
                 color: 'var(--color-accent)'
               }} />
-                  <h3 style={{
+              <h3 style={{
                 margin: 0,
                 fontSize: '1.25rem',
                 fontWeight: 700
               }}>{t("Dispute Evaluator")}</h3>
-                </div>
-                <span className={`badge-robinhood ${isRegisteredEvaluator ? 'active-badge' : ''}`} style={{
+            </div>
+            <span className={`badge-robinhood ${isRegisteredEvaluator ? 'active-badge' : ''}`} style={{
               fontSize: '0.75rem',
               padding: '4px 10px',
               borderColor: 'var(--color-accent)',
               color: 'var(--color-accent)'
             }}>
-                  {isRegisteredEvaluator ? '● Staked & Online' : '○ Off-duty'}
-                </span>
-              </div>
-              <p style={{
+              {isRegisteredEvaluator ? '● Staked & Online' : '○ Off-duty'}
+            </span>
+          </div>
+          <p style={{
             fontSize: '0.85rem',
             color: 'rgba(255,255,255,0.6)',
             lineHeight: '1.5',
             marginBottom: '16px'
           }}>
-                {t("Stake at least 100 ETH to act as an arbitrator. Review evidence to resolve user/agent contract disputes. Earn 5% of bounties on correct verdicts.")}
-              </p>
-              <div style={{
+            {t("Stake at least 100 ETH to act as an arbitrator. Review evidence to resolve user/agent contract disputes. Earn 5% of bounties on correct verdicts.")}
+          </p>
+          <div style={{
             background: '#020405',
             padding: '10px',
             borderRadius: '6px',
@@ -7428,57 +7443,57 @@ export default function App() {
             marginBottom: '16px',
             border: '1px solid rgba(255,255,255,0.05)'
           }}>
-                {t("prompt: Register me as an Evaluator on GoalRush")}
-              </div>
-              <button onClick={() => handleRunTerminalCommand('register-evaluator')} className="btn-secondary" style={{
+            {t("prompt: Register me as an Evaluator on GoalRush")}
+          </div>
+          <button onClick={() => handleRunTerminalCommand('register-evaluator')} className="btn-secondary" style={{
             width: '100%',
             padding: '8px',
             fontSize: '0.85rem',
             justifyContent: 'center',
             cursor: 'pointer'
           }}>
-                {t("Stake & Activate")}
-              </button>
-            </div>
-          </div>
+            {t("Stake & Activate")}
+          </button>
+        </div>
+      </div>
 
-          {/* Terminal and Interactive Command Center */}
-          <div style={{
+      {/* Terminal and Interactive Command Center */}
+      <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr',
         gap: '32px',
         marginBottom: '32px'
       }}>
-            <div className="card-bezel robinhood-terminal-card" style={{
+        <div className="card-bezel robinhood-terminal-card" style={{
           padding: '24px',
           display: 'flex',
           flexDirection: 'column',
           gap: '16px'
         }}>
-              <div style={{
+          <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
-                <h3 className="panel-title" style={{
+            <h3 className="panel-title" style={{
               margin: 0
             }}>
-                  <TerminalIcon size={20} style={{
+              <TerminalIcon size={20} style={{
                 color: 'var(--color-secondary)'
               }} />
-                  {t("Onchain OS Agent Console")}
-                </h3>
-                <span style={{
+              {t("Onchain OS Agent Console")}
+            </h3>
+            <span style={{
               fontSize: '0.75rem',
               fontFamily: 'var(--font-mono)',
               color: 'rgba(255,255,255,0.4)'
             }}>
-                  {t("Session: X-LAYER-TESTNET")}
-                </span>
-              </div>
+              {t("Session: X-LAYER-TESTNET")}
+            </span>
+          </div>
 
-              {/* Terminal Screen */}
-              <div className="robinhood-terminal-screen" style={{
+          {/* Terminal Screen */}
+          <div className="robinhood-terminal-screen" style={{
             background: '#010304',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: '8px',
@@ -7491,25 +7506,25 @@ export default function App() {
             color: '#00ff66',
             boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8)'
           }}>
-                {terminalHistory.map((line, idx) => <div key={idx} style={{
+            {terminalHistory.map((line, idx) => <div key={idx} style={{
               minHeight: '18px',
               color: line.startsWith('>') ? 'var(--color-secondary)' : line.includes('SUCCESS') || line.includes('CONFIRMED') ? 'var(--color-primary)' : line.includes('Warning') || line.includes('Error') ? 'var(--color-danger)' : '#a3b5c0'
             }}>
-                    {line}
-                  </div>)}
-                {isTerminalLoading && <div className="terminal-loading-dots" style={{
+              {line}
+            </div>)}
+            {isTerminalLoading && <div className="terminal-loading-dots" style={{
               color: 'var(--color-secondary)'
             }}>
-                    {t("Fulfilling request...")}
-                  </div>}
-              </div>
+              {t("Fulfilling request...")}
+            </div>}
+          </div>
 
-              {/* Console Inputs */}
-              <div style={{
+          {/* Console Inputs */}
+          <div style={{
             display: 'flex',
             gap: '12px'
           }}>
-                <input type="text" value={terminalInput} onChange={e => setTerminalInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleRunTerminalCommand(terminalInput)} placeholder={t("Type an Onchain OS prompt (e.g. status, help)...")} style={{
+            <input type="text" value={terminalInput} onChange={e => setTerminalInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleRunTerminalCommand(terminalInput)} placeholder={t("Type an Onchain OS prompt (e.g. status, help)...")} style={{
               flex: 1,
               background: 'rgba(0,0,0,0.4)',
               border: '1px solid rgba(255,255,255,0.08)',
@@ -7520,112 +7535,112 @@ export default function App() {
               fontSize: '0.9rem',
               outline: 'none'
             }} />
-                <button onClick={() => handleRunTerminalCommand(terminalInput)} className="btn-primary" style={{
+            <button onClick={() => handleRunTerminalCommand(terminalInput)} className="btn-primary" style={{
               padding: '0 24px',
               cursor: 'pointer'
             }}>
-                  <Send size={16} /> {t("Run")}
-                </button>
-              </div>
+              <Send size={16} /> {t("Run")}
+            </button>
+          </div>
 
-              {/* Quick Actions Footer */}
-              <div style={{
+          {/* Quick Actions Footer */}
+          <div style={{
             display: 'flex',
             gap: '8px',
             flexWrap: 'wrap',
             borderTop: '1px solid rgba(255,255,255,0.05)',
             paddingTop: '12px'
           }}>
-                <button onClick={() => handleRunTerminalCommand('help')} className="btn-secondary" style={{
+            <button onClick={() => handleRunTerminalCommand('help')} className="btn-secondary" style={{
               padding: '6px 12px',
               fontSize: '0.75rem',
               cursor: 'pointer'
             }}>{t("help")}</button>
-                <button onClick={() => handleRunTerminalCommand('npx skills add robinhood/onchainos-skills')} className="btn-secondary" style={{
+            <button onClick={() => handleRunTerminalCommand('npx skills add robinhood/onchainos-skills')} className="btn-secondary" style={{
               padding: '6px 12px',
               fontSize: '0.75rem',
               cursor: 'pointer'
             }}>{t("install skills pack")}</button>
-                <button onClick={() => handleRunTerminalCommand('status')} className="btn-secondary" style={{
+            <button onClick={() => handleRunTerminalCommand('status')} className="btn-secondary" style={{
               padding: '6px 12px',
               fontSize: '0.75rem',
               cursor: 'pointer'
             }}>{t("check status")}</button>
-                <button onClick={() => handleRunTerminalCommand('clear')} className="btn-secondary" style={{
+            <button onClick={() => handleRunTerminalCommand('clear')} className="btn-secondary" style={{
               padding: '6px 12px',
               fontSize: '0.75rem',
               color: 'var(--color-danger)',
               borderColor: 'rgba(255, 51, 68, 0.2)',
               cursor: 'pointer'
             }}>{t("clear logs")}</button>
-              </div>
-            </div>
           </div>
+        </div>
+      </div>
 
-          {/* Service Provider & Arbitration Section Grid */}
-          <div style={{
+      {/* Service Provider & Arbitration Section Grid */}
+      <div style={{
         display: 'grid',
         gridTemplateColumns: isRegisteredEvaluator ? '1fr 1fr' : '1fr',
         gap: '32px',
         marginBottom: '64px'
       }}>
-            
-            {/* ASP Service Hub details */}
-            <div className="card-bezel robinhood-asp-dashboard" style={{
+
+        {/* ASP Service Hub details */}
+        <div className="card-bezel robinhood-asp-dashboard" style={{
           padding: '24px',
           display: 'flex',
           flexDirection: 'column',
           gap: '16px'
         }}>
-              <div style={{
+          <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
-                <h3 className="panel-title" style={{
+            <h3 className="panel-title" style={{
               margin: 0
             }}>
-                  <Cpu size={20} style={{
+              <Cpu size={20} style={{
                 color: 'var(--color-primary)'
               }} />
-                  {t("GoalRush ASP Console")}
-                </h3>
-                <span className={`badge-robinhood ${isRegisteredASP ? 'active-badge' : ''}`} style={{
+              {t("GoalRush ASP Console")}
+            </h3>
+            <span className={`badge-robinhood ${isRegisteredASP ? 'active-badge' : ''}`} style={{
               fontSize: '0.75rem',
               borderColor: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)',
               color: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)'
             }}>
-                  {isRegisteredASP ? `● ${GOALRUSH_ASP_STATUS.toUpperCase()} (${GOALRUSH_ASP_ID})` : '○ OFFLINE'}
-                </span>
-              </div>
+              {isRegisteredASP ? `● ${GOALRUSH_ASP_STATUS.toUpperCase()} (${GOALRUSH_ASP_ID})` : '○ OFFLINE'}
+            </span>
+          </div>
 
-              {!isRegisteredASP ? <div style={{
+          {!isRegisteredASP ? <div style={{
             textAlign: 'center',
             padding: '40px 20px',
             background: 'rgba(0,0,0,0.2)',
             borderRadius: '8px',
             border: '1px dashed rgba(255,255,255,0.08)'
           }}>
-                  <p style={{
+            <p style={{
               color: 'rgba(255,255,255,0.4)',
               fontSize: '0.9rem',
               marginBottom: '16px'
             }}>
-                    {t("Register the GoalRush Swarm Predictor as an Agent Service Provider (ASP) to launch your sports oracle API services.")}
-                  </p>
-                  <button onClick={() => handleRunTerminalCommand('register-asp')} className="btn-primary" style={{
+              {t("Register the GoalRush Swarm Predictor as an Agent Service Provider (ASP) to launch your sports oracle API services.")}
+            </p>
+            <button onClick={() => handleRunTerminalCommand('register-asp')} className="btn-primary" style={{
               display: 'inline-flex',
               margin: '0 auto',
               cursor: 'pointer'
             }}>
-                    {t("Activate Provider Portal")}
-                  </button>
-                </div> : <div style={{
+              {t("Activate Provider Portal")}
+            </button>
+          </div> : <div style={{
             display: 'flex',
             flexDirection: 'column',
             gap: '16px'
           }}>
-                  <div style={{
+            <div style={{
               background: 'rgba(157, 255, 0, 0.08)',
               padding: '12px 16px',
               borderRadius: '8px',
@@ -7634,7 +7649,7 @@ export default function App() {
               flexDirection: 'column',
               gap: '4px'
             }}>
-                    <div style={{
+              <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
@@ -7642,184 +7657,184 @@ export default function App() {
                 fontWeight: 600,
                 fontSize: '0.85rem'
               }}>
-                      <CheckCircle size={16} />
-                      <span>{t("Listing submitted to GoalRush review (Agent ID:")} {GOALRUSH_ASP_ID})</span>
-                    </div>
-                    <span style={{
+                <CheckCircle size={16} />
+                <span>{t("Listing submitted to GoalRush review (Agent ID:")} {GOALRUSH_ASP_ID})</span>
+              </div>
+              <span style={{
                 fontSize: '0.75rem',
                 color: 'rgba(255,255,255,0.7)',
                 lineHeight: '1.4'
               }}>
-                      {t("The GoalRush ASP is registered on-chain and submitted for GoalRush review. Paid API calls must pass the x402 payment middleware before the prediction route runs.")}
-                    </span>
-                  </div>
+                {t("The GoalRush ASP is registered on-chain and submitted for GoalRush review. Paid API calls must pass the x402 payment middleware before the prediction route runs.")}
+              </span>
+            </div>
 
-                  <div style={{
+            <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: '16px'
             }}>
-                    <div style={{
+              <div style={{
                 background: 'rgba(255,255,255,0.02)',
                 padding: '12px',
                 borderRadius: '8px',
                 border: '1px solid rgba(255,255,255,0.05)'
               }}>
-                      <span style={{
+                <span style={{
                   fontSize: '0.75rem',
                   color: 'rgba(255,255,255,0.4)',
                   display: 'block'
                 }}>{t("Fee rate")}</span>
-                      <strong style={{
+                <strong style={{
                   fontSize: '1.2rem',
                   color: 'var(--color-primary)',
                   fontFamily: 'var(--font-mono)'
                 }}>{GOALRUSH_ASP_FEE}</strong>
-                      <span style={{
+                <span style={{
                   fontSize: '0.7rem',
                   color: 'rgba(255,255,255,0.3)',
                   display: 'block',
                   marginTop: '2px'
                 }}>{t("charged per paid API call")}</span>
-                    </div>
-                    <div style={{
+              </div>
+              <div style={{
                 background: 'rgba(255,255,255,0.02)',
                 padding: '12px',
                 borderRadius: '8px',
                 border: '1px solid rgba(255,255,255,0.05)'
               }}>
-                      <span style={{
+                <span style={{
                   fontSize: '0.75rem',
                   color: 'rgba(255,255,255,0.4)',
                   display: 'block'
                 }}>{t("Total Earnings")}</span>
-                      <strong style={{
+                <strong style={{
                   fontSize: '1.2rem',
                   color: 'var(--color-secondary)',
                   fontFamily: 'var(--font-mono)'
                 }}>{agentStats.totalEarnings} {t("USDT")}</strong>
-                      <span style={{
+                <span style={{
                   fontSize: '0.7rem',
                   color: 'rgba(255,255,255,0.3)',
                   display: 'block',
                   marginTop: '2px'
                 }}>{agentStats.totalCalls} {t("API calls served")}</span>
-                    </div>
-                  </div>
+              </div>
+            </div>
 
-                  <div style={{
+            <div style={{
               background: 'rgba(255,255,255,0.02)',
               padding: '12px',
               borderRadius: '8px',
               border: '1px solid rgba(255,255,255,0.05)',
               fontSize: '0.85rem'
             }}>
-                    <span style={{
+              <span style={{
                 color: 'rgba(255,255,255,0.4)',
                 display: 'block',
                 marginBottom: '4px'
               }}>{t("Registered API Endpoint (A2MCP)")}</span>
-                    <code style={{
+              <code style={{
                 color: 'var(--color-secondary)',
                 fontFamily: 'var(--font-mono)',
                 wordBreak: 'break-all'
               }}>{BACKEND_API_BASE}{t("/predict")}</code>
-                  </div>
+            </div>
 
-                  <div>
-                    <h4 style={{
+            <div>
+              <h4 style={{
                 fontSize: '0.9rem',
                 color: '#fff',
                 marginBottom: '8px',
                 fontWeight: 600
               }}>{t("Active Prediction Fulfillments")}</h4>
-                    <div style={{
+              <div style={{
                 overflowX: 'auto'
               }}>
-                      <table style={{
+                <table style={{
                   width: '100%',
                   borderCollapse: 'collapse',
                   fontSize: '0.8rem',
                   textAlign: 'left'
                 }}>
-                        <thead>
-                          <tr style={{
+                  <thead>
+                    <tr style={{
                       borderBottom: '1px solid rgba(255,255,255,0.08)',
                       color: 'rgba(255,255,255,0.4)'
                     }}>
-                            <th style={{
+                      <th style={{
                         padding: '8px 4px'
                       }}>{t("Client")}</th>
-                            <th style={{
+                      <th style={{
                         padding: '8px 4px'
                       }}>{t("Match")}</th>
-                            <th style={{
+                      <th style={{
                         padding: '8px 4px'
                       }}>{t("Prediction")}</th>
-                            <th style={{
+                      <th style={{
                         padding: '8px 4px'
                       }}>{t("Status")}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {isLoadingFulfillments && agentFulfillments.length === 0 ? <tr>
-                              <td colSpan="4" style={{
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {isLoadingFulfillments && agentFulfillments.length === 0 ? <tr>
+                      <td colSpan="4" style={{
                         padding: '16px',
                         textAlign: 'center',
                         color: 'rgba(255,255,255,0.4)'
                       }}>
-                                {t("Loading prediction jobs from DB...")}
-                              </td>
-                            </tr> : agentFulfillments.length === 0 ? <tr>
-                              <td colSpan="4" style={{
+                        {t("Loading prediction jobs from DB...")}
+                      </td>
+                    </tr> : agentFulfillments.length === 0 ? <tr>
+                      <td colSpan="4" style={{
                         padding: '16px',
                         textAlign: 'center',
                         color: 'rgba(255,255,255,0.4)'
                       }}>
-                                {t("No active prediction jobs. Select a match below to test.")}
-                              </td>
-                            </tr> : agentFulfillments.map((f, i) => {
+                        {t("No active prediction jobs. Select a match below to test.")}
+                      </td>
+                    </tr> : agentFulfillments.map((f, i) => {
                       const isFinished = f.match_status === 'FINISHED';
                       return <tr key={f.id || i} style={{
                         borderBottom: '1px solid rgba(255,255,255,0.04)'
                       }}>
-                                  <td style={{
+                        <td style={{
                           padding: '8px 4px',
                           fontFamily: 'var(--font-mono)'
                         }}>{f.wallet.slice(0, 10)}...</td>
-                                  <td style={{
+                        <td style={{
                           padding: '8px 4px'
                         }}>{f.home_team} vs {f.away_team}</td>
-                                  <td style={{
+                        <td style={{
                           padding: '8px 4px',
                           color: 'var(--color-primary)',
                           textTransform: 'uppercase'
                         }}>{f.prediction}</td>
-                                  <td style={{
+                        <td style={{
                           padding: '8px 4px',
                           color: isFinished ? 'var(--color-primary)' : '#ffaa00'
                         }}>
-                                    {isFinished ? 'Delivered' : 'Evaluating'}
-                                  </td>
-                                </tr>;
+                          {isFinished ? 'Delivered' : 'Evaluating'}
+                        </td>
+                      </tr>;
                     })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-                  <hr style={{
+            <hr style={{
               border: 'none',
               borderTop: '1px solid rgba(255,255,255,0.08)',
               margin: '16px 0'
             }} />
-                  
-                  <div style={{
+
+            <div style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '12px'
             }}>
-                    <h4 style={{
+              <h4 style={{
                 fontSize: '0.95rem',
                 color: 'var(--color-primary)',
                 margin: '0 0 4px 0',
@@ -7828,23 +7843,23 @@ export default function App() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                      <Activity size={16} />
-                      {t("Live AI Swarm Prediction Tester")}
-                    </h4>
-                    <p style={{
+                <Activity size={16} />
+                {t("Live AI Swarm Prediction Tester")}
+              </h4>
+              <p style={{
                 color: 'rgba(255,255,255,0.5)',
                 fontSize: '0.75rem',
                 margin: 0
               }}>
-                      {t("Send a real-time request to the GoalRush consensus swarm to predict an outcome using current news sentiment.")}
-                    </p>
+                {t("Send a real-time request to the GoalRush consensus swarm to predict an outcome using current news sentiment.")}
+              </p>
 
-                    <div style={{
+              <div style={{
                 display: 'flex',
                 gap: '12px',
                 alignItems: 'center'
               }}>
-                      <select value={selectedPredictMatchId} onChange={e => setSelectedPredictMatchId(e.target.value)} style={{
+                <select value={selectedPredictMatchId} onChange={e => setSelectedPredictMatchId(e.target.value)} style={{
                   flex: 1,
                   background: 'rgba(0,0,0,0.5)',
                   border: '1px solid rgba(255,255,255,0.1)',
@@ -7855,13 +7870,13 @@ export default function App() {
                   fontFamily: 'inherit',
                   outline: 'none'
                 }}>
-                        <option value="">{t("-- Select Active Match --")}</option>
-                        {liveMatches.map(m => <option key={m.id} value={m.dbId || m.id}>
-                            {m.teamA} vs {m.teamB} ({m.minute})
-                          </option>)}
-                      </select>
+                  <option value="">{t("-- Select Active Match --")}</option>
+                  {liveMatches.map(m => <option key={m.id} value={m.dbId || m.id}>
+                    {m.teamA} vs {m.teamB} ({m.minute})
+                  </option>)}
+                </select>
 
-                      <button onClick={handleQueryPrediction} disabled={isQueryingPredict || !selectedPredictMatchId} className="btn-primary" style={{
+                <button onClick={handleQueryPrediction} disabled={isQueryingPredict || !selectedPredictMatchId} className="btn-primary" style={{
                   padding: '8px 16px',
                   fontSize: '0.85rem',
                   height: '38px',
@@ -7871,16 +7886,16 @@ export default function App() {
                   alignItems: 'center',
                   gap: '6px'
                 }}>
-                        {isQueryingPredict ? <>
-                            <span className="terminal-loading-dots">{t("Swarm Voting")}</span>
-                          </> : <>
-                            <Send size={14} />
-                            {t("Query Swarm")}
-                          </>}
-                      </button>
-                    </div>
+                  {isQueryingPredict ? <>
+                    <span className="terminal-loading-dots">{t("Swarm Voting")}</span>
+                  </> : <>
+                    <Send size={14} />
+                    {t("Query Swarm")}
+                  </>}
+                </button>
+              </div>
 
-                    {predictError && <div style={{
+              {predictError && <div style={{
                 color: '#ff3344',
                 fontSize: '0.8rem',
                 background: 'rgba(255,51,68,0.05)',
@@ -7888,10 +7903,10 @@ export default function App() {
                 borderRadius: '4px',
                 border: '1px solid rgba(255,51,68,0.15)'
               }}>
-                        <strong>{t("Error:")}</strong> {predictError}
-                      </div>}
+                <strong>{t("Error:")}</strong> {predictError}
+              </div>}
 
-                    {predictResult && <div style={{
+              {predictResult && <div style={{
                 background: 'rgba(0,0,0,0.4)',
                 padding: '12px',
                 borderRadius: '8px',
@@ -7900,169 +7915,169 @@ export default function App() {
                 flexDirection: 'column',
                 gap: '8px'
               }}>
-                        <div style={{
+                <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   borderBottom: '1px solid rgba(255,255,255,0.08)',
                   paddingBottom: '6px'
                 }}>
-                          <span style={{
+                  <span style={{
                     fontSize: '0.8rem',
                     color: 'rgba(255,255,255,0.4)'
                   }}>{t("Swarm Verdict")}</span>
-                          <strong style={{
+                  <strong style={{
                     fontSize: '0.85rem',
                     color: 'var(--color-primary)'
                   }}>{predictResult.prediction}</strong>
-                        </div>
-                        <div style={{
+                </div>
+                <div style={{
                   fontSize: '0.75rem',
                   color: 'rgba(255,255,255,0.7)',
                   lineHeight: 1.4
                 }}>
-                          <strong>{t("Reasoning:")}</strong> {predictResult.reasoning}
-                        </div>
-                        <div style={{
+                  <strong>{t("Reasoning:")}</strong> {predictResult.reasoning}
+                </div>
+                <div style={{
                   display: 'flex',
                   gap: '12px',
                   fontSize: '0.7rem',
                   color: 'rgba(255,255,255,0.4)',
                   marginTop: '4px'
                 }}>
-                          <span>{t("Votes:")}</span>
-                          {Object.entries(predictResult.tally).map(([team, count]) => <span key={team}><strong>{team}</strong>: {count}</span>)}
-                        </div>
-                      </div>}
-                  </div>
-                </div>}
+                  <span>{t("Votes:")}</span>
+                  {Object.entries(predictResult.tally).map(([team, count]) => <span key={team}><strong>{team}</strong>: {count}</span>)}
+                </div>
+              </div>}
             </div>
+          </div>}
+        </div>
 
-            {/* Evaluator Arbitration Simulator */}
-            {isRegisteredEvaluator && <div className="card-bezel robinhood-evaluator-dashboard" style={{
+        {/* Evaluator Arbitration Simulator */}
+        {isRegisteredEvaluator && <div className="card-bezel robinhood-evaluator-dashboard" style={{
           padding: '24px',
           display: 'flex',
           flexDirection: 'column',
           gap: '16px'
         }}>
-                <div style={{
+          <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
-                  <h3 className="panel-title" style={{
+            <h3 className="panel-title" style={{
               margin: 0
             }}>
-                    <ShieldCheck size={20} style={{
+              <ShieldCheck size={20} style={{
                 color: 'var(--color-accent)'
               }} />
-                    {t("Evaluator Dispute Court")}
-                  </h3>
-                  <span style={{
+              {t("Evaluator Dispute Court")}
+            </h3>
+            <span style={{
               fontSize: '0.75rem',
               fontFamily: 'var(--font-mono)',
               color: 'rgba(255,255,255,0.4)'
             }}>
-                    {t("Acc:")} {evaluatorAccuracy}%
-                  </span>
-                </div>
+              {t("Acc:")} {evaluatorAccuracy}%
+            </span>
+          </div>
 
-                <div style={{
+          <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: '12px'
           }}>
-                  <div style={{
+            <div style={{
               background: 'rgba(255,255,255,0.02)',
               padding: '10px',
               borderRadius: '8px',
               border: '1px solid rgba(255,255,255,0.05)',
               textAlign: 'center'
             }}>
-                    <span style={{
+              <span style={{
                 fontSize: '0.7rem',
                 color: 'rgba(255,255,255,0.4)',
                 display: 'block'
               }}>{t("Staked")}</span>
-                    <strong style={{
+              <strong style={{
                 fontSize: '1rem',
                 color: '#fff',
                 fontFamily: 'var(--font-mono)'
               }}>{evaluatorStaked} {t("ETH")}</strong>
-                  </div>
-                  <div style={{
+            </div>
+            <div style={{
               background: 'rgba(255,255,255,0.02)',
               padding: '10px',
               borderRadius: '8px',
               border: '1px solid rgba(255,255,255,0.05)',
               textAlign: 'center'
             }}>
-                    <span style={{
+              <span style={{
                 fontSize: '0.7rem',
                 color: 'rgba(255,255,255,0.4)',
                 display: 'block'
               }}>{t("Earned")}</span>
-                    <strong style={{
+              <strong style={{
                 fontSize: '1rem',
                 color: 'var(--color-primary)',
                 fontFamily: 'var(--font-mono)'
               }}>+{evaluatorBounties} {t("ETH")}</strong>
-                  </div>
-                  <div style={{
+            </div>
+            <div style={{
               background: 'rgba(255,255,255,0.02)',
               padding: '10px',
               borderRadius: '8px',
               border: '1px solid rgba(255,255,255,0.05)',
               textAlign: 'center'
             }}>
-                    <span style={{
+              <span style={{
                 fontSize: '0.7rem',
                 color: 'rgba(255,255,255,0.4)',
                 display: 'block'
               }}>{t("Slashed")}</span>
-                    <strong style={{
+              <strong style={{
                 fontSize: '1rem',
                 color: 'var(--color-danger)',
                 fontFamily: 'var(--font-mono)'
               }}>-{evaluatorSlashed} {t("ETH")}</strong>
-                  </div>
-                </div>
+            </div>
+          </div>
 
-                {/* Staking Increase controls */}
-                <div style={{
+          {/* Staking Increase controls */}
+          <div style={{
             display: 'flex',
             gap: '8px',
             alignItems: 'center'
           }}>
-                  <span style={{
+            <span style={{
               fontSize: '0.8rem',
               color: 'rgba(255,255,255,0.6)'
             }}>{t("Adjust Staked Deposit:")}</span>
-                  <button onClick={() => setEvaluatorStaked(prev => prev + 50)} className="btn-secondary" style={{
+            <button onClick={() => setEvaluatorStaked(prev => prev + 50)} className="btn-secondary" style={{
               padding: '4px 8px',
               fontSize: '0.75rem',
               cursor: 'pointer'
             }}>{t("+50 ETH")}</button>
-                  <button onClick={() => setEvaluatorStaked(prev => Math.max(100, prev - 50))} className="btn-secondary" style={{
+            <button onClick={() => setEvaluatorStaked(prev => Math.max(100, prev - 50))} className="btn-secondary" style={{
               padding: '4px 8px',
               fontSize: '0.75rem',
               cursor: 'pointer'
             }}>{t("-50 ETH")}</button>
-                </div>
+          </div>
 
-                {/* Cases List */}
-                <div>
-                  <h4 style={{
+          {/* Cases List */}
+          <div>
+            <h4 style={{
               fontSize: '0.9rem',
               color: '#fff',
               marginBottom: '8px',
               fontWeight: 600
             }}>{t("Assigned Dispute Pool")}</h4>
-                  <div style={{
+            <div style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '8px'
             }}>
-                    {mockDisputes.map((item, idx) => <button key={item.id} onClick={() => {
+              {mockDisputes.map((item, idx) => <button key={item.id} onClick={() => {
                 setSelectedCaseIndex(idx);
                 setArbitrationResult(null);
               }} className={`team-row ${selectedCaseIndex === idx ? 'selected' : ''}`} style={{
@@ -8080,28 +8095,28 @@ export default function App() {
                 cursor: 'pointer',
                 transition: 'var(--transition-smooth)'
               }}>
-                        <div style={{
+                <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   width: '100%',
                   alignItems: 'center'
                 }}>
-                          <span style={{
+                  <span style={{
                     fontWeight: 600,
                     fontSize: '0.8rem'
                   }}>{item.id} &middot; {item.task.slice(0, 32)}...</span>
-                          <span style={{
+                  <span style={{
                     fontFamily: 'var(--font-mono)',
                     fontSize: '0.75rem',
                     color: 'var(--color-primary)'
                   }}>{item.bounty} {t("ETH")}</span>
-                        </div>
-                      </button>)}
-                  </div>
                 </div>
+              </button>)}
+            </div>
+          </div>
 
-                {/* Case File Details Panel */}
-                {selectedCaseIndex !== null && (() => {
+          {/* Case File Details Panel */}
+          {selectedCaseIndex !== null && (() => {
             const activeCase = mockDisputes[selectedCaseIndex];
             return <div style={{
               background: '#020405',
@@ -8112,68 +8127,68 @@ export default function App() {
               flexDirection: 'column',
               gap: '8px'
             }}>
-                      <div style={{
+              <div style={{
                 borderBottom: '1px solid rgba(255,255,255,0.05)',
                 paddingBottom: '6px',
                 fontSize: '0.8rem',
                 color: 'rgba(255,255,255,0.4)'
               }}>
-                        <strong>{t("Case File:")}</strong> {activeCase.id} {t("| Client:")} {activeCase.user} {t("vs Provider:")} {activeCase.asp}
-                      </div>
-                      <div style={{
+                <strong>{t("Case File:")}</strong> {activeCase.id} {t("| Client:")} {activeCase.user} {t("vs Provider:")} {activeCase.asp}
+              </div>
+              <div style={{
                 fontSize: '0.8rem',
                 lineHeight: '1.4'
               }}>
-                        <span style={{
+                <span style={{
                   color: 'var(--color-danger)',
                   fontWeight: 600,
                   display: 'block',
                   marginBottom: '2px'
                 }}>{t("User Complaint:")}</span>
-                        <p style={{
+                <p style={{
                   color: 'rgba(255,255,255,0.7)',
                   margin: 0
                 }}>"{activeCase.complaint}"</p>
-                      </div>
-                      <div style={{
+              </div>
+              <div style={{
                 fontSize: '0.8rem',
                 lineHeight: '1.4'
               }}>
-                        <span style={{
+                <span style={{
                   color: 'var(--color-secondary)',
                   fontWeight: 600,
                   display: 'block',
                   marginBottom: '2px'
                 }}>{t("ASP Delivery Log:")}</span>
-                        <p style={{
+                <p style={{
                   color: 'rgba(255,255,255,0.7)',
                   margin: 0
                 }}>"{activeCase.delivery}"</p>
-                      </div>
+              </div>
 
-                      {/* Vote selection */}
-                      <div style={{
+              {/* Vote selection */}
+              <div style={{
                 borderTop: '1px solid rgba(255,255,255,0.05)',
                 paddingTop: '10px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px'
               }}>
-                        <div style={{
+                <div style={{
                   fontSize: '0.75rem',
                   color: '#ffcc00'
                 }}>
-                          {t("⚠️ Submit your vote. Majority vote wins. Wrong vote slashes 1.00 ETH.")}
-                        </div>
-                        {isResolvingCase ? <div style={{
+                  {t("⚠️ Submit your vote. Majority vote wins. Wrong vote slashes 1.00 ETH.")}
+                </div>
+                {isResolvingCase ? <div style={{
                   textAlign: 'center',
                   padding: '8px',
                   color: 'var(--color-accent)',
                   fontSize: '0.8rem',
                   fontWeight: 600
                 }}>
-                            {t("⌛ Collecting evaluator consensus signatures...")}
-                          </div> : arbitrationResult ? <div style={{
+                  {t("⌛ Collecting evaluator consensus signatures...")}
+                </div> : arbitrationResult ? <div style={{
                   padding: '8px',
                   borderRadius: '6px',
                   fontSize: '0.85rem',
@@ -8181,21 +8196,21 @@ export default function App() {
                   border: `1px solid ${arbitrationResult.success ? 'var(--color-primary)' : 'var(--color-danger)'}`,
                   color: arbitrationResult.success ? 'var(--color-primary)' : 'var(--color-danger)'
                 }}>
-                            {arbitrationResult.message}
-                            <div style={{
+                  {arbitrationResult.message}
+                  <div style={{
                     fontSize: '0.75rem',
                     color: 'rgba(255,255,255,0.5)',
                     marginTop: '6px',
                     borderTop: '1px solid rgba(255,255,255,0.08)',
                     paddingTop: '4px'
                   }}>
-                              <strong>{t("Verdict logic:")}</strong> {activeCase.rational}
-                            </div>
-                          </div> : <div style={{
+                    <strong>{t("Verdict logic:")}</strong> {activeCase.rational}
+                  </div>
+                </div> : <div style={{
                   display: 'flex',
                   gap: '10px'
                 }}>
-                            <button onClick={() => handleArbitrationVote('user')} className="btn-secondary" style={{
+                  <button onClick={() => handleArbitrationVote('user')} className="btn-secondary" style={{
                     flex: 1,
                     padding: '8px',
                     fontSize: '0.8rem',
@@ -8205,9 +8220,9 @@ export default function App() {
                     justifyContent: 'center',
                     cursor: 'pointer'
                   }}>
-                              {t("Support User")}
-                            </button>
-                            <button onClick={() => handleArbitrationVote('asp')} className="btn-secondary" style={{
+                    {t("Support User")}
+                  </button>
+                  <button onClick={() => handleArbitrationVote('asp')} className="btn-secondary" style={{
                     flex: 1,
                     padding: '8px',
                     fontSize: '0.8rem',
@@ -8217,35 +8232,35 @@ export default function App() {
                     justifyContent: 'center',
                     cursor: 'pointer'
                   }}>
-                              {t("Support ASP")}
-                            </button>
-                          </div>}
-                      </div>
-                    </div>;
+                    {t("Support ASP")}
+                  </button>
+                </div>}
+              </div>
+            </div>;
           })()}
-
-              </div>}
-
-          </div>
 
         </div>}
 
-      {currentView === 'about' && <div style={{
+      </div>
+
+    </div>}
+
+    {currentView === 'about' && <div style={{
       marginTop: '32px'
     }}>
-          <section className="match-center-header" style={{
+      <section className="match-center-header" style={{
         marginBottom: '32px'
       }}>
-            <div style={{
+        <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '12px'
         }}>
-              <span style={{
+          <span style={{
             fontSize: '2.5rem'
           }}>ℹ️</span>
-              <div>
-                <h2 style={{
+          <div>
+            <h2 style={{
               fontFamily: 'var(--font-display)',
               fontSize: '2.2rem',
               fontWeight: 800,
@@ -8253,61 +8268,61 @@ export default function App() {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent'
             }}>{t("GoalRush Hub")}</h2>
-                <p style={{
+            <p style={{
               color: 'rgba(255,255,255,0.5)',
               fontSize: '0.9rem',
               marginTop: '4px'
             }}>{t("Learn about GoalRush Uniswap V4 hook architecture, utility tokens, NFT collectibles, and developer tools.")}</p>
-              </div>
-            </div>
-          </section>
+          </div>
+        </div>
+      </section>
 
-          {/* Tab Selection */}
-          <div className="match-filter-tabs" style={{
+      {/* Tab Selection */}
+      <div className="match-filter-tabs" style={{
         marginBottom: '24px'
       }}>
-            <button onClick={() => setAboutSubTab('overview')} className={`match-filter-btn ${aboutSubTab === 'overview' ? 'active' : ''}`}>{t("Overview")}</button>
-            <button onClick={() => setAboutSubTab('whitepaper')} className={`match-filter-btn ${aboutSubTab === 'whitepaper' ? 'active' : ''}`}>{t("Whitepaper")}</button>
-            <button onClick={() => setAboutSubTab('contracts')} className={`match-filter-btn ${aboutSubTab === 'contracts' ? 'active' : ''}`}>{t("Smart Contracts")}</button>
-            <button onClick={() => setAboutSubTab('deployment')} className={`match-filter-btn ${aboutSubTab === 'deployment' ? 'active' : ''}`}>{t("Deployment Guide")}</button>
-          </div>
+        <button onClick={() => setAboutSubTab('overview')} className={`match-filter-btn ${aboutSubTab === 'overview' ? 'active' : ''}`}>{t("Overview")}</button>
+        <button onClick={() => setAboutSubTab('whitepaper')} className={`match-filter-btn ${aboutSubTab === 'whitepaper' ? 'active' : ''}`}>{t("Whitepaper")}</button>
+        <button onClick={() => setAboutSubTab('contracts')} className={`match-filter-btn ${aboutSubTab === 'contracts' ? 'active' : ''}`}>{t("Smart Contracts")}</button>
+        <button onClick={() => setAboutSubTab('deployment')} className={`match-filter-btn ${aboutSubTab === 'deployment' ? 'active' : ''}`}>{t("Deployment Guide")}</button>
+      </div>
 
-          {aboutSubTab === 'overview' && <div style={{
+      {aboutSubTab === 'overview' && <div style={{
         display: 'flex',
         flexDirection: 'column',
         gap: '24px'
       }}>
-              <section className="card-bezel" style={{
+        <section className="card-bezel" style={{
           padding: '24px'
         }}>
-                <h3 className="panel-title" style={{
+          <h3 className="panel-title" style={{
             marginTop: 0
           }}>
-                  <Award size={20} style={{
+            <Award size={20} style={{
               color: 'var(--color-primary)'
             }} /> {t("About GoalRush")}
-                </h3>
-                <p style={{
+          </h3>
+          <p style={{
             fontSize: '0.95rem',
             color: 'rgba(255,255,255,0.8)',
             lineHeight: '1.6',
             marginBottom: '24px'
           }}>
-                  {t("GoalRush is a decentralized sports prediction protocol built natively on Robinhood Chain. It leverages the cutting-edge capabilities of")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to seamlessly combine yield, sports prediction jackpots, and gamified swap fee rebates directly within decentralized trading pools.")}
-                </p>
+            {t("GoalRush is a decentralized sports prediction protocol built natively on Robinhood Chain. It leverages the cutting-edge capabilities of")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to seamlessly combine yield, sports prediction jackpots, and gamified swap fee rebates directly within decentralized trading pools.")}
+          </p>
 
-                <div style={{
+          <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '24px'
           }}>
-                  <div style={{
+            <div style={{
               background: 'rgba(255,255,255,0.02)',
               padding: '20px',
               borderRadius: '12px',
               border: '1px solid rgba(255,255,255,0.05)'
             }}>
-                    <h4 style={{
+              <h4 style={{
                 fontWeight: 600,
                 fontSize: '1.05rem',
                 color: 'var(--color-primary)',
@@ -8316,34 +8331,34 @@ export default function App() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                      {t("⚽ Prediction Jackpot")}
-                    </h4>
-                    <p style={{
+                {t("⚽ Prediction Jackpot")}
+              </h4>
+              <p style={{
                 fontSize: '0.82rem',
                 color: 'rgba(255,255,255,0.5)',
                 lineHeight: '1.5',
                 marginBottom: '8px'
               }}>
-                      {t("Pick a result and fund it with ETH or GRUSH through the prediction router. Only transferred assets count toward the claimable jackpot; observed swap volume is informational.")}
-                    </p>
-                    <div style={{
+                {t("Pick a result and fund it with ETH or GRUSH through the prediction router. Only transferred assets count toward the claimable jackpot; observed swap volume is informational.")}
+              </p>
+              <div style={{
                 borderTop: '1px solid rgba(255,255,255,0.05)',
                 paddingTop: '8px',
                 fontSize: '0.75rem',
                 color: 'rgba(255,255,255,0.4)',
                 lineHeight: '1.4'
               }}>
-                      <strong>{t("Claim Rules:")}</strong> {t("Once the match is resolved on-chain, winners pull their winnings proportionally:")} <code>{t("(Your Swap Volume / Total Winning Team Volume) * Total Jackpot Pool")}</code>.
-                    </div>
-                  </div>
+                <strong>{t("Claim Rules:")}</strong> {t("Once the match is resolved on-chain, winners pull their winnings proportionally:")} <code>{t("(Your Swap Volume / Total Winning Team Volume) * Total Jackpot Pool")}</code>.
+              </div>
+            </div>
 
-                  <div style={{
+            <div style={{
               background: 'rgba(255,255,255,0.02)',
               padding: '20px',
               borderRadius: '12px',
               border: '1px solid rgba(255,255,255,0.05)'
             }}>
-                    <h4 style={{
+              <h4 style={{
                 fontWeight: 600,
                 fontSize: '1.05rem',
                 color: 'var(--color-primary)',
@@ -8352,34 +8367,34 @@ export default function App() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                      {t("🏆 Boosts & Multipliers")}
-                    </h4>
-                    <p style={{
+                {t("🏆 Boosts & Multipliers")}
+              </h4>
+              <p style={{
                 fontSize: '0.82rem',
                 color: 'rgba(255,255,255,0.5)',
                 lineHeight: '1.5',
                 marginBottom: '8px'
               }}>
-                      {t("Top users with higher")} <strong>{t("in-game goals scored")}</strong>{t(", more")} <strong>{t("GRUSH token holdings")}</strong>{t(", and larger")} <strong>{t("prediction volume")}</strong> {t("receive ecosystem multipliers.")}
-                    </p>
-                    <div style={{
+                {t("Top users with higher")} <strong>{t("in-game goals scored")}</strong>{t(", more")} <strong>{t("GRUSH token holdings")}</strong>{t(", and larger")} <strong>{t("prediction volume")}</strong> {t("receive ecosystem multipliers.")}
+              </p>
+              <div style={{
                 borderTop: '1px solid rgba(255,255,255,0.05)',
                 paddingTop: '8px',
                 fontSize: '0.75rem',
                 color: 'rgba(255,255,255,0.4)',
                 lineHeight: '1.4'
               }}>
-                      <strong>{t("Reward weight:")}</strong> {t("Your leaderboard status directly boosts your reward share weights in the pools and future drops, rewarding the most active members.")}
-                    </div>
-                  </div>
+                <strong>{t("Reward weight:")}</strong> {t("Your leaderboard status directly boosts your reward share weights in the pools and future drops, rewarding the most active members.")}
+              </div>
+            </div>
 
-                  <div style={{
+            <div style={{
               background: 'rgba(255,255,255,0.02)',
               padding: '20px',
               borderRadius: '12px',
               border: '1px solid rgba(255,255,255,0.05)'
             }}>
-                    <h4 style={{
+              <h4 style={{
                 fontWeight: 600,
                 fontSize: '1.05rem',
                 color: 'var(--color-primary)',
@@ -8388,34 +8403,34 @@ export default function App() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                      {t("📡 Live Match Integration")}
-                    </h4>
-                    <p style={{
+                {t("📡 Live Match Integration")}
+              </h4>
+              <p style={{
                 fontSize: '0.82rem',
                 color: 'rgba(255,255,255,0.5)',
                 lineHeight: '1.5',
                 marginBottom: '8px'
               }}>
-                      {t("Choose from real-world matches in the Live Scores feed. Anyone can select a fixture, and the contract owner can instantiate it directly onto the contract with a single click.")}
-                    </p>
-                    <div style={{
+                {t("Choose from real-world matches in the Live Scores feed. Anyone can select a fixture, and the contract owner can instantiate it directly onto the contract with a single click.")}
+              </p>
+              <div style={{
                 borderTop: '1px solid rgba(255,255,255,0.05)',
                 paddingTop: '8px',
                 fontSize: '0.75rem',
                 color: 'rgba(255,255,255,0.4)',
                 lineHeight: '1.4'
               }}>
-                      <strong>{t("Real-Time Updates:")}</strong> {t("Live matches load automatically. Simply click any match in the feed to set it as the target prediction match in the swap widget.")}
-                    </div>
-                  </div>
+                <strong>{t("Real-Time Updates:")}</strong> {t("Live matches load automatically. Simply click any match in the feed to set it as the target prediction match in the swap widget.")}
+              </div>
+            </div>
 
-                  <div style={{
+            <div style={{
               background: 'rgba(255,255,255,0.02)',
               padding: '20px',
               borderRadius: '12px',
               border: '1px solid rgba(255,255,255,0.05)'
             }}>
-                    <h4 style={{
+              <h4 style={{
                 fontWeight: 600,
                 fontSize: '1.05rem',
                 color: 'var(--color-primary)',
@@ -8424,34 +8439,34 @@ export default function App() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                      {t("🖼️ ERC-721 Player NFTs")}
-                    </h4>
-                    <p style={{
+                {t("🖼️ ERC-721 Player NFTs")}
+              </h4>
+              <p style={{
                 fontSize: '0.82rem',
                 color: 'rgba(255,255,255,0.5)',
                 lineHeight: '1.5',
                 marginBottom: '8px'
               }}>
-                      {t("Generate custom holographic player cards using your prediction volume statistics. Mint them as permanent, fully-tradable ERC-721 NFTs on the Robinhood Chain blockchain!")}
-                    </p>
-                    <div style={{
+                {t("Generate custom holographic player cards using your prediction volume statistics. Mint them as permanent, fully-tradable ERC-721 NFTs on the Robinhood Chain blockchain!")}
+              </p>
+              <div style={{
                 borderTop: '1px solid rgba(255,255,255,0.05)',
                 paddingTop: '8px',
                 fontSize: '0.75rem',
                 color: 'rgba(255,255,255,0.4)',
                 lineHeight: '1.4'
               }}>
-                      <strong>{t("Mint Pricing:")}</strong> {t("Mint for a small gas fee of 0.002 ETH or spend 10 GRUSH utility tokens. Tradable on the Robinhood NFT Marketplace.")}
-                    </div>
-                  </div>
+                <strong>{t("Mint Pricing:")}</strong> {t("Mint for a small gas fee of 0.002 ETH or spend 10 GRUSH utility tokens. Tradable on the Robinhood NFT Marketplace.")}
+              </div>
+            </div>
 
-                  <div style={{
+            <div style={{
               background: 'rgba(255,255,255,0.02)',
               padding: '20px',
               borderRadius: '12px',
               border: '1px solid rgba(255,255,255,0.05)'
             }}>
-                    <h4 style={{
+              <h4 style={{
                 fontWeight: 600,
                 fontSize: '1.05rem',
                 color: 'var(--color-primary)',
@@ -8460,24 +8475,24 @@ export default function App() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                      {t("⚡ Goal Rush Rebate")}
-                    </h4>
-                    <p style={{
+                {t("⚡ Goal Rush Rebate")}
+              </h4>
+              <p style={{
                 fontSize: '0.82rem',
                 color: 'rgba(255,255,255,0.5)',
                 lineHeight: '1.5'
               }}>
-                      {t("The hook records a pseudo-random goal event at a configurable rate. The current contract emits an event but does not transfer an automatic fee rebate; the penalty shootout is simulation-based.")}
-                    </p>
-                  </div>
+                {t("The hook records a pseudo-random goal event at a configurable rate. The current contract emits an event but does not transfer an automatic fee rebate; the penalty shootout is simulation-based.")}
+              </p>
+            </div>
 
-                  <div style={{
+            <div style={{
               background: 'rgba(255,255,255,0.02)',
               padding: '20px',
               borderRadius: '12px',
               border: '1px solid rgba(255,255,255,0.05)'
             }}>
-                    <h4 style={{
+              <h4 style={{
                 fontWeight: 600,
                 fontSize: '1.05rem',
                 color: 'var(--color-primary)',
@@ -8486,24 +8501,24 @@ export default function App() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                      {t("🔗 Robinhood Chain Integration")}
-                    </h4>
-                    <p style={{
+                {t("🔗 Robinhood Chain Integration")}
+              </h4>
+              <p style={{
                 fontSize: '0.82rem',
                 color: 'rgba(255,255,255,0.5)',
                 lineHeight: '1.5'
               }}>
-                      {t("Deployed on Robinhood Chain Mainnet, GoalRush utilizes high-speed block confirmation times and ultra-low gas fees. Swappers experience instant transaction feedback on penalty shootouts and minimal fee overhead.")}
-                    </p>
-                  </div>
+                {t("Deployed on Robinhood Chain Mainnet, GoalRush utilizes high-speed block confirmation times and ultra-low gas fees. Swappers experience instant transaction feedback on penalty shootouts and minimal fee overhead.")}
+              </p>
+            </div>
 
-                  <div style={{
+            <div style={{
               background: 'rgba(255,255,255,0.02)',
               padding: '20px',
               borderRadius: '12px',
               border: '1px solid rgba(157, 255, 0, 0.3)'
             }}>
-                    <h4 style={{
+              <h4 style={{
                 fontWeight: 600,
                 fontSize: '1.05rem',
                 color: 'var(--color-primary)',
@@ -8512,56 +8527,56 @@ export default function App() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                      {t("🧠 Autonomous AGI Agent")}
-                    </h4>
-                    <p style={{
+                {t("🧠 Autonomous AGI Agent")}
+              </h4>
+              <p style={{
                 fontSize: '0.82rem',
                 color: 'rgba(255,255,255,0.5)',
                 lineHeight: '1.5',
                 marginBottom: '8px'
               }}>
-                      {t("GoalRush is the premier execution sandbox for Open AGI. A decentralized Llama-3 agent actively monitors live sports news, predicts outcomes, and trades autonomously on our smart contracts.")}
-                    </p>
-                    <div style={{
+                {t("GoalRush is the premier execution sandbox for Open AGI. A decentralized Llama-3 agent actively monitors live sports news, predicts outcomes, and trades autonomously on our smart contracts.")}
+              </p>
+              <div style={{
                 borderTop: '1px solid rgba(255,255,255,0.05)',
                 paddingTop: '8px',
                 fontSize: '0.75rem',
                 color: 'rgba(255,255,255,0.4)',
                 lineHeight: '1.4'
               }}>
-                      <strong>{t("Security:")}</strong> {t("Protected by a Hard Boundary Architecture, preventing prompt-injection wallet hacks.")}
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </div>}
+                <strong>{t("Security:")}</strong> {t("Protected by a Hard Boundary Architecture, preventing prompt-injection wallet hacks.")}
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>}
 
-          {aboutSubTab === 'whitepaper' && <section className="card-bezel" style={{
+      {aboutSubTab === 'whitepaper' && <section className="card-bezel" style={{
         padding: '24px'
       }}>
-              <div className="whitepaper-content" style={{
+        <div className="whitepaper-content" style={{
           padding: 0
         }}>
-                <div className="whitepaper-section" style={{
+          <div className="whitepaper-section" style={{
             textAlign: 'center',
             marginBottom: '40px'
           }}>
-                  <h1 style={{
+            <h1 style={{
               fontFamily: 'var(--font-heading)',
               color: '#fff',
               fontSize: '2rem',
               marginBottom: '8px'
             }}>{t("GOALRUSH WHITEPAPER")}</h1>
-                  <p style={{
+            <p style={{
               color: 'var(--color-primary)',
               fontSize: '0.9rem',
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '2px'
             }}>
-                    {t("Sports Prediction Engine Powered by Uniswap V4")}
-                  </p>
-                  <div style={{
+              {t("Sports Prediction Engine Powered by Uniswap V4")}
+            </p>
+            <div style={{
               display: 'flex',
               justifyContent: 'center',
               gap: '20px',
@@ -8569,43 +8584,43 @@ export default function App() {
               fontSize: '0.8rem',
               opacity: 0.6
             }}>
-                    <span>{t("Published: July 2026")}</span>
-                    <span>•</span>
-                    <span>{t("Version: 2.0.0")}</span>
-                    <span>•</span>
-                    <span>{t("Chain: Robinhood Chain Mainnet")}</span>
-                  </div>
-                </div>
+              <span>{t("Published: July 2026")}</span>
+              <span>•</span>
+              <span>{t("Version: 2.0.0")}</span>
+              <span>•</span>
+              <span>{t("Chain: Robinhood Chain Mainnet")}</span>
+            </div>
+          </div>
 
-                <div className="whitepaper-section">
-                  <h2>{t("1. Executive Summary")}</h2>
-                  <p>
-                    {t("GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the")} <strong>{t("Robinhood Chain Mainnet")}</strong>{t(", GoalRush utilizes custom")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to route prediction ticket purchases directly through AMM swap events.")}
-                  </p>
-                  <p style={{
+          <div className="whitepaper-section">
+            <h2>{t("1. Executive Summary")}</h2>
+            <p>
+              {t("GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the")} <strong>{t("Robinhood Chain Mainnet")}</strong>{t(", GoalRush utilizes custom")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to route prediction ticket purchases directly through AMM swap events.")}
+            </p>
+            <p style={{
               marginTop: '12px'
             }}>
-                    {t("By turning trade volumes into prediction tickets and goalie shootout challenges, GoalRush creates a self-sustaining gamified ecosystem. Holders of the")} <strong>{t("GRUSH")}</strong> {t("utility token receive structural gameplay advantages (such as penalty strike success boosts) and unique visual profiles within the application, encouraging organic demand and token retention.")}
-                  </p>
-                </div>
+              {t("By turning trade volumes into prediction tickets and goalie shootout challenges, GoalRush creates a self-sustaining gamified ecosystem. Holders of the")} <strong>{t("GRUSH")}</strong> {t("utility token receive structural gameplay advantages (such as penalty strike success boosts) and unique visual profiles within the application, encouraging organic demand and token retention.")}
+            </p>
+          </div>
 
-                <div className="whitepaper-section">
-                  <h2>{t("2. Architecture & Uniswap V4 Hook Design")}</h2>
-                  <p>
-                    {t("GoalRush integrates directly with Uniswap V4's lifecycle callback hooks to trigger off-chain events and on-chain prediction entries. The core of this system is the")} <code>{t("WorldCupGoalRushHook")}</code> {t("contract.")}
-                  </p>
+          <div className="whitepaper-section">
+            <h2>{t("2. Architecture & Uniswap V4 Hook Design")}</h2>
+            <p>
+              {t("GoalRush integrates directly with Uniswap V4's lifecycle callback hooks to trigger off-chain events and on-chain prediction entries. The core of this system is the")} <code>{t("WorldCupGoalRushHook")}</code> {t("contract.")}
+            </p>
 
-                  <h3>{t("2.1 The beforeSwap Callback")}</h3>
-                  <p>
-                    {t("When a user initiates a prediction transaction via the dashboard:")}
-                  </p>
-                  <ul>
-                    <li>{t("The swap parameters and prediction selection (Team A vs Team B) are compiled and sent to the hook.")}</li>
-                    <li>{t("The")} <code>{t("beforeSwap")}</code> {t("callback extracts the prediction payload (e.g.")} <code>{t("hookData")}</code>).</li>
-                    <li>{t("The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native ETH sent directly into the")} <strong>{t("Match Jackpot Pool")}</strong>.</li>
-                  </ul>
+            <h3>{t("2.1 The beforeSwap Callback")}</h3>
+            <p>
+              {t("When a user initiates a prediction transaction via the dashboard:")}
+            </p>
+            <ul>
+              <li>{t("The swap parameters and prediction selection (Team A vs Team B) are compiled and sent to the hook.")}</li>
+              <li>{t("The")} <code>{t("beforeSwap")}</code> {t("callback extracts the prediction payload (e.g.")} <code>{t("hookData")}</code>).</li>
+              <li>{t("The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native ETH sent directly into the")} <strong>{t("Match Jackpot Pool")}</strong>.</li>
+            </ul>
 
-                  <div className="whitepaper-diagram-box" style={{
+            <div className="whitepaper-diagram-box" style={{
               background: '#000',
               border: '1px solid rgba(255,255,255,0.05)',
               padding: '16px',
@@ -8615,68 +8630,68 @@ export default function App() {
               margin: '16px 0',
               lineHeight: '1.4'
             }}>
-                    {"User Swap Initiated"} <br />
-                    {"  │"}<br />
-                    {"  ▼"}<br />
-                    {"Uniswap V4 PoolManager"}<br />
-                    {"  │  (calls callback)"}<br />
-                    {"  ▼"}<br />
-                    {"beforeSwap() on Hook Contract"}<br />
-                    {"  │"}<br />
-                    {"  ├──► Decodes prediction (Team A/B)"}<br />
-                    {"  ├──► Increments match prediction volume"}<br />
-                    {"  └──► Locks ETH value in Jackpot Pool"}<br />
-                  </div>
+              {"User Swap Initiated"} <br />
+              {"  │"}<br />
+              {"  ▼"}<br />
+              {"Uniswap V4 PoolManager"}<br />
+              {"  │  (calls callback)"}<br />
+              {"  ▼"}<br />
+              {"beforeSwap() on Hook Contract"}<br />
+              {"  │"}<br />
+              {"  ├──► Decodes prediction (Team A/B)"}<br />
+              {"  ├──► Increments match prediction volume"}<br />
+              {"  └──► Locks ETH value in Jackpot Pool"}<br />
+            </div>
 
-                  <h3>{t("2.2 The afterSwap Callback & Shootout Rebates")}</h3>
-                  <p>
-                    {t("Following the completion of the swap, the")} <code>{t("afterSwap")}</code> {t("callback is executed. This initiates a goalkeeper save/shootout simulation. If the user successfully scores a goal against the automated goalkeeper, they are rewarded with a")} <strong>{t("Fee Rebate")}</strong>:
-                  </p>
-                  <ul>
-                    <li><strong>{t("Standard Players:")}</strong> {t("Have a base 50% probability of scoring a goal.")}</li>
-                    <li><strong>{t("GRUSH Token Holders:")}</strong> {t("Holding GRUSH tokens activates the **VIP Shooter Perk**, increasing the success rate to")} <strong>75%</strong> {t("and applying a custom green glow to their UI.")}</li>
-                    <li>{t("On a successful score, a rebate payout (simulated from the pool's accumulated hook fees) is emitted back to the swapper.")}</li>
-                  </ul>
-                </div>
+            <h3>{t("2.2 The afterSwap Callback & Shootout Rebates")}</h3>
+            <p>
+              {t("Following the completion of the swap, the")} <code>{t("afterSwap")}</code> {t("callback is executed. This initiates a goalkeeper save/shootout simulation. If the user successfully scores a goal against the automated goalkeeper, they are rewarded with a")} <strong>{t("Fee Rebate")}</strong>:
+            </p>
+            <ul>
+              <li><strong>{t("Standard Players:")}</strong> {t("Have a base 50% probability of scoring a goal.")}</li>
+              <li><strong>{t("GRUSH Token Holders:")}</strong> {t("Holding GRUSH tokens activates the **VIP Shooter Perk**, increasing the success rate to")} <strong>75%</strong> {t("and applying a custom green glow to their UI.")}</li>
+              <li>{t("On a successful score, a rebate payout (simulated from the pool's accumulated hook fees) is emitted back to the swapper.")}</li>
+            </ul>
+          </div>
 
-                <div className="whitepaper-section">
-                  <h2>{t("3. Game Mechanics & Jackpot Resolution")}</h2>
-                  <div style={{
+          <div className="whitepaper-section">
+            <h2>{t("3. Game Mechanics & Jackpot Resolution")}</h2>
+            <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: '20px',
               marginTop: '12px'
             }}>
-                    <div style={{
+              <div style={{
                 background: 'rgba(255,255,255,0.02)',
                 padding: '16px',
                 borderRadius: '8px',
                 border: '1px solid rgba(255,255,255,0.05)'
               }}>
-                      <h3 style={{
+                <h3 style={{
                   marginTop: 0
                 }}>{t("Accumulating the Jackpot")}</h3>
-                      <p style={{
+                <p style={{
                   fontSize: '0.85rem'
                 }}>
-                        {t("Every shootout prediction ticket locks native ETH directly inside the Hook contract. GoalRush implements a low 2% platform fee on claim payouts, meaning 98% of the jackpot volume is distributed directly to the winners and 2% is allocated to protocol treasury for server, keeper bot, and platform maintenance.")}
-                      </p>
-                    </div>
-                    <div style={{
+                  {t("Every shootout prediction ticket locks native ETH directly inside the Hook contract. GoalRush implements a low 2% platform fee on claim payouts, meaning 98% of the jackpot volume is distributed directly to the winners and 2% is allocated to protocol treasury for server, keeper bot, and platform maintenance.")}
+                </p>
+              </div>
+              <div style={{
                 background: 'rgba(255,255,255,0.02)',
                 padding: '16px',
                 borderRadius: '8px',
                 border: '1px solid rgba(255,255,255,0.05)'
               }}>
-                      <h3 style={{
+                <h3 style={{
                   marginTop: 0
                 }}>{t("Claiming the Pool")}</h3>
-                      <p style={{
+                <p style={{
                   fontSize: '0.85rem'
                 }}>
-                        {t("Once the real-world match is resolved, the oracle updates the winner on-chain. Users who predicted the winning team can call")} <code>{t("claimJackpot")}</code>{t(". The contract automatically calculates their proportional share:")}
-                        <br />
-                        <code style={{
+                  {t("Once the real-world match is resolved, the oracle updates the winner on-chain. Users who predicted the winning team can call")} <code>{t("claimJackpot")}</code>{t(". The contract automatically calculates their proportional share:")}
+                  <br />
+                  <code style={{
                     display: 'block',
                     margin: '8px 0',
                     padding: '4px',
@@ -8685,109 +8700,109 @@ export default function App() {
                     fontSize: '0.75rem',
                     fontFamily: 'var(--font-mono)'
                   }}>
-                          {t("Payout = (UserBet * TotalJackpot) / WinnerTotalVolume")}
-                        </code>
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                    {t("Payout = (UserBet * TotalJackpot) / WinnerTotalVolume")}
+                  </code>
+                </p>
+              </div>
+            </div>
+          </div>
 
-                <div className="whitepaper-section">
-                  <h2>{t("4. The GRUSH Utility Token")}</h2>
-                  <p>
-                    {t("to foster active community prediction participation, the")} <strong>{t("GRUSH")}</strong> {t("utility token acts as a VIP membership Pass on the GoalRush platform.")}
-                  </p>
-                  <ul>
-                    <li><strong>{t("Contract Address:")}</strong> <code>{t("0x422fe165b2da990d18c6dca944b11dcd61519671")}</code></li>
-                    <li><strong>{t("Real-Time Balance Checks:")}</strong> {t("The dApp performs on-chain queries to verify if the connected wallet holds GRUSH.")}</li>
-                    <li><strong>{t("VIP Highlights:")}</strong> {t("Holding any amount of GRUSH applies neon-green aesthetic text shadows to the player's dashboard profile and registers them as a premium member in the prediction logs.")}</li>
-                  </ul>
-                </div>
+          <div className="whitepaper-section">
+            <h2>{t("4. The GRUSH Utility Token")}</h2>
+            <p>
+              {t("to foster active community prediction participation, the")} <strong>{t("GRUSH")}</strong> {t("utility token acts as a VIP membership Pass on the GoalRush platform.")}
+            </p>
+            <ul>
+              <li><strong>{t("Contract Address:")}</strong> <code>{t("0x422fe165b2da990d18c6dca944b11dcd61519671")}</code></li>
+              <li><strong>{t("Real-Time Balance Checks:")}</strong> {t("The dApp performs on-chain queries to verify if the connected wallet holds GRUSH.")}</li>
+              <li><strong>{t("VIP Highlights:")}</strong> {t("Holding any amount of GRUSH applies neon-green aesthetic text shadows to the player's dashboard profile and registers them as a premium member in the prediction logs.")}</li>
+            </ul>
+          </div>
 
-                <div className="whitepaper-section" style={{
+          <div className="whitepaper-section" style={{
             borderTop: '1px solid rgba(255,255,255,0.08)',
             paddingTop: '20px'
           }}>
-                  <h2>{t("5. Open AGI Execution Layer")}</h2>
-                  <p>
-                    {t("GoalRush operates as a secure execution sandbox for an Autonomous Open AGI Agent. Integrating open-source LLMs (like Llama-3) with decentralized finance presents significant prompt-injection security risks. GoalRush mitigates this using a")} <strong>{t("Hard Boundary Execution Architecture")}</strong>.
-                  </p>
-                  <p style={{
+            <h2>{t("5. Open AGI Execution Layer")}</h2>
+            <p>
+              {t("GoalRush operates as a secure execution sandbox for an Autonomous Open AGI Agent. Integrating open-source LLMs (like Llama-3) with decentralized finance presents significant prompt-injection security risks. GoalRush mitigates this using a")} <strong>{t("Hard Boundary Execution Architecture")}</strong>.
+            </p>
+            <p style={{
               marginTop: '12px'
             }}>
-                    {t("The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded ETH transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.")}
-                  </p>
-                  <p style={{
+              {t("The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded ETH transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.")}
+            </p>
+            <p style={{
               marginTop: '12px'
             }}>
-                    <strong>{t("Event-Driven Stealth Operation:")}</strong> {t("The agent operates entirely behind the scenes without exposing its logs to the frontend UI. Rather than inefficiently polling for updates, the swarm is purely event-driven: it wakes up precisely when a match is activated on-chain to place its prediction, and triggers instantly when a match is resolved to autonomously claim its jackpot winnings.")}
-                  </p>
-                  <p style={{
+              <strong>{t("Event-Driven Stealth Operation:")}</strong> {t("The agent operates entirely behind the scenes without exposing its logs to the frontend UI. Rather than inefficiently polling for updates, the swarm is purely event-driven: it wakes up precisely when a match is activated on-chain to place its prediction, and triggers instantly when a match is resolved to autonomously claim its jackpot winnings.")}
+            </p>
+            <p style={{
               marginTop: '12px'
             }}>
-                    <strong>{t("x402 Micropayment Protection:")}</strong> {t("Agent prediction and signal endpoints are protected by the official @x402/express middleware, enforcing standard 402 payment challenges (0.5 USDT on Robinhood Chain Mainnet) in full compliance with Robinhood AI marketplace standards.")}
-                  </p>
-                </div>
+              <strong>{t("x402 Micropayment Protection:")}</strong> {t("Agent prediction and signal endpoints are protected by the official @x402/express middleware, enforcing standard 402 payment challenges (0.5 USDT on Robinhood Chain Mainnet) in full compliance with Robinhood AI marketplace standards.")}
+            </p>
+          </div>
 
-                <div className="whitepaper-section" style={{
+          <div className="whitepaper-section" style={{
             borderTop: '1px solid rgba(255,255,255,0.08)',
             paddingTop: '20px'
           }}>
-                  <h2>{t("6. Security & Verification")}</h2>
-                  <p>
-                    {t("The GoalRush codebase has undergone a complete security check to ensure transparency and prevent loss of user funds:")}
-                  </p>
-                  <ol style={{
+            <h2>{t("6. Security & Verification")}</h2>
+            <p>
+              {t("The GoalRush codebase has undergone a complete security check to ensure transparency and prevent loss of user funds:")}
+            </p>
+            <ol style={{
               paddingLeft: '20px'
             }}>
-                    <li><strong>{t("Multi-Wallet Compatibility:")}</strong> {t("Seamless connection support for all major EVM wallets including Rabby, MetaMask, Phantom, Zerion, and OKX Wallet, automatically prioritizing the official Robinhood Wallet if installed.")}</li>
-                    <li><strong>{t("Non-Custodial Design:")}</strong> {t("The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.")}</li>
-                    <li><strong>{t("Real-Time Sync & Seamless Transitions:")}</strong> {t("Match states poll seamlessly every 15 seconds with automated transition to upcoming matches when games conclude.")}</li>
-                    <li><strong>{t("Token Solidity Verification:")}</strong> {t("The GRUSH token smart contract is fully verified on-chain, protecting the ecosystem from code vulnerabilities.")}</li>
-                    <li><strong>{t("Audited Code Quality:")}</strong> {t("Codebase is standardized with ESLint and Prettier rules, ensuring zero unhandled exceptions or memory leaks.")}</li>
-                  </ol>
-                </div>
-              </div>
-            </section>}
+              <li><strong>{t("Multi-Wallet Compatibility:")}</strong> {t("Seamless connection support for all major EVM wallets including Rabby, MetaMask, Phantom, Zerion, and OKX Wallet, automatically prioritizing the official Robinhood Wallet if installed.")}</li>
+              <li><strong>{t("Non-Custodial Design:")}</strong> {t("The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.")}</li>
+              <li><strong>{t("Real-Time Sync & Seamless Transitions:")}</strong> {t("Match states poll seamlessly every 15 seconds with automated transition to upcoming matches when games conclude.")}</li>
+              <li><strong>{t("Token Solidity Verification:")}</strong> {t("The GRUSH token smart contract is fully verified on-chain, protecting the ecosystem from code vulnerabilities.")}</li>
+              <li><strong>{t("Audited Code Quality:")}</strong> {t("Codebase is standardized with ESLint and Prettier rules, ensuring zero unhandled exceptions or memory leaks.")}</li>
+            </ol>
+          </div>
+        </div>
+      </section>}
 
-          {aboutSubTab === 'contracts' && <section className="code-section">
-              <h3 className="panel-title" style={{
+      {aboutSubTab === 'contracts' && <section className="code-section">
+        <h3 className="panel-title" style={{
           marginTop: 0
         }}>
-                <Code size={20} style={{
+          <Code size={20} style={{
             color: 'var(--color-primary)'
           }} /> {t("Smart Contract Repository")}
-              </h3>
-              <p style={{
+        </h3>
+        <p style={{
           fontSize: '0.85rem',
           color: 'rgba(255,255,255,0.5)',
           marginBottom: '20px'
         }}>
-                {t("Inspect the Solidity hook logic, ERC-721 collectible contracts, and deploy pipelines prepared for Robinhood Chain.")}
-              </p>
+          {t("Inspect the Solidity hook logic, ERC-721 collectible contracts, and deploy pipelines prepared for Robinhood Chain.")}
+        </p>
 
-              <div className="tabs-header" style={{
+        <div className="tabs-header" style={{
           display: 'flex',
           gap: '8px',
           flexWrap: 'wrap',
           marginBottom: '16px'
         }}>
-                <button className={`tab-button ${activeTab === 'collectible' ? 'active' : ''}`} onClick={() => setActiveTab('collectible')}>
-                  {t("AccessPass.sol")}
-                </button>
-                <button className={`tab-button ${activeTab === 'hook' ? 'active' : ''}`} onClick={() => setActiveTab('hook')}>
-                  {t("WorldCupGoalRushHook.sol")}
-                </button>
-                <button className={`tab-button ${activeTab === 'mock' ? 'active' : ''}`} onClick={() => setActiveTab('mock')}>
-                  {t("MockPoolManager.sol")}
-                </button>
-                <button className={`tab-button ${activeTab === 'deploy' ? 'active' : ''}`} onClick={() => setActiveTab('deploy')}>
-                  {t("deploy.js")}
-                </button>
-              </div>
+          <button className={`tab-button ${activeTab === 'collectible' ? 'active' : ''}`} onClick={() => setActiveTab('collectible')}>
+            {t("AccessPass.sol")}
+          </button>
+          <button className={`tab-button ${activeTab === 'hook' ? 'active' : ''}`} onClick={() => setActiveTab('hook')}>
+            {t("WorldCupGoalRushHook.sol")}
+          </button>
+          <button className={`tab-button ${activeTab === 'mock' ? 'active' : ''}`} onClick={() => setActiveTab('mock')}>
+            {t("MockPoolManager.sol")}
+          </button>
+          <button className={`tab-button ${activeTab === 'deploy' ? 'active' : ''}`} onClick={() => setActiveTab('deploy')}>
+            {t("deploy.js")}
+          </button>
+        </div>
 
-              <div className="code-viewer-container">
-                <div className="code-header" style={{
+        <div className="code-viewer-container">
+          <div className="code-header" style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -8795,12 +8810,12 @@ export default function App() {
             padding: '12px 16px',
             borderBottom: '1px solid rgba(255,255,255,0.08)'
           }}>
-                  <span className="code-lang" style={{
+            <span className="code-lang" style={{
               fontSize: '0.85rem',
               fontWeight: 600,
               color: 'rgba(255,255,255,0.6)'
             }}>{t("SOLIDITY")}</span>
-                  <button className="btn-copy" onClick={() => {
+            <button className="btn-copy" onClick={() => {
               const textMap = {
                 collectible: collectibleSolidityCode,
                 hook: currentHookSolidityCode,
@@ -8820,11 +8835,11 @@ export default function App() {
               alignItems: 'center',
               gap: '6px'
             }}>
-                    <Copy size={12} /> {t("Copy Code")}
-                  </button>
-                </div>
+              <Copy size={12} /> {t("Copy Code")}
+            </button>
+          </div>
 
-                <pre className="code-pre" style={{
+          <pre className="code-pre" style={{
             margin: 0,
             padding: '20px',
             background: '#000',
@@ -8833,48 +8848,48 @@ export default function App() {
             maxHeight: '500px',
             overflowY: 'auto'
           }}>
-                  <code style={{
+            <code style={{
               fontFamily: 'var(--font-mono)',
               fontSize: '0.82rem',
               color: '#00ff66',
               lineHeight: '1.5'
             }}>
-                    {activeTab === 'collectible' && collectibleSolidityCode}
-                    {activeTab === 'hook' && currentHookSolidityCode}
-                    {activeTab === 'mock' && mockManagerCode}
-                    {activeTab === 'deploy' && deployScriptCode}
-                  </code>
-                </pre>
-              </div>
-            </section>}
+              {activeTab === 'collectible' && collectibleSolidityCode}
+              {activeTab === 'hook' && currentHookSolidityCode}
+              {activeTab === 'mock' && mockManagerCode}
+              {activeTab === 'deploy' && deployScriptCode}
+            </code>
+          </pre>
+        </div>
+      </section>}
 
-          {aboutSubTab === 'deployment' && <section className="card-bezel" style={{
+      {aboutSubTab === 'deployment' && <section className="card-bezel" style={{
         padding: '24px'
       }}>
-              <h3 className="panel-title" style={{
+        <h3 className="panel-title" style={{
           marginTop: 0
         }}>
-                <Cpu size={20} style={{
+          <Cpu size={20} style={{
             color: 'var(--color-primary)'
           }} /> {t("Deploying on Robinhood Chain Mainnet")}
-              </h3>
+        </h3>
 
-              <div style={{
+        <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '32px',
           marginTop: '16px'
         }}>
-                <div style={{
+          <div style={{
             display: 'flex',
             flexDirection: 'column',
             gap: '16px'
           }}>
-                  <div style={{
+            <div style={{
               display: 'flex',
               gap: '12px'
             }}>
-                    <div style={{
+              <div style={{
                 background: 'var(--color-primary-glow)',
                 width: '28px',
                 height: '28px',
@@ -8887,23 +8902,23 @@ export default function App() {
                 flexShrink: 0,
                 justifyContent: 'center'
               }}>1</div>
-                    <div>
-                      <h4 style={{
+              <div>
+                <h4 style={{
                   fontWeight: 600,
                   fontSize: '0.95rem'
                 }}>{t("Compile with Hardhat")}</h4>
-                      <p style={{
+                <p style={{
                   fontSize: '0.8rem',
                   color: 'rgba(255,255,255,0.5)'
                 }}>{t("Use Solidity compiler 0.8.24 and enable viaIR to resolve stack-too-deep errors during metadata compilation.")}</p>
-                    </div>
-                  </div>
+              </div>
+            </div>
 
-                  <div style={{
+            <div style={{
               display: 'flex',
               gap: '12px'
             }}>
-                    <div style={{
+              <div style={{
                 background: 'var(--color-primary-glow)',
                 width: '28px',
                 height: '28px',
@@ -8916,23 +8931,23 @@ export default function App() {
                 flexShrink: 0,
                 justifyContent: 'center'
               }}>2</div>
-                    <div>
-                      <h4 style={{
+              <div>
+                <h4 style={{
                   fontWeight: 600,
                   fontSize: '0.95rem'
                 }}>{t("Address Mining")}</h4>
-                      <p style={{
+                <p style={{
                   fontSize: '0.8rem',
                   color: 'rgba(255,255,255,0.5)'
                 }}>{t("Uniswap V4 hooks require the deployed address to match flag prefixes. Use address mining tools to find the proper salt for CREATE2.")}</p>
-                    </div>
-                  </div>
+              </div>
+            </div>
 
-                  <div style={{
+            <div style={{
               display: 'flex',
               gap: '12px'
             }}>
-                    <div style={{
+              <div style={{
                 background: 'var(--color-primary-glow)',
                 width: '28px',
                 height: '28px',
@@ -8945,26 +8960,26 @@ export default function App() {
                 flexShrink: 0,
                 justifyContent: 'center'
               }}>3</div>
-                    <div>
-                      <h4 style={{
+              <div>
+                <h4 style={{
                   fontWeight: 600,
                   fontSize: '0.95rem'
                 }}>{t("Verify on Robinhood Chain Explorer")}</h4>
-                      <p style={{
+                <p style={{
                   fontSize: '0.8rem',
                   color: 'rgba(255,255,255,0.5)'
                 }}>{t("Submit contracts to Robinhood Link/Explorer for public verification using ABI-encoded initialization parameters.")}</p>
-                    </div>
-                  </div>
-                </div>
+              </div>
+            </div>
+          </div>
 
-                <div style={{
+          <div style={{
             background: 'rgba(255,255,255,0.02)',
             padding: '16px',
             borderRadius: '12px',
             border: '1px solid rgba(255,255,255,0.05)'
           }}>
-                  <h4 style={{
+            <h4 style={{
               fontWeight: 600,
               fontSize: '0.95rem',
               marginBottom: '12px',
@@ -8972,84 +8987,84 @@ export default function App() {
               alignItems: 'center',
               gap: '8px'
             }}>
-                    <AlertTriangle size={16} style={{
+              <AlertTriangle size={16} style={{
                 color: 'var(--color-primary)'
               }} />
-                    {t("Robinhood Chain RPC Information")}
-                  </h4>
+              {t("Robinhood Chain RPC Information")}
+            </h4>
 
-                  <div style={{
+            <div style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '8px',
               fontSize: '0.8rem'
             }}>
-                    <div style={{
+              <div style={{
                 display: 'flex',
                 justifySelf: 'stretch',
                 justifyContent: 'space-between'
               }}>
-                      <span style={{
+                <span style={{
                   color: 'rgba(255,255,255,0.5)'
                 }}>{t("Network Name")}</span>
-                      <span>{t("Robinhood Chain Mainnet")}</span>
-                    </div>
-                    <div style={{
+                <span>{t("Robinhood Chain Mainnet")}</span>
+              </div>
+              <div style={{
                 display: 'flex',
                 justifySelf: 'stretch',
                 justifyContent: 'space-between'
               }}>
-                      <span style={{
+                <span style={{
                   color: 'rgba(255,255,255,0.5)'
                 }}>{t("RPC URL")}</span>
-                      <span style={{
+                <span style={{
                   fontFamily: 'var(--font-mono)'
                 }}>{t("https://rpc.mainnet.chain.robinhood.com/")}</span>
-                    </div>
-                    <div style={{
+              </div>
+              <div style={{
                 display: 'flex',
                 justifySelf: 'stretch',
                 justifyContent: 'space-between'
               }}>
-                      <span style={{
+                <span style={{
                   color: 'rgba(255,255,255,0.5)'
                 }}>{t("Chain ID")}</span>
-                      <span style={{
+                <span style={{
                   fontFamily: 'var(--font-mono)'
                 }}>196</span>
-                    </div>
-                    <div style={{
+              </div>
+              <div style={{
                 display: 'flex',
                 justifySelf: 'stretch',
                 justifyContent: 'space-between'
               }}>
-                      <span style={{
+                <span style={{
                   color: 'rgba(255,255,255,0.5)'
                 }}>{t("Currency Symbol")}</span>
-                      <span>{t("ETH")}</span>
-                    </div>
-                    <div style={{
+                <span>{t("ETH")}</span>
+              </div>
+              <div style={{
                 display: 'flex',
                 justifySelf: 'stretch',
                 justifyContent: 'space-between'
               }}>
-                      <span style={{
+                <span style={{
                   color: 'rgba(255,255,255,0.5)'
                 }}>{t("Block Explorer")}</span>
-                      <span style={{
+                <span style={{
                   color: 'var(--color-primary)'
                 }}>{t("https://robinhoodchain.blockscout.com")}</span>
-                    </div>
-                  </div>
-                </div>
+              </div>
+            </div>
+          </div>
 
-                <div style={{
+          <div style={{
             background: 'rgba(157, 255, 0, 0.02)',
             padding: '16px',
             borderRadius: '12px',
             border: '1px solid rgba(157, 255, 0, 0.15)'
           }}>
-                  <h4 style={{
+            <h4 style={{
               fontWeight: 600,
               fontSize: '0.95rem',
               marginBottom: '12px',
@@ -9058,26 +9073,26 @@ export default function App() {
               gap: '8px',
               color: 'var(--color-primary)'
             }}>
-                    <Flame size={16} />
-                    {t("Token & NFT Deployment")}
-                  </h4>
+              <Flame size={16} />
+              {t("Token & NFT Deployment")}
+            </h4>
 
-                  <div style={{
+            <div style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '12px',
               fontSize: '0.8rem'
             }}>
-                    <div>
-                      <strong style={{
+              <div>
+                <strong style={{
                   color: 'var(--color-secondary)'
                 }}>{t("GoalRushCollectible (ERC-721) NFT")}</strong>
-                      <p style={{
+                <p style={{
                   color: 'rgba(255, 255, 255, 0.7)',
                   marginTop: '4px'
                 }}>
-                        {t("Deploys a premium tradable NFT allowing user mints for ETH/GRUSH:")}
-                        <code style={{
+                  {t("Deploys a premium tradable NFT allowing user mints for ETH/GRUSH:")}
+                  <code style={{
                     display: 'block',
                     background: 'rgba(0,0,0,0.3)',
                     padding: '4px',
@@ -9085,21 +9100,21 @@ export default function App() {
                     marginTop: '4px',
                     fontFamily: 'var(--font-mono)'
                   }}>{t("npx hardhat run scripts/deploy-collectible.cjs --network xlayerMainnet")}</code>
-                      </p>
-                    </div>
-                    <div style={{
+                </p>
+              </div>
+              <div style={{
                 borderTop: '1px solid rgba(255,255,255,0.08)',
                 paddingTop: '8px'
               }}>
-                      <strong style={{
+                <strong style={{
                   color: 'var(--color-primary)'
                 }}>{t("GoalRushToken (GRUSH) ERC-20")}</strong>
-                      <p style={{
+                <p style={{
                   color: 'rgba(255, 255, 255, 0.7)',
                   marginTop: '4px'
                 }}>
-                        {t("Deploy and manage GoalRush utility token natively using:")}
-                        <code style={{
+                  {t("Deploy and manage GoalRush utility token natively using:")}
+                  <code style={{
                     display: 'block',
                     background: 'rgba(0,0,0,0.3)',
                     padding: '4px',
@@ -9107,122 +9122,122 @@ export default function App() {
                     marginTop: '4px',
                     fontFamily: 'var(--font-mono)'
                   }}>{t("npx hardhat run scripts/deploy-token.cjs --network xlayerMainnet")}</code>
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                </p>
               </div>
-            </section>}
-        </div>}
+            </div>
+          </div>
+        </div>
+      </section>}
+    </div>}
 
-      {/* Simulated X / Twitter OAuth login popup modal */}
-      {isConnectingTwitter && <div className="oauth-modal-backdrop">
-          <div className="oauth-modal-box">
-            <div style={{
+    {/* Simulated X / Twitter OAuth login popup modal */}
+    {isConnectingTwitter && <div className="oauth-modal-backdrop">
+      <div className="oauth-modal-box">
+        <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: '14px'
         }}>
-              <div style={{
+          <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
           }}>
-                <Twitter size={20} style={{
+            <Twitter size={20} style={{
               color: 'var(--color-secondary)'
             }} />
-                <span style={{
+            <span style={{
               fontWeight: 'bold',
               fontSize: '1.1rem'
             }}>{t("Authorize GoalRush")}</span>
-              </div>
-              <button onClick={() => setIsConnectingTwitter(false)} style={{
+          </div>
+          <button onClick={() => setIsConnectingTwitter(false)} style={{
             background: 'transparent',
             border: 'none',
             color: 'rgba(255,255,255,0.4)',
             cursor: 'pointer'
           }}>
-                <X size={16} />
-              </button>
-            </div>
-            
-            <p style={{
+            <X size={16} />
+          </button>
+        </div>
+
+        <p style={{
           fontSize: '0.82rem',
           color: 'rgba(255,255,255,0.6)',
           lineHeight: '1.4',
           marginBottom: '16px'
         }}>
-              {t("GoalRush is requesting permission to access your public profile picture and read public engagement metrics. No write permissions requested.")}
-            </p>
+          {t("GoalRush is requesting permission to access your public profile picture and read public engagement metrics. No write permissions requested.")}
+        </p>
 
-            <div className="oauth-loading-steps">
-              <div className={`oauth-step ${authPopupStep === 1 ? 'active' : authPopupStep > 1 ? 'done' : ''}`}>
-                <div className="oauth-step-dot"></div>
-                <span>{t("Step 1: Connecting X.com secure API...")}</span>
-              </div>
-              <div className={`oauth-step ${authPopupStep === 2 ? 'active' : authPopupStep > 2 ? 'done' : ''}`}>
-                <div className="oauth-step-dot"></div>
-                <span>{t("Step 2: Resolving Twitter handle @")}{twitterUsername}...</span>
-              </div>
-              <div className={`oauth-step ${authPopupStep === 3 ? 'active' : authPopupStep > 3 ? 'done' : ''}`}>
-                <div className="oauth-step-dot"></div>
-                <span>{t("Step 3: Fetching avatar from unavatar.io CDN...")}</span>
-              </div>
-              <div className={`oauth-step ${authPopupStep === 4 ? 'active' : authPopupStep > 4 ? 'done' : ''}`}>
-                <div className="oauth-step-dot"></div>
-                <span>{t("Step 4: Compiling card metadata and stats...")}</span>
-              </div>
-            </div>
+        <div className="oauth-loading-steps">
+          <div className={`oauth-step ${authPopupStep === 1 ? 'active' : authPopupStep > 1 ? 'done' : ''}`}>
+            <div className="oauth-step-dot"></div>
+            <span>{t("Step 1: Connecting X.com secure API...")}</span>
+          </div>
+          <div className={`oauth-step ${authPopupStep === 2 ? 'active' : authPopupStep > 2 ? 'done' : ''}`}>
+            <div className="oauth-step-dot"></div>
+            <span>{t("Step 2: Resolving Twitter handle @")}{twitterUsername}...</span>
+          </div>
+          <div className={`oauth-step ${authPopupStep === 3 ? 'active' : authPopupStep > 3 ? 'done' : ''}`}>
+            <div className="oauth-step-dot"></div>
+            <span>{t("Step 3: Fetching avatar from unavatar.io CDN...")}</span>
+          </div>
+          <div className={`oauth-step ${authPopupStep === 4 ? 'active' : authPopupStep > 4 ? 'done' : ''}`}>
+            <div className="oauth-step-dot"></div>
+            <span>{t("Step 4: Compiling card metadata and stats...")}</span>
+          </div>
+        </div>
 
-            <div style={{
+        <div style={{
           display: 'flex',
           justifyContent: 'center',
           padding: '10px 0',
           alignItems: 'center'
         }}>
-              <div className="badge-dot" style={{
+          <div className="badge-dot" style={{
             animation: 'spin-slow 2s linear infinite',
             marginRight: '8px'
           }}></div>
-              <span style={{
+          <span style={{
             fontSize: '0.78rem',
             color: 'rgba(255,255,255,0.4)'
           }}>
-                {authPopupStep === 4 ? 'Finalizing holographic layout...' : 'Processing connection request...'}
-              </span>
-            </div>
-          </div>
-        </div>}
+            {authPopupStep === 4 ? 'Finalizing holographic layout...' : 'Processing connection request...'}
+          </span>
+        </div>
+      </div>
+    </div>}
 
-      {showWhitepaper && <div className="whitepaper-modal-overlay" onClick={() => setShowWhitepaper(false)}>
-          <div className="whitepaper-modal-container" onClick={e => e.stopPropagation()}>
-            <button className="whitepaper-close-btn" onClick={() => setShowWhitepaper(false)}>
-              <X size={18} />
-            </button>
-            <img src="/whitepaper-banner.png" alt="GoalRush Whitepaper" className="whitepaper-header-banner" />
+    {showWhitepaper && <div className="whitepaper-modal-overlay" onClick={() => setShowWhitepaper(false)}>
+      <div className="whitepaper-modal-container" onClick={e => e.stopPropagation()}>
+        <button className="whitepaper-close-btn" onClick={() => setShowWhitepaper(false)}>
+          <X size={18} />
+        </button>
+        <img src="/whitepaper-banner.png" alt="GoalRush Whitepaper" className="whitepaper-header-banner" />
 
-            <div className="whitepaper-content">
-              <div className="whitepaper-section" style={{
+        <div className="whitepaper-content">
+          <div className="whitepaper-section" style={{
             textAlign: 'center',
             marginBottom: '40px'
           }}>
-                <h1 style={{
+            <h1 style={{
               fontFamily: 'var(--font-heading)',
               color: '#fff',
               fontSize: '2.2rem',
               marginBottom: '8px'
             }}>{t("GOALRUSH WHITEPAPER")}</h1>
-                <p style={{
+            <p style={{
               color: 'var(--color-primary)',
               fontSize: '1rem',
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '2px'
             }}>
-                  {t("Sports Prediction Engine Powered by Uniswap V4")}
-                </p>
-                <div style={{
+              {t("Sports Prediction Engine Powered by Uniswap V4")}
+            </p>
+            <div style={{
               display: 'flex',
               justifyContent: 'center',
               gap: '20px',
@@ -9230,100 +9245,100 @@ export default function App() {
               fontSize: '0.8rem',
               opacity: 0.6
             }}>
-                  <span>{t("Published: July 2026")}</span>
-                  <span>•</span>
-                  <span>{t("Version: 2.0.0")}</span>
-                  <span>•</span>
-                  <span>{t("Chain: Robinhood Chain Mainnet")}</span>
-                </div>
-              </div>
+              <span>{t("Published: July 2026")}</span>
+              <span>•</span>
+              <span>{t("Version: 2.0.0")}</span>
+              <span>•</span>
+              <span>{t("Chain: Robinhood Chain Mainnet")}</span>
+            </div>
+          </div>
 
-              <div className="whitepaper-section">
-                <h2>{t("1. Executive Summary")}</h2>
-                <p>
-                  {t("GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the")} <strong>{t("Robinhood Chain Mainnet")}</strong>{t(", GoalRush utilizes custom")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to route prediction ticket purchases directly through AMM swap events.")}
-                </p>
-                <p style={{
+          <div className="whitepaper-section">
+            <h2>{t("1. Executive Summary")}</h2>
+            <p>
+              {t("GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the")} <strong>{t("Robinhood Chain Mainnet")}</strong>{t(", GoalRush utilizes custom")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to route prediction ticket purchases directly through AMM swap events.")}
+            </p>
+            <p style={{
               marginTop: '12px'
             }}>
-                  {t("By turning trade volumes into prediction tickets and goalie shootout challenges, GoalRush creates a self-sustaining gamified ecosystem. Holders of the")} <strong>{t("GRUSH")}</strong> {t("utility token receive structural gameplay advantages (such as penalty strike success boosts) and unique visual profiles within the application, encouraging organic demand and token retention.")}
-                </p>
-              </div>
+              {t("By turning trade volumes into prediction tickets and goalie shootout challenges, GoalRush creates a self-sustaining gamified ecosystem. Holders of the")} <strong>{t("GRUSH")}</strong> {t("utility token receive structural gameplay advantages (such as penalty strike success boosts) and unique visual profiles within the application, encouraging organic demand and token retention.")}
+            </p>
+          </div>
 
-              <div className="whitepaper-section">
-                <h2>{t("2. Architecture & Uniswap V4 Hook Design")}</h2>
-                <p>
-                  {t("GoalRush integrates directly with Uniswap V4's lifecycle callback hooks to trigger off-chain events and on-chain prediction entries. The core of this system is the")} <code>{t("WorldCupGoalRushHook")}</code> {t("contract.")}
-                </p>
+          <div className="whitepaper-section">
+            <h2>{t("2. Architecture & Uniswap V4 Hook Design")}</h2>
+            <p>
+              {t("GoalRush integrates directly with Uniswap V4's lifecycle callback hooks to trigger off-chain events and on-chain prediction entries. The core of this system is the")} <code>{t("WorldCupGoalRushHook")}</code> {t("contract.")}
+            </p>
 
-                <h3>{t("2.1 The beforeSwap Callback")}</h3>
-                <p>
-                  {t("When a user initiates a prediction transaction via the dashboard:")}
-                </p>
-                <ul>
-                  <li>{t("The swap parameters and prediction selection (Team A vs Team B) are compiled and sent to the hook.")}</li>
-                  <li>{t("The")} <code>{t("beforeSwap")}</code> {t("callback extracts the prediction payload (e.g.")} <code>{t("hookData")}</code>).</li>
-                  <li>{t("The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native ETH sent directly into the")} <strong>{t("Match Jackpot Pool")}</strong>.</li>
-                </ul>
+            <h3>{t("2.1 The beforeSwap Callback")}</h3>
+            <p>
+              {t("When a user initiates a prediction transaction via the dashboard:")}
+            </p>
+            <ul>
+              <li>{t("The swap parameters and prediction selection (Team A vs Team B) are compiled and sent to the hook.")}</li>
+              <li>{t("The")} <code>{t("beforeSwap")}</code> {t("callback extracts the prediction payload (e.g.")} <code>{t("hookData")}</code>).</li>
+              <li>{t("The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native ETH sent directly into the")} <strong>{t("Match Jackpot Pool")}</strong>.</li>
+            </ul>
 
-                <div className="whitepaper-diagram-box">
-                  {"User Swap Initiated"} <br />
-                  {"  │"}<br />
-                  {"  ▼"}<br />
-                  {"Uniswap V4 PoolManager"}<br />
-                  {"  │  (calls callback)"}<br />
-                  {"  ▼"}<br />
-                  {"beforeSwap() on Hook Contract"}<br />
-                  {"  │"}<br />
-                  {"  ├──► Decodes prediction (Team A/B)"}<br />
-                  {"  ├──► Increments match prediction volume"}<br />
-                  {"  └──► Locks ETH value in Jackpot Pool"}<br />
-                </div>
+            <div className="whitepaper-diagram-box">
+              {"User Swap Initiated"} <br />
+              {"  │"}<br />
+              {"  ▼"}<br />
+              {"Uniswap V4 PoolManager"}<br />
+              {"  │  (calls callback)"}<br />
+              {"  ▼"}<br />
+              {"beforeSwap() on Hook Contract"}<br />
+              {"  │"}<br />
+              {"  ├──► Decodes prediction (Team A/B)"}<br />
+              {"  ├──► Increments match prediction volume"}<br />
+              {"  └──► Locks ETH value in Jackpot Pool"}<br />
+            </div>
 
-                <h3>{t("2.2 The afterSwap Callback & Shootout Rebates")}</h3>
-                <p>
-                  {t("Following the completion of the swap, the")} <code>{t("afterSwap")}</code> {t("callback is executed. This initiates a goalkeeper save/shootout simulation. If the user successfully scores a goal against the automated goalkeeper, they are rewarded with a")} <strong>{t("Fee Rebate")}</strong>:
-                </p>
-                <ul>
-                  <li><strong>{t("Standard Players:")}</strong> {t("Have a base 50% probability of scoring a goal.")}</li>
-                  <li><strong>{t("GRUSH Token Holders:")}</strong> {t("Holding GRUSH tokens activates the **VIP Shooter Perk**, increasing the success rate to")} <strong>75%</strong> {t("and applying a custom green glow to their UI.")}</li>
-                  <li>{t("On a successful score, a rebate payout (simulated from the pool's accumulated hook fees) is emitted back to the swapper.")}</li>
-                </ul>
-              </div>
+            <h3>{t("2.2 The afterSwap Callback & Shootout Rebates")}</h3>
+            <p>
+              {t("Following the completion of the swap, the")} <code>{t("afterSwap")}</code> {t("callback is executed. This initiates a goalkeeper save/shootout simulation. If the user successfully scores a goal against the automated goalkeeper, they are rewarded with a")} <strong>{t("Fee Rebate")}</strong>:
+            </p>
+            <ul>
+              <li><strong>{t("Standard Players:")}</strong> {t("Have a base 50% probability of scoring a goal.")}</li>
+              <li><strong>{t("GRUSH Token Holders:")}</strong> {t("Holding GRUSH tokens activates the **VIP Shooter Perk**, increasing the success rate to")} <strong>75%</strong> {t("and applying a custom green glow to their UI.")}</li>
+              <li>{t("On a successful score, a rebate payout (simulated from the pool's accumulated hook fees) is emitted back to the swapper.")}</li>
+            </ul>
+          </div>
 
-              <div className="whitepaper-section">
-                <h2>{t("3. Game Mechanics & Jackpot Resolution")}</h2>
-                <div className="whitepaper-grid-2">
-                  <div style={{
+          <div className="whitepaper-section">
+            <h2>{t("3. Game Mechanics & Jackpot Resolution")}</h2>
+            <div className="whitepaper-grid-2">
+              <div style={{
                 background: 'rgba(255,255,255,0.02)',
                 padding: '16px',
                 borderRadius: '8px',
                 border: '1px solid rgba(255,255,255,0.05)'
               }}>
-                    <h3 style={{
+                <h3 style={{
                   marginTop: 0
                 }}>{t("Accumulating the Jackpot")}</h3>
-                    <p style={{
+                <p style={{
                   fontSize: '0.85rem'
                 }}>
-                      {t("Every shootout prediction ticket locks native ETH directly inside the Hook contract. GoalRush implements a low 2% platform fee on claim payouts, meaning 98% of the jackpot volume is distributed directly to the winners and 2% is allocated to protocol treasury for server, keeper bot, and platform maintenance.")}
-                    </p>
-                  </div>
-                  <div style={{
+                  {t("Every shootout prediction ticket locks native ETH directly inside the Hook contract. GoalRush implements a low 2% platform fee on claim payouts, meaning 98% of the jackpot volume is distributed directly to the winners and 2% is allocated to protocol treasury for server, keeper bot, and platform maintenance.")}
+                </p>
+              </div>
+              <div style={{
                 background: 'rgba(255,255,255,0.02)',
                 padding: '16px',
                 borderRadius: '8px',
                 border: '1px solid rgba(255,255,255,0.05)'
               }}>
-                    <h3 style={{
+                <h3 style={{
                   marginTop: 0
                 }}>{t("Claiming the Pool")}</h3>
-                    <p style={{
+                <p style={{
                   fontSize: '0.85rem'
                 }}>
-                      {t("Once the real-world match is resolved, the oracle updates the winner on-chain. Users who predicted the winning team can call")} <code>{t("claimJackpot")}</code>{t(". The contract automatically calculates their proportional share:")}
-                      <br />
-                      <code style={{
+                  {t("Once the real-world match is resolved, the oracle updates the winner on-chain. Users who predicted the winning team can call")} <code>{t("claimJackpot")}</code>{t(". The contract automatically calculates their proportional share:")}
+                  <br />
+                  <code style={{
                     display: 'block',
                     margin: '8px 0',
                     padding: '4px',
@@ -9332,133 +9347,133 @@ export default function App() {
                     fontSize: '0.75rem',
                     fontFamily: 'var(--font-mono)'
                   }}>
-                        {t("Payout = (UserBet * TotalJackpot) / WinnerTotalVolume")}
-                      </code>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="whitepaper-section">
-                <h2>{t("4. The GRUSH Utility Token")}</h2>
-                <p>
-                  {t("to foster active community prediction participation, the")} <strong>{t("GRUSH")}</strong> {t("utility token acts as a VIP membership Pass on the GoalRush platform.")}
+                    {t("Payout = (UserBet * TotalJackpot) / WinnerTotalVolume")}
+                  </code>
                 </p>
-                <ul>
-                  <li><strong>{t("Contract Address:")}</strong> <code>{t("0x422fe165b2da990d18c6dca944b11dcd61519671")}</code></li>
-                  <li><strong>{t("Real-Time Balance Checks:")}</strong> {t("The dApp performs on-chain queries to verify if the connected wallet holds GRUSH.")}</li>
-                  <li><strong>{t("VIP Highlights:")}</strong> {t("Holding any amount of GRUSH applies neon-green aesthetic text shadows to the player's dashboard profile and registers them as a premium member in the prediction logs.")}</li>
-                </ul>
-              </div>
-
-              <div className="whitepaper-section" style={{
-            borderTop: '1px solid rgba(255,255,255,0.08)',
-            paddingTop: '20px'
-          }}>
-                <h2>{t("5. Open AGI Execution Layer")}</h2>
-                <p>
-                  {t("GoalRush operates as a secure execution sandbox for an Autonomous Open AGI Agent. Integrating open-source LLMs (like Llama-3) with decentralized finance presents significant prompt-injection security risks. GoalRush mitigates this using a")} <strong>{t("Hard Boundary Execution Architecture")}</strong>.
-                </p>
-                <p style={{
-              marginTop: '12px'
-            }}>
-                  {t("The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded ETH transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.")}
-                </p>
-                <p style={{
-              marginTop: '12px'
-            }}>
-                  <strong>{t("Event-Driven Stealth Operation:")}</strong> {t("The agent operates entirely behind the scenes without exposing its logs to the frontend UI. Rather than inefficiently polling for updates, the swarm is purely event-driven: it wakes up precisely when a match is activated on-chain to place its prediction, and triggers instantly when a match is resolved to autonomously claim its jackpot winnings.")}
-                </p>
-                <p style={{
-              marginTop: '12px'
-            }}>
-                  <strong>{t("x402 Micropayment Protection:")}</strong> {t("Agent prediction and signal endpoints are protected by the official @x402/express middleware, enforcing standard 402 payment challenges (0.5 USDT on Robinhood Chain Mainnet) in full compliance with Robinhood AI marketplace standards.")}
-                </p>
-              </div>
-
-              <div className="whitepaper-section" style={{
-            borderTop: '1px solid rgba(255,255,255,0.08)',
-            paddingTop: '20px'
-          }}>
-                <h2>{t("6. Security & Verification")}</h2>
-                <p>
-                  {t("The GoalRush codebase has undergone a complete security check to ensure transparency and prevent loss of user funds:")}
-                </p>
-                <ol style={{
-              paddingLeft: '20px'
-            }}>
-                  <li><strong>{t("Multi-Wallet Compatibility:")}</strong> {t("Seamless connection support for all major EVM wallets including Rabby, MetaMask, Phantom, Zerion, and OKX Wallet, automatically prioritizing the official Robinhood Wallet if installed.")}</li>
-                  <li><strong>{t("Non-Custodial Design:")}</strong> {t("The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.")}</li>
-                  <li><strong>{t("Real-Time Sync & Seamless Transitions:")}</strong> {t("Match states poll seamlessly every 15 seconds with automated transition to upcoming matches when games conclude.")}</li>
-                  <li><strong>{t("Token Solidity Verification:")}</strong> {t("The GRUSH token smart contract is fully verified on-chain, protecting the ecosystem from code vulnerabilities.")}</li>
-                  <li><strong>{t("Audited Code Quality:")}</strong> {t("Codebase is standardized with ESLint and Prettier rules, ensuring zero unhandled exceptions or memory leaks.")}</li>
-                </ol>
               </div>
             </div>
           </div>
-        </div>}
+
+          <div className="whitepaper-section">
+            <h2>{t("4. The GRUSH Utility Token")}</h2>
+            <p>
+              {t("to foster active community prediction participation, the")} <strong>{t("GRUSH")}</strong> {t("utility token acts as a VIP membership Pass on the GoalRush platform.")}
+            </p>
+            <ul>
+              <li><strong>{t("Contract Address:")}</strong> <code>{t("0x422fe165b2da990d18c6dca944b11dcd61519671")}</code></li>
+              <li><strong>{t("Real-Time Balance Checks:")}</strong> {t("The dApp performs on-chain queries to verify if the connected wallet holds GRUSH.")}</li>
+              <li><strong>{t("VIP Highlights:")}</strong> {t("Holding any amount of GRUSH applies neon-green aesthetic text shadows to the player's dashboard profile and registers them as a premium member in the prediction logs.")}</li>
+            </ul>
+          </div>
+
+          <div className="whitepaper-section" style={{
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            paddingTop: '20px'
+          }}>
+            <h2>{t("5. Open AGI Execution Layer")}</h2>
+            <p>
+              {t("GoalRush operates as a secure execution sandbox for an Autonomous Open AGI Agent. Integrating open-source LLMs (like Llama-3) with decentralized finance presents significant prompt-injection security risks. GoalRush mitigates this using a")} <strong>{t("Hard Boundary Execution Architecture")}</strong>.
+            </p>
+            <p style={{
+              marginTop: '12px'
+            }}>
+              {t("The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded ETH transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.")}
+            </p>
+            <p style={{
+              marginTop: '12px'
+            }}>
+              <strong>{t("Event-Driven Stealth Operation:")}</strong> {t("The agent operates entirely behind the scenes without exposing its logs to the frontend UI. Rather than inefficiently polling for updates, the swarm is purely event-driven: it wakes up precisely when a match is activated on-chain to place its prediction, and triggers instantly when a match is resolved to autonomously claim its jackpot winnings.")}
+            </p>
+            <p style={{
+              marginTop: '12px'
+            }}>
+              <strong>{t("x402 Micropayment Protection:")}</strong> {t("Agent prediction and signal endpoints are protected by the official @x402/express middleware, enforcing standard 402 payment challenges (0.5 USDT on Robinhood Chain Mainnet) in full compliance with Robinhood AI marketplace standards.")}
+            </p>
+          </div>
+
+          <div className="whitepaper-section" style={{
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            paddingTop: '20px'
+          }}>
+            <h2>{t("6. Security & Verification")}</h2>
+            <p>
+              {t("The GoalRush codebase has undergone a complete security check to ensure transparency and prevent loss of user funds:")}
+            </p>
+            <ol style={{
+              paddingLeft: '20px'
+            }}>
+              <li><strong>{t("Multi-Wallet Compatibility:")}</strong> {t("Seamless connection support for all major EVM wallets including Rabby, MetaMask, Phantom, Zerion, and OKX Wallet, automatically prioritizing the official Robinhood Wallet if installed.")}</li>
+              <li><strong>{t("Non-Custodial Design:")}</strong> {t("The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.")}</li>
+              <li><strong>{t("Real-Time Sync & Seamless Transitions:")}</strong> {t("Match states poll seamlessly every 15 seconds with automated transition to upcoming matches when games conclude.")}</li>
+              <li><strong>{t("Token Solidity Verification:")}</strong> {t("The GRUSH token smart contract is fully verified on-chain, protecting the ecosystem from code vulnerabilities.")}</li>
+              <li><strong>{t("Audited Code Quality:")}</strong> {t("Codebase is standardized with ESLint and Prettier rules, ensuring zero unhandled exceptions or memory leaks.")}</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>}
 
 
-      {/* Protocol Info Bar */}
-      {currentView === 'dashboard' && <section className="bottom-info-bar" style={{
+    {/* Protocol Info Bar */}
+    {currentView === 'dashboard' && <section className="bottom-info-bar" style={{
       padding: '0 32px 32px 32px',
       maxWidth: '1200px',
       margin: '0 auto'
     }}>
 
 
-              {/* Cyber Info Panel */}
-              <div className="hero-info-grid">
-                <div className="hero-info-card">
-                  <div className="hero-info-card-header">
-                    <Globe size={13} className="hero-info-card-icon" />
-                    <span>{t("NETWORK")}</span>
-                  </div>
-                  <div className="hero-info-card-value">{t("Robinhood Chain")}</div>
-                </div>
+      {/* Cyber Info Panel */}
+      <div className="hero-info-grid">
+        <div className="hero-info-card">
+          <div className="hero-info-card-header">
+            <Globe size={13} className="hero-info-card-icon" />
+            <span>{t("NETWORK")}</span>
+          </div>
+          <div className="hero-info-card-value">{t("Robinhood Chain")}</div>
+        </div>
 
-                <div className="hero-info-card clickable" onClick={() => {
+        <div className="hero-info-card clickable" onClick={() => {
           navigator.clipboard.writeText(HOOK_ADDRESS);
           alert('Hook address copied to clipboard!');
         }} style={{
           borderColor: 'rgba(157, 255, 0, 0.4)',
           background: 'rgba(157, 255, 0, 0.03)'
         }}>
-                  <div className="hero-info-card-header">
-                    <Code size={13} className="hero-info-card-icon" style={{
+          <div className="hero-info-card-header">
+            <Code size={13} className="hero-info-card-icon" style={{
               color: 'var(--color-primary)'
             }} />
-                    <span style={{
+            <span style={{
               color: 'var(--color-primary)'
             }}>{t("HOOK CONTRACT")}</span>
-                  </div>
-                  <div className="hero-info-card-value font-mono">
-                    {HOOK_ADDRESS.slice(0, 6)}...{HOOK_ADDRESS.slice(-4)}
-                    <Copy size={11} className="copy-hint-icon" />
-                  </div>
-                </div>
+          </div>
+          <div className="hero-info-card-value font-mono">
+            {HOOK_ADDRESS.slice(0, 6)}...{HOOK_ADDRESS.slice(-4)}
+            <Copy size={11} className="copy-hint-icon" />
+          </div>
+        </div>
 
-                <div className="hero-info-card">
-                  <div className="hero-info-card-header">
-                    <Activity size={13} className="hero-info-card-icon" />
-                    <span>{t("CALLBACKS")}</span>
-                  </div>
-                  <div className="hero-info-card-value">{t("Swap Triggers")}</div>
-                </div>
+        <div className="hero-info-card">
+          <div className="hero-info-card-header">
+            <Activity size={13} className="hero-info-card-icon" />
+            <span>{t("CALLBACKS")}</span>
+          </div>
+          <div className="hero-info-card-value">{t("Swap Triggers")}</div>
+        </div>
 
-                <div className="hero-info-card">
-                  <div className="hero-info-card-header">
-                    <Flame size={13} className="hero-info-card-icon" style={{
+        <div className="hero-info-card">
+          <div className="hero-info-card-header">
+            <Flame size={13} className="hero-info-card-icon" style={{
               color: 'var(--color-accent)'
             }} />
-                    <span>{t("GOAL ODDS")}</span>
-                  </div>
-                  <div className="hero-info-card-value">{t("5% Chance")}</div>
-                </div>
-              </div>      </section>}
+            <span>{t("GOAL ODDS")}</span>
+          </div>
+          <div className="hero-info-card-value">{t("5% Chance")}</div>
+        </div>
+      </div>      </section>}
 
-      {/* Footer */}
-      <footer className="app-footer" style={{
+    {/* Footer */}
+    <footer className="app-footer" style={{
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -9466,20 +9481,20 @@ export default function App() {
       flexWrap: 'wrap',
       gap: '16px'
     }}>
-        <div style={{
+      <div style={{
         display: 'flex',
         flexDirection: 'column',
         gap: '8px'
       }}>
-          <p>{t("© 2026 GoalRush. Powered by Uniswap V4 & Robinhood Chain.")}</p>
-          <div style={{
+        <p>{t("© 2026 GoalRush. Powered by Uniswap V4 & Robinhood Chain.")}</p>
+        <div style={{
           display: 'flex',
           gap: '12px',
           fontSize: '0.8rem',
           color: 'rgba(255,255,255,0.4)',
           marginTop: '4px'
         }}>
-            <button onClick={() => setShowTerms(true)} style={{
+          <button onClick={() => setShowTerms(true)} style={{
             background: 'none',
             border: 'none',
             padding: 0,
@@ -9488,8 +9503,8 @@ export default function App() {
             fontSize: 'inherit',
             textDecoration: 'underline'
           }}>{t("Terms of Service")}</button>
-            <span>•</span>
-            <button onClick={() => setShowPrivacy(true)} style={{
+          <span>•</span>
+          <button onClick={() => setShowPrivacy(true)} style={{
             background: 'none',
             border: 'none',
             padding: 0,
@@ -9498,14 +9513,14 @@ export default function App() {
             fontSize: 'inherit',
             textDecoration: 'underline'
           }}>{t("Privacy Policy")}</button>
-          </div>
         </div>
-        <div style={{
+      </div>
+      <div style={{
         display: 'flex',
         gap: '16px',
         alignItems: 'center'
       }}>
-          <a href="https://x.com/goalrushdotfun" target="_blank" rel="noopener noreferrer" style={{
+        <a href="https://x.com/goalrushdotfun" target="_blank" rel="noopener noreferrer" style={{
           color: 'rgba(255,255,255,0.6)',
           transition: 'color 0.2s',
           display: 'flex',
@@ -9513,12 +9528,12 @@ export default function App() {
           gap: '6px',
           fontSize: '0.85rem'
         }} onMouseEnter={e => e.currentTarget.style.color = 'var(--color-primary)'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}>
-            <Twitter size={16} /> {t("Twitter / X")}
-          </a>
-          <span style={{
+          <Twitter size={16} /> {t("Twitter / X")}
+        </a>
+        <span style={{
           color: 'rgba(255,255,255,0.15)'
         }}>|</span>
-          <a href="https://t.me/+qwzA9MrSA3I2OTk9" target="_blank" rel="noopener noreferrer" style={{
+        <a href="https://t.me/+qwzA9MrSA3I2OTk9" target="_blank" rel="noopener noreferrer" style={{
           color: 'rgba(255,255,255,0.6)',
           transition: 'color 0.2s',
           display: 'flex',
@@ -9526,12 +9541,12 @@ export default function App() {
           gap: '6px',
           fontSize: '0.85rem'
         }} onMouseEnter={e => e.currentTarget.style.color = 'var(--color-secondary)'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}>
-            <Send size={16} /> {t("Telegram")}
-          </a>
-          <span style={{
+          <Send size={16} /> {t("Telegram")}
+        </a>
+        <span style={{
           color: 'rgba(255,255,255,0.15)'
         }}>|</span>
-          <a href="https://gitlab.com/tanizcoldz/goal-rush" target="_blank" rel="noopener noreferrer" style={{
+        <a href="https://gitlab.com/tanizcoldz/goal-rush" target="_blank" rel="noopener noreferrer" style={{
           color: 'rgba(255,255,255,0.6)',
           transition: 'color 0.2s',
           display: 'flex',
@@ -9539,410 +9554,410 @@ export default function App() {
           gap: '6px',
           fontSize: '0.85rem'
         }} onMouseEnter={e => e.currentTarget.style.color = '#fc6d26'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-              <path d="M23.955 13.587l-1.342-4.135-2.664-8.189c-.135-.423-.73-.423-.867 0L16.418 9.45H7.582L4.919 1.263C4.783.84 4.185.84 4.05 1.26L1.386 9.449.044 13.587c-.121.375.014.789.331 1.023L12 23.054l11.625-8.443c.318-.235.453-.647.33-1.024z" />
-            </svg>
-            {t("GitLab")}
-          </a>
-        </div>
-      </footer>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+            <path d="M23.955 13.587l-1.342-4.135-2.664-8.189c-.135-.423-.73-.423-.867 0L16.418 9.45H7.582L4.919 1.263C4.783.84 4.185.84 4.05 1.26L1.386 9.449.044 13.587c-.121.375.014.789.331 1.023L12 23.054l11.625-8.443c.318-.235.453-.647.33-1.024z" />
+          </svg>
+          {t("GitLab")}
+        </a>
+      </div>
+    </footer>
 
-      {showTerms && <div className="whitepaper-modal-overlay" onClick={() => setShowTerms(false)}>
-          <div className="whitepaper-modal-container" style={{
+    {showTerms && <div className="whitepaper-modal-overlay" onClick={() => setShowTerms(false)}>
+      <div className="whitepaper-modal-container" style={{
         maxWidth: '600px'
       }} onClick={e => e.stopPropagation()}>
-            <button className="whitepaper-close-btn" onClick={() => setShowTerms(false)}>
-              <X size={18} />
-            </button>
-            <div className="whitepaper-content" style={{
+        <button className="whitepaper-close-btn" onClick={() => setShowTerms(false)}>
+          <X size={18} />
+        </button>
+        <div className="whitepaper-content" style={{
           padding: '24px'
         }}>
-              <h2 style={{
+          <h2 style={{
             fontSize: '1.4rem',
             borderBottom: '1px solid rgba(255,255,255,0.1)',
             paddingBottom: '8px',
             marginBottom: '16px'
           }}>{t("Terms of Service")}</h2>
-              <div style={{
+          <div style={{
             fontSize: '0.85rem',
             display: 'flex',
             flexDirection: 'column',
             gap: '12px',
             opacity: 0.85
           }}>
-                <p><strong>{t("Last Updated: June 13, 2026")}</strong></p>
-                <p>{t("Please read these Terms of Service carefully before interacting with the GoalRush platform. By connecting your wallet and participating, you agree to these Terms.")}</p>
+            <p><strong>{t("Last Updated: June 13, 2026")}</strong></p>
+            <p>{t("Please read these Terms of Service carefully before interacting with the GoalRush platform. By connecting your wallet and participating, you agree to these Terms.")}</p>
 
-                <p><strong>{t("1. Educational & Simulation Use Only")}</strong></p>
-                <p>{t("GoalRush is a proof-of-concept dApp built for Robinhood Chain. All on-chain simulations, predictions, and games are provided for educational and gaming purposes. There is no guarantee of profits or rewards.")}</p>
+            <p><strong>{t("1. Educational & Simulation Use Only")}</strong></p>
+            <p>{t("GoalRush is a proof-of-concept dApp built for Robinhood Chain. All on-chain simulations, predictions, and games are provided for educational and gaming purposes. There is no guarantee of profits or rewards.")}</p>
 
-                <p><strong>{t("2. Assumption of Risk")}</strong></p>
-                <p>{t("All transactions are executed directly by the user via their Web3 wallet (Robinhood Wallet) on the public Robinhood Chain blockchain. You accept full responsibility for any native ETH, gas costs, or token interactions. We have zero control over on-chain executions.")}</p>
+            <p><strong>{t("2. Assumption of Risk")}</strong></p>
+            <p>{t("All transactions are executed directly by the user via their Web3 wallet (Robinhood Wallet) on the public Robinhood Chain blockchain. You accept full responsibility for any native ETH, gas costs, or token interactions. We have zero control over on-chain executions.")}</p>
 
-                <p><strong>{t("3. Solvency & Disclaimer")}</strong></p>
-                <p>{t("GoalRush is provided \"as is\" and \"as available\" without any warranties of any kind. We are not liable for any losses, contract bugs, network downtime, or wallet service provider issues.")}</p>
-              </div>
-            </div>
+            <p><strong>{t("3. Solvency & Disclaimer")}</strong></p>
+            <p>{t("GoalRush is provided \"as is\" and \"as available\" without any warranties of any kind. We are not liable for any losses, contract bugs, network downtime, or wallet service provider issues.")}</p>
           </div>
-        </div>}
+        </div>
+      </div>
+    </div>}
 
-      {currentView === 'news' && (() => {
+    {currentView === 'news' && (() => {
       const filteredArticles = newsCategory === 'All' ? newsArticles : newsArticles.filter(art => art.category === newsCategory);
       return <main className="news-container-layout" id="main-content" style={{
         marginTop: '32px'
       }}>
-            {/* SEO Heading structure - Single h1 per view page */}
-            <header className="news-header-section" style={{
+        {/* SEO Heading structure - Single h1 per view page */}
+        <header className="news-header-section" style={{
           marginBottom: '32px'
         }}>
-              <span className="hero-tag">{t("🔥 Live Match Updates")}</span>
-              <h1 className="news-main-title">{t("Daily News Hub")}</h1>
-              <p className="news-subtitle-text">
-                {t("Stay ahead with the latest GoalRush Tournament 2026 match reports, team news, and tournament highlights — updated automatically throughout the day.")}
-              </p>
-            </header>
+          <span className="hero-tag">{t("🔥 Live Match Updates")}</span>
+          <h1 className="news-main-title">{t("Daily News Hub")}</h1>
+          <p className="news-subtitle-text">
+            {t("Stay ahead with the latest GoalRush Tournament 2026 match reports, team news, and tournament highlights — updated automatically throughout the day.")}
+          </p>
+        </header>
 
-            {/* Breaking News Ticker */}
-            {newsArticles.length > 0 && <div className="breaking-news-ticker-container">
-                <span className="ticker-label">{t("BREAKING NEWS")}</span>
-                <div className="ticker-scroll-wrap">
-                  <div className="ticker-scroll-content">
-                    {newsArticles.map((article, idx) => <span key={article.id || idx} className="ticker-item" onClick={() => setActiveNewsArticle(article)}>
-                        ⚡ {article.title} &nbsp;&nbsp;&nbsp;&nbsp;&bull;&nbsp;&nbsp;&nbsp;&nbsp;
-                      </span>)}
-                    {/* Duplicate the items to ensure seamless infinite scroll */}
-                    {newsArticles.map((article, idx) => <span key={`dup-${article.id || idx}`} className="ticker-item" onClick={() => setActiveNewsArticle(article)}>
-                        ⚡ {article.title} &nbsp;&nbsp;&nbsp;&nbsp;&bull;&nbsp;&nbsp;&nbsp;&nbsp;
-                      </span>)}
-                  </div>
-                </div>
-              </div>}
+        {/* Breaking News Ticker */}
+        {newsArticles.length > 0 && <div className="breaking-news-ticker-container">
+          <span className="ticker-label">{t("BREAKING NEWS")}</span>
+          <div className="ticker-scroll-wrap">
+            <div className="ticker-scroll-content">
+              {newsArticles.map((article, idx) => <span key={article.id || idx} className="ticker-item" onClick={() => setActiveNewsArticle(article)}>
+                ⚡ {article.title} &nbsp;&nbsp;&nbsp;&nbsp;&bull;&nbsp;&nbsp;&nbsp;&nbsp;
+              </span>)}
+              {/* Duplicate the items to ensure seamless infinite scroll */}
+              {newsArticles.map((article, idx) => <span key={`dup-${article.id || idx}`} className="ticker-item" onClick={() => setActiveNewsArticle(article)}>
+                ⚡ {article.title} &nbsp;&nbsp;&nbsp;&nbsp;&bull;&nbsp;&nbsp;&nbsp;&nbsp;
+              </span>)}
+            </div>
+          </div>
+        </div>}
 
-            {/* Categories Tab navigation */}
-            <nav className="news-tabs-nav" aria-label="News categories">
-              {['All', 'Match Report', 'Team News'].map(cat => <button key={cat} id={`news-tab-filter-${cat.toLowerCase().replace(' ', '-')}`} onClick={() => setNewsCategory(cat)} className={`news-tab-filter-btn ${newsCategory === cat ? 'active' : ''}`}>
-                  {cat === 'All' ? '📢 All News' : cat === 'Match Report' ? '⚽ Match Reports' : cat === 'Team News' ? '🏃 Team News' : '⚡ Platform Updates'}
-                </button>)}
-            </nav>
+        {/* Categories Tab navigation */}
+        <nav className="news-tabs-nav" aria-label="News categories">
+          {['All', 'Match Report', 'Team News'].map(cat => <button key={cat} id={`news-tab-filter-${cat.toLowerCase().replace(' ', '-')}`} onClick={() => setNewsCategory(cat)} className={`news-tab-filter-btn ${newsCategory === cat ? 'active' : ''}`}>
+            {cat === 'All' ? '📢 All News' : cat === 'Match Report' ? '⚽ Match Reports' : cat === 'Team News' ? '🏃 Team News' : '⚡ Platform Updates'}
+          </button>)}
+        </nav>
 
 
-            {newsLoading && newsArticles.length === 0 ? <div className="news-loading-spinner" id="news-loader">
-                <div className="spinner-glow"></div>
-                <span>{t("Syncing Tournament RSS news feeds...")}</span>
-              </div> : filteredArticles.length === 0 ? <div className="news-empty-state">
-                <span>{t("No news articles found for this category.")}</span>
-              </div> : <section className="news-articles-grid" aria-label="News articles">
-                {/* Featured article - render first article uniquely */}
-                {newsCategory === 'All' && filteredArticles[0] && <article className="featured-news-card" id={`news-article-featured-${filteredArticles[0].id}`}>
-                    <div className="featured-image-wrapper">
-                      <img src={filteredArticles[0].image_url} alt={filteredArticles[0].title} />
-                      <span className="featured-badge">{t("Featured Coverage")}</span>
-                    </div>
-                    <div className="featured-content">
-                      <div className="article-meta-info">
-                        <span className="article-category">{filteredArticles[0].category}</span>
-                        <span className="article-dot">•</span>
-                        <span>{new Date(filteredArticles[0].published_at).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    timeZone: 'America/New_York'
-                  })} {t("ET")}</span>
-                      </div>
-                      <h2 className="featured-title">{filteredArticles[0].title}</h2>
-                      <p className="featured-summary">{filteredArticles[0].summary}</p>
-                      <div className="article-footer-row">
-                        <span className="article-source-tag">{t("Source:")} {filteredArticles[0].source}</span>
-                        <div className="footer-actions-wrap">
-                          <button id={`like-btn-featured-${filteredArticles[0].id}`} className={`article-like-action-btn ${likedArticles.includes(filteredArticles[0].id) ? 'liked' : ''}`} onClick={e => {
+        {newsLoading && newsArticles.length === 0 ? <div className="news-loading-spinner" id="news-loader">
+          <div className="spinner-glow"></div>
+          <span>{t("Syncing Tournament RSS news feeds...")}</span>
+        </div> : filteredArticles.length === 0 ? <div className="news-empty-state">
+          <span>{t("No news articles found for this category.")}</span>
+        </div> : <section className="news-articles-grid" aria-label="News articles">
+          {/* Featured article - render first article uniquely */}
+          {newsCategory === 'All' && filteredArticles[0] && <article className="featured-news-card" id={`news-article-featured-${filteredArticles[0].id}`}>
+            <div className="featured-image-wrapper">
+              <img src={filteredArticles[0].image_url} alt={filteredArticles[0].title} />
+              <span className="featured-badge">{t("Featured Coverage")}</span>
+            </div>
+            <div className="featured-content">
+              <div className="article-meta-info">
+                <span className="article-category">{filteredArticles[0].category}</span>
+                <span className="article-dot">•</span>
+                <span>{new Date(filteredArticles[0].published_at).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  timeZone: 'America/New_York'
+                })} {t("ET")}</span>
+              </div>
+              <h2 className="featured-title">{filteredArticles[0].title}</h2>
+              <p className="featured-summary">{filteredArticles[0].summary}</p>
+              <div className="article-footer-row">
+                <span className="article-source-tag">{t("Source:")} {filteredArticles[0].source}</span>
+                <div className="footer-actions-wrap">
+                  <button id={`like-btn-featured-${filteredArticles[0].id}`} className={`article-like-action-btn ${likedArticles.includes(filteredArticles[0].id) ? 'liked' : ''}`} onClick={e => {
                     e.stopPropagation();
                     handleLikeArticle(filteredArticles[0].id);
                   }}>
-                            ❤️ {filteredArticles[0].likes || 0}
-                          </button>
-                          <button id={`read-more-btn-featured-${filteredArticles[0].id}`} className="btn-primary" style={{
+                    ❤️ {filteredArticles[0].likes || 0}
+                  </button>
+                  <button id={`read-more-btn-featured-${filteredArticles[0].id}`} className="btn-primary" style={{
                     padding: '8px 16px',
                     fontSize: '0.85rem'
                   }} onClick={() => setActiveNewsArticle(filteredArticles[0])}>
-                            {t("Read Article")} <ChevronRight size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </article>}
+                    {t("Read Article")} <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>}
 
-                {/* Grid articles */}
-                <div className="regular-news-grid">
-                  {(newsCategory === 'All' ? filteredArticles.slice(1) : filteredArticles).map(article => <article key={article.id} className="regular-news-card" id={`news-article-card-${article.id}`}>
-                      <div className="card-image-wrap">
-                        <img src={article.image_url} alt={article.title} />
-                        <span className="category-card-badge">{article.category}</span>
-                      </div>
-                      <div className="card-body-content">
-                        <span className="card-date-lbl">
-                          {new Date(article.published_at).toLocaleDateString('en-US', {
+          {/* Grid articles */}
+          <div className="regular-news-grid">
+            {(newsCategory === 'All' ? filteredArticles.slice(1) : filteredArticles).map(article => <article key={article.id} className="regular-news-card" id={`news-article-card-${article.id}`}>
+              <div className="card-image-wrap">
+                <img src={article.image_url} alt={article.title} />
+                <span className="category-card-badge">{article.category}</span>
+              </div>
+              <div className="card-body-content">
+                <span className="card-date-lbl">
+                  {new Date(article.published_at).toLocaleDateString('en-US', {
                     month: 'short',
                     day: 'numeric',
                     timeZone: 'America/New_York'
                   })}
-                        </span>
-                        <h3 className="card-title-heading">{article.title}</h3>
-                        <p className="card-summary-text">{article.summary}</p>
-                        <div className="card-footer-flex">
-                          <button id={`like-btn-card-${article.id}`} className={`article-like-action-btn ${likedArticles.includes(article.id) ? 'liked' : ''}`} onClick={e => {
+                </span>
+                <h3 className="card-title-heading">{article.title}</h3>
+                <p className="card-summary-text">{article.summary}</p>
+                <div className="card-footer-flex">
+                  <button id={`like-btn-card-${article.id}`} className={`article-like-action-btn ${likedArticles.includes(article.id) ? 'liked' : ''}`} onClick={e => {
                     e.stopPropagation();
                     handleLikeArticle(article.id);
                   }}>
-                            ❤️ {article.likes || 0}
-                          </button>
-                          <button id={`read-more-btn-card-${article.id}`} className="btn-secondary" style={{
+                    ❤️ {article.likes || 0}
+                  </button>
+                  <button id={`read-more-btn-card-${article.id}`} className="btn-secondary" style={{
                     padding: '6px 12px',
                     fontSize: '0.8rem',
                     gap: '4px'
                   }} onClick={() => setActiveNewsArticle(article)}>
-                            {t("Read")} <ChevronRight size={12} />
-                          </button>
-                        </div>
-                      </div>
-                    </article>)}
-                </div>
-              </section>}
-
-            {/* Glassmorphic Modal for Reading Full Article */}
-            {activeNewsArticle && <div className="news-modal-overlay" id="news-reader-modal" onClick={() => setActiveNewsArticle(null)} role="dialog" aria-modal="true" aria-labelledby="modal-article-title">
-                <div className="news-modal-box" onClick={e => e.stopPropagation()}>
-                  <button id="close-news-modal-btn" className="modal-close-btn" onClick={() => setActiveNewsArticle(null)} aria-label="Close article reader">
-                    <X size={20} />
+                    {t("Read")} <ChevronRight size={12} />
                   </button>
-                  <div className="modal-banner-image">
-                    <img src={activeNewsArticle.image_url} alt={activeNewsArticle.title} />
-                  </div>
-                  <div className="modal-inner-body">
-                    <div className="modal-meta-row">
-                      <span className="category-card-badge">{activeNewsArticle.category}</span>
-                      <span className="modal-date-tag">
-                        {new Date(activeNewsArticle.published_at).toLocaleDateString('en-US', {
+                </div>
+              </div>
+            </article>)}
+          </div>
+        </section>}
+
+        {/* Glassmorphic Modal for Reading Full Article */}
+        {activeNewsArticle && <div className="news-modal-overlay" id="news-reader-modal" onClick={() => setActiveNewsArticle(null)} role="dialog" aria-modal="true" aria-labelledby="modal-article-title">
+          <div className="news-modal-box" onClick={e => e.stopPropagation()}>
+            <button id="close-news-modal-btn" className="modal-close-btn" onClick={() => setActiveNewsArticle(null)} aria-label="Close article reader">
+              <X size={20} />
+            </button>
+            <div className="modal-banner-image">
+              <img src={activeNewsArticle.image_url} alt={activeNewsArticle.title} />
+            </div>
+            <div className="modal-inner-body">
+              <div className="modal-meta-row">
+                <span className="category-card-badge">{activeNewsArticle.category}</span>
+                <span className="modal-date-tag">
+                  {new Date(activeNewsArticle.published_at).toLocaleDateString('en-US', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                     timeZone: 'America/New_York'
                   })}
-                      </span>
-                    </div>
-                    <h2 className="modal-title-h2" id="modal-article-title">{activeNewsArticle.title}</h2>
-                    <div className="modal-rich-text">
-                      <p className="lead-paragraph">{activeNewsArticle.summary}</p>
-                      <p className="body-paragraph">{activeNewsArticle.content}</p>
-                    </div>
-                    <div className="modal-footer-row">
-                      <div className="source-info">
-                        <span>{t("Publisher:")} <strong>{activeNewsArticle.source}</strong></span>
-                      </div>
-                      <button id={`modal-like-btn-${activeNewsArticle.id}`} className={`article-like-action-btn ${likedArticles.includes(activeNewsArticle.id) ? 'liked' : ''}`} onClick={() => handleLikeArticle(activeNewsArticle.id)}>
-                        {t("❤️ Like Article (")}{activeNewsArticle.likes || 0})
-                      </button>
-                    </div>
-                  </div>
+                </span>
+              </div>
+              <h2 className="modal-title-h2" id="modal-article-title">{activeNewsArticle.title}</h2>
+              <div className="modal-rich-text">
+                <p className="lead-paragraph">{activeNewsArticle.summary}</p>
+                <p className="body-paragraph">{activeNewsArticle.content}</p>
+              </div>
+              <div className="modal-footer-row">
+                <div className="source-info">
+                  <span>{t("Publisher:")} <strong>{activeNewsArticle.source}</strong></span>
                 </div>
-              </div>}
-          </main>;
+                <button id={`modal-like-btn-${activeNewsArticle.id}`} className={`article-like-action-btn ${likedArticles.includes(activeNewsArticle.id) ? 'liked' : ''}`} onClick={() => handleLikeArticle(activeNewsArticle.id)}>
+                  {t("❤️ Like Article (")}{activeNewsArticle.likes || 0})
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>}
+      </main>;
     })()}
 
-      {showPrivacy && <div className="whitepaper-modal-overlay" onClick={() => setShowPrivacy(false)}>
-          <div className="whitepaper-modal-container" style={{
+    {showPrivacy && <div className="whitepaper-modal-overlay" onClick={() => setShowPrivacy(false)}>
+      <div className="whitepaper-modal-container" style={{
         maxWidth: '600px'
       }} onClick={e => e.stopPropagation()}>
-            <button className="whitepaper-close-btn" onClick={() => setShowPrivacy(false)}>
-              <X size={18} />
-            </button>
-            <div className="whitepaper-content" style={{
+        <button className="whitepaper-close-btn" onClick={() => setShowPrivacy(false)}>
+          <X size={18} />
+        </button>
+        <div className="whitepaper-content" style={{
           padding: '24px'
         }}>
-              <h2 style={{
+          <h2 style={{
             fontSize: '1.4rem',
             borderBottom: '1px solid rgba(255,255,255,0.1)',
             paddingBottom: '8px',
             marginBottom: '16px'
           }}>{t("Privacy Policy")}</h2>
-              <div style={{
+          <div style={{
             fontSize: '0.85rem',
             display: 'flex',
             flexDirection: 'column',
             gap: '12px',
             opacity: 0.85
           }}>
-                <p><strong>{t("Last Updated: June 13, 2026")}</strong></p>
-                <p>{t("GoalRush is committed to protecting user privacy. Because our platform is a decentralized application, we operate differently than standard websites.")}</p>
+            <p><strong>{t("Last Updated: June 13, 2026")}</strong></p>
+            <p>{t("GoalRush is committed to protecting user privacy. Because our platform is a decentralized application, we operate differently than standard websites.")}</p>
 
-                <p><strong>{t("1. No Collection of Personal Data")}</strong></p>
-                <p>{t("We do not collect, store, or process any personal identification information (PII) such as your name, email address, IP address, or physical address. There is no sign-up form or database account registration.")}</p>
+            <p><strong>{t("1. No Collection of Personal Data")}</strong></p>
+            <p>{t("We do not collect, store, or process any personal identification information (PII) such as your name, email address, IP address, or physical address. There is no sign-up form or database account registration.")}</p>
 
-                <p><strong>{t("2. Blockchain Publicity")}</strong></p>
-                <p>{t("Your connected wallet address, token balances, and prediction transaction details are broadcasted to the public Robinhood Chain blockchain network. This data is open-source, permanent, and accessible by anyone.")}</p>
+            <p><strong>{t("2. Blockchain Publicity")}</strong></p>
+            <p>{t("Your connected wallet address, token balances, and prediction transaction details are broadcasted to the public Robinhood Chain blockchain network. This data is open-source, permanent, and accessible by anyone.")}</p>
 
-                <p><strong>{t("3. Third-Party Services")}</strong></p>
-                <p>{t("When you interact with the Robinhood Wallet extension or decentralized networks, you are subject to their respective terms and privacy policies. We do not control third-party Web3 infrastructure.")}</p>
-              </div>
-            </div>
+            <p><strong>{t("3. Third-Party Services")}</strong></p>
+            <p>{t("When you interact with the Robinhood Wallet extension or decentralized networks, you are subject to their respective terms and privacy policies. We do not control third-party Web3 infrastructure.")}</p>
           </div>
-        </div>}
+        </div>
+      </div>
+    </div>}
 
-      {/* Floating Glassmorphic Breaking News Toast Notification */}
-      {showNewsToast && latestNewArticle && <div className="breaking-news-toast-notification" onClick={() => {
+    {/* Floating Glassmorphic Breaking News Toast Notification */}
+    {showNewsToast && latestNewArticle && <div className="breaking-news-toast-notification" onClick={() => {
       setActiveNewsArticle(latestNewArticle);
       setShowNewsToast(false);
     }}>
-          <div className="toast-badge">{t("LIVE UPDATE")}</div>
-          <div className="toast-body">
-            <h4 className="toast-title">{latestNewArticle.title}</h4>
-            <p className="toast-text">{latestNewArticle.summary.slice(0, 85)}...</p>
-          </div>
-          <button className="toast-close-btn" onClick={e => {
+      <div className="toast-badge">{t("LIVE UPDATE")}</div>
+      <div className="toast-body">
+        <h4 className="toast-title">{latestNewArticle.title}</h4>
+        <p className="toast-text">{latestNewArticle.summary.slice(0, 85)}...</p>
+      </div>
+      <button className="toast-close-btn" onClick={e => {
         e.stopPropagation();
         setShowNewsToast(false);
       }}>
-            &times;
-          </button>
-        </div>}
+        &times;
+      </button>
+    </div>}
 
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="mobile-bottom-nav">
-        <button className={`bottom-nav-item ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => {
+    {/* Mobile Bottom Navigation Bar */}
+    <nav className="mobile-bottom-nav">
+      <button className={`bottom-nav-item ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => {
         setCurrentView('dashboard');
         window.scrollTo({
           top: 0,
           behavior: 'smooth'
         });
       }}>
-          <Home size={20} />
-          <span>{t("Home")}</span>
-        </button>
-        <button className={`bottom-nav-item ${currentView === 'match-center' ? 'active' : ''}`} onClick={() => {
+        <Home size={20} />
+        <span>{t("Home")}</span>
+      </button>
+      <button className={`bottom-nav-item ${currentView === 'match-center' ? 'active' : ''}`} onClick={() => {
         setCurrentView('match-center');
         window.scrollTo({
           top: 0,
           behavior: 'smooth'
         });
       }}>
-          <Activity size={20} />
-          <span>{t("Matches")}</span>
-        </button>
-        <button className={`bottom-nav-item ${currentView === 'news' ? 'active' : ''}`} onClick={() => setCurrentView('news')}>
-          <Globe size={20} />
-          <span>{t("News")}</span>
-        </button>
-        <button className={`bottom-nav-item ${currentView === 'leaderboard' ? 'active' : ''}`} onClick={() => {
+        <Activity size={20} />
+        <span>{t("Matches")}</span>
+      </button>
+      <button className={`bottom-nav-item ${currentView === 'news' ? 'active' : ''}`} onClick={() => setCurrentView('news')}>
+        <Globe size={20} />
+        <span>{t("News")}</span>
+      </button>
+      <button className={`bottom-nav-item ${currentView === 'leaderboard' ? 'active' : ''}`} onClick={() => {
         setCurrentView('leaderboard');
         setTimeout(() => document.getElementById('leaderboard')?.scrollIntoView({
           behavior: 'smooth'
         }), 100);
       }}>
-          <Award size={20} />
-          <span>{t("Ranks")}</span>
-        </button>
-        <button className={`bottom-nav-item ${currentView === 'robinhood-ai' ? 'active' : ''}`} onClick={() => {
+        <Award size={20} />
+        <span>{t("Ranks")}</span>
+      </button>
+      <button className={`bottom-nav-item ${currentView === 'robinhood-ai' ? 'active' : ''}`} onClick={() => {
         setCurrentView('robinhood-ai');
         window.scrollTo({
           top: 0,
           behavior: 'smooth'
         });
       }}>
-          <Cpu size={20} />
-          <span>{t("GoalRush")}</span>
-        </button>
-        <button className={`bottom-nav-item ${currentView === 'about' ? 'active' : ''}`} onClick={() => setCurrentView('about')}>
-          <HelpCircle size={20} />
-          <span>{t("About")}</span>
-        </button>
-      </nav>
+        <Cpu size={20} />
+        <span>{t("GoalRush")}</span>
+      </button>
+      <button className={`bottom-nav-item ${currentView === 'about' ? 'active' : ''}`} onClick={() => setCurrentView('about')}>
+        <HelpCircle size={20} />
+        <span>{t("About")}</span>
+      </button>
+    </nav>
 
-      {/* How the Swarm Works Modal */}
-      {showSwarmExplainer && (
+    {/* How the Swarm Works Modal */}
+    {showSwarmExplainer && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0,0,0,0.85)',
+        backdropFilter: 'blur(8px)',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px'
+      }}>
         <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.85)',
-          backdropFilter: 'blur(8px)',
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px'
+          background: '#12141d',
+          border: '1px solid rgba(0, 229, 255, 0.3)',
+          borderRadius: '16px',
+          maxWidth: '520px',
+          width: '100%',
+          padding: '24px',
+          color: '#fff',
+          boxShadow: '0 0 40px rgba(0, 229, 255, 0.2)',
+          position: 'relative'
         }}>
-          <div style={{
-            background: '#12141d',
-            border: '1px solid rgba(0, 229, 255, 0.3)',
-            borderRadius: '16px',
-            maxWidth: '520px',
-            width: '100%',
-            padding: '24px',
-            color: '#fff',
-            boxShadow: '0 0 40px rgba(0, 229, 255, 0.2)',
-            position: 'relative'
-          }}>
-            <button
-              onClick={() => setShowSwarmExplainer(false)}
-              style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                background: 'none',
-                border: 'none',
-                color: 'rgba(255,255,255,0.5)',
-                cursor: 'pointer'
-              }}
-            >
-              <X size={20} />
-            </button>
+          <button
+            onClick={() => setShowSwarmExplainer(false)}
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '16px',
+              background: 'none',
+              border: 'none',
+              color: 'rgba(255,255,255,0.5)',
+              cursor: 'pointer'
+            }}
+          >
+            <X size={20} />
+          </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <Cpu size={24} style={{ color: '#00e5ff' }} />
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>{t("How the Swarm Works")}</h3>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+            <Cpu size={24} style={{ color: '#00e5ff' }} />
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>{t("How the Swarm Works")}</h3>
+          </div>
 
-            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: '16px' }}>
-              GoalRush utilizes a multi-agent consensus engine to evaluate football fixtures without human emotional bias. Here is the 3-step pipeline behind every AI prediction signal:
-            </p>
+          <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: '16px' }}>
+            GoalRush utilizes a multi-agent consensus engine to evaluate football fixtures without human emotional bias. Here is the 3-step pipeline behind every AI prediction signal:
+          </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--color-primary)', marginBottom: '4px' }}>
-                  1. 📡 News & Form Ingestion
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
-                  Crawlee agents fetch real-time injury reports, team statistics, and news feeds continuously.
-                </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--color-primary)', marginBottom: '4px' }}>
+                1. 📡 News & Form Ingestion
               </div>
-
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#00e5ff', marginBottom: '4px' }}>
-                  2. 🤖 3-LLM Consensus Voting
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
-                  Three independent LLMs (Llama-3.1-8B, Llama-3.3-70B, Qwen-32B) evaluate tactical matchups and vote on Home, Away, or Draw.
-                </div>
-              </div>
-
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#ff007a', marginBottom: '4px' }}>
-                  3. ⛓️ Smart Contract Execution
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
-                  When a user clicks Copy-Trade, the consensus pick is populated into the Uniswap V4 hookData transaction payload on Robinhood Chain.
-                </div>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
+                Crawlee agents fetch real-time injury reports, team statistics, and news feeds continuously.
               </div>
             </div>
 
-            <div style={{ background: 'rgba(255, 170, 0, 0.1)', border: '1px solid rgba(255, 170, 0, 0.3)', padding: '12px', borderRadius: '8px', fontSize: '0.75rem', color: '#ffaa00', lineHeight: 1.4 }}>
-              <strong>⚠️ Non-Financial Advice (NFA) Disclaimer:</strong> AI models operate on statistical probabilities and cannot guarantee sports outcomes. Prediction markets involve financial risk. Never stake more than you can afford to lose. Always perform your own research (DYOR).
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#00e5ff', marginBottom: '4px' }}>
+                2. 🤖 3-LLM Consensus Voting
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
+                Three independent LLMs (Llama-3.1-8B, Llama-3.3-70B, Qwen-32B) evaluate tactical matchups and vote on Home, Away, or Draw.
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#ff007a', marginBottom: '4px' }}>
+                3. ⛓️ Smart Contract Execution
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
+                When a user clicks Copy-Trade, the consensus pick is populated into the Uniswap V4 hookData transaction payload on Robinhood Chain.
+              </div>
             </div>
           </div>
+
+          <div style={{ background: 'rgba(255, 170, 0, 0.1)', border: '1px solid rgba(255, 170, 0, 0.3)', padding: '12px', borderRadius: '8px', fontSize: '0.75rem', color: '#ffaa00', lineHeight: 1.4 }}>
+            <strong>⚠️ Non-Financial Advice (NFA) Disclaimer:</strong> AI models operate on statistical probabilities and cannot guarantee sports outcomes. Prediction markets involve financial risk. Never stake more than you can afford to lose. Always perform your own research (DYOR).
+          </div>
         </div>
-      )}
-    </div>;
+      </div>
+    )}
+  </div>;
 }

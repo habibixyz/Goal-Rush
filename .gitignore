@@ -20,6 +20,7 @@ cache/
 dist/
 dist-ssr/
 *.local
+vite.config.js.timestamp-*
 
 # Logs
 npm-debug.log*

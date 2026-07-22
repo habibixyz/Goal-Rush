@@ -16,7 +16,8 @@ module.exports = {
   solidity: {
     version: "0.8.24",
     settings: {
-      viaIR: true, evmVersion: 'cancun',
+      viaIR: true,
+      evmVersion: 'cancun',
       optimizer: {
         enabled: true,
         runs: 200,
@@ -24,6 +25,12 @@ module.exports = {
     },
   },
   networks: {
+    // Robinhood Chain Mainnet
+    robinhoodMainnet: {
+      url: process.env.ROBINHOOD_MAINNET_RPC || "https://rpc.mainnet.chain.robinhood.com",
+      chainId: 4663,
+      accounts: [PRIVATE_KEY],
+    },
     // X Layer Testnet
     xlayerTestnet: {
       url: process.env.XLAYER_TESTNET_RPC || "https://testrpc.xlayer.tech",

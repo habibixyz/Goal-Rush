@@ -15,12 +15,12 @@ pragma solidity ^0.8.24;
 
 /**
  * @title WorldCupGoalRushHook
- * @notice A Uniswap V4 Hook designed for the OKX X Layer "Hook the World Cup" Hackathon.
- * It integrates a World Cup Match Prediction Jackpot and a gamified "Goal Rush" swap rebate.
+ * @notice A Uniswap V4 Hook designed for the Robinhood Chain Mainnet.
+ * It integrates a Tournament Match Prediction Jackpot and a gamified "Goal Rush" swap rebate.
  * 
  * Features:
- * 1. World Cup Jackpot: A percentage of each swap fee is sent to a jackpot pool. Users can
- *    predict the winner of the active World Cup match via \`hookData\`. Correct predictions
+ * 1. Match Jackpot: A percentage of each swap fee is sent to a jackpot pool. Users can
+ *    predict the winner of the active Tournament match via \`hookData\`. Correct predictions
  *    share the jackpot when the match is resolved.
  * 2. Goal Rush Rebate: Swaps have a random chance (e.g., 5%) to score a "Goal", which triggers
  *    an immediate fee rebate or cashback reward from the pool.
@@ -56,7 +56,7 @@ contract WorldCupGoalRushHook {
         _;
     }
 
-    // --- World Cup State ---
+    // --- Tournament State ---
     struct Match {
         uint256 id;
         string teamA;
@@ -164,13 +164,13 @@ contract WorldCupGoalRushHook {
             totalGoalsScored++;
             userGoals[swapper]++;
 
-            emit GoalScored(swapper, 10000000000000000); // 0.01 OKB rebate reward
+            emit GoalScored(swapper, 10000000000000000); // 0.01 ETH rebate reward
         }
 
         return (this.afterSwap.selector, 0);
     }
 
-    // --- World Cup Admin Functions ---
+    // --- Tournament Admin Functions ---
 
     function createMatch(
         uint256 _matchId,
@@ -230,7 +230,7 @@ contract WorldCupGoalRushHook {
         emit JackpotClaimed(msg.sender, _matchId, claimAmount);
     }
 
-    // --- Native OKB Deposits and Admin Management ---
+    // --- Native ETH Deposits and Admin Management ---
 
     receive() external payable {}
 
@@ -311,7 +311,7 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   console.log("Deploying with account:", deployer.address);
 
-  // PoolManager and CREATE2 Deployer addresses on X Layer Mainnet
+  // PoolManager and CREATE2 Deployer addresses on Robinhood Chain Mainnet
   const poolManagerAddress = "0x360e68faccca8ca495c1b759fd9eee466db9fb32";
   const deployerAddress = "0x4e59b44847b379578588920cA78FbF26c0B4956C";
   const salt = process.argv[4]; // Mined salt matching BEFORE_SWAP and AFTER_SWAP flags
@@ -331,20 +331,20 @@ async function main() {
   await tx.wait();
   console.log("Successfully deployed contract via CREATE2!");
 }`;
-const readmeMarkdown = `# GoalRush — World Cup Uniswap V4 Hook
+const readmeMarkdown = `# GoalRush — Tournament Uniswap V4 Hook
 
-GoalRush is a gamified Uniswap V4 hook custom-built for the OKX X Layer "Hook the World Cup" Hackathon.
+GoalRush is a gamified Uniswap V4 hook custom-built for the Robinhood Chain Mainnet.
 
 ## Features
-1. **World Cup Prediction Jackpot**: Diverts 0.1% of swap volume to a match winner jackpot pool.
-2. **Goal Rush Rebate**: 5% chance on swap to score a "Goal", awarding an immediate 0.01 OKB fee rebate.
+1. **Tournament Prediction Jackpot**: Diverts 0.1% of swap volume to a match winner jackpot pool.
+2. **Goal Rush Rebate**: 5% chance on swap to score a "Goal", awarding an immediate 0.01 ETH fee rebate.
 3. **CREATE2 Mined Address**: Optimized address mining to satisfy Uniswap V4 hook permission flags.
 
-## Eulr.fun Hackathon Integration (Qualify for $200K USDT)
-1. **Deploy Hook**: Deploy \`WorldCupGoalRushHook\` to X Layer Mainnet.
-2. **Launch Token**: Go to Eulr.fun on X Layer, create a token, and paste your hook address.
+## Eulr.fun Integration
+1. **Deploy Hook**: Deploy \`WorldCupGoalRushHook\` to Robinhood Chain Mainnet.
+2. **Launch Token**: Go to Eulr.fun on Robinhood Chain, create a token, and paste your hook address.
 3. **Graduate**: Reach the bonding curve cap. Eulr.fun automatically initializes the Uniswap V4 pool with your hook.
-4. **Drive Volume**: All swaps on the graduated pool run through your hook. Trade via OKX Wallet to rank!
+4. **Drive Volume**: All swaps on the graduated pool run through your hook. Trade via Robinhood Wallet to rank!
 `;
 const asciiArtText = `
                                          #IF-28082006-FFFFFFFF - BLOCK_LINDY - 3835388 - OR-CHECKSIZE_BLOCK...
@@ -352,8 +352,8 @@ const asciiArtText = `
                               #INDEX-10293882 - BLOCK.NUM - 820388 - BLOCK.WITHDRAW - FEE_REBATE...
                            #beforeSwap() - hookData - prediction[user] - activeMatchId[1] - winner...
                         #afterSwap() - scoreGoal - penaltyRebate - okbBonus - msg.sender - gasLimit...
-                     #Eulr.fun - graduationPool - UniswapV4Pool - XLayerMainnet - 0x360e68faccca...
-                   #196 - OKX_Wallet - TradeVolume - $200K_USDT - prizePool - ranking - scoreGoal...
+                     #Eulr.fun - graduationPool - UniswapV4Pool - RobinhoodChainMainnet - 0x360e68faccca...
+                   #196 - Robinhood_Wallet - TradeVolume - $200K_USDT - prizePool - ranking - scoreGoal...
                  #WorldCupGoalRushHook - 0xb4f86ecb09BE... - poolManager...
                #CREATE2Deployer - mineSalt() - 0x4e59b44847b379578588920cA78FbF26c0B4956C - flags...
              #MockPoolManager - executeMockSwap() - SwapTriggered() - zeroForOne - amountSpecified...
@@ -377,7 +377,7 @@ const asciiArtText = `
       #executeMockSwap - MockPoolManager - SwapTriggered - WorldCupGoalRushHook...
       #deployer - Signers - poolManagerAddress - deployerAddress - salt - bytecode...
       #CREATE2 - Factory - tx.wait() - successfullyDeployedContract - hardhat...
-      #GoalRush - WorldCupUniswapV4Hook - XLayer - hackathon - OKX_Wallet...
+      #GoalRush - WorldCupUniswapV4Hook - RobinhoodChain - protocol - Robinhood_Wallet...
       #bondingCurve - capReached - graduate - realTrading - liquidityMoves...
       #activeMatch.resolved - activeMatch.endTime - activeMatch.totalJackpot - activeMatch...
       #PredictionPlaced - GoalScored - JackpotClaimed - MatchCreated - MatchResolved...
@@ -389,11 +389,11 @@ const asciiArtText = `
       #executeMockSwap - MockPoolManager - SwapTriggered - WorldCupGoalRushHook...
       #deployer - Signers - poolManagerAddress - deployerAddress - salt - bytecode...
       #CREATE2 - Factory - tx.wait() - successfullyDeployedContract - hardhat...
-      #GoalRush - WorldCupUniswapV4Hook - XLayer - hackathon - OKX_Wallet...
+      #GoalRush - WorldCupUniswapV4Hook - RobinhoodChain - protocol - Robinhood_Wallet...
       #bondingCurve - capReached - graduate - realTrading - liquidityMoves...
                         #afterSwap() - scoreGoal - penaltyRebate - okbBonus - msg.sender - gasLimit...
-                     #Eulr.fun - graduationPool - UniswapV4Pool - XLayerMainnet - 0x360e68faccca...
-                   #196 - OKX_Wallet - TradeVolume - $200K_USDT - prizePool - ranking - scoreGoal...
+                     #Eulr.fun - graduationPool - UniswapV4Pool - RobinhoodChainMainnet - 0x360e68faccca...
+                   #196 - Robinhood_Wallet - TradeVolume - $200K_USDT - prizePool - ranking - scoreGoal...
                  #WorldCupGoalRushHook - 0xb4f86ecb09BE... - poolManager...
                #CREATE2Deployer - mineSalt() - 0x4e59b44847b379578588920cA78FbF26c0B4956C - flags...
              #MockPoolManager - executeMockSwap() - SwapTriggered() - zeroForOne - amountSpecified...
@@ -621,27 +621,27 @@ const getCleanAbbreviation = (teamName, flagCode) => {
   return teamName?.slice(0, 3).toUpperCase() || 'UN';
 };
 
-// Helper to get the correct OKX Wallet provider strictly
+// Helper to get the correct Robinhood Wallet provider strictly
 const getProvider = () => {
   if (typeof window !== 'undefined') {
     // 1. Check direct okxwallet injector
     if (window.okxwallet) return window.okxwallet;
 
-    // 2. Check if window.ethereum is OKX Wallet
+    // 2. Check if window.ethereum is Robinhood Wallet
     if (window.ethereum) {
-      if (window.ethereum.isOKXWallet) return window.ethereum;
+      if (window.ethereum.isRobinhoodWallet) return window.ethereum;
 
-      // 3. Handle multi-provider injection setups (e.g. OKX + MetaMask coexistence)
+      // 3. Handle multi-provider injection setups (e.g. Robinhood + MetaMask coexistence)
       if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
-        const okx = window.ethereum.providers.find(p => p.isOKXWallet);
-        if (okx) return okx;
+        const robinhood = window.ethereum.providers.find(p => p.isRobinhoodWallet);
+        if (robinhood) return robinhood;
       }
     }
   }
   return null;
 };
-const HOOK_ADDRESS = '0x700656337a252A004Ca0B170828f4adEaa680288';
-const ROUTER_ADDRESS = '0x8f3e9B45a377cEa9fCeC9509e82EEe237e67ba24';
+const HOOK_ADDRESS = '0x737b827dF98aC380C447dC54aCcDF415B01DB6a6';   // GoalRush v2 — Robinhood Chain
+const ROUTER_ADDRESS = '0xbd2386017d075CC6031195ad623e3E923bb1FCFf'; // Router v2 (with batch support) — Robinhood Chain
 const GRUSH_TOKEN_ADDRESS = '0x422fe165b2da990d18c6dca944b11dcd61519671';
 const BACKEND_API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001/api' : 'https://goal-rush-backend-production.up.railway.app/api';
 
@@ -688,7 +688,7 @@ const formatLocalDate = timestamp => {
 };
 const TODAY_LABEL = getTodayLabel();
 const TOMORROW_LABEL = getTomorrowLabel();
-const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
+const rpcProvider = new ethers.JsonRpcProvider("https://rpc.mainnet.chain.robinhood.com/");
 export default function App() {
   const [lang, setLang] = useState(getGlobalLanguage());
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -756,12 +756,12 @@ export default function App() {
   const [matchId, setMatchId] = useState(1);
   const [prediction, setPrediction] = useState(1); // 1 = Argentina, 2 = France
   const [swapAmount, setSwapAmount] = useState('0.001');
-  const [selectedToken, setSelectedToken] = useState('OKB');
+  const [selectedToken, setSelectedToken] = useState('ETH');
   const [jackpot, setJackpot] = useState(0);
   const [grushJackpot, setGrushJackpot] = useState(0);
-  const [teamAVotes, setTeamAVotes] = useState(0); // Argentina volume OKB
-  const [teamBVotes, setTeamBVotes] = useState(0); // France volume OKB
-  const [teamDrawVotes, setTeamDrawVotes] = useState(0); // Draw volume OKB
+  const [teamAVotes, setTeamAVotes] = useState(0); // Argentina volume ETH
+  const [teamBVotes, setTeamBVotes] = useState(0); // France volume ETH
+  const [teamDrawVotes, setTeamDrawVotes] = useState(0); // Draw volume ETH
   const [teamAGrushVotes, setTeamAGrushVotes] = useState(0);
   const [teamBGrushVotes, setTeamBGrushVotes] = useState(0);
   const [teamDrawGrushVotes, setTeamDrawGrushVotes] = useState(0);
@@ -778,6 +778,10 @@ export default function App() {
   const [selectedMatchCenterId, setSelectedMatchCenterId] = useState(10);
   const [matchFilter, setMatchFilter] = useState('all');
   const [matchCenterSubTab, setMatchCenterSubTab] = useState('lineup');
+  const [betSlip, setBetSlip] = useState([]); // Array of { matchId, matchName, teamA, teamB, marketKey, marketLabel, optionLabel, odds, stake }
+  const [placedBets, setPlacedBets] = useState({}); // { [betKey]: true }
+  const [betSlipStatus, setBetSlipStatus] = useState(null); // { tone: 'pending'|'success'|'danger', message: '' }
+  const [isSubmittingBets, setIsSubmittingBets] = useState(false);
   const [competitionCategory, setCompetitionCategory] = useState('world-cup');
 
   // Daily News States
@@ -808,7 +812,7 @@ export default function App() {
     second: '2-digit',
     hour12: true,
     timeZone: 'America/New_York'
-  })} ET] > Connected to X Layer mempool & Sentient AGI Swarm.`]);
+  })} ET] > Connected to Robinhood Chain mempool & Sentient AGI Swarm.`]);
   const [isIngesting, setIsIngesting] = useState(false);
 
   // Twitter Card states
@@ -824,8 +828,8 @@ export default function App() {
   const GOALRUSH_ASP_ID = '#4564';
   const GOALRUSH_ASP_STATUS = 'Pending resubmission';
   const GOALRUSH_ASP_FEE = '0.005 USDT';
-  const GOALRUSH_ASP_NETWORK = 'X Layer (eip155:196)';
-  const GOALRUSH_ASP_ASSET = '0x1E4a5963aBFD975d8c9021ce480b42188849D41d'; // Real USDT on X Layer
+  const GOALRUSH_ASP_NETWORK = 'Robinhood Chain (eip155:4663)';
+  const GOALRUSH_ASP_ASSET = '0x1E4a5963aBFD975d8c9021ce480b42188849D41d'; // Real USDT on Robinhood Chain
   const [grushPriceUsd, setGrushPriceUsd] = useState(null);
   const [viewedCard, setViewedCard] = useState(null); // For viewing other users' cards from gallery
 
@@ -857,7 +861,7 @@ export default function App() {
     fetchAISignal();
   }, [activeMatch?.id, activeMatch?.teamA, activeMatch?.teamB]);
 
-  // OKX.AI Hub state variables
+  // GoalRush Hub state variables
   const [evaluatorStaked, setEvaluatorStaked] = useState(100);
   const [evaluatorAccuracy, setEvaluatorAccuracy] = useState(94);
   const [evaluatorBounties, setEvaluatorBounties] = useState(0);
@@ -879,7 +883,7 @@ export default function App() {
   const [terminalHistory, setTerminalHistory] = useState(() => {
     const isUser = localStorage.getItem('okx_registered_user') === 'true';
     const statusLine = isUser ? `Status: ONLINE | User ID: Active | ASP: ${GOALRUSH_ASP_ID} (${GOALRUSH_ASP_STATUS})` : `Status: ONLINE | ASP: ${GOALRUSH_ASP_ID} (${GOALRUSH_ASP_STATUS})`;
-    return ['ONCHAIN OS v1.2.0 - OKX.AI SECURE COMMAND CONSOLE', '-------------------------------------------------', 'Type help or use the quick buttons to get started.', statusLine, ''];
+    return ['ONCHAIN OS v1.2.0 - GoalRush SECURE COMMAND CONSOLE', '-------------------------------------------------', 'Type help or use the quick buttons to get started.', statusLine, ''];
   });
   const [isTerminalLoading, setIsTerminalLoading] = useState(false);
   const [selectedCaseIndex, setSelectedCaseIndex] = useState(null);
@@ -1039,7 +1043,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [currentView]);
   useEffect(() => {
-    if (currentView === 'okx-ai') {
+    if (currentView === 'robinhood-ai') {
       fetchAgentData();
       const interval = setInterval(fetchAgentData, 5000); // Poll agent stats/fulfillments every 5s
       return () => clearInterval(interval);
@@ -1100,27 +1104,27 @@ export default function App() {
 
   // SEO Optimization: Dynamic Title & Meta Tag updates
   useEffect(() => {
-    let title = "GoalRush — World Cup Uniswap V4 Hook & Jackpot on X Layer";
-    let metaDesc = "GoalRush is a World Cup-themed Uniswap V4 hook featuring match prediction jackpots and gamified swap rebate penalties on OKX X Layer.";
+    let title = "GoalRush — Tournament Uniswap V4 Hook & Jackpot on Robinhood Chain";
+    let metaDesc = "GoalRush is a Sports-themed Uniswap V4 hook featuring match prediction jackpots and gamified swap rebate penalties on Robinhood Chain.";
     if (currentView === 'dashboard' || currentView === 'leaderboard') {
-      title = currentView === 'leaderboard' ? "Leaderboard | GoalRush — World Cup Hook & Jackpot" : "Dashboard | GoalRush — World Cup Hook & Jackpot";
-      metaDesc = "View active World Cup prediction jackpots, simulate swaps, track goals scored, and see Leaderboard rankings on GoalRush.";
+      title = currentView === 'leaderboard' ? "Leaderboard | GoalRush — Tournament Hook & Jackpot" : "Dashboard | GoalRush — Tournament Hook & Jackpot";
+      metaDesc = "View active Tournament prediction jackpots, simulate swaps, track goals scored, and see Leaderboard rankings on GoalRush.";
     } else if (currentView === 'match-center') {
-      title = "Match Center | GoalRush — Live World Cup Scores & Lineups";
-      metaDesc = "Get live World Cup scores, schedules, team lineups, match statistics, and place your on-chain predictions on GoalRush.";
+      title = "Match Center | GoalRush — Live Tournament Scores & Lineups";
+      metaDesc = "Get live Tournament scores, schedules, team lineups, match statistics, and place your on-chain predictions on GoalRush.";
     } else if (currentView === 'about') {
       title = "About & Docs | GoalRush Uniswap V4 Hook Technical Whitepaper";
       metaDesc = "Read the technical whitepaper, inspect smart contracts, and explore the CREATE2 deployment specs of the GoalRush V4 hook.";
-    } else if (currentView === 'okx-ai') {
-      title = "OKX.AI Agentic Portal | GoalRush Autonomous Predictions Swarm";
+    } else if (currentView === 'robinhood-ai') {
+      title = "GoalRush Agentic Portal | GoalRush Autonomous Predictions Swarm";
       metaDesc = "Participate in the on-chain AI agent economy. Sell prediction services, run Onchain OS terminal prompts, and simulate Evaluator arbitration.";
     } else if (currentView === 'news') {
       if (activeNewsArticle) {
-        title = `${activeNewsArticle.title} | GoalRush World Cup Daily News`;
+        title = `${activeNewsArticle.title} | GoalRush Daily Sports News`;
         metaDesc = activeNewsArticle.summary;
       } else {
-        title = "Daily News Hub | GoalRush — Latest FIFA World Cup Coverage";
-        metaDesc = "Get the latest 2026 FIFA World Cup matches, match analysis, player card updates, and GoalRush announcements directly on X Layer.";
+        title = "Daily News Hub | GoalRush — Latest Tournament Coverage";
+        metaDesc = "Get the latest 2026 Tournament matches, match analysis, player card updates, and GoalRush announcements directly on Robinhood Chain.";
       }
     }
     document.title = title;
@@ -1169,8 +1173,8 @@ export default function App() {
       schemaData = {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
-        "name": "GoalRush World Cup Daily News Hub",
-        "description": "Daily news, updates, match reports, and analysis for the FIFA World Cup on OKX X Layer.",
+        "name": "GoalRush Daily Sports News Hub",
+        "description": "Daily news, updates, match reports, and analysis for the GoalRush League on Robinhood Chain.",
         "url": `${window.location.origin}/#news`
       };
     } else {
@@ -1180,7 +1184,7 @@ export default function App() {
         "name": "GoalRush",
         "operatingSystem": "All",
         "applicationCategory": "DeFiApplication",
-        "description": "A World Cup-themed Uniswap V4 hook featuring match prediction jackpots and gamified swap rebate penalties on X Layer.",
+        "description": "A Sports-themed Uniswap V4 hook featuring match prediction jackpots and gamified swap rebate penalties on Robinhood Chain.",
         "offers": {
           "@type": "Offer",
           "price": "0.0"
@@ -1317,7 +1321,7 @@ export default function App() {
     const vipInfluencers = ['waleswoosh', 'chillpill', 'vitalik', 'elonmusk', 'cz_binance', 'sandeepnailwal', 'cobie', 'ansem', 'gainzy', 'rovercrc'];
 
     // Fallback if handle contains special keywords or is a VIP influencer -> promote to Legendary!
-    if (cleanName.includes('okx') || cleanName.includes('xlayer') || cleanName.includes('grush') || cleanName.includes('uniswap') || vipInfluencers.includes(cleanName)) {
+    if (cleanName.includes('robinhood') || cleanName.includes('robinhood') || cleanName.includes('grush') || cleanName.includes('uniswap') || vipInfluencers.includes(cleanName)) {
       card_type = 'legendary';
     }
 
@@ -1458,13 +1462,13 @@ export default function App() {
         setMintStatus('Confirming GRUSH Mint Transaction in wallet...');
         tx = await nftContract.mintWithGrush(twitterCard.username, twitterCard.posAbbr || 'ST', twitterCard.overall, twitterCard.defi_iq, twitterCard.prediction_power, twitterCard.jackpot_luck, twitterCard.degen_level, twitterCard.swap_speed, twitterCard.x_factor, cardTypeLabel, metadataUri);
       } else {
-        // Mint with OKB
+        // Mint with ETH
         const okbPrice = ethers.parseEther('0.002');
         const balance = await provider.getBalance(userAddress);
         if (balance < okbPrice) {
-          throw new Error("Insufficient OKB balance (0.002 OKB required).");
+          throw new Error("Insufficient ETH balance (0.002 ETH required).");
         }
-        setMintStatus('Confirming OKB Mint Transaction in wallet...');
+        setMintStatus('Confirming ETH Mint Transaction in wallet...');
         tx = await nftContract.mintWithOKB(twitterCard.username, twitterCard.posAbbr || 'ST', twitterCard.overall, twitterCard.defi_iq, twitterCard.prediction_power, twitterCard.jackpot_luck, twitterCard.degen_level, twitterCard.swap_speed, twitterCard.x_factor, cardTypeLabel, metadataUri, {
           value: okbPrice
         });
@@ -1506,7 +1510,7 @@ export default function App() {
         tx_hash: tx.hash
       };
       setTwitterCard(updatedCard);
-      alert(`🎉 Successfully minted your Player Card as a real ERC-721 NFT on X Layer!`);
+      alert(`🎉 Successfully minted your Player Card as a real ERC-721 NFT on Robinhood Chain!`);
       updateGrushBalance(userAddress);
       fetchRecentCards();
     } catch (err) {
@@ -2468,7 +2472,7 @@ export default function App() {
               fontSize: '1.25rem',
               fontWeight: 800,
               color: 'var(--color-secondary)'
-            }}>{displayJackpot.toFixed(4)} {t("OKB")}</div>
+            }}>{displayJackpot.toFixed(4)} {t("ETH")}</div>
               <div style={{
               fontSize: '0.7rem',
               color: 'rgba(255,255,255,0.3)'
@@ -2490,7 +2494,7 @@ export default function App() {
               fontSize: '1.25rem',
               fontWeight: 800,
               color: '#fff'
-            }}>{totalVotes.toFixed(4)} {t("OKB")}</div>
+            }}>{totalVotes.toFixed(4)} {t("ETH")}</div>
               <div style={{
               fontSize: '0.7rem',
               color: 'rgba(255,255,255,0.3)'
@@ -2729,7 +2733,7 @@ export default function App() {
                 lineHeight: '1.4',
                 fontWeight: 600
               }}>
-                    {t("🎉 You won! Click above to claim your OKB/GRUSH rewards on the dashboard.")}
+                    {t("🎉 You won! Click above to claim your ETH/GRUSH rewards on the dashboard.")}
                   </div>
                 </>;
           } else {
@@ -2765,208 +2769,252 @@ export default function App() {
             </button>}
         </div>
 
-        <div className="card-bezel">
-          <div style={{
-          display: 'flex',
-          gap: '16px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          marginBottom: '20px',
-          paddingBottom: '4px'
+        {/* ─── LIVE MICRO-PREDICTION MARKETS ─── */}
+        <div style={{
+          background: 'linear-gradient(145deg, rgba(12,12,16,0.95) 0%, rgba(20,26,20,0.98) 100%)',
+          border: '1px solid rgba(157,255,0,0.12)',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          backdropFilter: 'blur(20px)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)'
         }}>
-            <button onClick={() => setMatchCenterSubTab('lineup')} style={{
-            background: 'transparent',
-            border: 'none',
-            color: matchCenterSubTab === 'lineup' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
-            fontFamily: 'var(--font-display)',
-            fontWeight: 700,
-            fontSize: '0.9rem',
-            padding: '8px 4px',
-            cursor: 'pointer',
-            borderBottom: matchCenterSubTab === 'lineup' ? '2px solid var(--color-primary)' : '2px solid transparent',
-            transition: 'var(--transition-smooth)'
+          {/* Header */}
+          <div style={{
+            padding: '14px 18px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'rgba(157,255,0,0.03)'
           }}>
-              {t("Lineups")}
-            </button>
-            <button onClick={() => setMatchCenterSubTab('stats')} style={{
-            background: 'transparent',
-            border: 'none',
-            color: matchCenterSubTab === 'stats' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.5)',
-            fontFamily: 'var(--font-display)',
-            fontWeight: 700,
-            fontSize: '0.9rem',
-            padding: '8px 4px',
-            cursor: 'pointer',
-            borderBottom: matchCenterSubTab === 'stats' ? '2px solid var(--color-primary)' : '2px solid transparent',
-            transition: 'var(--transition-smooth)'
-          }}>
-              {t("Match Stats")}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '1rem' }}>⚡</span>
+              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.95rem', color: '#fff', letterSpacing: '0.3px' }}>Live Micro-Markets</span>
+              {m.isLive && m.minute !== 'FT' && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.6rem', background: 'rgba(255,51,68,0.15)', color: '#ff3344', border: '1px solid rgba(255,51,68,0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <span style={{ width: '5px', height: '5px', background: '#ff3344', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></span>
+                  LIVE
+                </span>
+              )}
+            </div>
+            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>Min stake: 0.0001 ETH</span>
           </div>
 
-          {matchCenterSubTab === 'lineup' && <div>
-              <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '12px'
-          }}>
-                <span style={{
-              fontSize: '0.78rem',
-              color: 'rgba(255,255,255,0.5)'
-            }}>{t("Formation:")} <strong>{t("4-3-3 (Classic)")}</strong></span>
-                <div style={{
+          {/* Markets Grid */}
+          <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {[
+              { key: 'next_goal', icon: '⚽', label: 'Next Goal', options: [{ label: m.teamA, color: 'var(--color-primary)', odds: '1.85' }, { label: 'No Goal', color: 'rgba(255,255,255,0.5)', odds: '2.10' }, { label: m.teamB, color: '#ff007a', odds: '2.40' }] },
+              { key: 'next_corner', icon: '🚩', label: 'Next Corner', options: [{ label: m.teamA, color: 'var(--color-primary)', odds: '1.70' }, { label: m.teamB, color: '#ff007a', odds: '2.05' }] },
+              { key: 'next_card', icon: '🟨', label: 'Next Card', options: [{ label: m.teamA + ' Player', color: '#ffaa00', odds: '2.20' }, { label: m.teamB + ' Player', color: '#ff3344', odds: '1.95' }] },
+              { key: 'halftime', icon: '🕐', label: 'Half-Time Result', options: [{ label: m.teamA, color: 'var(--color-primary)', odds: '2.30' }, { label: 'Draw', color: 'rgba(255,255,255,0.5)', odds: '2.00' }, { label: m.teamB, color: '#ff007a', odds: '3.10' }] },
+              { key: 'over_under', icon: '📊', label: 'Over/Under 2.5 Goals', options: [{ label: 'Over 2.5', color: '#00e5ff', odds: '1.90' }, { label: 'Under 2.5', color: '#ff007a', odds: '1.95' }] },
+              { key: 'next_scorer', icon: '🌟', label: 'Next Scorer (Team)', options: [{ label: m.teamA, color: 'var(--color-primary)', odds: '1.75' }, { label: m.teamB, color: '#ff007a', odds: '2.25' }] }
+            ].map(market => {
+              const betKey = `${m.id}_${market.key}`;
+              const cartItem = betSlip.find(item => item.matchId === m.id && item.marketKey === market.key);
+              const picked = cartItem ? cartItem.optionLabel : null;
+              const placed = placedBets[betKey];
+              return (
+                <div key={market.key} style={{
+                  background: picked ? 'rgba(157,255,0,0.04)' : 'rgba(255,255,255,0.02)',
+                  border: picked ? '1px solid rgba(157,255,0,0.2)' : '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: '12px',
+                  padding: '12px 14px',
+                  transition: 'all 0.2s'
+                }}>
+                  {/* Market Row Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                      <span style={{ fontSize: '0.85rem' }}>{market.icon}</span>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.2px' }}>{market.label}</span>
+                    </div>
+                    {placed && (
+                      <span style={{ fontSize: '0.6rem', background: 'rgba(157,255,0,0.15)', color: 'var(--color-primary)', border: '1px solid rgba(157,255,0,0.3)', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>PLACED ✓</span>
+                    )}
+                  </div>
+
+                  {/* Odds Buttons */}
+                  <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
+                    {market.options.map(opt => {
+                      const isChosen = picked === opt.label;
+                      return (
+                        <button
+                          key={opt.label}
+                          disabled={placed}
+                          onClick={() => {
+                            if (!placed) {
+                              if (isChosen) {
+                                handleBetSlipRemove(m.id, market.key);
+                              } else {
+                                handleBetSlipAdd(m, market.key, market.label, opt.label, opt.odds);
+                              }
+                            }
+                          }}
+                          style={{
+                            flex: 1,
+                            minWidth: '80px',
+                            padding: '9px 10px',
+                            background: isChosen
+                              ? `linear-gradient(135deg, ${opt.color}22 0%, ${opt.color}11 100%)`
+                              : 'rgba(255,255,255,0.03)',
+                            border: isChosen
+                              ? `1px solid ${opt.color}`
+                              : '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '9px',
+                            cursor: placed ? 'default' : 'pointer',
+                            transition: 'all 0.18s',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '3px',
+                            opacity: placed && !isChosen ? 0.45 : 1
+                          }}
+                        >
+                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: isChosen ? opt.color : 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{opt.label}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 900, color: isChosen ? opt.color : '#fff', fontVariantNumeric: 'tabular-nums' }}>{opt.odds}</span>
+                          <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>odds</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Bet Slip (Cart) */}
+          {betSlip.length > 0 && (
+            <div style={{
+              background: 'rgba(0,0,0,0.3)',
+              borderTop: '1px solid rgba(255,255,255,0.08)',
+              padding: '16px',
               display: 'flex',
-              gap: '12px',
-              fontSize: '0.72rem'
+              flexDirection: 'column',
+              gap: '12px'
             }}>
-                  <span style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}><span style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: 'var(--color-primary)',
-                  display: 'inline-block'
-                }}></span> {m.teamA}</span>
-                  <span style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}><span style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: 'var(--color-secondary)',
-                  display: 'inline-block'
-                }}></span> {m.teamB}</span>
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.85rem', color: 'var(--color-primary)' }}>
+                  📋 BET SLIP ({betSlip.length})
+                </span>
+                <button
+                  onClick={() => setBetSlip([])}
+                  style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
+                >
+                  Clear Slip
+                </button>
               </div>
 
-              <div className="tactical-pitch">
-                <div className="tactical-lines"></div>
-                <div className="tactical-midline"></div>
-                <div className="tactical-center-circle"></div>
-                <div className="tactical-box-top"></div>
-                <div className="tactical-box-bottom"></div>
-
-                {lineups.teamA.map((p, idx) => <div key={`ta-${idx}`} className="tactical-player" style={{
-              left: `${p.x}%`,
-              top: `${p.y}%`
-            }}>
-                    <div className="tactical-player-circle">{idx + 1}</div>
-                    <span className="tactical-player-name">{p.name}</span>
-                  </div>)}
-
-                {lineups.teamB.map((p, idx) => <div key={`tb-${idx}`} className="tactical-player team-b" style={{
-              left: `${p.x}%`,
-              top: `${p.y}%`
-            }}>
-                    <div className="tactical-player-circle">{idx + 1}</div>
-                    <span className="tactical-player-name">{p.name}</span>
-                  </div>)}
-              </div>
-            </div>}
-
-          {matchCenterSubTab === 'stats' && <div className="match-stats-grid">
-              <div className="stat-row-wrap">
-                <div className="stat-label-row">
-                  <span>{stats.possession[0]}%</span>
-                  <span className="stat-label-title">{t("Possession")}</span>
-                  <span>{stats.possession[1]}%</span>
-                </div>
-                <div className="stat-bar-bg">
-                  <div className="stat-bar-fill-a" style={{
-                width: `${stats.possession[0]}%`
-              }}></div>
-                  <div className="stat-bar-fill-b" style={{
-                width: `${stats.possession[1]}%`
-              }}></div>
-                </div>
-              </div>
-
-              <div className="stat-row-wrap">
-                <div className="stat-label-row">
-                  <span>{stats.shots[0]}</span>
-                  <span className="stat-label-title">{t("Total Shots")}</span>
-                  <span>{stats.shots[1]}</span>
-                </div>
-                <div className="stat-bar-bg">
-                  <div className="stat-bar-fill-a" style={{
-                width: `${stats.shots[0] / (stats.shots[0] + stats.shots[1] || 1) * 100}%`
-              }}></div>
-                  <div className="stat-bar-fill-b" style={{
-                width: `${stats.shots[1] / (stats.shots[0] + stats.shots[1] || 1) * 100}%`
-              }}></div>
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
+                {betSlip.map(item => (
+                  <div key={`${item.matchId}_${item.marketKey}`} style={{
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: '8px',
+                    padding: '8px 12px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{item.marketLabel}</div>
+                      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                        {item.optionLabel} <span style={{ color: 'var(--color-primary)', marginLeft: '4px' }}>@{item.odds}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <input
+                        type="number"
+                        step="0.001"
+                        min="0.0001"
+                        value={item.stake}
+                        onChange={(e) => updateBetSlipStake(item.matchId, item.marketKey, e.target.value)}
+                        style={{
+                          width: '90px',
+                          background: 'rgba(0,0,0,0.4)',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          borderRadius: '4px',
+                          padding: '4px 6px',
+                          color: '#fff',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          textAlign: 'right'
+                        }}
+                      />
+                      <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>ETH</span>
+                      <button
+                        onClick={() => handleBetSlipRemove(item.matchId, item.marketKey)}
+                        style={{ background: 'none', border: 'none', color: '#ff3344', fontSize: '0.9rem', cursor: 'pointer', padding: '0 4px' }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              <div className="stat-row-wrap">
-                <div className="stat-label-row">
-                  <span>{stats.shotsOnTarget[0]}</span>
-                  <span className="stat-label-title">{t("Shots on Target")}</span>
-                  <span>{stats.shotsOnTarget[1]}</span>
-                </div>
-                <div className="stat-bar-bg">
-                  <div className="stat-bar-fill-a" style={{
-                width: `${stats.shotsOnTarget[0] / (stats.shotsOnTarget[0] + stats.shotsOnTarget[1] || 1) * 100}%`
-              }}></div>
-                  <div className="stat-bar-fill-b" style={{
-                width: `${stats.shotsOnTarget[1] / (stats.shotsOnTarget[0] + stats.shotsOnTarget[1] || 1) * 100}%`
-              }}></div>
-                </div>
+              {/* Total Summary */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '10px' }}>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Total Stake:</span>
+                <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--color-primary)' }}>
+                  {betSlip.reduce((sum, item) => sum + parseFloat(item.stake || '0'), 0).toFixed(4)} ETH
+                </span>
               </div>
 
-              <div className="stat-row-wrap">
-                <div className="stat-label-row">
-                  <span>{stats.corners[0]}</span>
-                  <span className="stat-label-title">{t("Corners")}</span>
-                  <span>{stats.corners[1]}</span>
+              {betSlipStatus && (
+                <div style={{
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  background: betSlipStatus.tone === 'success' ? 'rgba(157,255,0,0.12)' : betSlipStatus.tone === 'pending' ? 'rgba(0,229,255,0.1)' : 'rgba(255,51,68,0.1)',
+                  color: betSlipStatus.tone === 'success' ? 'var(--color-primary)' : betSlipStatus.tone === 'pending' ? '#00e5ff' : '#ff3344',
+                  border: `1px solid ${betSlipStatus.tone === 'success' ? 'rgba(157,255,0,0.25)' : betSlipStatus.tone === 'pending' ? 'rgba(0,229,255,0.25)' : 'rgba(255,51,68,0.25)'}`
+                }}>
+                  {betSlipStatus.message}
                 </div>
-                <div className="stat-bar-bg">
-                  <div className="stat-bar-fill-a" style={{
-                width: `${stats.corners[0] / (stats.corners[0] + stats.corners[1] || 1) * 100}%`
-              }}></div>
-                  <div className="stat-bar-fill-b" style={{
-                width: `${stats.corners[1] / (stats.corners[0] + stats.corners[1] || 1) * 100}%`
-              }}></div>
-                </div>
-              </div>
+              )}
 
-              <div className="stat-row-wrap">
-                <div className="stat-label-row">
-                  <span>{stats.fouls[0]}</span>
-                  <span className="stat-label-title">{t("Fouls")}</span>
-                  <span>{stats.fouls[1]}</span>
-                </div>
-                <div className="stat-bar-bg">
-                  <div className="stat-bar-fill-a" style={{
-                width: `${stats.fouls[0] / (stats.fouls[0] + stats.fouls[1] || 1) * 100}%`
-              }}></div>
-                  <div className="stat-bar-fill-b" style={{
-                width: `${stats.fouls[1] / (stats.fouls[0] + stats.fouls[1] || 1) * 100}%`
-              }}></div>
-                </div>
-              </div>
+              <button
+                onClick={placeBatchBets}
+                disabled={isSubmittingBets}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  background: 'linear-gradient(135deg, var(--color-primary) 0%, #00e5ff 100%)',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: 800,
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 16px rgba(157,255,0,0.2)'
+                }}
+              >
+                {isSubmittingBets ? t("Submitting Transactions...") : `⚡ ${t("Place Bets via Robinhood")}`}
+              </button>
+            </div>
+          )}
 
-              <div className="stat-row-wrap">
-                <div className="stat-label-row">
-                  <span>{stats.yellowCards[0]}</span>
-                  <span className="stat-label-title">{t("Yellow Cards")}</span>
-                  <span>{stats.yellowCards[1]}</span>
-                </div>
-                <div className="stat-bar-bg">
-                  <div className="stat-bar-fill-a" style={{
-                width: `${stats.yellowCards[0] / (stats.yellowCards[0] + stats.yellowCards[1] || 1) * 100}%`
-              }}></div>
-                  <div className="stat-bar-fill-b" style={{
-                width: `${stats.yellowCards[1] / (stats.yellowCards[0] + stats.yellowCards[1] || 1) * 100}%`
-              }}></div>
-                </div>
-              </div>
-            </div>}
+          {/* Footer */}
+          <div style={{
+            padding: '10px 18px',
+            borderTop: '1px solid rgba(255,255,255,0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'rgba(0,0,0,0.2)'
+          }}>
+            <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>Micro-bets settle on-chain after full time. NFA.</span>
+            <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 700, letterSpacing: '0.3px' }}>Robinhood Chain ⚡</span>
+          </div>
         </div>
+
+
 
         <div className="match-venue-card">
           <div className="venue-icon-wrap">
@@ -3069,7 +3117,7 @@ export default function App() {
                   referee: match.referee || 'Referee',
                   scorersA: [],
                   scorersB: [],
-                  competition: match.competition || 'FIFA World Cup'
+                  competition: match.competition || 'GoalRush League'
                 };
               });
               data = mapped;
@@ -3077,7 +3125,7 @@ export default function App() {
           }
         }
 
-        // 3. Clean and inject the live/scheduled FIFA World Cup 2026 matches
+        // 3. Clean and inject the live/scheduled GoalRush Tournament 2026 matches
         // Filter out duplicates in case backend has them under different statuses
         const teamPairsToMock = [];
         data = data.filter(m => {
@@ -3392,7 +3440,7 @@ export default function App() {
     const interval = setInterval(loadRealMatches, 15000); // refresh every 15s to keep scores & match status seamlessly updated
     return () => clearInterval(interval);
   }, []);
-  const [logs, setLogs] = useState(['System: GoalRush Hook verified on X Layer. Ready for mainnet deployment.', 'System: Active Match is accepting predictions.', 'System: Current jackpot pool backed by native OKB.']);
+  const [logs, setLogs] = useState(['System: GoalRush Hook verified on Robinhood Chain. Ready for mainnet deployment.', 'System: Active Match is accepting predictions.', 'System: Current jackpot pool backed by native ETH.']);
   const handleNavClick = sectionId => {
     setShowDevPortal(true);
   };
@@ -3447,7 +3495,7 @@ export default function App() {
         return;
       }
       try {
-        const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
+        const rpcProvider = new ethers.JsonRpcProvider("https://rpc.mainnet.chain.robinhood.com/");
         const queryAbi = ["function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)", "function matches(uint256) view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)"];
         const queryContract = new ethers.Contract(HOOK_ADDRESS, queryAbi, rpcProvider);
         const numericId = getNumericMatchId(selectedMatchCenterId);
@@ -3520,7 +3568,7 @@ export default function App() {
     setPastClaimLoading(true);
     setPastClaimResult(null);
     try {
-      const rpcProvider = new ethers.JsonRpcProvider('https://rpc.xlayer.tech');
+      const rpcProvider = new ethers.JsonRpcProvider('https://rpc.mainnet.chain.robinhood.com/');
       const abi = ['function matches(uint256) view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)', 'function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)'];
       const hook = new ethers.Contract(HOOK_ADDRESS, abi, rpcProvider);
       const numericId = getNumericMatchId(matchIdInput);
@@ -3595,11 +3643,11 @@ export default function App() {
       const provider = new ethers.BrowserProvider(rawProvider);
       const signer = await provider.getSigner();
       const hook = new ethers.Contract(HOOK_ADDRESS, ['function claimJackpot(uint256) external'], signer);
-      addLog(`[claimJackpot] Claiming past match OKB jackpot...`);
+      addLog(`[claimJackpot] Claiming past match ETH jackpot...`);
       const tx = await hook.claimJackpot(numericId);
       await tx.wait();
-      addLog('🎉 OKB Jackpot claimed successfully!');
-      alert('OKB Jackpot claimed!');
+      addLog('🎉 ETH Jackpot claimed successfully!');
+      alert('ETH Jackpot claimed!');
       handleCheckPastClaim(pastClaimResult?.matchIdInput || '');
     } catch (err) {
       addLog(`❌ Claim failed: ${err.reason || err.message}`);
@@ -3666,7 +3714,7 @@ export default function App() {
       };
     });
 
-    // Sort leaderboard: goals desc, then OKB volume desc, then GRUSH volume desc
+    // Sort leaderboard: goals desc, then ETH volume desc, then GRUSH volume desc
     statsArray.sort((a, b) => {
       if (b.goals !== a.goals) return b.goals - a.goals;
       if (b.volume !== a.volume) return b.volume - a.volume;
@@ -3842,8 +3890,8 @@ export default function App() {
         const routerAddress = ROUTER_ADDRESS;
 
         // Use official public RPC for general reads to bypass CORS/adblocker blocks, and Sentio for logs
-        const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
-        const logProvider = new ethers.JsonRpcProvider("https://xlayer-mainnet.rpc.sentio.xyz");
+        const rpcProvider = new ethers.JsonRpcProvider("https://rpc.mainnet.chain.robinhood.com/");
+        const logProvider = new ethers.JsonRpcProvider("https://robinhood-mainnet.rpc.sentio.xyz");
         const abi = ["function activeMatchId() external view returns (uint256)", "function matches(uint256) external view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)", "function teamPredictionVolume(uint256, uint8) external view returns (uint256)", "function teamGrushPredictionVolume(uint256, uint8) external view returns (uint256)", "function matchGrushJackpot(uint256) external view returns (uint256)", "event GoalScored(address indexed swapper, uint256 bonusAmount)", "event PredictionPlaced(address indexed user, uint256 indexed matchId, uint8 team, uint256 volume)", "event GrushPredictionPlaced(address indexed user, uint256 indexed matchId, uint8 team, uint256 volume)", "event JackpotClaimed(address indexed user, uint256 indexed matchId, uint256 amount)", "event GrushJackpotClaimed(address indexed user, uint256 indexed matchId, uint256 amount)"];
         const routerAbi = ["event PredictionDeposited(address indexed user, uint8 indexed team, uint256 amount)", "event GrushPredictionDeposited(address indexed user, uint8 indexed team, uint256 amount)", "event PredictionDeposited(address indexed user, uint256 amount)", "event GrushPredictionDeposited(address indexed user, uint256 amount)"];
         const hookContract = new ethers.Contract(hookAddress, abi, rpcProvider);
@@ -3939,7 +3987,7 @@ export default function App() {
               };
             }
             const totalJackpotWei = effectiveMatchData[7] || effectiveMatchData.totalJackpot || 0n;
-            // OKB predictions are held by the Router contract - check both
+            // ETH predictions are held by the Router contract - check both
             const hookBalance = await rpcProvider.getBalance(hookAddress);
             const routerBalance = await rpcProvider.getBalance(routerAddress);
             const combinedBalance = hookBalance + routerBalance;
@@ -4197,7 +4245,7 @@ export default function App() {
       return;
     }
     try {
-      const rpcProvider = new ethers.JsonRpcProvider("https://rpc.xlayer.tech");
+      const rpcProvider = new ethers.JsonRpcProvider("https://rpc.mainnet.chain.robinhood.com/");
       const queryAbi = ["function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] okbAmounts, uint256[4] grushAmounts, bool[4] okbClaimeds, bool[4] grushClaimeds)"];
       const queryContract = new ethers.Contract(HOOK_ADDRESS, queryAbi, rpcProvider);
       const numericId = getNumericMatchId(activeMatch.id);
@@ -4278,12 +4326,12 @@ export default function App() {
   const handleChainChanged = hexChainId => {
     const decChainId = parseInt(hexChainId, 16);
     setChainId(decChainId);
-    if (decChainId === 196) {
-      addLog('Network switched: OKX X Layer Mainnet');
+    if (decChainId === 4663) {
+      addLog('Network switched: Robinhood Chain Mainnet');
     } else if (decChainId === 195) {
-      addLog('Network switched: OKX X Layer Testnet');
+      addLog('Network switched: Robinhood Chain Testnet');
     } else {
-      addLog(`Connected to Chain ID ${decChainId}. Please switch to X Layer Mainnet (Chain ID 196).`);
+      addLog(`Connected to Chain ID ${decChainId}. Please switch to Robinhood Chain Mainnet (Chain ID 196).`);
     }
   };
   const updateBalance = async address => {
@@ -4303,7 +4351,7 @@ export default function App() {
   const handleConnectWallet = async () => {
     const provider = getProvider();
     if (!provider) {
-      alert('OKX Wallet was not detected. Please install the OKX Wallet extension on your browser or open this page inside the OKX Wallet mobile app.');
+      alert('Robinhood Wallet was not detected. Please install the Robinhood Wallet extension on your browser or open this page inside the Robinhood Wallet mobile app.');
       return;
     }
     try {
@@ -4331,8 +4379,8 @@ export default function App() {
       await provider.request({
         method: 'wallet_switchEthereumChain',
         params: [{
-          chainId: '0xc4'
-        }] // 196 is 0xc4
+          chainId: '0x1237'
+        }] // 196 is 0x1237
       });
     } catch (switchError) {
       if (switchError.code === 4902) {
@@ -4340,15 +4388,15 @@ export default function App() {
           await provider.request({
             method: 'wallet_addEthereumChain',
             params: [{
-              chainId: '0xc4',
-              chainName: 'X Layer Mainnet',
+              chainId: '0x1237',
+              chainName: 'Robinhood Chain Mainnet',
               nativeCurrency: {
-                name: 'OKB',
-                symbol: 'OKB',
+                name: 'ETH',
+                symbol: 'ETH',
                 decimals: 18
               },
-              rpcUrls: ['https://rpc.xlayer.tech'],
-              blockExplorerUrls: ['https://www.okx.com/explorer/xlayer']
+              rpcUrls: ['https://rpc.mainnet.chain.robinhood.com/'],
+              blockExplorerUrls: ['https://robinhoodchain.blockscout.com']
             }]
           });
         } catch (addError) {
@@ -4363,7 +4411,7 @@ export default function App() {
   const handleAddGrushToWallet = async () => {
     const provider = getProvider();
     if (!provider) {
-      alert("Please connect your OKX Wallet first!");
+      alert("Please connect your Robinhood Wallet first!");
       return;
     }
     try {
@@ -4379,7 +4427,7 @@ export default function App() {
           }
         }
       });
-      addLog("GRUSH token registration request sent to OKX Wallet.");
+      addLog("GRUSH token registration request sent to Robinhood Wallet.");
     } catch (err) {
       console.error(err);
       addLog(`Failed to add GRUSH: ${err.message || err}`);
@@ -4395,7 +4443,7 @@ export default function App() {
   // === Uniswap V4 Pool Constants (GRUSH graduated from bonding curve) ===
   const V4_POOL_KEY = {
     currency0: '0x0000000000000000000000000000000000000000',
-    // native OKB
+    // native ETH
     currency1: GRUSH_TOKEN_ADDRESS,
     fee: 3000,
     tickSpacing: 60,
@@ -4410,7 +4458,7 @@ export default function App() {
     }
     setIsQuoting(true);
     try {
-      const provider = new ethers.JsonRpcProvider('https://rpc.xlayer.tech');
+      const provider = new ethers.JsonRpcProvider('https://rpc.mainnet.chain.robinhood.com/');
       const pm = new ethers.Contract(POOL_MANAGER, ["function extsload(bytes32 slot) external view returns (bytes32)"], provider);
 
       // Compute poolId from PoolKey
@@ -4465,7 +4513,7 @@ export default function App() {
       return;
     }
     if (!swapAmountOKB || isNaN(swapAmountOKB) || parseFloat(swapAmountOKB) <= 0) {
-      alert("Please enter a valid OKB amount.");
+      alert("Please enter a valid ETH amount.");
       return;
     }
     setIsSwapping(true);
@@ -4491,7 +4539,7 @@ export default function App() {
 
       // 1. Encode ExactInputSingleParams
       const swapParams = abiCoder.encode(["tuple(tuple(address,address,uint24,int24,address),bool,uint128,uint128,bytes)"], [[[V4_POOL_KEY.currency0, V4_POOL_KEY.currency1, V4_POOL_KEY.fee, V4_POOL_KEY.tickSpacing, V4_POOL_KEY.hooks], true,
-      // zeroForOne: OKB → GRUSH
+      // zeroForOne: ETH → GRUSH
       amountIn, minAmountOut, "0x" // empty hookData
       ]]);
 
@@ -4522,7 +4570,7 @@ export default function App() {
         tone: 'success',
         message: `Successfully bought GRUSH via Uniswap V4! Transaction confirmed.`
       });
-      addLog(`Bought GRUSH with ${swapAmountOKB} OKB via Uniswap V4 pool.`);
+      addLog(`Bought GRUSH with ${swapAmountOKB} ETH via Uniswap V4 pool.`);
       updateBalance(userAddress);
       updateGrushBalance(userAddress);
     } catch (e) {
@@ -4585,10 +4633,10 @@ export default function App() {
       });
       return;
     }
-    if (chainId !== 196) {
+    if (chainId !== 4663) {
       setTransactionStatus({
         tone: 'danger',
-        message: 'Wrong network. Switch your wallet to X Layer Mainnet before signing.'
+        message: 'Wrong network. Switch your wallet to Robinhood Chain Mainnet before signing.'
       });
       return;
     }
@@ -4603,7 +4651,7 @@ export default function App() {
     setIsStriking(true);
     setTransactionStatus({
       tone: 'pending',
-      message: 'Waiting for your wallet. Verify the destination, amount, and X Layer network before signing.'
+      message: 'Waiting for your wallet. Verify the destination, amount, and Robinhood Chain network before signing.'
     });
     try {
       const rawProvider = getProvider();
@@ -4638,7 +4686,7 @@ export default function App() {
         const routerAbi = ["function predictWithOKB(uint256 matchId, uint8 predictedTeam) external payable"];
         const routerContract = new ethers.Contract(ROUTER_ADDRESS, routerAbi, signer);
         const predictionLabel = prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw';
-        addLog(`[predictWithOKB] Recording ${parsedAmount} OKB prediction for ${predictionLabel}...`);
+        addLog(`[predictWithOKB] Recording ${parsedAmount} ETH prediction for ${predictionLabel}...`);
         const numericMatchId = getNumericMatchId(activeMatch.id);
         tx = await routerContract.predictWithOKB(numericMatchId, prediction, {
           value: ethers.parseEther(swapAmount)
@@ -4647,13 +4695,13 @@ export default function App() {
       addLog(`Transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
       setTransactionStatus({
         tone: 'pending',
-        message: `Transaction ${tx.hash.slice(0, 10)}... submitted. Waiting for X Layer confirmation.`
+        message: `Transaction ${tx.hash.slice(0, 10)}... submitted. Waiting for Robinhood Chain confirmation.`
       });
       await tx.wait();
       fetchUserPrediction();
       setTransactionStatus({
         tone: 'success',
-        message: 'Prediction confirmed on X Layer. The penalty animation is cosmetic and does not change the on-chain result.'
+        message: 'Prediction confirmed on Robinhood Chain. The penalty animation is cosmetic and does not change the on-chain result.'
       });
       if (selectedToken === 'GRUSH') {
         addLog(`🎉 Transaction confirmed! Prediction jackpot successfully funded with ${parsedAmount} GRUSH.`);
@@ -4674,7 +4722,7 @@ export default function App() {
           }));
         } catch (e) {}
       } else {
-        addLog(`🎉 Transaction confirmed! Match jackpot successfully funded with ${parsedAmount} OKB.`);
+        addLog(`🎉 Transaction confirmed! Match jackpot successfully funded with ${parsedAmount} ETH.`);
         setJackpot(prev => prev + parsedAmount);
         setTotalUserVolume(prev => {
           const next = prev + parsedAmount;
@@ -4812,7 +4860,7 @@ export default function App() {
       }
 
       // Increment predicted team volume dynamically in state
-      if (selectedToken === 'OKB') {
+      if (selectedToken === 'ETH') {
         if (prediction === 1) {
           setTeamAVotes(prev => prev + parsedAmount);
         } else if (prediction === 2) {
@@ -4882,6 +4930,147 @@ export default function App() {
       setIsStriking(false);
     }
   };
+  // ─── BET SLIP CART LOGIC ───
+  const getPredictionTeamCode = (marketKey, optionLabel, teamA, teamB) => {
+    if (optionLabel === teamA || optionLabel === `${teamA} Player` || optionLabel === 'Over 2.5') {
+      return 1;
+    }
+    if (optionLabel === teamB || optionLabel === `${teamB} Player` || optionLabel === 'Under 2.5') {
+      return 2;
+    }
+    if (optionLabel === 'Draw' || optionLabel === 'No Goal') {
+      return 3;
+    }
+    return 1;
+  };
+
+  const getMarketOffset = (marketKey) => {
+    switch (marketKey) {
+      case 'winner': return 0n;
+      case 'next_goal': return 1n;
+      case 'next_corner': return 2n;
+      case 'next_card': return 3n;
+      case 'halftime': return 4n;
+      case 'over_under': return 5n;
+      case 'next_scorer': return 6n;
+      default: return 0n;
+    }
+  };
+
+  const handleBetSlipAdd = (m, marketKey, marketLabel, optionLabel, odds) => {
+    const betKey = `${m.id}_${marketKey}`;
+    if (placedBets[betKey]) return; // already placed on-chain
+
+    const teamCode = getPredictionTeamCode(marketKey, optionLabel, m.teamA, m.teamB);
+    const offset = getMarketOffset(marketKey);
+
+    setBetSlip(prev => {
+      // Remove previous selection for the same market to prevent duplicates
+      const filtered = prev.filter(item => !(item.matchId === m.id && item.marketKey === marketKey));
+      return [...filtered, {
+        matchId: m.id,
+        matchName: `${m.teamA} vs ${m.teamB}`,
+        teamA: m.teamA,
+        teamB: m.teamB,
+        marketKey,
+        marketLabel,
+        optionLabel,
+        odds,
+        teamCode,
+        offset,
+        stake: '0.001' // default stake
+      }];
+    });
+    setBetSlipStatus(null);
+  };
+
+  const handleBetSlipRemove = (matchId, marketKey) => {
+    setBetSlip(prev => prev.filter(item => !(item.matchId === matchId && item.marketKey === marketKey)));
+  };
+
+  const updateBetSlipStake = (matchId, marketKey, newStake) => {
+    setBetSlip(prev => prev.map(item => {
+      if (item.matchId === matchId && item.marketKey === marketKey) {
+        return { ...item, stake: newStake };
+      }
+      return item;
+    }));
+  };
+
+  const placeBatchBets = async () => {
+    if (betSlip.length === 0) return;
+    if (!walletConnected) {
+      setBetSlipStatus({ tone: 'warning', message: t("Connect your wallet to review and submit predictions.") });
+      return;
+    }
+    if (chainId !== 4663) {
+      setBetSlipStatus({ tone: 'danger', message: t("Wrong network. Switch your wallet to Robinhood Chain Mainnet.") });
+      return;
+    }
+
+    setIsSubmittingBets(true);
+    setBetSlipStatus({ tone: 'pending', message: t("Preparing transaction. Approve the transaction in your wallet.") });
+
+    try {
+      const rawProvider = getProvider();
+      if (!rawProvider) throw new Error("No wallet provider detected");
+      const provider = new ethers.BrowserProvider(rawProvider);
+      const signer = await provider.getSigner();
+
+      const routerAbi = [
+        "function batchPredictWithETH(uint256[] calldata _matchIds, uint8[] calldata _predictedTeams, uint256[] calldata _amounts) external payable"
+      ];
+      const routerContract = new ethers.Contract(ROUTER_ADDRESS, routerAbi, signer);
+
+      const matchIds = [];
+      const predictedTeams = [];
+      const amounts = [];
+      let totalValueWei = 0n;
+
+      betSlip.forEach(item => {
+        const baseId = getNumericMatchId(item.matchId);
+        const onChainMatchId = baseId + item.offset;
+        const stakeWei = ethers.parseEther(item.stake || '0.001');
+
+        matchIds.push(onChainMatchId);
+        predictedTeams.push(item.teamCode);
+        amounts.push(stakeWei);
+        totalValueWei += stakeWei;
+      });
+
+      addLog(`[batchPredictWithETH] Submitting transaction for ${betSlip.length} bets...`);
+      const tx = await routerContract.batchPredictWithETH(matchIds, predictedTeams, amounts, {
+        value: totalValueWei
+      });
+
+      addLog(`Batch transaction submitted: ${tx.hash.slice(0, 10)}... waiting for confirmation`);
+      setBetSlipStatus({
+        tone: 'pending',
+        message: `${t("Transaction")} ${tx.hash.slice(0, 10)}... ${t("submitted. Waiting for Robinhood Chain confirmation.")}`
+      });
+
+      await tx.wait();
+
+      // Confirmed! Mark all as placed
+      const newPlaced = { ...placedBets };
+      betSlip.forEach(item => {
+        const betKey = `${item.matchId}_${item.marketKey}`;
+        newPlaced[betKey] = true;
+        addLog(`🎉 Bet confirmed on-chain: ${item.marketLabel} → ${item.optionLabel} (${item.stake} ETH)`);
+      });
+
+      setPlacedBets(newPlaced);
+      setBetSlip([]); // Clear bet slip
+      setBetSlipStatus({ tone: 'success', message: t("WAGMI! Predictions recorded on Robinhood Chain Mainnet! ⚡") });
+    } catch (err) {
+      console.error(err);
+      const reason = parseRevertReason(err);
+      setBetSlipStatus({ tone: 'danger', message: reason ? `Reverted: ${reason}` : t("Transaction failed. Check wallet balance.") });
+    } finally {
+      setIsSubmittingBets(false);
+    }
+  };
+
   const handleSelectMatchUI = match => {
     setActiveMatch({
       id: match.id,
@@ -5056,14 +5245,7 @@ export default function App() {
           {t("Leaderboard")}
         </button>
       </li>
-      <li>
-        <button onClick={() => {
-        setCurrentView('okx-ai');
-        if (isSidebar) setIsMobileMenuOpen(false);
-      }} className={`nav-btn ${currentView === 'okx-ai' ? 'active' : ''}`}>
-          AI Hub
-        </button>
-      </li>
+
       <li>
         <button onClick={() => {
         setCurrentView('about');
@@ -5146,23 +5328,23 @@ export default function App() {
           </div>}
       </div>
   
-      {chainId !== null ? chainId === 196 ? <div className="badge-xlayer" style={{
+      {chainId !== null ? chainId === 4663 ? <div className="badge-robinhood" style={{
       color: 'var(--color-primary)'
     }}>
             <span className="badge-dot" style={{
         backgroundColor: 'var(--color-primary)',
         boxShadow: '0 0 8px var(--color-primary)'
       }}></span>
-            <span className="badge-text">{t("X Layer Mainnet")}</span>
-          </div> : chainId === 195 ? <div className="badge-xlayer" style={{
+            <span className="badge-text">{t("Robinhood Chain Mainnet")}</span>
+          </div> : chainId === 195 ? <div className="badge-robinhood" style={{
       color: '#ffcc00'
     }}>
             <span className="badge-dot" style={{
         backgroundColor: '#ffcc00',
         boxShadow: '0 0 8px #ffcc00'
       }}></span>
-            <span className="badge-text">{t("X Layer Testnet")}</span>
-          </div> : <button className="badge-xlayer" onClick={() => {
+            <span className="badge-text">{t("Robinhood Chain Testnet")}</span>
+          </div> : <button className="badge-robinhood" onClick={() => {
       handleSwitchNetwork();
       if (isSidebar) setIsMobileMenuOpen(false);
     }} style={{
@@ -5173,7 +5355,7 @@ export default function App() {
     }}>
             <AlertTriangle size={12} />
             <span className="badge-text">{t("Switch Network")}</span>
-          </button> : <div className="badge-xlayer">
+          </button> : <div className="badge-robinhood">
           <span className="badge-dot" style={{
         backgroundColor: '#666'
       }}></span>
@@ -5238,7 +5420,7 @@ export default function App() {
         setUserAddress('0xae1b810ffb88855ffd967dc274d9ba4fadd21990');
         setUserBalance('0.1500');
         setGrushBalance('500.00');
-        setChainId(196);
+        setChainId(4663);
         addLog('Simulating wallet: 0xae1b... (Winner prediction)');
         if (isSidebar) setIsMobileMenuOpen(false);
       }} className="btn-secondary" style={{
@@ -5274,7 +5456,7 @@ export default function App() {
         </div>}
     </div>;
 
-  // OKX.AI Mock Dispute Cases
+  // GoalRush Mock Dispute Cases
   const mockDisputes = [{
     id: "CASE-9021",
     task: "Develop Uniswap V4 dynamic fee hook based on volatility",
@@ -5288,7 +5470,7 @@ export default function App() {
     rational: "The developer's design is economically sound. Sandwich attack protection is a critical security requirement that overrides the user's extreme intra-block volatility simulation."
   }, {
     id: "CASE-7043",
-    task: "Build ESPN live sports data crawler for X Layer oracle",
+    task: "Build ESPN live sports data crawler for Robinhood Chain oracle",
     bounty: 8.0,
     user: "0xGoalRushApp",
     asp: "0xCrawlerAgent",
@@ -5317,7 +5499,7 @@ export default function App() {
     setIsQueryingPredict(true);
     setPredictResult(null);
     setPredictError(null);
-    setTerminalHistory(prev => [...prev, `> npx okx-ai query-asp --match-id ${selectedPredictMatchId}`, `Connecting to GoalRush ASP Gateway...`, `Invoking consensus swarm on Llama-3.1-8b, Llama-3.3-70b, and Qwen-32b...`]);
+    setTerminalHistory(prev => [...prev, `> npx robinhood-ai query-asp --match-id ${selectedPredictMatchId}`, `Connecting to GoalRush ASP Gateway...`, `Invoking consensus swarm on Llama-3.1-8b, Llama-3.3-70b, and Qwen-32b...`]);
     try {
       const response = await fetch(`${BACKEND_API_BASE}/predict`, {
         method: 'POST',
@@ -5342,11 +5524,11 @@ export default function App() {
           try {
             const decoded = JSON.parse(atob(paymentHeader));
             const opt = decoded.accepts ? decoded.accepts[0] : decoded;
-            paymentInfo = ` Network: ${opt.network || 'eip155:196'}, Asset: ${opt.asset || GOALRUSH_ASP_ASSET}, Price: ${opt.price || '0.005'}`;
+            paymentInfo = ` Network: ${opt.network || 'eip155:4663'}, Asset: ${opt.asset || GOALRUSH_ASP_ASSET}, Price: ${opt.price || '0.005'}`;
           } catch (e) {/* ignore decode error */}
         }
-        setPredictError(`Payment required (${GOALRUSH_ASP_FEE}).${paymentInfo} Use an OKX.AI / Onchain OS agent to execute the paid A2MCP call.`);
-        setTerminalHistory(prev => [...prev, `HTTP 402 — Payment Required: ${GOALRUSH_ASP_FEE}`, `Network: ${GOALRUSH_ASP_NETWORK}`, `Asset (USDT): ${GOALRUSH_ASP_ASSET}`, 'This endpoint is gated by the OKX Agent Payments Protocol (@x402/express).', 'Use an Onchain OS agent client to make the paid A2MCP call.']);
+        setPredictError(`Payment required (${GOALRUSH_ASP_FEE}).${paymentInfo} Use an GoalRush / Onchain OS agent to execute the paid A2MCP call.`);
+        setTerminalHistory(prev => [...prev, `HTTP 402 — Payment Required: ${GOALRUSH_ASP_FEE}`, `Network: ${GOALRUSH_ASP_NETWORK}`, `Asset (USDT): ${GOALRUSH_ASP_ASSET}`, 'This endpoint is gated by the Robinhood Agent Payments Protocol (@x402/express).', 'Use an Onchain OS agent client to make the paid A2MCP call.']);
       } else {
         setPredictError(data.error || "Failed to query prediction API.");
         setTerminalHistory(prev => [...prev, `❌ Query Failed: ${data.error || "Unknown error"}`]);
@@ -5367,22 +5549,22 @@ export default function App() {
       let output = [];
       const normalizedCmd = cmd.toLowerCase();
       if (normalizedCmd === 'help') {
-        output = ['Available commands:', '  help                     - Show this menu', '  clear                    - Clear the console', '  npx skills add okx/onchainos-skills - Install OKX Onchain OS skills', '  register-user            - Register as a User on OKX.AI', '  register-asp             - Show the real GoalRush ASP registration status', '  register-evaluator       - Stake 100 OKB and register as Evaluator', '  status                   - Check registration and agent status'];
+        output = ['Available commands:', '  help                     - Show this menu', '  clear                    - Clear the console', '  npx skills add robinhood/onchainos-skills - Install Robinhood Onchain OS skills', '  register-user            - Register as a User on GoalRush', '  register-asp             - Show the real GoalRush ASP registration status', '  register-evaluator       - Stake 100 ETH and register as Evaluator', '  status                   - Check registration and agent status'];
       } else if (normalizedCmd === 'clear') {
         setTerminalHistory([]);
         setIsTerminalLoading(false);
         return;
       } else if (normalizedCmd.includes('skills add') || normalizedCmd.includes('onchainos-skills')) {
-        output = ['Installing Onchain OS skill pack [okx/onchainos-skills]...', 'Progress: ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 100%', 'Connecting to Web3 Wallet provider...', walletConnected ? `Connected successfully to wallet: ${userAddress.slice(0, 10)}...${userAddress.slice(-6)}` : 'Warning: Web3 wallet not connected. Please connect your wallet in the dashboard.', 'Initializing Agentic Wallet container on X Layer Testnet...', 'Onchain OS installed successfully. Try running: register-user'];
+        output = ['Installing Onchain OS skill pack [robinhood/onchainos-skills]...', 'Progress: ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 100%', 'Connecting to Web3 Wallet provider...', walletConnected ? `Connected successfully to wallet: ${userAddress.slice(0, 10)}...${userAddress.slice(-6)}` : 'Warning: Web3 wallet not connected. Please connect your wallet in the dashboard.', 'Initializing Agentic Wallet container on Robinhood Chain Testnet...', 'Onchain OS installed successfully. Try running: register-user'];
       } else if (normalizedCmd === 'register-user') {
-        output = ['User registration must be completed in Onchain OS with wallet confirmation.', 'Open a Codex/Agent session with Onchain OS and ask: "Register me as a User on OKX.AI".', 'This browser console will not fabricate a User identity or transaction hash.'];
+        output = ['User registration must be completed in Onchain OS with wallet confirmation.', 'Open a Codex/Agent session with Onchain OS and ask: "Register me as a User on GoalRush".', 'This browser console will not fabricate a User identity or transaction hash.'];
       } else if (normalizedCmd === 'register-asp') {
         setIsRegisteredASP(true);
         output = ['GoalRush ASP registered on-chain via Onchain OS.', `Agent ID: ${GOALRUSH_ASP_ID}`, 'Service: Soccer Prediction Swarm (A2MCP)', `Endpoint: ${BACKEND_API_BASE}/predict`, `Fee: ${GOALRUSH_ASP_FEE} per call`, `Payment Network: ${GOALRUSH_ASP_NETWORK}`, `Payment Asset (USDT): ${GOALRUSH_ASP_ASSET}`, `Receiver: 0xd96c9899b4d48c02efbd88dc22252a60dc6ee38d`, `x402 Middleware: @x402/express (ExactEvmScheme)`, `Registration TX: 0x9d500f0defa939c287a78e0db0879b2587d4171fdbf0e4d8540e69daaee76e56`, `Status: ${GOALRUSH_ASP_STATUS}`];
       } else if (normalizedCmd === 'register-evaluator') {
-        output = ['Evaluator registration and staking must be completed in Onchain OS with wallet confirmation.', 'This browser console will not fabricate stake, eligibility, or transaction hashes.', 'Use the official OKX.AI evaluator flow if you want to register as an arbitrator.'];
+        output = ['Evaluator registration and staking must be completed in Onchain OS with wallet confirmation.', 'This browser console will not fabricate stake, eligibility, or transaction hashes.', 'Use the official GoalRush evaluator flow if you want to register as an arbitrator.'];
       } else if (normalizedCmd === 'status') {
-        output = ['--- OKX.AI SYSTEM STATUS ---', `Wallet connected: ${walletConnected ? 'YES' : 'NO'}`, `User registered: ${isRegisteredUser ? 'YES' : 'NO'}`, `ASP registered (GoalRush Predictor): YES (${GOALRUSH_ASP_ID}, ${GOALRUSH_ASP_STATUS})`, `Evaluator registered: ${isRegisteredEvaluator ? 'YES (Active)' : 'NO'}`, `Evaluator Stake: ${isRegisteredEvaluator ? evaluatorStaked + ' OKB' : '0 OKB'}`];
+        output = ['--- GoalRush SYSTEM STATUS ---', `Wallet connected: ${walletConnected ? 'YES' : 'NO'}`, `User registered: ${isRegisteredUser ? 'YES' : 'NO'}`, `ASP registered (GoalRush Predictor): YES (${GOALRUSH_ASP_ID}, ${GOALRUSH_ASP_STATUS})`, `Evaluator registered: ${isRegisteredEvaluator ? 'YES (Active)' : 'NO'}`, `Evaluator Stake: ${isRegisteredEvaluator ? evaluatorStaked + ' ETH' : '0 ETH'}`];
       } else {
         output = [`Command not found: '${cmd}'.`, "Type 'help' for a list of available commands."];
       }
@@ -5405,7 +5587,7 @@ export default function App() {
         });
         setArbitrationResult({
           success: true,
-          message: `SUCCESS! Your verdict aligned with the majority of the evaluators (4 out of 5 voted for ${vote.toUpperCase()}). You earned a bounty reward of +0.25 OKB (5% of the task budget).`
+          message: `SUCCESS! Your verdict aligned with the majority of the evaluators (4 out of 5 voted for ${vote.toUpperCase()}). You earned a bounty reward of +0.25 ETH (5% of the task budget).`
         });
       } else {
         setEvaluatorSlashed(prev => prev + 1);
@@ -5415,7 +5597,7 @@ export default function App() {
         });
         setArbitrationResult({
           success: false,
-          message: `VERDICT OVERRULED: Your verdict disagreed with the majority of the evaluators (4 out of 5 voted for ${activeCase.correctVote.toUpperCase()}). 1% of your stake (1.00 OKB) has been slashed.`
+          message: `VERDICT OVERRULED: Your verdict disagreed with the majority of the evaluators (4 out of 5 voted for ${activeCase.correctVote.toUpperCase()}). 1% of your stake (1.00 ETH) has been slashed.`
         });
       }
       setIsResolvingCase(false);
@@ -5439,9 +5621,9 @@ export default function App() {
       </header>
 
       {(currentView === 'dashboard' || currentView === 'leaderboard') && <>
-          {/* Hackathon Hero Section */}
-          <section className="hackathon-hero-container">
-            <div className="hackathon-left" style={{
+          {/* protocol Hero Section */}
+          <section className="protocol-hero-container">
+            <div className="protocol-left" style={{
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
@@ -5473,7 +5655,7 @@ export default function App() {
                 </h1>
               </div>
               
-              <p className="hackathon-desc" style={{
+              <p className="protocol-desc" style={{
             fontSize: '1.25rem',
             lineHeight: '1.6',
             color: 'rgba(255, 255, 255, 0.8)',
@@ -5483,7 +5665,7 @@ export default function App() {
           }}>
                 {t("The premier decentralized sports prediction experience on")} <strong style={{
               color: '#fff'
-            }}>{t("OKX X Layer")}</strong>{t(". Fund a match pick through the prediction router, follow live fixtures, and play a cosmetic penalty challenge after confirmation.")}
+            }}>{t("Robinhood Chain")}</strong>{t(". Fund a match pick through the prediction router, follow live fixtures, and play a cosmetic penalty challenge after confirmation.")}
               </p>
               
               <div className="security-status-card desktop-security-card" role="note" aria-label="Protocol security status" style={{
@@ -5508,16 +5690,16 @@ export default function App() {
                 fontSize: '1rem',
                 color: '#fff',
                 letterSpacing: '0.5px'
-              }}>{t("Mainnet Beta · Contract Verified")}</strong>
+              }}>{t("Robinhood Mainnet Live · Verified Contracts")}</strong>
                   <span style={{
                 fontSize: '0.85rem',
                 color: 'rgba(255,255,255,0.5)',
                 display: 'block',
                 marginTop: '4px',
                 lineHeight: '1.4'
-              }}>{t("Verify the contract address and transaction amount in your wallet. GoalRush will never ask for a seed phrase or tell you to bypass a wallet warning.")}</span>
+              }}>{t("GoalRush smart contracts (Hook & Prediction Router) are live on Robinhood Chain Mainnet. Match predictions and jackpot payouts execute on-chain with non-reentrant security & owner emergency withdraw safeguards.")}</span>
                 </div>
-                <a href={`https://www.okx.com/explorer/xlayer/address/${HOOK_ADDRESS}`} target="_blank" rel="noopener noreferrer" style={{
+                <a href={`https://robinhoodchain.blockscout.com/address/${HOOK_ADDRESS}`} target="_blank" rel="noopener noreferrer" style={{
               padding: '8px 16px',
               background: 'rgba(255,255,255,0.05)',
               borderRadius: '8px',
@@ -5529,38 +5711,19 @@ export default function App() {
               display: 'flex',
               alignItems: 'center'
             }}>
-                  {t("View Source")} <ExternalLink size={14} style={{
+                  {t("View Explorer")} <ExternalLink size={14} style={{
                 marginLeft: '6px'
               }} />
                 </a>
               </div>
               
               
-              <div className="hackathon-actions" style={{
-            marginTop: '8px'
-          }}>
-                <button onClick={() => {
-              document.getElementById('grush-token-hub')?.scrollIntoView({
-                behavior: 'smooth'
-              });
-            }} className="btn-primary" style={{
-              border: 'none',
-              cursor: 'pointer',
-              padding: '16px 32px',
-              fontSize: '1.15rem',
-              fontWeight: 800,
-              borderRadius: '16px',
-              boxShadow: '0 0 30px rgba(157, 255, 0, 0.3)',
-              transition: 'all 0.3s ease'
-            }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                  <Play size={20} fill="currentColor" /> {t("Buy GRUSH Token")}
-                </button>
-              </div>
+
             </div>
 
 
             {/* Cyber-Matrix Right Column */}
-            <div className="hackathon-right">
+            <div className="protocol-right">
               <div className="ascii-ball-wrapper">
                 <div className="ascii-code-graphic">
                   {asciiArtText}
@@ -5662,38 +5825,38 @@ export default function App() {
               marginBottom: '16px'
             }}>
                   <button type="button" onClick={() => {
-                setSelectedToken('OKB');
+                setSelectedToken('ETH');
                 setSwapAmount('0.001');
-              }} className={`btn-secondary ${selectedToken === 'OKB' ? 'active' : ''}`} style={{
+              }} className={`btn-secondary ${selectedToken === 'ETH' ? 'active' : ''}`} style={{
                 flex: 1,
                 padding: '8px 12px',
                 borderRadius: '8px',
                 fontSize: '0.8rem',
-                border: `1px solid ${selectedToken === 'OKB' ? 'var(--color-primary)' : 'rgba(255,255,255,0.08)'}`,
-                background: selectedToken === 'OKB' ? 'rgba(157, 255, 0, 0.08)' : 'rgba(255,255,255,0.03)',
-                color: selectedToken === 'OKB' ? 'var(--color-primary)' : 'rgba(255,255,255,0.6)',
+                border: `1px solid ${selectedToken === 'ETH' ? 'var(--color-primary)' : 'rgba(255,255,255,0.08)'}`,
+                background: selectedToken === 'ETH' ? 'rgba(157, 255, 0, 0.08)' : 'rgba(255,255,255,0.03)',
+                color: selectedToken === 'ETH' ? 'var(--color-primary)' : 'rgba(255,255,255,0.6)',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 transition: 'all 0.2s'
               }} disabled={isStriking}>
-                    {t("native OKB")}
+                    {t("native ETH")}
                   </button>
                   <button type="button" onClick={() => {
-                setSelectedToken('GRUSH');
-                setSwapAmount('100');
-              }} className={`btn-secondary ${selectedToken === 'GRUSH' ? 'active' : ''}`} style={{
+                setSelectedToken('USDG');
+                setSwapAmount('1');
+              }} className={`btn-secondary ${selectedToken === 'USDG' ? 'active' : ''}`} style={{
                 flex: 1,
                 padding: '8px 12px',
                 borderRadius: '8px',
                 fontSize: '0.8rem',
-                border: `1px solid ${selectedToken === 'GRUSH' ? 'var(--color-primary)' : 'rgba(255,255,255,0.08)'}`,
-                background: selectedToken === 'GRUSH' ? 'rgba(157, 255, 0, 0.08)' : 'rgba(255,255,255,0.03)',
-                color: selectedToken === 'GRUSH' ? 'var(--color-primary)' : 'rgba(255,255,255,0.6)',
+                border: `1px solid ${selectedToken === 'USDG' ? 'var(--color-primary)' : 'rgba(255,255,255,0.08)'}`,
+                background: selectedToken === 'USDG' ? 'rgba(157, 255, 0, 0.08)' : 'rgba(255,255,255,0.03)',
+                color: selectedToken === 'USDG' ? 'var(--color-primary)' : 'rgba(255,255,255,0.6)',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 transition: 'all 0.2s'
               }} disabled={isStriking}>
-                    {t("GRUSH Token")}
+                    {t("USDG (Robinhood Dollar)")}
                   </button>
                 </div>
 
@@ -5704,7 +5867,7 @@ export default function App() {
                   display: 'flex',
                   alignItems: 'center'
                 }}>
-                      <input type="number" value={swapAmount} onChange={e => setSwapAmount(e.target.value)} className="swap-input" disabled={isStriking} step={selectedToken === 'GRUSH' ? '1' : '0.0001'} min={selectedToken === 'GRUSH' ? '1' : '0.0001'} />
+                      <input type="number" value={swapAmount} onChange={e => setSwapAmount(e.target.value)} className="swap-input" disabled={isStriking} step={selectedToken === 'USDG' ? '1' : '0.0001'} min={selectedToken === 'USDG' ? '1' : '0.0001'} />
                       <span style={{
                     fontWeight: 700,
                     fontSize: '0.9rem',
@@ -5716,44 +5879,44 @@ export default function App() {
                   gap: '6px',
                   marginTop: '8px'
                 }}>
-                      {selectedToken === 'GRUSH' ? <>
+                      {selectedToken === 'USDG' ? <>
+                          <button type="button" onClick={() => setSwapAmount('1')} className="btn-secondary" style={{
+                      padding: '2px 8px',
+                      fontSize: '0.65rem',
+                      minWidth: 'auto',
+                      cursor: 'pointer'
+                    }} disabled={isStriking}>{t("1 USDG")}</button>
                           <button type="button" onClick={() => setSwapAmount('10')} className="btn-secondary" style={{
                       padding: '2px 8px',
                       fontSize: '0.65rem',
                       minWidth: 'auto',
                       cursor: 'pointer'
-                    }} disabled={isStriking}>{t("10 GRUSH")}</button>
-                          <button type="button" onClick={() => setSwapAmount('100')} className="btn-secondary" style={{
+                    }} disabled={isStriking}>{t("10 USDG")}</button>
+                          <button type="button" onClick={() => setSwapAmount('50')} className="btn-secondary" style={{
                       padding: '2px 8px',
                       fontSize: '0.65rem',
                       minWidth: 'auto',
                       cursor: 'pointer'
-                    }} disabled={isStriking}>{t("100 GRUSH")}</button>
-                          <button type="button" onClick={() => setSwapAmount('1000')} className="btn-secondary" style={{
-                      padding: '2px 8px',
-                      fontSize: '0.65rem',
-                      minWidth: 'auto',
-                      cursor: 'pointer'
-                    }} disabled={isStriking}>{t("1,000 GRUSH")}</button>
+                    }} disabled={isStriking}>{t("50 USDG")}</button>
                         </> : <>
                           <button type="button" onClick={() => setSwapAmount('0.0001')} className="btn-secondary" style={{
                       padding: '2px 8px',
                       fontSize: '0.65rem',
                       minWidth: 'auto',
                       cursor: 'pointer'
-                    }} disabled={isStriking}>{t("0.0001 OKB")}</button>
+                    }} disabled={isStriking}>{t("0.0001 ETH")}</button>
                           <button type="button" onClick={() => setSwapAmount('0.001')} className="btn-secondary" style={{
                       padding: '2px 8px',
                       fontSize: '0.65rem',
                       minWidth: 'auto',
                       cursor: 'pointer'
-                    }} disabled={isStriking}>{t("0.001 OKB")}</button>
+                    }} disabled={isStriking}>{t("0.001 ETH")}</button>
                           <button type="button" onClick={() => setSwapAmount('0.01')} className="btn-secondary" style={{
                       padding: '2px 8px',
                       fontSize: '0.65rem',
                       minWidth: 'auto',
                       cursor: 'pointer'
-                    }} disabled={isStriking}>{t("0.01 OKB")}</button>
+                    }} disabled={isStriking}>{t("0.01 ETH")}</button>
                         </>}
                     </div>
                   </div>
@@ -5782,7 +5945,7 @@ export default function App() {
                       <span className="swap-input" style={{
                     opacity: 0.8
                   }}>
-                        {parseFloat(swapAmount) ? parseFloat(swapAmount).toFixed(selectedToken === 'GRUSH' ? 0 : 4) : '0'}
+                        {parseFloat(swapAmount) ? parseFloat(swapAmount).toFixed(selectedToken === 'USDG' ? 0 : 4) : '0'}
                       </span>
                       <span style={{
                     fontWeight: 700,
@@ -5807,7 +5970,7 @@ export default function App() {
               flexDirection: 'column',
               gap: '10px'
             }}>
-                    {/* OKB Claim */}
+                    {/* ETH Claim */}
                     {parseFloat(userPredictions[activeMatch.winner]?.okbAmount) > 0 && (userPredictions[activeMatch.winner]?.okbClaimed ? <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -5821,8 +5984,8 @@ export default function App() {
                 fontWeight: 600,
                 color: 'var(--color-primary)'
               }}>
-                          {t("✅ OKB Jackpot claimed")}
-                        </div> : <button type="button" id="claim-okb-jackpot-btn" onClick={handleClaimJackpot} className="swap-btn" style={{
+                          {t("✅ ETH Jackpot claimed")}
+                        </div> : <button type="button" id="claim-eth-jackpot-btn" onClick={handleClaimJackpot} className="swap-btn" style={{
                 background: 'linear-gradient(135deg, #00e5ff 0%, #9dff00 100%)',
                 color: '#000',
                 fontWeight: 800,
@@ -5830,7 +5993,7 @@ export default function App() {
                 boxShadow: '0 0 20px rgba(0, 229, 255, 0.35)',
                 letterSpacing: '0.3px'
               }}>
-                          {t("💰 Claim OKB Jackpot ·")} {parseFloat(userPredictions[activeMatch.winner]?.okbAmount).toFixed(4)} {t("OKB")}
+                          {t("💰 Claim ETH Jackpot ·")} {parseFloat(userPredictions[activeMatch.winner]?.okbAmount).toFixed(4)} {t("ETH")}
                         </button>)}
                     {/* GRUSH Claim */}
                     {parseFloat(userPredictions[activeMatch.winner]?.grushAmount) > 0 && (userPredictions[activeMatch.winner]?.grushClaimed ? <div style={{
@@ -5982,7 +6145,7 @@ export default function App() {
                       color: 'rgba(255,255,255,0.6)',
                       fontSize: '0.78rem'
                     }}>
-                                  {t("Jackpot:")} {parseFloat(pastClaimResult.jackpot).toFixed(4)} {t("OKB")}
+                                  {t("Jackpot:")} {parseFloat(pastClaimResult.jackpot).toFixed(4)} {t("ETH")}
                                 </div>
 
                                 {!pastClaimResult.hasPrediction ? <div style={{
@@ -5999,7 +6162,7 @@ export default function App() {
                                       {t("Your pick:")} <strong style={{
                           color: '#fff'
                         }}>{pastClaimResult.predictedTeam === 1 ? pastClaimResult.teamA : pastClaimResult.predictedTeam === 2 ? pastClaimResult.teamB : 'Draw'}</strong>
-                                      {parseFloat(pastClaimResult.okbAmount) > 0 && ` · ${parseFloat(pastClaimResult.okbAmount).toFixed(4)} OKB`}
+                                      {parseFloat(pastClaimResult.okbAmount) > 0 && ` · ${parseFloat(pastClaimResult.okbAmount).toFixed(4)} ETH`}
                                       {parseFloat(pastClaimResult.grushAmount) > 0 && ` · ${parseFloat(pastClaimResult.grushAmount).toFixed(0)} GRUSH`}
                                     </div>
 
@@ -6012,12 +6175,12 @@ export default function App() {
                           color: 'var(--color-primary)',
                           fontWeight: 600,
                           fontSize: '0.8rem'
-                        }}>{t("✅ OKB Jackpot already claimed")}</div> : <button type="button" onClick={() => handleClaimPastOkb(pastClaimResult.numericId)} className="swap-btn" style={{
+                        }}>{t("✅ ETH Jackpot already claimed")}</div> : <button type="button" onClick={() => handleClaimPastOkb(pastClaimResult.numericId)} className="swap-btn" style={{
                           background: 'linear-gradient(135deg, #00e5ff, #9dff00)',
                           color: '#000',
                           fontWeight: 800,
                           fontSize: '0.9rem'
-                        }}>{t("💰 Claim OKB Jackpot")}</button>)}
+                        }}>{t("💰 Claim ETH Jackpot")}</button>)}
                                         {parseFloat(pastClaimResult.grushAmount) > 0 && (pastClaimResult.grushClaimed ? <div style={{
                           color: 'var(--color-secondary)',
                           fontWeight: 600,
@@ -6072,7 +6235,7 @@ export default function App() {
                   marginTop: '8px',
                   marginBottom: 0
                 }}>
-                        {t("Predictions and shootout games are available only on contract-active World Cup matches.")}
+                        {t("Predictions and shootout games are available only on contract-active Tournament matches.")}
                       </p>
                     </div>
                     <button type="button" onClick={() => {
@@ -6148,7 +6311,7 @@ export default function App() {
                   marginTop: '8px',
                   marginBottom: 0
                 }}>
-                          {isSelectedMatchOnChain ? `On-chain Match · Jackpot: ${jackpot.toFixed(4)} OKB` : 'This is a local simulation match. On-chain claims require the contract-active match.'}
+                          {isSelectedMatchOnChain ? `On-chain Match · Jackpot: ${jackpot.toFixed(4)} ETH` : 'This is a local simulation match. On-chain claims require the contract-active match.'}
                         </p>
                       </div>
                       {/* Claim buttons handled by winner-only panel above */}
@@ -6262,7 +6425,7 @@ export default function App() {
                         color: 'var(--color-primary)',
                         fontWeight: 600
                       }}>
-                                {t("Predicted:")} {parseFloat(userPredictions[1]?.okbAmount) > 0 ? `${parseFloat(userPredictions[1]?.okbAmount).toFixed(3)} OKB` : ''}
+                                {t("Predicted:")} {parseFloat(userPredictions[1]?.okbAmount) > 0 ? `${parseFloat(userPredictions[1]?.okbAmount).toFixed(3)} ETH` : ''}
                                 {parseFloat(userPredictions[1]?.okbAmount) > 0 && parseFloat(userPredictions[1]?.grushAmount) > 0 ? ' + ' : ''}
                                 {parseFloat(userPredictions[1]?.grushAmount) > 0 ? `${parseFloat(userPredictions[1]?.grushAmount).toFixed(0)} GRUSH` : ''}
                               </span>}
@@ -6290,7 +6453,7 @@ export default function App() {
                         color: 'var(--color-primary)',
                         fontWeight: 600
                       }}>
-                                {t("Predicted:")} {parseFloat(userPredictions[3]?.okbAmount) > 0 ? `${parseFloat(userPredictions[3]?.okbAmount).toFixed(3)} OKB` : ''}
+                                {t("Predicted:")} {parseFloat(userPredictions[3]?.okbAmount) > 0 ? `${parseFloat(userPredictions[3]?.okbAmount).toFixed(3)} ETH` : ''}
                                 {parseFloat(userPredictions[3]?.okbAmount) > 0 && parseFloat(userPredictions[3]?.grushAmount) > 0 ? ' + ' : ''}
                                 {parseFloat(userPredictions[3]?.grushAmount) > 0 ? `${parseFloat(userPredictions[3]?.grushAmount).toFixed(0)} GRUSH` : ''}
                               </span>}
@@ -6323,7 +6486,7 @@ export default function App() {
                         color: 'var(--color-primary)',
                         fontWeight: 600
                       }}>
-                                {t("Predicted:")} {parseFloat(userPredictions[2]?.okbAmount) > 0 ? `${parseFloat(userPredictions[2]?.okbAmount).toFixed(3)} OKB` : ''}
+                                {t("Predicted:")} {parseFloat(userPredictions[2]?.okbAmount) > 0 ? `${parseFloat(userPredictions[2]?.okbAmount).toFixed(3)} ETH` : ''}
                                 {parseFloat(userPredictions[2]?.okbAmount) > 0 && parseFloat(userPredictions[2]?.grushAmount) > 0 ? ' + ' : ''}
                                 {parseFloat(userPredictions[2]?.grushAmount) > 0 ? `${parseFloat(userPredictions[2]?.grushAmount).toFixed(0)} GRUSH` : ''}
                               </span>}
@@ -6332,8 +6495,8 @@ export default function App() {
                       </div>
                     </div>
 
-                    <button type={walletConnected ? "submit" : "button"} className="swap-btn" disabled={isStriking || walletConnected && chainId !== 196} onClick={!walletConnected ? handleConnectWallet : undefined}>
-                      {isStriking ? 'Transaction in progress...' : !walletConnected ? 'Connect Wallet to Continue' : chainId !== 196 ? 'Switch to X Layer Mainnet' : 'Review & Submit Prediction'}
+                    <button type={walletConnected ? "submit" : "button"} className="swap-btn" disabled={isStriking || walletConnected && chainId !== 4663} onClick={!walletConnected ? handleConnectWallet : undefined}>
+                      {isStriking ? 'Transaction in progress...' : !walletConnected ? 'Connect Wallet to Continue' : chainId !== 4663 ? 'Switch to Robinhood Chain Mainnet' : 'Review & Submit Prediction'}
                     </button>
 
                     <div className={`transaction-status ${transactionStatus.tone}`} role="status" aria-live="polite">
@@ -6341,247 +6504,14 @@ export default function App() {
                         <span>{t("Match")}<strong>{activeMatch.teamA} vs {activeMatch.teamB}</strong></span>
                         <span>{t("Your pick")}<strong>{prediction === 1 ? activeMatch.teamA : prediction === 2 ? activeMatch.teamB : 'Draw'}</strong></span>
                         <span>{t("Maximum spend")}<strong>{swapAmount || '0'} {selectedToken} {t("+ gas")}</strong></span>
-                        <span>{t("Network")}<strong>{chainId === 196 ? 'X Layer Mainnet' : 'Switch required'}</strong></span>
+                        <span>{t("Network")}<strong>{chainId === 4663 ? 'Robinhood Chain Mainnet' : 'Switch required'}</strong></span>
                       </div>
                       <p>{transactionStatus.message}</p>
                       <small>{t("If your wallet marks the transaction suspicious or unsafe, cancel it. Verify the router and hook addresses independently before retrying.")}</small>
                     </div>
                   </>}
 
-                {/* GRUSH Token Hub Card */}
-                <div id="grush-token-hub" style={{
-              marginTop: '20px',
-              padding: '14px',
-              background: 'rgba(157, 255, 0, 0.02)',
-              border: '1px solid rgba(157, 255, 0, 0.12)',
-              borderRadius: '12px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px'
-            }}>
-                  <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
-              }}>
-                    <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                      <Coins size={16} style={{
-                    color: 'var(--color-primary)'
-                  }} />
-                      <span style={{
-                    fontSize: '0.85rem',
-                    fontWeight: 700,
-                    color: '#fff',
-                    letterSpacing: '0.3px'
-                  }}>
-                        {t("GRUSH Token Hub")}
-                      </span>
-                    </div>
-                    <span style={{
-                  fontSize: '0.65rem',
-                  background: 'rgba(157, 255, 0, 0.1)',
-                  color: 'var(--color-primary)',
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  fontWeight: 600
-                }}>
-                      {t("X Layer CA")}
-                    </span>
-                  </div>
 
-                  {/* Contract Address row */}
-                  <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: 'rgba(0,0,0,0.2)',
-                borderRadius: '8px',
-                padding: '8px 10px',
-                border: '1px solid rgba(255,255,255,0.05)'
-              }}>
-                    <span style={{
-                  fontSize: '0.72rem',
-                  fontFamily: 'var(--font-mono)',
-                  color: 'rgba(255,255,255,0.6)',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  maxWidth: '180px'
-                }}>
-                      {GRUSH_TOKEN_ADDRESS}
-                    </span>
-                    <button type="button" onClick={copyCA} style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: caCopied ? 'var(--color-primary)' : 'rgba(255,255,255,0.4)',
-                  cursor: 'pointer',
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  transition: 'all 0.2s'
-                }}>
-                      <Copy size={12} />
-                      {caCopied ? 'Copied!' : 'Copy CA'}
-                    </button>
-                  </div>
-
-                  {/* On-Chain Swap Widget */}
-                  <div style={{
-                background: 'rgba(255, 255, 255, 0.02)',
-                borderRadius: '8px',
-                padding: '10px',
-                border: '1px solid rgba(255,255,255,0.05)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px'
-              }}>
-                    <div style={{
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
-                  color: 'rgba(255,255,255,0.4)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
-                }}>
-                      {t("⚡ Quick Swap OKB for GRUSH")}
-                    </div>
-                    
-                    <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '8px'
-                }}>
-                      {/* You Pay OKB */}
-                      <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px'
-                  }}>
-                        <span style={{
-                      fontSize: '0.65rem',
-                      color: 'rgba(255,255,255,0.5)'
-                    }}>{t("You Pay (OKB)")}</span>
-                        <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      background: 'rgba(0,0,0,0.3)',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      padding: '4px 8px'
-                    }}>
-                          <input type="text" placeholder="0.0" value={swapAmountOKB} onChange={e => setSwapAmountOKB(e.target.value)} style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#fff',
-                        fontSize: '0.8rem',
-                        fontFamily: 'var(--font-mono)',
-                        width: '100%',
-                        outline: 'none'
-                      }} />
-                        </div>
-                      </div>
-
-                      {/* You Receive GRUSH */}
-                      <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px'
-                  }}>
-                        <span style={{
-                      fontSize: '0.65rem',
-                      color: 'rgba(255,255,255,0.5)'
-                    }}>{t("You Receive (Est)")}</span>
-                        <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      background: 'rgba(0,0,0,0.3)',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      padding: '4px 8px',
-                      height: '28px'
-                    }}>
-                          <span style={{
-                        color: isQuoting ? 'var(--color-primary)' : '#fff',
-                        fontSize: '0.8rem',
-                        fontFamily: 'var(--font-mono)',
-                        width: '100%',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}>
-                            {isQuoting ? 'Quoting...' : `${estimatedGrush} GRUSH`}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button type="button" onClick={!walletConnected ? handleConnectWallet : executeSwap} disabled={walletConnected && (isSwapping || isQuoting || !swapAmountOKB || parseFloat(swapAmountOKB) <= 0 || chainId !== 196)} style={{
-                  background: 'linear-gradient(135deg, var(--color-primary) 0%, #7dbf00 100%)',
-                  border: 'none',
-                  color: '#000',
-                  fontWeight: 700,
-                  borderRadius: '6px',
-                  padding: '8px',
-                  fontSize: '0.75rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  transition: 'all 0.2s',
-                  opacity: walletConnected && (isSwapping || isQuoting || !swapAmountOKB || parseFloat(swapAmountOKB) <= 0 || chainId !== 196) ? 0.6 : 1
-                }}>
-                      {isSwapping ? 'Swapping...' : !walletConnected ? 'Connect Wallet' : chainId !== 196 ? 'Switch to X Layer' : 'Buy GRUSH'}
-                    </button>
-
-                    {swapStatus.message && <div style={{
-                  fontSize: '0.65rem',
-                  color: swapStatus.tone === 'error' ? '#ff4d4d' : swapStatus.tone === 'success' ? 'var(--color-primary)' : 'var(--color-secondary)',
-                  background: 'rgba(0,0,0,0.2)',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  border: swapStatus.tone === 'error' ? '1px solid rgba(255,77,77,0.1)' : '1px solid rgba(157, 255, 0, 0.1)',
-                  lineHeight: '1.3'
-                }}>
-                        {swapStatus.message}
-                      </div>}
-                  </div>
-
-                  {/* Quick actions grid */}
-                  <div className="grush-hub-actions" style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr',
-                gap: '8px'
-              }}>
-                    <button type="button" onClick={handleAddGrushToWallet} style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  color: '#fff',
-                  borderRadius: '8px',
-                  padding: '8px',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}>
-                      <Plus size={14} style={{
-                    color: 'var(--color-primary)'
-                  }} />
-                      {t("Add to OKX Wallet")}
-                    </button>
-                  </div>
-                </div>
               </form>
             </div>
 
@@ -6660,25 +6590,15 @@ export default function App() {
               return <>
                       <div className="jackpot-display">
                         <div className="swap-label">{t("TOTAL ACCUMULATED JACKPOT")}</div>
-                        <div className="jackpot-val">{jackpot.toFixed(4)} {t("OKB")}</div>
-                        <div className="jackpot-val-grush" style={{
-                    fontSize: '1.2rem',
-                    color: '#ff00aa',
-                    marginTop: '4px',
-                    fontWeight: 'bold'
-                  }}>
-                          + {grushJackpot.toLocaleString(undefined, {
-                      maximumFractionDigits: 2
-                    })} {t("GRUSH")}
-                        </div>
+                        <div className="jackpot-val">{jackpot.toFixed(4)} {t("ETH")}</div>
                         <div style={{
-                    fontSize: '0.8rem',
                     color: 'rgba(255,255,255,0.4)',
                     marginTop: '4px'
                   }}>
-                          ≈ ${(jackpot * 60 + grushJackpot * 0.05).toLocaleString(undefined, {
+                          ≈ ${(jackpot * 3300).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
                       maximumFractionDigits: 2
-                    })} {t("USD")}
+                    })} USD
                         </div>
                       </div>
 
@@ -6696,7 +6616,7 @@ export default function App() {
                       }} />
                             <span className="team-name">{activeMatch.teamA}</span>
                           </div>
-                          <span className="team-odds">{teamAVotes.toFixed(1)} {t("OKB (")}{percentageA}%)</span>
+                          <span className="team-odds">{teamAVotes.toFixed(1)} {t("ETH (")}{percentageA}%)</span>
                         </div>
 
                         <div className={`team-row ${prediction === 3 ? 'selected' : ''}`} onClick={() => handlePredictionChange(3)}>
@@ -6707,7 +6627,7 @@ export default function App() {
                       }}>🤝</span>
                             <span className="team-name">{t("Draw")}</span>
                           </div>
-                          <span className="team-odds">{teamDrawVotes.toFixed(1)} {t("OKB (")}{percentageDraw}%)</span>
+                          <span className="team-odds">{teamDrawVotes.toFixed(1)} {t("ETH (")}{percentageDraw}%)</span>
                         </div>
 
                         <div className={`team-row ${prediction === 2 ? 'selected' : ''}`} onClick={() => handlePredictionChange(2)}>
@@ -6721,7 +6641,7 @@ export default function App() {
                       }} />
                             <span className="team-name">{activeMatch.teamB}</span>
                           </div>
-                          <span className="team-odds">{teamBVotes.toFixed(1)} {t("OKB (")}{percentageB}%)</span>
+                          <span className="team-odds">{teamBVotes.toFixed(1)} {t("ETH (")}{percentageB}%)</span>
                         </div>
 
                         <div className="odds-progress-wrap" style={{
@@ -7057,142 +6977,6 @@ export default function App() {
                   </div>}
               </div>
 
-              {/* VIP Access Pass */}
-              <div className="card-bezel" style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px'
-          }}>
-                <div>
-                  <h3 className="panel-title" style={{
-                color: 'var(--color-primary)',
-                textShadow: '0 0 10px rgba(157,255,0,0.3)'
-              }}>
-                    <Award size={20} />
-                    {t("GoalRush Access Pass")}
-                  </h3>
-                  <p style={{
-                fontSize: '0.85rem',
-                color: 'rgba(255,255,255,0.7)',
-                marginBottom: '8px',
-                lineHeight: '1.4'
-              }}>
-                    {t("Guarantees exclusive gated access to VIP prediction pools and zero-fee token swaps.")}
-                  </p>
-                </div>
-                
-                <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginBottom: '8px',
-              position: 'relative'
-            }}>
-                  <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'radial-gradient(circle at center, rgba(157,255,0,0.2) 0%, transparent 70%)',
-                filter: 'blur(20px)',
-                zIndex: 0
-              }}></div>
-                  <img src="/access-pass.png" alt="GoalRush Access Pass" style={{
-                width: '100%',
-                maxWidth: '300px',
-                borderRadius: '16px',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(157,255,0,0.15)',
-                border: '1px solid rgba(157,255,0,0.3)',
-                zIndex: 1,
-                position: 'relative'
-              }} />
-                </div>
-                
-                <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              background: 'rgba(0,0,0,0.4)',
-              padding: '16px',
-              borderRadius: '12px',
-              border: '1px solid rgba(255,255,255,0.08)'
-            }}>
-                  <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px'
-              }}>
-                    <span style={{
-                  fontSize: '0.75rem',
-                  color: 'rgba(255,255,255,0.5)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px'
-                }}>{t("Supply")}</span>
-                    <span style={{
-                  fontSize: '1.15rem',
-                  fontWeight: 'bold',
-                  color: '#fff'
-                }}>{accessPassSupply} / 1000</span>
-                  </div>
-                  <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px',
-                alignItems: 'flex-end'
-              }}>
-                    <span style={{
-                  fontSize: '0.75rem',
-                  color: 'rgba(255,255,255,0.5)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px'
-                }}>{t("Mint Price")}</span>
-                    <span style={{
-                  fontSize: '1.15rem',
-                  fontWeight: 'bold',
-                  color: 'var(--color-primary)'
-                }}>$10</span>
-                    <span style={{
-                  fontSize: '0.78rem',
-                  color: 'rgba(255,255,255,0.5)'
-                }}>
-                      {grushPriceUsd ? `≈ ${Math.ceil(10 / grushPriceUsd).toLocaleString()} $GRUSH` : 'Loading price...'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Mint Status Notification */}
-                  {mintStatus && <div style={{
-              padding: '10px',
-              background: 'rgba(0, 229, 255, 0.05)',
-              border: '1px solid rgba(0, 229, 255, 0.15)',
-              borderRadius: '8px',
-              fontSize: '0.8rem',
-              color: 'var(--color-secondary)',
-              textAlign: 'center',
-              fontFamily: 'var(--font-mono)'
-            }}>
-                      <div className="badge-dot" style={{
-                display: 'inline-block',
-                marginRight: '6px',
-                background: 'var(--color-secondary)',
-                boxShadow: '0 0 6px var(--color-secondary)'
-              }}></div>
-                      {mintStatus}
-                    </div>}
-                <button className="btn-primary" style={{
-              padding: '16px',
-              fontSize: '1.1rem',
-              fontWeight: '800',
-              borderRadius: '12px',
-              marginTop: '4px',
-              boxShadow: '0 0 20px rgba(157,255,0,0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }} onClick={handleMintAccessPass} disabled={isMintingCard}>
-                  <Award size={18} fill="currentColor" /> {isMintingCard ? 'Minting...' : walletConnected ? 'Mint Access Pass' : 'Connect to Mint'}
-                </button>
-              </div>
             </div>
           </section>
 
@@ -7211,7 +6995,7 @@ export default function App() {
           color: 'rgba(255,255,255,0.5)',
           marginBottom: '20px'
         }}>
-              {t("Top creators and swappers registered on OKX X Layer during the tournament.")}
+              {t("Top creators and swappers registered on Robinhood Chain during the tournament.")}
             </p>
 
             {!scanState.done && <div style={{
@@ -7265,7 +7049,7 @@ export default function App() {
                             <span className="compact-stat-primary" style={{
                     color: 'var(--color-secondary)',
                     whiteSpace: 'nowrap'
-                  }}>{row.claimed.toFixed(4)} {t("OKB")} <span className="desktop-only-text" style={{
+                  }}>{row.claimed.toFixed(4)} {t("ETH")} <span className="desktop-only-text" style={{
                       fontSize: '0.65rem',
                       color: 'rgba(255,255,255,0.4)'
                     }}>{t("CLAIMED")}</span></span>
@@ -7279,7 +7063,7 @@ export default function App() {
                             <span className="compact-stat-primary" style={{
                     color: 'var(--color-primary)',
                     whiteSpace: 'nowrap'
-                  }}>{row.volume.toFixed(4)} {t("OKB")} <span className="desktop-only-text" style={{
+                  }}>{row.volume.toFixed(4)} {t("ETH")} <span className="desktop-only-text" style={{
                       fontSize: '0.65rem',
                       color: 'rgba(255,255,255,0.4)'
                     }}>{t("VOL")}</span></span>
@@ -7333,14 +7117,7 @@ export default function App() {
               <div>{t("Connecting to live matches database...")}</div>
             </div>;
       }
-      const isWorldCupMatch = m => {
-        const comp = m.competition?.toLowerCase() || '';
-        return comp.includes('world cup') || comp.includes('fifa');
-      };
-      const categoryMatches = liveMatches.filter(m => {
-        const isWC = isWorldCupMatch(m);
-        return competitionCategory === 'world-cup' ? isWC : !isWC;
-      });
+      const categoryMatches = liveMatches;
       const selectedMatch = categoryMatches.find(m => m.id === selectedMatchCenterId) || categoryMatches[0];
       const filteredMatches = categoryMatches.filter(m => {
         if (matchFilter === 'live') return m.isLive && m.minute !== 'FT';
@@ -7385,7 +7162,7 @@ export default function App() {
             }}>
                   <span style={{
                 fontSize: '2.5rem'
-              }}>{competitionCategory === 'world-cup' ? '🏆' : '⚽'}</span>
+              }}>⚽</span>
                   <div>
                     <h2 style={{
                   fontFamily: 'var(--font-display)',
@@ -7395,52 +7172,16 @@ export default function App() {
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent'
                 }}>
-                      {competitionCategory === 'world-cup' ? 'World Cup Match Hub' : 'Leagues & Cups Hub'}
+                      Leagues & Cups Match Hub
                     </h2>
                     <p style={{
                   color: 'rgba(255,255,255,0.5)',
                   fontSize: '0.9rem',
                   marginTop: '4px'
                 }}>
-                      {competitionCategory === 'world-cup' ? 'Real-time match scoring, tactical formations, and decentralized prediction jackpot pools for FIFA World Cup.' : 'Real-time fixtures, predictions, and stats for the major domestic leagues and continental cups.'}
+                      Real-time fixtures, predictions, and stats for the major domestic leagues and continental cups.
                     </p>
                   </div>
-                </div>
-
-                {/* Competition Segmented Tabs */}
-                <div style={{
-              display: 'flex',
-              background: 'rgba(255,255,255,0.03)',
-              padding: '4px',
-              borderRadius: '8px',
-              border: '1px solid rgba(255,255,255,0.05)'
-            }}>
-                  <button onClick={() => handleCategoryChange('world-cup')} style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                transition: 'all 0.2s',
-                background: competitionCategory === 'world-cup' ? 'var(--color-primary)' : 'transparent',
-                color: competitionCategory === 'world-cup' ? '#000' : 'rgba(255,255,255,0.6)'
-              }}>
-                    {t("🏆 FIFA World Cup")}
-                  </button>
-                  <button onClick={() => handleCategoryChange('club')} style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                transition: 'all 0.2s',
-                background: competitionCategory === 'club' ? 'var(--color-primary)' : 'transparent',
-                color: competitionCategory === 'club' ? '#000' : 'rgba(255,255,255,0.6)'
-              }}>
-                    {t("⚽ Leagues & Cups")}
-                  </button>
                 </div>
               </div>
             </section>
@@ -7518,7 +7259,7 @@ export default function App() {
 
 
 
-      {currentView === 'okx-ai' && <div style={{
+      {currentView === 'robinhood-ai' && <div style={{
       marginTop: '32px'
     }}>
           {/* Header Banner */}
@@ -7542,28 +7283,28 @@ export default function App() {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent'
             }}>
-                  {t("OKX.AI Portal")}
+                  {t("GoalRush Portal")}
                 </h2>
                 <p style={{
               color: 'rgba(255,255,255,0.5)',
               fontSize: '0.9rem',
               marginTop: '4px'
             }}>
-                  {t("Welcome to the Agentic Economy. Interact with the OKX.AI marketplace, list agents as service providers, or arbitrate disputes.")}
+                  {t("Welcome to the Agentic Economy. Interact with the GoalRush marketplace, list agents as service providers, or arbitrate disputes.")}
                 </p>
               </div>
             </div>
           </section>
 
           {/* Role Showcase Grid */}
-          <div className="okx-roles-grid" style={{
+          <div className="robinhood-roles-grid" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
         gap: '24px',
         marginBottom: '32px'
       }}>
             {/* User Card */}
-            <div className="card-bezel okx-role-card" style={{
+            <div className="card-bezel robinhood-role-card" style={{
           padding: '24px'
         }}>
               <div style={{
@@ -7586,7 +7327,7 @@ export default function App() {
                 fontWeight: 700
               }}>{t("Task User")}</h3>
                 </div>
-                <span className={`badge-xlayer ${isRegisteredUser ? 'active-badge' : ''}`} style={{
+                <span className={`badge-robinhood ${isRegisteredUser ? 'active-badge' : ''}`} style={{
               fontSize: '0.75rem',
               padding: '4px 10px'
             }}>
@@ -7599,7 +7340,7 @@ export default function App() {
             lineHeight: '1.5',
             marginBottom: '16px'
           }}>
-                {t("Hire specialized AI agents to complete on-chain task requests (auditing, trading, analysis). Fund secure escrow smart contracts on X Layer.")}
+                {t("Hire specialized AI agents to complete on-chain task requests (auditing, trading, analysis). Fund secure escrow smart contracts on Robinhood Chain.")}
               </p>
               <div style={{
             background: '#020405',
@@ -7611,7 +7352,7 @@ export default function App() {
             marginBottom: '16px',
             border: '1px solid rgba(255,255,255,0.05)'
           }}>
-                {t("prompt: Register me as a User on OKX.AI")}
+                {t("prompt: Register me as a User on GoalRush")}
               </div>
               <button onClick={() => handleRunTerminalCommand('register-user')} className="btn-secondary" style={{
             width: '100%',
@@ -7625,7 +7366,7 @@ export default function App() {
             </div>
 
             {/* ASP Card */}
-            <div className="card-bezel okx-role-card" style={{
+            <div className="card-bezel robinhood-role-card" style={{
           padding: '24px'
         }}>
               <div style={{
@@ -7648,7 +7389,7 @@ export default function App() {
                 fontWeight: 700
               }}>{t("Service Provider (ASP)")}</h3>
                 </div>
-                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{
+                <span className={`badge-robinhood ${isRegisteredASP ? 'active-badge' : ''}`} style={{
               fontSize: '0.75rem',
               padding: '4px 10px',
               borderColor: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)',
@@ -7663,7 +7404,7 @@ export default function App() {
             lineHeight: '1.5',
             marginBottom: '16px'
           }}>
-                {t("List your AI agent services in the OKX.AI directory. Fulfill automated tasks or custom-negotiated predictions and earn payout fees.")}
+                {t("List your AI agent services in the GoalRush directory. Fulfill automated tasks or custom-negotiated predictions and earn payout fees.")}
               </p>
               <div style={{
             background: '#020405',
@@ -7675,7 +7416,7 @@ export default function App() {
             marginBottom: '16px',
             border: '1px solid rgba(255,255,255,0.05)'
           }}>
-                {t("prompt: GoalRush ASP is registered as an A2MCP service on OKX.AI")}
+                {t("prompt: GoalRush ASP is registered as an A2MCP service on GoalRush")}
               </div>
               <button onClick={() => handleRunTerminalCommand('register-asp')} className="btn-primary" style={{
             width: '100%',
@@ -7689,7 +7430,7 @@ export default function App() {
             </div>
 
             {/* Evaluator Card */}
-            <div className="card-bezel okx-role-card" style={{
+            <div className="card-bezel robinhood-role-card" style={{
           padding: '24px'
         }}>
               <div style={{
@@ -7712,7 +7453,7 @@ export default function App() {
                 fontWeight: 700
               }}>{t("Dispute Evaluator")}</h3>
                 </div>
-                <span className={`badge-xlayer ${isRegisteredEvaluator ? 'active-badge' : ''}`} style={{
+                <span className={`badge-robinhood ${isRegisteredEvaluator ? 'active-badge' : ''}`} style={{
               fontSize: '0.75rem',
               padding: '4px 10px',
               borderColor: 'var(--color-accent)',
@@ -7727,7 +7468,7 @@ export default function App() {
             lineHeight: '1.5',
             marginBottom: '16px'
           }}>
-                {t("Stake at least 100 OKB to act as an arbitrator. Review evidence to resolve user/agent contract disputes. Earn 5% of bounties on correct verdicts.")}
+                {t("Stake at least 100 ETH to act as an arbitrator. Review evidence to resolve user/agent contract disputes. Earn 5% of bounties on correct verdicts.")}
               </p>
               <div style={{
             background: '#020405',
@@ -7739,7 +7480,7 @@ export default function App() {
             marginBottom: '16px',
             border: '1px solid rgba(255,255,255,0.05)'
           }}>
-                {t("prompt: Register me as an Evaluator on OKX.AI")}
+                {t("prompt: Register me as an Evaluator on GoalRush")}
               </div>
               <button onClick={() => handleRunTerminalCommand('register-evaluator')} className="btn-secondary" style={{
             width: '100%',
@@ -7760,7 +7501,7 @@ export default function App() {
         gap: '32px',
         marginBottom: '32px'
       }}>
-            <div className="card-bezel okx-terminal-card" style={{
+            <div className="card-bezel robinhood-terminal-card" style={{
           padding: '24px',
           display: 'flex',
           flexDirection: 'column',
@@ -7789,7 +7530,7 @@ export default function App() {
               </div>
 
               {/* Terminal Screen */}
-              <div className="okx-terminal-screen" style={{
+              <div className="robinhood-terminal-screen" style={{
             background: '#010304',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: '8px',
@@ -7852,7 +7593,7 @@ export default function App() {
               fontSize: '0.75rem',
               cursor: 'pointer'
             }}>{t("help")}</button>
-                <button onClick={() => handleRunTerminalCommand('npx skills add okx/onchainos-skills')} className="btn-secondary" style={{
+                <button onClick={() => handleRunTerminalCommand('npx skills add robinhood/onchainos-skills')} className="btn-secondary" style={{
               padding: '6px 12px',
               fontSize: '0.75rem',
               cursor: 'pointer'
@@ -7882,7 +7623,7 @@ export default function App() {
       }}>
             
             {/* ASP Service Hub details */}
-            <div className="card-bezel okx-asp-dashboard" style={{
+            <div className="card-bezel robinhood-asp-dashboard" style={{
           padding: '24px',
           display: 'flex',
           flexDirection: 'column',
@@ -7901,7 +7642,7 @@ export default function App() {
               }} />
                   {t("GoalRush ASP Console")}
                 </h3>
-                <span className={`badge-xlayer ${isRegisteredASP ? 'active-badge' : ''}`} style={{
+                <span className={`badge-robinhood ${isRegisteredASP ? 'active-badge' : ''}`} style={{
               fontSize: '0.75rem',
               borderColor: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)',
               color: isRegisteredASP ? 'var(--color-primary)' : 'var(--color-primary)'
@@ -7954,14 +7695,14 @@ export default function App() {
                 fontSize: '0.85rem'
               }}>
                       <CheckCircle size={16} />
-                      <span>{t("Listing submitted to OKX.AI review (Agent ID:")} {GOALRUSH_ASP_ID})</span>
+                      <span>{t("Listing submitted to GoalRush review (Agent ID:")} {GOALRUSH_ASP_ID})</span>
                     </div>
                     <span style={{
                 fontSize: '0.75rem',
                 color: 'rgba(255,255,255,0.7)',
                 lineHeight: '1.4'
               }}>
-                      {t("The GoalRush ASP is registered on-chain and submitted for OKX.AI review. Paid API calls must pass the x402 payment middleware before the prediction route runs.")}
+                      {t("The GoalRush ASP is registered on-chain and submitted for GoalRush review. Paid API calls must pass the x402 payment middleware before the prediction route runs.")}
                     </span>
                   </div>
 
@@ -8249,7 +7990,7 @@ export default function App() {
             </div>
 
             {/* Evaluator Arbitration Simulator */}
-            {isRegisteredEvaluator && <div className="card-bezel okx-evaluator-dashboard" style={{
+            {isRegisteredEvaluator && <div className="card-bezel robinhood-evaluator-dashboard" style={{
           padding: '24px',
           display: 'flex',
           flexDirection: 'column',
@@ -8298,7 +8039,7 @@ export default function App() {
                 fontSize: '1rem',
                 color: '#fff',
                 fontFamily: 'var(--font-mono)'
-              }}>{evaluatorStaked} {t("OKB")}</strong>
+              }}>{evaluatorStaked} {t("ETH")}</strong>
                   </div>
                   <div style={{
               background: 'rgba(255,255,255,0.02)',
@@ -8316,7 +8057,7 @@ export default function App() {
                 fontSize: '1rem',
                 color: 'var(--color-primary)',
                 fontFamily: 'var(--font-mono)'
-              }}>+{evaluatorBounties} {t("OKB")}</strong>
+              }}>+{evaluatorBounties} {t("ETH")}</strong>
                   </div>
                   <div style={{
               background: 'rgba(255,255,255,0.02)',
@@ -8334,7 +8075,7 @@ export default function App() {
                 fontSize: '1rem',
                 color: 'var(--color-danger)',
                 fontFamily: 'var(--font-mono)'
-              }}>-{evaluatorSlashed} {t("OKB")}</strong>
+              }}>-{evaluatorSlashed} {t("ETH")}</strong>
                   </div>
                 </div>
 
@@ -8352,12 +8093,12 @@ export default function App() {
               padding: '4px 8px',
               fontSize: '0.75rem',
               cursor: 'pointer'
-            }}>{t("+50 OKB")}</button>
+            }}>{t("+50 ETH")}</button>
                   <button onClick={() => setEvaluatorStaked(prev => Math.max(100, prev - 50))} className="btn-secondary" style={{
               padding: '4px 8px',
               fontSize: '0.75rem',
               cursor: 'pointer'
-            }}>{t("-50 OKB")}</button>
+            }}>{t("-50 ETH")}</button>
                 </div>
 
                 {/* Cases List */}
@@ -8405,7 +8146,7 @@ export default function App() {
                     fontFamily: 'var(--font-mono)',
                     fontSize: '0.75rem',
                     color: 'var(--color-primary)'
-                  }}>{item.bounty} {t("OKB")}</span>
+                  }}>{item.bounty} {t("ETH")}</span>
                         </div>
                       </button>)}
                   </div>
@@ -8474,7 +8215,7 @@ export default function App() {
                   fontSize: '0.75rem',
                   color: '#ffcc00'
                 }}>
-                          {t("⚠️ Submit your vote. Majority vote wins. Wrong vote slashes 1.00 OKB.")}
+                          {t("⚠️ Submit your vote. Majority vote wins. Wrong vote slashes 1.00 ETH.")}
                         </div>
                         {isResolvingCase ? <div style={{
                   textAlign: 'center',
@@ -8604,7 +8345,7 @@ export default function App() {
             lineHeight: '1.6',
             marginBottom: '24px'
           }}>
-                  {t("GoalRush is a decentralized sports prediction protocol built natively on OKX X Layer. It leverages the cutting-edge capabilities of")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to seamlessly combine yield, sports prediction jackpots, and gamified swap fee rebates directly within decentralized trading pools.")}
+                  {t("GoalRush is a decentralized sports prediction protocol built natively on Robinhood Chain. It leverages the cutting-edge capabilities of")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to seamlessly combine yield, sports prediction jackpots, and gamified swap fee rebates directly within decentralized trading pools.")}
                 </p>
 
                 <div style={{
@@ -8635,7 +8376,7 @@ export default function App() {
                 lineHeight: '1.5',
                 marginBottom: '8px'
               }}>
-                      {t("Pick a result and fund it with OKB or GRUSH through the prediction router. Only transferred assets count toward the claimable jackpot; observed swap volume is informational.")}
+                      {t("Pick a result and fund it with ETH or GRUSH through the prediction router. Only transferred assets count toward the claimable jackpot; observed swap volume is informational.")}
                     </p>
                     <div style={{
                 borderTop: '1px solid rgba(255,255,255,0.05)',
@@ -8743,7 +8484,7 @@ export default function App() {
                 lineHeight: '1.5',
                 marginBottom: '8px'
               }}>
-                      {t("Generate custom holographic player cards using your prediction volume statistics. Mint them as permanent, fully-tradable ERC-721 NFTs on the X Layer blockchain!")}
+                      {t("Generate custom holographic player cards using your prediction volume statistics. Mint them as permanent, fully-tradable ERC-721 NFTs on the Robinhood Chain blockchain!")}
                     </p>
                     <div style={{
                 borderTop: '1px solid rgba(255,255,255,0.05)',
@@ -8752,7 +8493,7 @@ export default function App() {
                 color: 'rgba(255,255,255,0.4)',
                 lineHeight: '1.4'
               }}>
-                      <strong>{t("Mint Pricing:")}</strong> {t("Mint for a small gas fee of 0.002 OKB or spend 10 GRUSH utility tokens. Tradable on the OKX NFT Marketplace.")}
+                      <strong>{t("Mint Pricing:")}</strong> {t("Mint for a small gas fee of 0.002 ETH or spend 10 GRUSH utility tokens. Tradable on the Robinhood NFT Marketplace.")}
                     </div>
                   </div>
 
@@ -8797,14 +8538,14 @@ export default function App() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                      {t("🔗 X Layer Integration")}
+                      {t("🔗 Robinhood Chain Integration")}
                     </h4>
                     <p style={{
                 fontSize: '0.82rem',
                 color: 'rgba(255,255,255,0.5)',
                 lineHeight: '1.5'
               }}>
-                      {t("Deployed on OKX X Layer Mainnet, GoalRush utilizes high-speed block confirmation times and ultra-low gas fees. Swappers experience instant transaction feedback on penalty shootouts and minimal fee overhead.")}
+                      {t("Deployed on Robinhood Chain Mainnet, GoalRush utilizes high-speed block confirmation times and ultra-low gas fees. Swappers experience instant transaction feedback on penalty shootouts and minimal fee overhead.")}
                     </p>
                   </div>
 
@@ -8884,14 +8625,14 @@ export default function App() {
                     <span>•</span>
                     <span>{t("Version: 1.0.2")}</span>
                     <span>•</span>
-                    <span>{t("Chain: OKX X Layer Mainnet")}</span>
+                    <span>{t("Chain: Robinhood Chain Mainnet")}</span>
                   </div>
                 </div>
 
                 <div className="whitepaper-section">
                   <h2>{t("1. Executive Summary")}</h2>
                   <p>
-                    {t("GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the")} <strong>{t("OKX X Layer Mainnet")}</strong>{t(", GoalRush utilizes custom")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to route prediction ticket purchases directly through AMM swap events.")}
+                    {t("GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the")} <strong>{t("Robinhood Chain Mainnet")}</strong>{t(", GoalRush utilizes custom")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to route prediction ticket purchases directly through AMM swap events.")}
                   </p>
                   <p style={{
               marginTop: '12px'
@@ -8913,7 +8654,7 @@ export default function App() {
                   <ul>
                     <li>{t("The swap parameters and prediction selection (Team A vs Team B) are compiled and sent to the hook.")}</li>
                     <li>{t("The")} <code>{t("beforeSwap")}</code> {t("callback extracts the prediction payload (e.g.")} <code>{t("hookData")}</code>).</li>
-                    <li>{t("The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native OKB sent directly into the")} <strong>{t("Match Jackpot Pool")}</strong>.</li>
+                    <li>{t("The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native ETH sent directly into the")} <strong>{t("Match Jackpot Pool")}</strong>.</li>
                   </ul>
 
                   <div className="whitepaper-diagram-box" style={{
@@ -8936,7 +8677,7 @@ export default function App() {
                     {"  │"}<br />
                     {"  ├──► Decodes prediction (Team A/B)"}<br />
                     {"  ├──► Increments match prediction volume"}<br />
-                    {"  └──► Locks OKB value in Jackpot Pool"}<br />
+                    {"  └──► Locks ETH value in Jackpot Pool"}<br />
                   </div>
 
                   <h3>{t("2.2 The afterSwap Callback & Shootout Rebates")}</h3>
@@ -8970,7 +8711,7 @@ export default function App() {
                       <p style={{
                   fontSize: '0.85rem'
                 }}>
-                        {t("Every shootout prediction ticket locks native OKB directly inside the Hook contract. Unlike standard prediction markets with high fee cuts, GoalRush allocates 100% of the user-submitted amount directly into the Match Jackpot Pool, creating massive pools for key matches.")}
+                        {t("Every shootout prediction ticket locks native ETH directly inside the Hook contract. Unlike standard prediction markets with high fee cuts, GoalRush allocates 100% of the user-submitted amount directly into the Match Jackpot Pool, creating massive pools for key matches.")}
                       </p>
                     </div>
                     <div style={{
@@ -9006,7 +8747,7 @@ export default function App() {
                 <div className="whitepaper-section">
                   <h2>{t("4. The GRUSH Utility Token")}</h2>
                   <p>
-                    {t("To maximize compliance with hackathon regulations and foster permissionless market listing, the")} <strong>{t("GRUSH")}</strong> {t("token was launched on the")} <strong>{t("Eulr.fun")}</strong> {t("bonding curve platform.")}
+                    {t("to foster permissionless market listing, the")} <strong>{t("GRUSH")}</strong> {t("token was launched on the")} <strong>{t("Eulr.fun")}</strong> {t("bonding curve platform.")}
                   </p>
                   <ul>
                     <li><strong>{t("Contract Address:")}</strong> <code>{t("0x422fe165b2da990d18c6dca944b11dcd61519671")}</code></li>
@@ -9026,7 +8767,7 @@ export default function App() {
                   <p style={{
               marginTop: '12px'
             }}>
-                    {t("The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded OKB transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.")}
+                    {t("The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded ETH transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.")}
                   </p>
                   <p style={{
               marginTop: '12px'
@@ -9036,7 +8777,7 @@ export default function App() {
                   <p style={{
               marginTop: '12px'
             }}>
-                    <strong>{t("x402 Micropayment Protection:")}</strong> {t("Agent prediction and signal endpoints are protected by the official @x402/express middleware, enforcing standard 402 payment challenges (0.5 USDT on X Layer Mainnet) in full compliance with OKX AI marketplace standards.")}
+                    <strong>{t("x402 Micropayment Protection:")}</strong> {t("Agent prediction and signal endpoints are protected by the official @x402/express middleware, enforcing standard 402 payment challenges (0.5 USDT on Robinhood Chain Mainnet) in full compliance with Robinhood AI marketplace standards.")}
                   </p>
                 </div>
 
@@ -9051,7 +8792,7 @@ export default function App() {
                   <ol style={{
               paddingLeft: '20px'
             }}>
-                    <li><strong>{t("Strict OKX Wallet Isolation:")}</strong> {t("Connection is locked to the official OKX wallet to prevent phishing or multi-wallet collisions.")}</li>
+                    <li><strong>{t("Strict Robinhood Wallet Isolation:")}</strong> {t("Connection is locked to the official Robinhood wallet to prevent phishing or multi-wallet collisions.")}</li>
                     <li><strong>{t("Non-Custodial Design:")}</strong> {t("The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.")}</li>
                     <li><strong>{t("Real-Time Sync & Seamless Transitions:")}</strong> {t("Match states poll seamlessly every 15 seconds with automated transition to upcoming matches when games conclude.")}</li>
                     <li><strong>{t("Eulr-fun Bonding Safety:")}</strong> {t("Real token swaps happen permissionlessly on Euler, shielding the dApp simulator from token vault vulnerabilities.")}</li>
@@ -9074,7 +8815,7 @@ export default function App() {
           color: 'rgba(255,255,255,0.5)',
           marginBottom: '20px'
         }}>
-                {t("Inspect the Solidity hook logic, ERC-721 collectible contracts, and deploy pipelines prepared for OKX X Layer.")}
+                {t("Inspect the Solidity hook logic, ERC-721 collectible contracts, and deploy pipelines prepared for Robinhood Chain.")}
               </p>
 
               <div className="tabs-header" style={{
@@ -9167,7 +8908,7 @@ export default function App() {
         }}>
                 <Cpu size={20} style={{
             color: 'var(--color-primary)'
-          }} /> {t("Deploying on X Layer Mainnet")}
+          }} /> {t("Deploying on Robinhood Chain Mainnet")}
               </h3>
 
               <div style={{
@@ -9260,11 +9001,11 @@ export default function App() {
                       <h4 style={{
                   fontWeight: 600,
                   fontSize: '0.95rem'
-                }}>{t("Verify on X Layer Explorer")}</h4>
+                }}>{t("Verify on Robinhood Chain Explorer")}</h4>
                       <p style={{
                   fontSize: '0.8rem',
                   color: 'rgba(255,255,255,0.5)'
-                }}>{t("Submit contracts to OKX Link/Explorer for public verification using ABI-encoded initialization parameters.")}</p>
+                }}>{t("Submit contracts to Robinhood Link/Explorer for public verification using ABI-encoded initialization parameters.")}</p>
                     </div>
                   </div>
                 </div>
@@ -9286,7 +9027,7 @@ export default function App() {
                     <AlertTriangle size={16} style={{
                 color: 'var(--color-primary)'
               }} />
-                    {t("X Layer RPC Information")}
+                    {t("Robinhood Chain RPC Information")}
                   </h4>
 
                   <div style={{
@@ -9303,7 +9044,7 @@ export default function App() {
                       <span style={{
                   color: 'rgba(255,255,255,0.5)'
                 }}>{t("Network Name")}</span>
-                      <span>{t("X Layer Mainnet")}</span>
+                      <span>{t("Robinhood Chain Mainnet")}</span>
                     </div>
                     <div style={{
                 display: 'flex',
@@ -9315,7 +9056,7 @@ export default function App() {
                 }}>{t("RPC URL")}</span>
                       <span style={{
                   fontFamily: 'var(--font-mono)'
-                }}>{t("https://rpc.xlayer.tech")}</span>
+                }}>{t("https://rpc.mainnet.chain.robinhood.com/")}</span>
                     </div>
                     <div style={{
                 display: 'flex',
@@ -9337,7 +9078,7 @@ export default function App() {
                       <span style={{
                   color: 'rgba(255,255,255,0.5)'
                 }}>{t("Currency Symbol")}</span>
-                      <span>{t("OKB")}</span>
+                      <span>{t("ETH")}</span>
                     </div>
                     <div style={{
                 display: 'flex',
@@ -9349,7 +9090,7 @@ export default function App() {
                 }}>{t("Block Explorer")}</span>
                       <span style={{
                   color: 'var(--color-primary)'
-                }}>{t("https://www.okx.com/explorer/xlayer")}</span>
+                }}>{t("https://robinhoodchain.blockscout.com")}</span>
                     </div>
                   </div>
                 </div>
@@ -9387,7 +9128,7 @@ export default function App() {
                   color: 'rgba(255, 255, 255, 0.7)',
                   marginTop: '4px'
                 }}>
-                        {t("Deploys a premium tradable NFT allowing user mints for OKB/GRUSH:")}
+                        {t("Deploys a premium tradable NFT allowing user mints for ETH/GRUSH:")}
                         <code style={{
                     display: 'block',
                     background: 'rgba(0,0,0,0.3)',
@@ -9545,14 +9286,14 @@ export default function App() {
                   <span>•</span>
                   <span>{t("Version: 1.0.2")}</span>
                   <span>•</span>
-                  <span>{t("Chain: OKX X Layer Mainnet")}</span>
+                  <span>{t("Chain: Robinhood Chain Mainnet")}</span>
                 </div>
               </div>
 
               <div className="whitepaper-section">
                 <h2>{t("1. Executive Summary")}</h2>
                 <p>
-                  {t("GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the")} <strong>{t("OKX X Layer Mainnet")}</strong>{t(", GoalRush utilizes custom")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to route prediction ticket purchases directly through AMM swap events.")}
+                  {t("GoalRush (GRUSH) is a decentralized sports prediction protocol designed to align liquidity incentives, Web3 gaming, and active market trading. Deployed on the")} <strong>{t("Robinhood Chain Mainnet")}</strong>{t(", GoalRush utilizes custom")} <strong>{t("Uniswap V4 Hooks")}</strong> {t("to route prediction ticket purchases directly through AMM swap events.")}
                 </p>
                 <p style={{
               marginTop: '12px'
@@ -9574,7 +9315,7 @@ export default function App() {
                 <ul>
                   <li>{t("The swap parameters and prediction selection (Team A vs Team B) are compiled and sent to the hook.")}</li>
                   <li>{t("The")} <code>{t("beforeSwap")}</code> {t("callback extracts the prediction payload (e.g.")} <code>{t("hookData")}</code>).</li>
-                  <li>{t("The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native OKB sent directly into the")} <strong>{t("Match Jackpot Pool")}</strong>.</li>
+                  <li>{t("The smart contract automatically registers the swapper’s choice, increments their predicted team's volume, and allocates 100% of the native ETH sent directly into the")} <strong>{t("Match Jackpot Pool")}</strong>.</li>
                 </ul>
 
                 <div className="whitepaper-diagram-box">
@@ -9588,7 +9329,7 @@ export default function App() {
                   {"  │"}<br />
                   {"  ├──► Decodes prediction (Team A/B)"}<br />
                   {"  ├──► Increments match prediction volume"}<br />
-                  {"  └──► Locks OKB value in Jackpot Pool"}<br />
+                  {"  └──► Locks ETH value in Jackpot Pool"}<br />
                 </div>
 
                 <h3>{t("2.2 The afterSwap Callback & Shootout Rebates")}</h3>
@@ -9617,7 +9358,7 @@ export default function App() {
                     <p style={{
                   fontSize: '0.85rem'
                 }}>
-                      {t("Every shootout prediction ticket locks native OKB directly inside the Hook contract. Unlike standard prediction markets with high fee cuts, GoalRush allocates 100% of the user-submitted amount directly into the Match Jackpot Pool, creating massive pools for key matches.")}
+                      {t("Every shootout prediction ticket locks native ETH directly inside the Hook contract. Unlike standard prediction markets with high fee cuts, GoalRush allocates 100% of the user-submitted amount directly into the Match Jackpot Pool, creating massive pools for key matches.")}
                     </p>
                   </div>
                   <div style={{
@@ -9653,7 +9394,7 @@ export default function App() {
               <div className="whitepaper-section">
                 <h2>{t("4. The GRUSH Utility Token")}</h2>
                 <p>
-                  {t("To maximize compliance with hackathon regulations and foster permissionless market listing, the")} <strong>{t("GRUSH")}</strong> {t("token was launched on the")} <strong>{t("Eulr.fun")}</strong> {t("bonding curve platform.")}
+                  {t("to foster permissionless market listing, the")} <strong>{t("GRUSH")}</strong> {t("token was launched on the")} <strong>{t("Eulr.fun")}</strong> {t("bonding curve platform.")}
                 </p>
                 <ul>
                   <li><strong>{t("Contract Address:")}</strong> <code>{t("0x422fe165b2da990d18c6dca944b11dcd61519671")}</code></li>
@@ -9673,7 +9414,7 @@ export default function App() {
                 <p style={{
               marginTop: '12px'
             }}>
-                  {t("The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded OKB transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.")}
+                  {t("The AI model is strictly sandboxed. It consumes live football news and outputs a deterministic single-digit prediction (`1`, `2`, or `3`). The Node.js execution layer parses this digit and routes a hardcoded ETH transaction to the Uniswap V4 hook. The AI model never has access to the private key or the ability to manipulate the transaction payload, rendering wallet-draining exploits mathematically impossible.")}
                 </p>
                 <p style={{
               marginTop: '12px'
@@ -9683,7 +9424,7 @@ export default function App() {
                 <p style={{
               marginTop: '12px'
             }}>
-                  <strong>{t("x402 Micropayment Protection:")}</strong> {t("Agent prediction and signal endpoints are protected by the official @x402/express middleware, enforcing standard 402 payment challenges (0.5 USDT on X Layer Mainnet) in full compliance with OKX AI marketplace standards.")}
+                  <strong>{t("x402 Micropayment Protection:")}</strong> {t("Agent prediction and signal endpoints are protected by the official @x402/express middleware, enforcing standard 402 payment challenges (0.5 USDT on Robinhood Chain Mainnet) in full compliance with Robinhood AI marketplace standards.")}
                 </p>
               </div>
 
@@ -9698,7 +9439,7 @@ export default function App() {
                 <ol style={{
               paddingLeft: '20px'
             }}>
-                  <li><strong>{t("Strict OKX Wallet Isolation:")}</strong> {t("Connection is locked to the official OKX wallet to prevent phishing or multi-wallet collisions.")}</li>
+                  <li><strong>{t("Strict Robinhood Wallet Isolation:")}</strong> {t("Connection is locked to the official Robinhood wallet to prevent phishing or multi-wallet collisions.")}</li>
                   <li><strong>{t("Non-Custodial Design:")}</strong> {t("The jackpot pools are managed entirely by immutable contract logic, and admin withdrawals are restricted to verify jackpot payout solvency.")}</li>
                   <li><strong>{t("Real-Time Sync & Seamless Transitions:")}</strong> {t("Match states poll seamlessly every 15 seconds with automated transition to upcoming matches when games conclude.")}</li>
                   <li><strong>{t("Eulr-fun Bonding Safety:")}</strong> {t("Real token swaps happen permissionlessly on Euler, shielding the dApp simulator from token vault vulnerabilities.")}</li>
@@ -9725,7 +9466,7 @@ export default function App() {
                     <Globe size={13} className="hero-info-card-icon" />
                     <span>{t("NETWORK")}</span>
                   </div>
-                  <div className="hero-info-card-value">{t("OKX X Layer")}</div>
+                  <div className="hero-info-card-value">{t("Robinhood Chain")}</div>
                 </div>
 
                 <div className="hero-info-card clickable" onClick={() => {
@@ -9782,7 +9523,7 @@ export default function App() {
         flexDirection: 'column',
         gap: '8px'
       }}>
-          <p>{t("© 2026 GoalRush. Powered by Uniswap V4 & OKX X Layer.")}</p>
+          <p>{t("© 2026 GoalRush. Powered by Uniswap V4 & Robinhood Chain.")}</p>
           <div style={{
           display: 'flex',
           gap: '12px',
@@ -9885,10 +9626,10 @@ export default function App() {
                 <p>{t("Please read these Terms of Service carefully before interacting with the GoalRush platform. By connecting your wallet and participating, you agree to these Terms.")}</p>
 
                 <p><strong>{t("1. Educational & Simulation Use Only")}</strong></p>
-                <p>{t("GoalRush is a proof-of-concept dApp built for the Build X Hackathon. All on-chain simulations, predictions, and games are provided for educational and gaming purposes. There is no guarantee of profits or rewards.")}</p>
+                <p>{t("GoalRush is a proof-of-concept dApp built for Robinhood Chain. All on-chain simulations, predictions, and games are provided for educational and gaming purposes. There is no guarantee of profits or rewards.")}</p>
 
                 <p><strong>{t("2. Assumption of Risk")}</strong></p>
-                <p>{t("All transactions are executed directly by the user via their Web3 wallet (OKX Wallet) on the public X Layer blockchain. You accept full responsibility for any native OKB, gas costs, or token interactions. We have zero control over on-chain executions.")}</p>
+                <p>{t("All transactions are executed directly by the user via their Web3 wallet (Robinhood Wallet) on the public Robinhood Chain blockchain. You accept full responsibility for any native ETH, gas costs, or token interactions. We have zero control over on-chain executions.")}</p>
 
                 <p><strong>{t("3. Solvency & Disclaimer")}</strong></p>
                 <p>{t("GoalRush is provided \"as is\" and \"as available\" without any warranties of any kind. We are not liable for any losses, contract bugs, network downtime, or wallet service provider issues.")}</p>
@@ -9906,10 +9647,10 @@ export default function App() {
             <header className="news-header-section" style={{
           marginBottom: '32px'
         }}>
-              <span className="hero-tag">{t("🔥 World Cup Updates")}</span>
+              <span className="hero-tag">{t("🔥 Live Match Updates")}</span>
               <h1 className="news-main-title">{t("Daily News Hub")}</h1>
               <p className="news-subtitle-text">
-                {t("Stay ahead with the latest FIFA World Cup 2026 match reports, team news, and tournament highlights — updated automatically throughout the day.")}
+                {t("Stay ahead with the latest GoalRush Tournament 2026 match reports, team news, and tournament highlights — updated automatically throughout the day.")}
               </p>
             </header>
 
@@ -9939,7 +9680,7 @@ export default function App() {
 
             {newsLoading && newsArticles.length === 0 ? <div className="news-loading-spinner" id="news-loader">
                 <div className="spinner-glow"></div>
-                <span>{t("Syncing World Cup RSS news feeds...")}</span>
+                <span>{t("Syncing Tournament RSS news feeds...")}</span>
               </div> : filteredArticles.length === 0 ? <div className="news-empty-state">
                 <span>{t("No news articles found for this category.")}</span>
               </div> : <section className="news-articles-grid" aria-label="News articles">
@@ -10091,10 +9832,10 @@ export default function App() {
                 <p>{t("We do not collect, store, or process any personal identification information (PII) such as your name, email address, IP address, or physical address. There is no sign-up form or database account registration.")}</p>
 
                 <p><strong>{t("2. Blockchain Publicity")}</strong></p>
-                <p>{t("Your connected wallet address, token balances, and prediction transaction details are broadcasted to the public X Layer blockchain network. This data is open-source, permanent, and accessible by anyone.")}</p>
+                <p>{t("Your connected wallet address, token balances, and prediction transaction details are broadcasted to the public Robinhood Chain blockchain network. This data is open-source, permanent, and accessible by anyone.")}</p>
 
                 <p><strong>{t("3. Third-Party Services")}</strong></p>
-                <p>{t("When you interact with the OKX Wallet extension or the Eulr.fun bonding curve, you are subject to their respective terms and privacy policies. We do not control third-party Web3 infrastructure.")}</p>
+                <p>{t("When you interact with the Robinhood Wallet extension or the Eulr.fun bonding curve, you are subject to their respective terms and privacy policies. We do not control third-party Web3 infrastructure.")}</p>
               </div>
             </div>
           </div>
@@ -10153,15 +9894,15 @@ export default function App() {
           <Award size={20} />
           <span>{t("Ranks")}</span>
         </button>
-        <button className={`bottom-nav-item ${currentView === 'okx-ai' ? 'active' : ''}`} onClick={() => {
-        setCurrentView('okx-ai');
+        <button className={`bottom-nav-item ${currentView === 'robinhood-ai' ? 'active' : ''}`} onClick={() => {
+        setCurrentView('robinhood-ai');
         window.scrollTo({
           top: 0,
           behavior: 'smooth'
         });
       }}>
           <Cpu size={20} />
-          <span>{t("OKX.AI")}</span>
+          <span>{t("GoalRush")}</span>
         </button>
         <button className={`bottom-nav-item ${currentView === 'about' ? 'active' : ''}`} onClick={() => setCurrentView('about')}>
           <HelpCircle size={20} />
@@ -10244,7 +9985,7 @@ export default function App() {
                   3. ⛓️ Smart Contract Execution
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
-                  When a user clicks Copy-Trade, the consensus pick is populated into the Uniswap V4 hookData transaction payload on OKX X Layer.
+                  When a user clicks Copy-Trade, the consensus pick is populated into the Uniswap V4 hookData transaction payload on Robinhood Chain.
                 </div>
               </div>
             </div>

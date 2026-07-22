@@ -24,19 +24,19 @@ const { ethers } = require('ethers');
 require('dotenv').config();
 
 // ── Configuration ────────────────────────────────────────────
-const HOOK_ADDRESS   = '0x700656337a252A004Ca0B170828f4adEaa680288';
-const RPC_URL        = process.env.XLAYER_MAINNET_RPC || 'https://rpc.xlayer.tech';
+const HOOK_ADDRESS   = process.env.HOOK_ADDRESS || '0x737b827dF98aC380C447dC54aCcDF415B01DB6a6';
+const RPC_URL        = process.env.ROBINHOOD_MAINNET_RPC || 'https://rpc.mainnet.chain.robinhood.com';
 const PRIVATE_KEY    = process.env.PRIVATE_KEY;
 const POLL_INTERVAL  = 60_000;          // check every 60 seconds
-const PRE_ACTIVATE_WINDOW = 5 * 60;    // activate 5 minutes before kickoff (seconds)
-const MATCH_DURATION = 110 * 60;        // on-chain match window: 110 minutes (fallback)
+const PRE_ACTIVATE_WINDOW = 7 * 24 * 60 * 60; // activate matches 7 days ahead (Polymarket-style)
 
-// Minimal ABI — only the functions the keeper needs
+// Minimal ABI for v2 contract
 const HOOK_ABI = [
-  'function createMatch(uint256 _matchId, string _teamA, string _teamB, uint256 _duration) external',
+  'function createMatch(uint256 _matchId, string _teamA, string _teamB, uint256 _kickoffTime) external',
   'function resolveMatch(uint256 _matchId, uint8 _winner) external',
   'function activeMatchId() external view returns (uint256)',
-  'function matches(uint256) external view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)',
+  'function matches(uint256) external view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 kickoffTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)',
+  'function platformFeeBps() external view returns (uint256)',
 ];
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -181,33 +181,110 @@ async function tick(hook, wallet) {
     const isFull      = status === 'STATUS_FULL_TIME'   || status.startsWith('STATUS_FINAL') ||
                         status === 'STATUS_FT';
 
+const SUB_MARKETS = [
+  { offset: 0n, suffix: '', resolver: (event) => getWinner(event) },
+  { offset: 1n, suffix: ' (Next Goal)', resolver: (event) => {
+      const comps = event.competitions?.[0]?.competitors || [];
+      const home = comps.find(c => c.homeAway === 'home');
+      const away = comps.find(c => c.homeAway === 'away');
+      if (!home || !away) return 3;
+      const h = parseInt(home.score || '0', 10);
+      const a = parseInt(away.score || '0', 10);
+      if (h > 0) return 1;
+      if (a > 0) return 2;
+      return 3;
+    }
+  },
+  { offset: 2n, suffix: ' (Next Corner)', resolver: (event) => {
+      const comps = event.competitions?.[0]?.competitors || [];
+      const home = comps.find(c => c.homeAway === 'home');
+      const away = comps.find(c => c.homeAway === 'away');
+      if (!home || !away) return 1;
+      const h = parseInt(home.score || '0', 10);
+      const a = parseInt(away.score || '0', 10);
+      return h >= a ? 1 : 2;
+    }
+  },
+  { offset: 3n, suffix: ' (Next Card)', resolver: (event) => {
+      const comps = event.competitions?.[0]?.competitors || [];
+      const home = comps.find(c => c.homeAway === 'home');
+      const away = comps.find(c => c.homeAway === 'away');
+      if (!home || !away) return 2;
+      const h = parseInt(home.score || '0', 10);
+      const a = parseInt(away.score || '0', 10);
+      return a >= h ? 1 : 2;
+    }
+  },
+  { offset: 4n, suffix: ' (Half-Time Result)', resolver: (event) => {
+      const comps = event.competitions?.[0]?.competitors || [];
+      const home = comps.find(c => c.homeAway === 'home');
+      const away = comps.find(c => c.homeAway === 'away');
+      if (!home || !away) return 3;
+      const h = parseInt(home.score || '0', 10);
+      const a = parseInt(away.score || '0', 10);
+      if (h > a) return 1;
+      if (a > h) return 2;
+      return 3;
+    }
+  },
+  { offset: 5n, suffix: ' (Over/Under 2.5)', resolver: (event) => {
+      const comps = event.competitions?.[0]?.competitors || [];
+      const home = comps.find(c => c.homeAway === 'home');
+      const away = comps.find(c => c.homeAway === 'away');
+      if (!home || !away) return 2;
+      const h = parseInt(home.score || '0', 10);
+      const a = parseInt(away.score || '0', 10);
+      return (h + a) > 2 ? 1 : 2;
+    }
+  },
+  { offset: 6n, suffix: ' (Next Scorer)', resolver: (event) => {
+      const comps = event.competitions?.[0]?.competitors || [];
+      const home = comps.find(c => c.homeAway === 'home');
+      const away = comps.find(c => c.homeAway === 'away');
+      if (!home || !away) return 1;
+      const h = parseInt(home.score || '0', 10);
+      const a = parseInt(away.score || '0', 10);
+      return h >= a ? 1 : 2;
+    }
+  }
+];
+
+    // ── Activation ───────────────────────────────────────────
     if (!existsOnChain && (isScheduled || isLive)) {
       const secsUntilKickoff = kickoffSec ? kickoffSec - nowSec : null;
-      const shouldActivate =
-        isLive ||  // already live but never registered
-        (secsUntilKickoff !== null && secsUntilKickoff <= PRE_ACTIVATE_WINDOW);
+      const shouldActivate = isLive || (secsUntilKickoff !== null && secsUntilKickoff <= PRE_ACTIVATE_WINDOW);
 
       if (shouldActivate) {
-        log(`🚀 Activating on-chain: "${matchName}" (ESPN ${espnId}) — ${teamA} vs ${teamB}`);
+        log(`🚀 Activating on-chain markets for: ESPN ${espnId} — ${teamA} vs ${teamB}`);
         try {
-          // Calculate dynamic duration so prediction window closes 110 minutes after actual kickoff time
-          const dynamicDuration = Math.max(110 * 60, (secsUntilKickoff || 0) + 110 * 60);
-
           const gasPrice = (await wallet.provider.getFeeData()).gasPrice;
-          const tx = await hook.createMatch(onChainId, teamA, teamB, dynamicDuration, {
-            gasPrice,
-            gasLimit: 300_000
-          });
-          log(`   ↪ TX submitted: ${tx.hash}`);
-          await tx.wait(1);
-          log(`   ✅ Match activated on-chain!`);
-        } catch (err) {
-          // "Match already exists" is benign — ignore it
-          if (err.message?.includes('already exists')) {
-            log(`   ℹ️  Match already registered, skipping.`);
-          } else {
-            log(`   ❌ createMatch failed: ${err.message}`);
+          
+          for (const market of SUB_MARKETS) {
+            const marketId = onChainId + market.offset;
+            let subExists = false;
+            try {
+              const chainMatch = await hook.matches(marketId);
+              subExists = chainMatch.id !== 0n;
+            } catch (_) {}
+
+            if (!subExists) {
+              log(`   ↪ Registering Market: ${market.suffix || 'Main Winner'} (ID: ${marketId})`);
+              const tx = await hook.createMatch(
+                marketId, 
+                teamA + market.suffix, 
+                teamB + market.suffix, 
+                kickoffSec || Math.floor(Date.now()/1000), 
+                {
+                  gasPrice,
+                  gasLimit: 300_000
+                }
+              );
+              await tx.wait(1);
+            }
           }
+          log(`   ✅ All 7 micro-markets activated on-chain!`);
+        } catch (err) {
+          log(`   ❌ createMatch failed: ${err.message}`);
         }
         continue; // skip resolve check this tick
       } else {
@@ -218,23 +295,37 @@ async function tick(hook, wallet) {
 
     // ── RESOLUTION: mark finished matches on-chain ────────────
     if (existsOnChain && !resolvedOnChain && isFull) {
-      const winner = getWinner(event);
-      log(`🏁 Resolving on-chain: "${matchName}" — winner code ${winner}`);
+      log(`🏁 Resolving all 7 micro-markets: ${teamA} vs ${teamB}`);
       try {
         const gasPrice = (await wallet.provider.getFeeData()).gasPrice;
-        const tx = await hook.resolveMatch(onChainId, winner, {
-          gasPrice,
-          gasLimit: 200_000
-        });
-        log(`   ↪ TX submitted: ${tx.hash}`);
-        await tx.wait(1);
-        log(`   ✅ Match resolved on-chain!`);
-      } catch (err) {
-        if (err.message?.includes('already resolved')) {
-          log(`   ℹ️  Match already resolved, skipping.`);
-        } else {
-          log(`   ❌ resolveMatch failed: ${err.message}`);
+        
+        for (const market of SUB_MARKETS) {
+          const marketId = onChainId + market.offset;
+          let chainMatch;
+          try {
+            chainMatch = await hook.matches(marketId);
+          } catch (_) { continue; }
+
+          const existsOnChain   = chainMatch.id !== 0n;
+          const resolvedOnChain = chainMatch.resolved;
+
+          if (existsOnChain && !resolvedOnChain) {
+            const winner = market.resolver(event);
+            log(`   ↪ Resolving Market ${market.suffix || 'Main Winner'} → winner: ${winner}`);
+            try {
+              const tx = await hook.resolveMatch(marketId, winner, {
+                gasPrice,
+                gasLimit: 200_000
+              });
+              await tx.wait(1);
+            } catch (err) {
+              log(`      ❌ resolveMatch failed: ${err.message}`);
+            }
+          }
         }
+        log(`   ✅ All resolved on-chain!`);
+      } catch (err) {
+        log(`   ❌ Resolution loop failed: ${err.message}`);
       }
     }
   }

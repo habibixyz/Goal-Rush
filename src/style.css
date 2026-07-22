@@ -218,7 +218,7 @@ input:focus-visible {
   text-shadow: 0 0 10px rgba(157, 255, 0, 0.4);
 }
 
-.badge-xlayer {
+.badge-robinhood {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -873,22 +873,22 @@ input:focus-visible {
   animation: live-pulse 1.2s infinite ease-in-out;
 }
 
-/* --- Hackathon Premium Dark UI styles --- */
-.hackathon-hero-container {
+/* --- Protocol Hero Dark UI styles --- */
+.protocol-hero-container {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   gap: 48px;
-  padding: 80px 0;
+  padding: 40px 0 60px;
   align-items: center;
   position: relative;
   overflow: hidden;
 }
 
 @media (max-width: 1024px) {
-  .hackathon-hero-container {
+  .protocol-hero-container {
     display: flex;
     flex-direction: column-reverse;
-    padding: 40px 0;
+    padding: 30px 0;
     gap: 32px;
   }
   .desktop-security-card {
@@ -896,17 +896,18 @@ input:focus-visible {
   }
 }
 
-.hackathon-left {
+.protocol-left {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   z-index: 10;
 }
 
-.hackathon-title-group {
+.protocol-title-group {
   margin-bottom: 24px;
 }
 
-.hackathon-big-title {
+.protocol-big-title {
   font-family: var(--font-display);
   font-size: 5.2rem;
   font-weight: 800;
@@ -917,12 +918,12 @@ input:focus-visible {
 }
 
 @media (max-width: 640px) {
-  .hackathon-big-title {
+  .protocol-big-title {
     font-size: 3.5rem;
   }
 }
 
-.hackathon-sub-title {
+.protocol-sub-title {
   font-family: var(--font-display);
   font-size: 2rem;
   font-weight: 400;
@@ -934,12 +935,12 @@ input:focus-visible {
   gap: 12px;
 }
 
-.hackathon-desc {
+.protocol-desc {
   font-size: 1.05rem;
-  color: rgba(255, 255, 255, 0.6);
-  max-width: 540px;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 600px;
   line-height: 1.6;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .security-status-card {
@@ -1070,18 +1071,18 @@ input:focus-visible {
   }
 }
 
-.hackathon-actions {
+.protocol-actions {
   display: flex;
   gap: 16px;
   align-items: center;
 }
 
-.hackathon-right {
+.protocol-right {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 480px;
+  height: 380px;
   width: 100%;
 }
 
@@ -1098,21 +1099,21 @@ input:focus-visible {
 
 .ascii-code-graphic {
   position: absolute;
-  right: -10%;
+  right: 0;
   top: 50%;
   transform: translateY(-50%);
   font-family: var(--font-mono);
-  font-size: 0.6rem;
-  line-height: 1.1;
-  color: rgba(255, 255, 255, 0.18);
+  font-size: 0.58rem;
+  line-height: 1.15;
+  color: rgba(255, 255, 255, 0.12);
   white-space: pre;
   user-select: none;
   pointer-events: none;
   text-align: right;
   z-index: 1;
   letter-spacing: 0.5px;
-  mask-image: radial-gradient(circle at 60% 50%, black 50%, transparent 95%);
-  -webkit-mask-image: radial-gradient(circle at 60% 50%, black 50%, transparent 95%);
+  mask-image: radial-gradient(circle at 50% 50%, black 45%, transparent 90%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 45%, transparent 90%);
 }
 
 .ascii-glow-effect {
@@ -1237,7 +1238,7 @@ input:focus-visible {
     align-items: center;
   }
   
-  .badge-xlayer {
+  .badge-robinhood {
     width: 100%;
     justify-content: center;
     max-width: 280px;
@@ -1962,14 +1963,14 @@ input:focus-visible {
   }
   
   /* Hero section adjustments */
-  .hackathon-big-title {
+  .protocol-big-title {
     font-size: 2.8rem !important;
     letter-spacing: -1px !important;
   }
-  .hackathon-sub-title {
+  .protocol-sub-title {
     font-size: 1.4rem !important;
   }
-  .hackathon-desc {
+  .protocol-desc {
     font-size: 0.95rem !important;
     margin-bottom: 24px !important;
   }
@@ -1986,13 +1987,13 @@ input:focus-visible {
   }
   
   /* Hero actions full-width on mobile */
-  .hackathon-actions {
+  .protocol-actions {
     flex-direction: column;
     gap: 10px;
     width: 100%;
   }
-  .hackathon-actions a,
-  .hackathon-actions button {
+  .protocol-actions a,
+  .protocol-actions button {
     width: 100% !important;
     justify-content: center;
   }
@@ -2157,15 +2158,15 @@ input:focus-visible {
     width: 100%;
   }
 
-  .hackathon-actions {
+  .protocol-actions {
     flex-direction: column !important;
     gap: 10px !important;
     width: 100% !important;
     align-items: stretch !important;
   }
 
-  .hackathon-actions a,
-  .hackathon-actions button {
+  .protocol-actions a,
+  .protocol-actions button {
     width: 100% !important;
     justify-content: center !important;
   }
@@ -2194,7 +2195,7 @@ input:focus-visible {
 }
 
 @media (max-width: 768px) {
-  .hero-logo-wrapper, .hackathon-desc {
+  .hero-logo-wrapper {
     display: none !important;
   }
 }
@@ -4029,7 +4030,7 @@ input:focus-visible {
   }
 }
 
-/* X Layer Oracle Console Styling */
+/* Robinhood Chain Oracle Console Styling */
 .oracle-console-wrapper {
   background: rgba(10, 15, 10, 0.45);
   backdrop-filter: blur(16px);
@@ -4280,7 +4281,7 @@ input:focus-visible {
     align-items: center;
   }
   
-  .badge-xlayer {
+  .badge-robinhood {
     justify-content: center;
     width: 100%;
     max-width: 280px;
@@ -4349,7 +4350,7 @@ input:focus-visible {
     gap: 8px;
   }
   
-  .badge-xlayer {
+  .badge-robinhood {
     padding: 6px 10px;
     font-size: 0.8rem;
   }
@@ -4620,7 +4621,7 @@ input:focus-visible {
     justify-content: center !important;
     gap: 8px !important;
   }
-  .mobile-wallet-nav .badge-xlayer {
+  .mobile-wallet-nav .badge-robinhood {
     padding: 6px 10px !important;
     font-size: 0.75rem !important;
   }
@@ -4650,8 +4651,8 @@ input:focus-visible {
     min-width: 0 !important;
   }
   
-  /* Make the X Layer Mainnet badge compact */
-  .mobile-wallet-nav .badge-xlayer {
+  /* Make the Robinhood Chain Mainnet badge compact */
+  .mobile-wallet-nav .badge-robinhood {
     flex: 0 0 auto !important;
     width: auto !important;
   }
@@ -4667,7 +4668,7 @@ input:focus-visible {
 }
 
 @media (max-width: 1024px) {
-  .mobile-wallet-nav .badge-xlayer {
+  .mobile-wallet-nav .badge-robinhood {
     padding: 6px 12px !important;
     font-size: 0.65rem !important;
   }
@@ -4966,16 +4967,16 @@ input:focus-visible {
   }
 }
 
-/* OKX.AI Hub Custom Styles */
-.okx-roles-grid {
+/* GoalRush Hub Custom Styles */
+.robinhood-roles-grid {
   margin-top: 24px;
 }
 
-.okx-role-card {
+.robinhood-role-card {
   transition: var(--transition-smooth);
 }
 
-.okx-role-card:hover {
+.robinhood-role-card:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.15);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
@@ -4988,20 +4989,20 @@ input:focus-visible {
   text-shadow: 0 0 8px rgba(157, 255, 0, 0.4);
 }
 
-.okx-terminal-screen::-webkit-scrollbar {
+.robinhood-terminal-screen::-webkit-scrollbar {
   width: 4px;
 }
 
-.okx-terminal-screen::-webkit-scrollbar-track {
+.robinhood-terminal-screen::-webkit-scrollbar-track {
   background: #010304;
 }
 
-.okx-terminal-screen::-webkit-scrollbar-thumb {
+.robinhood-terminal-screen::-webkit-scrollbar-thumb {
   background: #222;
   border-radius: 2px;
 }
 
-.okx-terminal-screen::-webkit-scrollbar-thumb:hover {
+.robinhood-terminal-screen::-webkit-scrollbar-thumb:hover {
   background: var(--color-secondary);
 }
 
@@ -5020,12 +5021,12 @@ input:focus-visible {
   }
 }
 
-.okx-asp-dashboard table th,
-.okx-asp-dashboard table td {
+.robinhood-asp-dashboard table th,
+.robinhood-asp-dashboard table td {
   padding: 10px 8px;
 }
 
-.okx-evaluator-dashboard button.selected {
+.robinhood-evaluator-dashboard button.selected {
   background: rgba(255, 92, 0, 0.08) !important;
   border-color: var(--color-accent) !important;
   color: #fff !important;

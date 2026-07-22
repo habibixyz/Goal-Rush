@@ -163,7 +163,7 @@ router.get('/metadata/:username', async (req, res) => {
       console.log(`Card ${username} not found in local DB. Querying blockchain fallback...`);
       // Fallback: Query the blockchain directly if DB was reset
       const { ethers } = require('ethers');
-      const provider = new ethers.JsonRpcProvider('https://xlayerrpc.okx.com');
+      const provider = new ethers.JsonRpcProvider('https://rpc.mainnet.chain.robinhood.com');
       const nftAddress = '0xd30b894bbD3185737c5D6a276367A4fEDF44de5C';
       const nftAbi = [
         "function nextTokenId() view returns (uint256)",
@@ -255,7 +255,7 @@ router.get('/metadata/:username', async (req, res) => {
     // Return ERC-721 metadata standard JSON
     const metadata = {
       name: `GoalRush Player: ${card.username}`,
-      description: `Official GoalRush Degen World Cup Collectible for ${card.username}. Position: ${card.position}. OVR: ${card.overall}.`,
+      description: `Official GoalRush Degen Tournament Collectible for ${card.username}. Position: ${card.position}. OVR: ${card.overall}.`,
       image: imageUri,
       attributes: [
         { trait_type: 'Position', value: card.position },
@@ -377,7 +377,7 @@ router.get('/agent/logs', (req, res) => {
 });
 
 // ── GET & POST /api/predict ──────────────────────────────────
-// OKX.AI ASP #4564 endpoint — multi-agent consensus swarm prediction.
+// GoalRush ASP #4564 endpoint — multi-agent consensus swarm prediction.
 // Payment gating handled by @x402/express middleware in server.js.
 // If a request reaches this handler, it has already passed payment verification.
 async function handlePredictRequest(req, res) {
@@ -664,7 +664,7 @@ STRICT ANALYSIS RULES:
           draw: tally[3] || 0
         },
         reasoning: reasons.join(" | "),
-        recommended_stake: "0.001 OKB",
+        recommended_stake: "0.001 ETH",
         disclaimer: "Not Financial Advice (NFA). AI prediction signals are generated for entertainment and research purposes. On-chain prediction markets carry risk. Always DYOR."
       }
     });

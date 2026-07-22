@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 
 async function main() {
   const [owner] = await ethers.getSigners();
-  const hookAddress = "0x700656337a252A004Ca0B170828f4adEaa680288";
+  const hookAddress = "0x8bD62234113b1A860A09ABc9ECDaC86376E49DA9";
 
   console.log(`Using owner account: ${owner.address}`);
   

@@ -13,12 +13,12 @@ const db = require('./db.js');
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
-const RPC_URL = process.env.XLAYER_MAINNET_RPC || 'https://rpc.xlayer.tech';
-const ROUTER_ADDRESS = '0x8f3e9B45a377cEa9fCeC9509e82EEe237e67ba24';
-const HOOK_ADDRESS = '0x700656337a252A004Ca0B170828f4adEaa680288';
+const RPC_URL = process.env.ROBINHOOD_MAINNET_RPC || 'https://rpc.mainnet.chain.robinhood.com';
+const ROUTER_ADDRESS = process.env.ROUTER_ADDRESS || '0xbd2386017d075CC6031195ad623e3E923bb1FCFf';
+const HOOK_ADDRESS   = process.env.HOOK_ADDRESS   || process.env.CONTRACT_ADDRESS || '0x737b827dF98aC380C447dC54aCcDF415B01DB6a6';
 
 // HARD LIMIT: No matter what the AI says, the agent can NEVER bet more than this amount.
-const MAX_PREDICTION_AMOUNT_OKB = "0.0001"; 
+const MAX_PREDICTION_AMOUNT_OKB = "0.00001"; // Set to 0.00001 ETH to preserve deployer balance
 
 // How often the agent runs (10 minutes)
 const POLL_INTERVAL_MS = 10 * 60 * 1000;
@@ -30,7 +30,7 @@ const ROUTER_ABI = [
 
 const HOOK_ABI = [
   'function activeMatchId() external view returns (uint256)',
-  'function matches(uint256) external view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)',
+  'function matches(uint256) external view returns (uint256 id, string teamA, string teamB, uint256 startTime, uint256 kickoffTime, uint256 endTime, bool resolved, uint8 winner, uint256 totalJackpot, uint256 totalPredictionVolume)',
   'function getUserPredictions(uint256 _matchId, address _user) external view returns (uint256[4] memory okbAmounts, uint256[4] memory grushAmounts, bool[4] memory okbClaimeds, bool[4] memory grushClaimeds)',
   'function claimJackpot(uint256 _matchId) external'
 ];
@@ -334,7 +334,7 @@ Analyze the match based on the news and return a JSON object with your predictio
 
     // 6. Execute Transaction (Strict Limit Applied)
     const amountWei = ethers.parseEther(MAX_PREDICTION_AMOUNT_OKB);
-    log(`Submitting transaction to router... Amount: ${MAX_PREDICTION_AMOUNT_OKB} OKB`);
+    log(`Submitting transaction to router... Amount: ${MAX_PREDICTION_AMOUNT_OKB} ETH`);
     
     const tx = await router.predictWithOKB(activeMatchId, consensusPrediction, {
       value: amountWei,

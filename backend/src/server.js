@@ -79,7 +79,7 @@ async function boot() {
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   });
 
-  // Start on-chain keeper (auto-activates & resolves matches on X Layer)
+  // Start on-chain keeper (auto-activates & resolves matches on Robinhood Chain Mainnet)
   startKeeper(cron);
 
   // Start the GoalRush Open AGI Agent

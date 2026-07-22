@@ -2,7 +2,7 @@ const { ethers } = require("ethers");
 require('dotenv').config();
 
 async function main() {
-  const p = new ethers.JsonRpcProvider("https://xlayer-mainnet.rpc.sentio.xyz");
+  const p = new ethers.JsonRpcProvider("https://rpc.mainnet.chain.robinhood.com");
   
   if (!process.env.PRIVATE_KEY) {
       console.log("No PRIVATE_KEY found in .env");
@@ -13,7 +13,7 @@ async function main() {
   const agentAddress = wallet.address;
   console.log(`Agent Wallet Address: ${agentAddress}`);
 
-  const hookAddress = "0x700656337a252A004Ca0B170828f4adEaa680288"; // From goalrush-ai-agent.cjs
+  const hookAddress = "0x8bD62234113b1A860A09ABc9ECDaC86376E49DA9"; // GoalRush Hook on Robinhood Chain
   
   const abi = [
     "event PredictionPlaced(address indexed user, uint256 indexed matchId, uint8 team, uint256 volume)",

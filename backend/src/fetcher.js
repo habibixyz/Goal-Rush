@@ -32,7 +32,7 @@ cp.spawn = function(command, args, options) {
 
 // ─── ESPN Public API (completely free, no key) ────────────
 const ESPN_LEAGUES = [
-  { id: 'fifa.world',       name: 'FIFA World Cup' },
+  { id: 'fifa.world',       name: 'GoalRush League' },
   { id: 'eng.1',            name: 'English Premier League' },
   { id: 'uefa.champions',   name: 'UEFA Champions League' },
   { id: 'esp.1',            name: 'Spanish La Liga' },
@@ -113,7 +113,7 @@ const FD_KEY = process.env.FOOTBALL_DATA_KEY;
 // football-data.org competition codes
 // Free tier covers: WC, EC, CL, PL, PD, BL1, SA, FL1, DED, BSA, PPL, ELC, WCQ (some)
 const FD_COMPETITIONS = [
-  'WC',   // FIFA World Cup
+  'WC',   // GoalRush League
   'CL',   // UEFA Champions League
   'PL',   // English Premier League
   'PD',   // Spanish La Liga
@@ -174,7 +174,7 @@ function mapFDStatus(s) {
 // ─── OpenLigaDB (totally free, German + other leagues) ────
 // https://api.openligadb.de
 async function fetchOpenLiga() {
-  return []; // Disabled for FIFA World Cup focus
+  return []; // Disabled for GoalRush League focus
 }
 
 // ─── Main orchestrator ────────────────────────────────────

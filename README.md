@@ -192,36 +192,4 @@ Execute the token deployment script:
 npx hardhat run scripts/deploy-token.cjs --network robinhood
 ```
 
----
 
-## 🏆 Eulr.fun Token Launch & Graduation Guide
-
-To participate in the **Build X: Tournament x Hooks** protocol and qualify for the **$200K USDT prize pool**, we leverage the recommended Eulr.fun launchpad route on Robinhood Chain:
-
-### 1. Deploy the Hook Contract on Robinhood Chain
-First, deploy `WorldCupGoalRushHook` to the Robinhood Chain Mainnet using a mined salt that matches the required flags (`beforeSwap` and `afterSwap`). Save the deployed hook address (e.g., `0xD168C19fA2c8b52b8024209B4e3E4Eaf69cD40c0`).
-
-### 2. Launch your Token on Eulr.fun
-1. Go to [Eulr.fun](https://eulr.fun/) on the Robinhood Chain network.
-2. Create your custom Tournament fan token (e.g., `GRUSH`).
-3. During token creation, specify your deployed `WorldCupGoalRushHook` address as the target hook to be attached to the Uniswap V4 pool upon graduation.
-
-### 3. Bonding Curve Trading
-Users buy and sell your token on the Eulr.fun bonding curve. This builds initial hype, community, and volume. *(Note: Bonding curve volume does not count towards the $200k prize pool).*
-
-### 4. Graduation & Real Trading on Uniswap V4
-Once the bonding curve hits the threshold:
-1. Eulr.fun ends the bonding curve automatically.
-2. It deploys a Uniswap V4 pool on Robinhood Chain with your pre-configured `WorldCupGoalRushHook`.
-3. It moves all gathered liquidity into the pool.
-4. **Real trading starts!** 
-
-### 5. Drive Robinhood Wallet Trading Volume
-From this point on, all swaps on the Uniswap V4 pool will execute with the `WorldCupGoalRushHook` active:
-* Every swap diverts 0.1% volume to the match jackpot.
-* Every swap triggers the Goal Rush rebate chance.
-* **CRITICAL**: Only trading volume routed through the **Robinhood Wallet** on your graduated Uniswap V4 pool counts towards the ranking for the $200K USDT prize pool.
-
-### 6. Submit Your Project
-1. Share your project on X (Twitter) tagging `@RobinhoodChainOfficial`.
-2. Submit your project via the [Official Google Form](https://docs.google.com/forms/d/e/1FAIpQLSfY4MsczrCXsWDM3U_Xo_dEq7dAU04YXZLGhTntiPA2bXL6uQ/viewform?usp=dialog) before the deadline.

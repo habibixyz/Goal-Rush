@@ -341,7 +341,7 @@ GoalRush is a gamified Uniswap V4 hook custom-built for the Robinhood Chain Main
 3. **CREATE2 Mined Address**: Optimized address mining to satisfy Uniswap V4 hook permission flags.
 
 ## Token Integration
-1. **Deploy Hook**: Deploy `WorldCupGoalRushHook` to Robinhood Chain Mainnet.
+1. **Deploy Hook**: Deploy \`WorldCupGoalRushHook\` to Robinhood Chain Mainnet.
 2. **Launch Token**: Deploy utility tokens to Robinhood Chain and configure prediction metrics.
 3. **Drive Volume**: Enable fans to place predictions using native ETH.
 `;

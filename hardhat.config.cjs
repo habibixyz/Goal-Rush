@@ -25,20 +25,21 @@ module.exports = {
     },
   },
   networks: {
-    // Robinhood Chain Mainnet
-    robinhoodMainnet: {
-      url: process.env.ROBINHOOD_MAINNET_RPC || "https://rpc.mainnet.chain.robinhood.com",
-      chainId: 4663,
+    // X Layer Mainnet
+    xlayer: {
+      url: process.env.XLAYER_MAINNET_RPC || "https://rpc.xlayer.tech",
+      chainId: 196,
+      accounts: [PRIVATE_KEY],
+    },
+    xlayerMainnet: {
+      url: process.env.XLAYER_MAINNET_RPC || "https://rpc.xlayer.tech",
+      chainId: 196,
       accounts: [PRIVATE_KEY],
     },
     // X Layer Testnet
     xlayerTestnet: {
       url: process.env.XLAYER_TESTNET_RPC || "https://testrpc.xlayer.tech",
-      accounts: [PRIVATE_KEY],
-    },
-    // X Layer Mainnet
-    xlayerMainnet: {
-      url: process.env.XLAYER_MAINNET_RPC || "https://rpc.xlayer.tech",
+      chainId: 195,
       accounts: [PRIVATE_KEY],
     },
   },

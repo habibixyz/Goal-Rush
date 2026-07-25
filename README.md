@@ -1,14 +1,14 @@
-# GoalRush — Tournament Uniswap V4 Hook & Jackpot on Robinhood Chain
+# GoalRush — Tournament Uniswap V4 Hook & Jackpot on OKX X Layer
 
 **🌐 Live Demo:** [goalrush.fun](https://goalrush.fun)
 
-GoalRush is a gamified Uniswap V4 hook custom-built for the Robinhood Chain Mainnet. It bridges the thrill of Tournament match predictions and penalty shootouts directly into decentralized exchange operations.
+GoalRush is a gamified Uniswap V4 hook custom-built for the OKX X Layer Mainnet. It bridges the thrill of Tournament match predictions and penalty shootouts directly into decentralized exchange operations.
 
 ![GoalRush Banner](https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80)
 
 ---
 
-## 🚀 Active Deployment Addresses (Robinhood Chain Mainnet)
+## 🚀 Active Deployment Addresses (OKX X Layer Mainnet)
 
 * **GoalRush Hook v2**: `0x737b827dF98aC380C447dC54aCcDF415B01DB6a6` (with 2% platform fee)
 * **GoalRush Router v2**: `0xbd2386017d075CC6031195ad623e3E923bb1FCFf` (with batch support)
@@ -35,19 +35,21 @@ npx pm2 logs goalrush-keeper
 npx pm2 restart goalrush-keeper
 ```
 
+---
+
 ## 🧠 Autonomous Multi-Agent Consensus Swarm (Sentient Grant Edition)
 
 GoalRush acts as the execution sandbox for an **Autonomous Multi-Agent Consensus Swarm** built to interact safely with decentralized prediction markets. The agent showcases a "Hard Boundary" security architecture and a "Mixture of Agents" consensus model, proving that open-source LLMs can securely operate on-chain without exposing private keys to prompt-injection vulnerabilities.
 
 ### How the Sentient Swarm Agent Works
-1. **Event-Driven Triggering:** The agent is no longer polling on an interval. Instead, it is event-driven. The **Keeper Bot** triggers the Swarm Agent immediately upon match registration/activation ( kick-off ≤ 5 minutes away) and match resolution.
+1. **Event-Driven Triggering:** The agent is event-driven. The **Keeper Bot** triggers the Swarm Agent immediately upon match registration/activation (kick-off ≤ 5 minutes away) and match resolution.
 2. **Context Ingestion:** The Swarm Agent reads the latest scraped soccer news articles and match schedules from the SQLite database to build a rich historical and current context.
 3. **Multi-Agent Consensus (Mixture of Agents):** The agent queries **three independent open-source models** simultaneously:
    - `llama-3.1-8b-instant`
    - `llama-3.3-70b-versatile`
    - `qwen/qwen3-32b`
 4. **Reasoning Verification:** Each model acts as an independent analyst, responding strictly with a JSON object containing its prediction (`1` for Home, `2` for Away, `3` for Draw) and a 1-sentence analytical `reasoning`.
-5. **Hard Boundary Execution:** The Executive Agent tallies the votes. It enforces a strict, hardcoded betting limit (e.g., `0.0001 ETH` per prediction) and parses the JSON. A transaction is only signed and sent if a 2/3 majority consensus (quorum) is successfully reached. The AI models *never* have access to the wallet private key or the direct construction of the transaction payload, keeping the wallet safe from prompt injection attacks.
+5. **Hard Boundary Execution:** The Executive Agent tallies the votes. It enforces a strict, hardcoded betting limit (e.g., `0.0001 OKB` per prediction) and parses the JSON. A transaction is only signed and sent if a 2/3 majority consensus (quorum) is successfully reached. The AI models *never* have access to the wallet private key or direct payload construction, keeping the wallet safe from prompt injection attacks.
 6. **Live Oracle Terminal:** The frontend features an "X LAYER SPORTS ORACLE SYSTEM" that streams the Swarm's internal logs in real-time.
 
 ---
@@ -58,9 +60,9 @@ If you or another user want to run this agent, follow these steps:
 
 #### 1. Setup Environment Variables
 Configure your hosting platform (e.g., Railway variables) or local `.env` with the following variables:
-* `PRIVATE_KEY`: Private key of the EVM wallet that will pay for predictions and gas (must be funded with ETH on Robinhood Chain).
+* `PRIVATE_KEY`: Private key of the EVM wallet that will pay for predictions and gas (must be funded with OKB on X Layer).
 * `GROQ_API_KEY`: API key from Groq to query the LLMs.
-* `XLAYER_MAINNET_RPC`: Mainnet RPC URL (`https://xlayerrpc.robinhood.com` or `https://rpc.robinhood.tech`).
+* `XLAYER_MAINNET_RPC`: Mainnet RPC URL (`https://rpc.xlayer.tech`).
 * `HOOK_ADDRESS`: The deployed GoalRush hook contract address.
 * `ROUTER_ADDRESS`: The prediction router address.
 
@@ -99,7 +101,7 @@ hook-the-world-cup/
 │   └── mocks/
 │       └── MockPoolManager.sol    # Local pool manager simulator
 ├── scripts/
-│   ├── deploy.cjs                 # Hardhat deployment script for Hook on Robinhood Chain
+│   ├── deploy.cjs                 # Hardhat deployment script for Hook on X Layer
 │   ├── deploy-token.cjs           # Hardhat deployment script for GRUSH token
 │   └── test.cjs                   # Local test simulation runner
 ├── src/
@@ -133,9 +135,9 @@ npm run dev
 
 ---
 
-## 🤖 GoalRush Onchain OS Integration & Payments Protocol Compliance
+## 🤖 OKX.AI Onchain OS Integration & Payments Protocol Compliance
 
-GoalRush is integrated with the official Robinhood Agentic Wallet, Agent Service Provider (ASP) standards, and the Robinhood Agent Payments Protocol (x402).
+GoalRush is integrated with the official OKX Agentic Wallet, Agent Service Provider (ASP) standards, and the OKX Agent Payments Protocol (x402).
 
 ### 1. ASP Identity & Listing Status
 * **Agent ID**: `#4564`
@@ -144,9 +146,9 @@ GoalRush is integrated with the official Robinhood Agentic Wallet, Agent Service
 * **Status**: `Listing under review` (Resubmitted with verified payments integration)
 * **Owner Wallet Address**: `0xd96c9899b4d48c02efbd88dc22252a60dc6ee38d`
 
-### 2. Robinhood Agent Payments Protocol (x402) Integration
+### 2. OKX Agent Payments Protocol (x402) Integration
 The `/api/predict` route handler is protected by the official `@x402/express` middleware. When queried directly, it issues an HTTP 402 challenge requesting payment:
-* **Asset/Token**: `USDT` on Robinhood Chain Mainnet (`eip155:4663`)
+* **Asset/Token**: `USDT` on X Layer Mainnet (`eip155:196`)
 * **Service Fee**: `0.005` USDT (represented as `5000` micro-units)
 * **Contract/Asset Address**: `0x1E4a5963aBFD975d8c9021ce480b42188849D41d`
 * **Default Facilitator**: `https://facilitator.payai.network`
@@ -162,16 +164,16 @@ The `/api/predict` route handler is protected by the official `@x402/express` mi
 
 ---
 
-## 🌐 Deploying to Robinhood Chain Mainnet
+## 🌐 Deploying to OKX X Layer
 
-To deploy the `WorldCupGoalRushHook` contract onto the Robinhood Chain Mainnet:
+To deploy the `WorldCupGoalRushHook` contract onto the OKX X Layer:
 
 ### 1. Set Up RPC Configurations
 Configure your Hardhat network parameters:
-- **Network Name**: Robinhood Chain Mainnet / Testnet
-- **RPC URL**: `https://rpc.robinhood.tech` (Mainnet) or `https://testrpc.robinhood.tech` (Testnet)
-- **Chain ID**: `4663` (Mainnet) or `195` (Testnet)
-- **Gas Token**: ETH
+- **Network Name**: X Layer Mainnet / Testnet
+- **RPC URL**: `https://rpc.xlayer.tech` (Mainnet) or `https://testrpc.xlayer.tech` (Testnet)
+- **Chain ID**: `196` (Mainnet) or `195` (Testnet)
+- **Gas Token**: OKB
 
 ### 2. Hook Address Mining
 Uniswap V4 hooks rely on the leading flags of the hook address to determine which callbacks to trigger. In our case, the address must have prefix bits matching the `BEFORE_SWAP_FLAG` and `AFTER_SWAP_FLAG`. Use a hook miner to find a matching salt:
@@ -183,13 +185,11 @@ npx hardhat run scripts/mine-salt.js
 ### 3. Deploy Hook
 Execute the deployment script:
 ```bash
-npx hardhat run scripts/deploy.cjs --network robinhood
+npx hardhat run scripts/deploy.cjs --network xlayer
 ```
 
 ### 4. Deploy standalone GRUSH token (Optional fallback)
 Execute the token deployment script:
 ```bash
-npx hardhat run scripts/deploy-token.cjs --network robinhood
+npx hardhat run scripts/deploy-token.cjs --network xlayer
 ```
-
-

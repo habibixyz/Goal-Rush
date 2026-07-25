@@ -218,7 +218,7 @@ input:focus-visible {
   text-shadow: 0 0 10px rgba(157, 255, 0, 0.4);
 }
 
-.badge-robinhood {
+.badge-okx {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1245,7 +1245,7 @@ input:focus-visible {
     align-items: center;
   }
   
-  .badge-robinhood {
+  .badge-okx {
     width: 100%;
     justify-content: center;
     max-width: 280px;
@@ -4037,7 +4037,7 @@ input:focus-visible {
   }
 }
 
-/* Robinhood Chain Oracle Console Styling */
+/* OKX X Layer Oracle Console Styling */
 .oracle-console-wrapper {
   background: rgba(10, 15, 10, 0.45);
   backdrop-filter: blur(16px);
@@ -4288,7 +4288,7 @@ input:focus-visible {
     align-items: center;
   }
   
-  .badge-robinhood {
+  .badge-okx {
     justify-content: center;
     width: 100%;
     max-width: 280px;
@@ -4357,7 +4357,7 @@ input:focus-visible {
     gap: 8px;
   }
   
-  .badge-robinhood {
+  .badge-okx {
     padding: 6px 10px;
     font-size: 0.8rem;
   }
@@ -4628,7 +4628,7 @@ input:focus-visible {
     justify-content: center !important;
     gap: 8px !important;
   }
-  .mobile-wallet-nav .badge-robinhood {
+  .mobile-wallet-nav .badge-okx {
     padding: 6px 10px !important;
     font-size: 0.75rem !important;
   }
@@ -4658,8 +4658,8 @@ input:focus-visible {
     min-width: 0 !important;
   }
   
-  /* Make the Robinhood Chain Mainnet badge compact */
-  .mobile-wallet-nav .badge-robinhood {
+  /* Make the X Layer Mainnet badge compact */
+  .mobile-wallet-nav .badge-okx {
     flex: 0 0 auto !important;
     width: auto !important;
   }
@@ -4675,7 +4675,7 @@ input:focus-visible {
 }
 
 @media (max-width: 1024px) {
-  .mobile-wallet-nav .badge-robinhood {
+  .mobile-wallet-nav .badge-okx {
     padding: 6px 12px !important;
     font-size: 0.65rem !important;
   }
@@ -4975,15 +4975,15 @@ input:focus-visible {
 }
 
 /* GoalRush Hub Custom Styles */
-.robinhood-roles-grid {
+.okx-roles-grid {
   margin-top: 24px;
 }
 
-.robinhood-role-card {
+.okx-role-card {
   transition: var(--transition-smooth);
 }
 
-.robinhood-role-card:hover {
+.okx-role-card:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.15);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
@@ -4996,20 +4996,20 @@ input:focus-visible {
   text-shadow: 0 0 8px rgba(157, 255, 0, 0.4);
 }
 
-.robinhood-terminal-screen::-webkit-scrollbar {
+.okx-terminal-screen::-webkit-scrollbar {
   width: 4px;
 }
 
-.robinhood-terminal-screen::-webkit-scrollbar-track {
+.okx-terminal-screen::-webkit-scrollbar-track {
   background: #010304;
 }
 
-.robinhood-terminal-screen::-webkit-scrollbar-thumb {
+.okx-terminal-screen::-webkit-scrollbar-thumb {
   background: #222;
   border-radius: 2px;
 }
 
-.robinhood-terminal-screen::-webkit-scrollbar-thumb:hover {
+.okx-terminal-screen::-webkit-scrollbar-thumb:hover {
   background: var(--color-secondary);
 }
 
@@ -5028,12 +5028,12 @@ input:focus-visible {
   }
 }
 
-.robinhood-asp-dashboard table th,
-.robinhood-asp-dashboard table td {
+.okx-asp-dashboard table th,
+.okx-asp-dashboard table td {
   padding: 10px 8px;
 }
 
-.robinhood-evaluator-dashboard button.selected {
+.okx-evaluator-dashboard button.selected {
   background: rgba(255, 92, 0, 0.08) !important;
   border-color: var(--color-accent) !important;
   color: #fff !important;

@@ -2,7 +2,7 @@
 
 const { ethers } = require('hardhat');
 
-// Existing Hook v2 address on Robinhood Chain Mainnet
+// Existing Hook v2 address on X Layer Mainnet
 const HOOK_ADDRESS = '0x737b827dF98aC380C447dC54aCcDF415B01DB6a6';
 
 async function main() {

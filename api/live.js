@@ -1,4 +1,5 @@
 import https from 'https';
+import http from 'http';
 
 const API_SPORTS_KEY = process.env.APISPORTS_KEY;
 
@@ -167,7 +168,8 @@ function fetchFromBackend() {
       timeout: 3000
     };
 
-    const req = https.request(options, (res) => {
+    const client = isDev ? http : https;
+    const req = client.request(options, (res) => {
       let body = '';
       res.on('data', (chunk) => body += chunk);
       res.on('end', () => {

@@ -1,6 +1,6 @@
 ---
 name: goalrush
-description: Exposes the GoalRush Soccer Predictor consensus swarm skill. Crawls real-time match news from ESPN and Sky Sports, resolves consensus outcomes via multi-model LLM voting (Llama 3.1, Llama 3.3, Qwen 3), and logs or executes autonomous predictions on-chain using Uniswap V4 hooks on Robinhood Chain.
+description: Exposes the GoalRush Soccer Predictor consensus swarm skill. Crawls real-time match news from ESPN and Sky Sports, resolves consensus outcomes via multi-model LLM voting (Llama 3.1, Llama 3.3, Qwen 3), and logs or executes autonomous predictions on-chain using Uniswap V4 hooks on OKX X Layer.
 license: MIT
 metadata:
   author: GoalRush Team
@@ -15,10 +15,10 @@ Exposes prediction tools for soccer/football matches based on real-time news sen
 
 ## Installation
 
-To install this skill locally to your Robinhood Onchain OS workspace:
+To install this skill locally to your OKX Onchain OS workspace:
 
 ```sh
-npx skills add robinhood/onchainos-skills
+npx skills add okx/onchainos-skills
 ```
 
 ## API Endpoint / MCP Tool
@@ -27,7 +27,7 @@ npx skills add robinhood/onchainos-skills
 - **URL**: `http://localhost:3001/api/predict` (Local Dev) or `https://goal-rush-backend-production.up.railway.app/api/predict` (Production)
 - **Protocol**: HTTP REST (Agent-to-MCP)
 - **Method**: `POST`
-- **Fee**: `0.005 USDT` settled instantly on-chain via eip155:4663 permit2
+- **Fee**: `0.005 USDT` settled instantly on-chain via eip155:196 permit2
 
 ### Request Payload
 

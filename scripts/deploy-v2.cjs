@@ -3,19 +3,19 @@
  * deploy-v2.cjs
  * ─────────────────────────────────────────────
  * Deploys WorldCupGoalRushHook v2 + GoalRushPredictionRouter
- * to Robinhood Chain Mainnet.
+ * to X Layer Mainnet.
  *
  * v2 features:
  *   - 2% platform fee on jackpot claims
  *   - createMatch takes kickoffTime (not duration) → predictions open days ahead
  *
  * Run:
- *   npx hardhat run scripts/deploy-v2.cjs --network robinhoodMainnet
+ *   npx hardhat run scripts/deploy-v2.cjs --network xlayerMainnet
  */
 
 const { ethers } = require('hardhat');
 
-// Placeholder PoolManager — Robinhood Chain doesn't have Uniswap V4 yet,
+// Placeholder PoolManager — X Layer doesn't have Uniswap V4 yet,
 // so we use the deployer address to satisfy the non-zero check.
 const POOL_MANAGER = '0x0000000000000000000000000000000000000000'; // replaced below
 
@@ -23,15 +23,15 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   const balance = await ethers.provider.getBalance(deployer.address);
   console.log(`\nDeployer : ${deployer.address}`);
-  console.log(`Balance  : ${ethers.formatEther(balance)} ETH`);
+  console.log(`Balance  : ${ethers.formatEther(balance)} OKB`);
 
   if (balance < ethers.parseEther('0.0001')) {
-    console.error('❌ Insufficient balance (need ~0.0001 ETH for deployment)');
+    console.error('❌ Insufficient balance (need ~0.0001 OKB for deployment)');
     process.exit(1);
   }
 
   // ── 1. Deploy Hook v2 ──────────────────────────────────────
-  console.log('\n📦 Deploying WorldCupGoalRushHook v2 (with 2% fee) to Robinhood Chain...');
+  console.log('\n📦 Deploying WorldCupGoalRushHook v2 (with 2% fee) to X Layer...');
   const HookFactory = await ethers.getContractFactory('WorldCupGoalRushHook');
   // Use deployer as poolManager placeholder so the require(!=0) passes
   const hook = await HookFactory.deploy(deployer.address);
@@ -44,11 +44,11 @@ async function main() {
   console.log(`   Platform fee: ${feeBps}bps (${Number(feeBps)/100}%)`);
 
   // ── 2. Deploy Router ───────────────────────────────────────
-  console.log('\n📦 Deploying GoalRushPredictionRouter to Robinhood Chain...');
+  console.log('\n📦 Deploying GoalRushPredictionRouter to X Layer...');
   const RouterFactory = await ethers.getContractFactory('GoalRushPredictionRouter');
   const router = await RouterFactory.deploy(
     HOOK_ADDRESS,
-    '0x0000000000000000000000000000000000000000' // GRUSH token — not live on Robinhood yet
+    '0x0000000000000000000000000000000000000000' // GRUSH token
   );
   await router.waitForDeployment();
   const ROUTER_ADDRESS = await router.getAddress();
@@ -64,7 +64,8 @@ async function main() {
   const newBalance = await ethers.provider.getBalance(deployer.address);
   const spent = balance - newBalance;
   console.log('\n═══════════════════════════════════════════════════════════');
-  console.log('  ROBINHOOD CHAIN — GoalRush v2 — CONTRACT ADDRESSES');
+  console.log('  X LAYER MAINNET — GoalRush v2 — CONTRACT ADDRESSES');
+  console.log('═══════════════════════════════════════════════════════════');
   console.log('═══════════════════════════════════════════════════════════');
   console.log(`  HOOK_ADDRESS   = '${HOOK_ADDRESS}'`);
   console.log(`  ROUTER_ADDRESS = '${ROUTER_ADDRESS}'`);

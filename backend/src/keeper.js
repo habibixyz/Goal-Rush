@@ -23,7 +23,7 @@ const { ethers } = require('ethers');
 
 // ── Configuration (override via Railway env vars) ────────────
 const HOOK_ADDRESS         = process.env.HOOK_ADDRESS || process.env.CONTRACT_ADDRESS || '0x737b827dF98aC380C447dC54aCcDF415B01DB6a6';
-const RPC_URL              = process.env.ROBINHOOD_MAINNET_RPC || process.env.XLAYER_RPC || 'https://rpc.mainnet.chain.robinhood.com';
+const RPC_URL              = process.env.XLAYER_MAINNET_RPC || process.env.XLAYER_RPC || 'https://rpc.xlayer.tech';
 const PRIVATE_KEY          = process.env.KEEPER_PRIVATE_KEY || process.env.PRIVATE_KEY;
 // Activate matches up to 7 days before kickoff — predictions open immediately (Polymarket-style)
 const PRE_ACTIVATE_WINDOW  = 7 * 24 * 60 * 60; // 7 days in seconds

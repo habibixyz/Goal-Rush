@@ -13,12 +13,12 @@ const db = require('./db.js');
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
-const RPC_URL = process.env.ROBINHOOD_MAINNET_RPC || 'https://rpc.mainnet.chain.robinhood.com';
+const RPC_URL = process.env.XLAYER_MAINNET_RPC || 'https://rpc.xlayer.tech';
 const ROUTER_ADDRESS = process.env.ROUTER_ADDRESS || '0xbd2386017d075CC6031195ad623e3E923bb1FCFf';
 const HOOK_ADDRESS   = process.env.HOOK_ADDRESS   || process.env.CONTRACT_ADDRESS || '0x737b827dF98aC380C447dC54aCcDF415B01DB6a6';
 
 // HARD LIMIT: No matter what the AI says, the agent can NEVER bet more than this amount.
-const MAX_PREDICTION_AMOUNT_OKB = "0.00001"; // Set to 0.00001 ETH to preserve deployer balance
+const MAX_PREDICTION_AMOUNT_OKB = "0.00001"; // Set to 0.00001 OKB to preserve deployer balance
 
 // How often the agent runs (10 minutes)
 const POLL_INTERVAL_MS = 10 * 60 * 1000;
@@ -291,7 +291,7 @@ Analyze the match based on the news and return a JSON object with your predictio
     log(`> Initiating Multi-Agent Consensus Swarm for match ${activeMatchId}...`);
     
     // 5. Ask the AI Swarm
-    const models = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'qwen/qwen3-32b'];
+    const models = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'mixtral-8x7b-32768'];
     const votes = [];
     
     for (const model of models) {

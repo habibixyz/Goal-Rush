@@ -6,20 +6,20 @@ async function configureX402Payments(app) {
   }
 
   const payTo = process.env.X402_RECEIVER_ADDRESS || '0xd96c9899b4d48c02efbd88dc22252a60dc6ee38d';
-  const network = process.env.X402_NETWORK || 'eip155:4663';
-  const asset = process.env.X402_ASSET || '0x779ded0c9e1022225f8e0630b35a9b54be713736';
-  const price = process.env.X402_PRICE || '0.5';
+  const network = process.env.X402_NETWORK || 'eip155:196';
+  const asset = process.env.X402_ASSET || '0x1E4a5963aBFD975d8c9021ce480b42188849D41d';
+  const price = process.env.X402_PRICE || '0.005';
 
   try {
     const { paymentMiddleware, x402ResourceServer } = require('@okxweb3/x402-express');
-    const { RobinhoodFacilitatorClient } = require('@okxweb3/x402-core');
+    const { OkxFacilitatorClient } = require('@okxweb3/x402-core');
     const { ExactEvmScheme } = require('@okxweb3/x402-evm/exact/server');
 
-    console.log('[x402] Instantiating RobinhoodFacilitatorClient with credentials...');
-    const facilitatorClient = new RobinhoodFacilitatorClient({
-      apiKey: process.env.Robinhood_API_KEY,
-      secretKey: process.env.Robinhood_SECRET_KEY,
-      passphrase: process.env.Robinhood_PASSPHRASE
+    console.log('[x402] Instantiating OkxFacilitatorClient with credentials...');
+    const facilitatorClient = new OkxFacilitatorClient({
+      apiKey: process.env.OKX_API_KEY,
+      secretKey: process.env.OKX_SECRET_KEY,
+      passphrase: process.env.OKX_PASSPHRASE
     });
 
     const evmScheme = new ExactEvmScheme();

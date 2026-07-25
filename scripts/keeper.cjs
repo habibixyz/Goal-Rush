@@ -25,7 +25,7 @@ require('dotenv').config();
 
 // ── Configuration ────────────────────────────────────────────
 const HOOK_ADDRESS   = process.env.HOOK_ADDRESS || '0x737b827dF98aC380C447dC54aCcDF415B01DB6a6';
-const RPC_URL        = process.env.ROBINHOOD_MAINNET_RPC || 'https://rpc.mainnet.chain.robinhood.com';
+const RPC_URL        = process.env.XLAYER_MAINNET_RPC || 'https://rpc.xlayer.tech';
 const PRIVATE_KEY    = process.env.PRIVATE_KEY;
 const POLL_INTERVAL  = 60_000;          // check every 60 seconds
 const PRE_ACTIVATE_WINDOW = 7 * 24 * 60 * 60; // activate matches 7 days ahead (Polymarket-style)

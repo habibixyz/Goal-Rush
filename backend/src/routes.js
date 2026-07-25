@@ -163,7 +163,7 @@ router.get('/metadata/:username', async (req, res) => {
       console.log(`Card ${username} not found in local DB. Querying blockchain fallback...`);
       // Fallback: Query the blockchain directly if DB was reset
       const { ethers } = require('ethers');
-      const provider = new ethers.JsonRpcProvider('https://rpc.mainnet.chain.robinhood.com');
+      const provider = new ethers.JsonRpcProvider('https://rpc.xlayer.tech');
       const nftAddress = '0xd30b894bbD3185737c5D6a276367A4fEDF44de5C';
       const nftAbi = [
         "function nextTokenId() view returns (uint256)",
@@ -435,7 +435,7 @@ Analyze the match based on the news and return a JSON object with your predictio
 `;
 
     const agent = require('./goalrush-ai-agent.cjs');
-    const models = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'qwen/qwen3-32b'];
+    const models = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'mixtral-8x7b-32768'];
     
     // Parallelize model requests with timeout guard
     const modelPromises = models.map(async (model) => {
@@ -549,7 +549,7 @@ router.get('/agent/predictions', (req, res) => {
 });
 
 // ── GET /api/agent/signal/:matchId ───────────────────────
-// Get AI Swarm consensus signal for Copy-Trading
+// Get AI Swarm consensus prediction signal for active match
 router.get('/agent/signal/:matchId', async (req, res) => {
   try {
     const matchId = req.params.matchId;
@@ -601,7 +601,7 @@ STRICT ANALYSIS RULES:
 `;
 
     const agent = require('./goalrush-ai-agent.cjs');
-    const models = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'qwen/qwen3-32b'];
+    const models = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'mixtral-8x7b-32768'];
     const votes = [];
     const reasons = [];
 

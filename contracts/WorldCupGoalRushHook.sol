@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 /**
  * @title WorldCupGoalRushHook v2
- * @notice Robinhood Chain Mainnet — GoalRush Prediction Jackpot
+ * @notice OKX X Layer Mainnet — GoalRush Prediction Jackpot
  *
  * Changes from v1:
  *  - platformFeeBps (2% default): 2% of each jackpot claim goes to owner
@@ -311,7 +311,7 @@ contract WorldCupGoalRushHook {
     // ─── Claims ───────────────────────────────────────────────
 
     /**
-     * @notice Claim ETH jackpot. A 2% platform fee is deducted at claim time.
+     * @notice Claim OKB jackpot. A 2% platform fee is deducted at claim time.
      */
     function claimJackpot(uint256 _matchId) external nonReentrant {
         Match storage targetMatch = matches[_matchId];

@@ -5,7 +5,7 @@ async function configureX402Payments(app) {
     return;
   }
 
-  const payTo = process.env.X402_RECEIVER_ADDRESS || '0xd96c9899b4d48c02efbd88dc22252a60dc6ee38d';
+  const payTo = process.env.X402_RECEIVER_ADDRESS || '0xeaef8a2efb72bb4a337873da8a79adeebbc8af3b';
   const network = process.env.X402_NETWORK || 'eip155:196';
   const asset = process.env.X402_ASSET || '0x1E4a5963aBFD975d8c9021ce480b42188849D41d';
   const price = process.env.X402_PRICE || '0.005';
@@ -54,7 +54,7 @@ async function configureX402Payments(app) {
         return res.json({
           response: "GoalRush Football Agent is online! To predict a match, please use the A2MCP endpoint with standard x402 payment headers. (A2A test successful)",
           success: true,
-          service: "GoalRush Consensus Soccer Prediction Swarm (ASP #4564)",
+          service: "GoalRush Consensus Soccer Prediction Swarm (ASP #9819)",
           message: "A2A Endpoint reachable. Service is healthy and ready to accept tasks.",
           timestamp: new Date().toISOString()
         });
@@ -74,7 +74,7 @@ async function configureX402Payments(app) {
               payTo
             }
           ],
-          description: 'GoalRush consensus soccer match prediction — GoalRush ASP #4564.',
+          description: 'GoalRush consensus soccer match prediction — GoalRush ASP #9819.',
           mimeType: 'application/json'
         },
         'GET /api/predict': {
@@ -87,7 +87,7 @@ async function configureX402Payments(app) {
               payTo
             }
           ],
-          description: 'GoalRush consensus soccer match prediction — GoalRush ASP #4564.',
+          description: 'GoalRush consensus soccer match prediction — GoalRush ASP #9819.',
           mimeType: 'application/json'
         }
       },

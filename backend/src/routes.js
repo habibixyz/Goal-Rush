@@ -377,7 +377,7 @@ router.get('/agent/logs', (req, res) => {
 });
 
 // ── GET & POST /api/predict ──────────────────────────────────
-// GoalRush ASP #4564 endpoint — multi-agent consensus swarm prediction.
+// GoalRush ASP #9819 endpoint — multi-agent consensus swarm prediction.
 // Payment gating handled by @x402/express middleware in server.js.
 // If a request reaches this handler, it has already passed payment verification.
 async function handlePredictRequest(req, res) {
@@ -477,7 +477,7 @@ Analyze the match based on the news and return a JSON object with your predictio
     
     const predictRes = {
       success: true,
-      service: "GoalRush Consensus Soccer Prediction Swarm (ASP #4564)",
+      service: "GoalRush Consensus Soccer Prediction Swarm (ASP #9819)",
       match_id,
       match: `${teamA} vs ${teamB}`,
       prediction: predictionName,

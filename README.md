@@ -140,11 +140,11 @@ npm run dev
 GoalRush is integrated with the official OKX Agentic Wallet, Agent Service Provider (ASP) standards, and the OKX Agent Payments Protocol (x402).
 
 ### 1. ASP Identity & Listing Status
-* **Agent ID**: `#4564`
+* **Agent ID**: `#9819`
 * **Name**: `GoalRush`
 * **Role**: `Agent Service Provider (ASP)`
-* **Status**: `Listing under review` (Resubmitted with verified payments integration)
-* **Owner Wallet Address**: `0xd96c9899b4d48c02efbd88dc22252a60dc6ee38d`
+* **Status**: `Listing registered` (Registered with verified payments integration)
+* **Owner Wallet Address**: `0xeaef8a2efb72bb4a337873da8a79adeebbc8af3b`
 
 ### 2. OKX Agent Payments Protocol (x402) Integration
 The `/api/predict` route handler is protected by the official `@x402/express` middleware. When queried directly, it issues an HTTP 402 challenge requesting payment:

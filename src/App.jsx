@@ -773,8 +773,8 @@ export default function App() {
   const [mintStatus, setMintStatus] = useState('');
   const [accessPassSupply, setAccessPassSupply] = useState('0');
   const ACCESS_PASS_ADDRESS = '0x953a03161A2e4be8E5e8405B74a254B336cdBe97'; // UPDATE ME AFTER DEPLOYMENT
-  const GOALRUSH_ASP_ID = '#4564';
-  const GOALRUSH_ASP_STATUS = 'Pending resubmission';
+  const GOALRUSH_ASP_ID = '#9819';
+  const GOALRUSH_ASP_STATUS = 'Pending activation';
   const GOALRUSH_ASP_FEE = '0.005 USDT';
   const GOALRUSH_ASP_NETWORK = 'X Layer (eip155:196)';
   const GOALRUSH_ASP_ASSET = '0x1E4a5963aBFD975d8c9021ce480b42188849D41d'; // Real USDT on X Layer

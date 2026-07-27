@@ -14,7 +14,7 @@ const serviceData = [
     "operation": "update",
     "id": "30861",
     "serviceName": "Match Prediction Oracle",
-    "serviceDescription": "Returns a high-confidence consensus winner for any GoalRush League match using a three-agent AI swarm vote. Optional: clientAddress wallet.",
+    "serviceDescription": "Returns a high-confidence consensus winner for any GoalRush League match using a three-agent AI swarm vote.\nProvide a valid matchId and an optional clientAddress wallet.",
     "serviceType": "A2MCP",
     "fee": "0.005",
     "endpoint": "https://goal-rush-backend-production.up.railway.app/api/predict"
@@ -24,8 +24,8 @@ const serviceData = [
 try {
   const result = spawnSync('onchainos.exe', [
     'agent', 'update',
-    '--agent-id', '4564',
-    '--picture', 'https://static.okx.com/cdn/web3/wallet/marketplace/headimages/agent/avatar/237b3ffc-e7e0-4d82-bbab-21939880a7a3.png',
+    '--agent-id', '9819',
+    '--picture', 'https://static.okx.com/cdn/web3/wallet/marketplace/headimages/agent/avatar/c1fbd9b7-d928-4ef7-8374-82e33a125603.png',
     '--service', JSON.stringify(serviceData)
   ], {
     encoding: 'utf-8',

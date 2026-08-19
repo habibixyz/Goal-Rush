@@ -20,7 +20,7 @@ async function fetchESPN() {
   const results = [];
   for (const league of ESPN_LEAGUES) {
     try {
-      const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${league.id}/scoreboard`;
+      const url = `https://site.web.api.espn.com/apis/site/v2/sports/soccer/${league.id}/scoreboard`;
       const { data } = await axios.get(url, { timeout: 8000 });
       const events = data?.events || [];
 

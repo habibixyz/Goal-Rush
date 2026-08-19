@@ -521,7 +521,7 @@ function fetchFromESPN(startDate, endDate) {
           path += `?dates=${startDate}-${endDate}`;
         }
         const options = {
-          hostname: 'site.api.espn.com',
+          hostname: 'site.web.api.espn.com',
           path: path,
           method: 'GET',
           timeout: 4000

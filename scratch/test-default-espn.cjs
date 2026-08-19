@@ -2,7 +2,15 @@ const https = require("https");
 
 function httpGet(url) {
   return new Promise((resolve, reject) => {
-    const req = https.get(url, { timeout: 8000 }, (res) => {
+    const req = https.get(url, {
+      timeout: 8000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://www.espn.com/',
+        'Origin': 'https://www.espn.com',
+        'Accept': 'application/json, text/plain, */*'
+      }
+    }, (res) => {
       let body = '';
       res.on('data', c => body += c);
       res.on('end', () => {
@@ -16,7 +24,7 @@ function httpGet(url) {
 }
 
 async function main() {
-  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard`;
+  const url = `https://site.web.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard`;
   console.log("Fetching default ESPN URL:", url);
   try {
     const data = await httpGet(url);

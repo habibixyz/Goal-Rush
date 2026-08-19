@@ -95,7 +95,7 @@ async function fetchESPN() {
   const allEvents = [];
   for (const leagueId of KEEPER_LEAGUES) {
     try {
-      const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueId}/scoreboard?dates=${dates}`;
+      const url = `https://site.web.api.espn.com/apis/site/v2/sports/soccer/${leagueId}/scoreboard?dates=${dates}`;
       const data = await httpGet(url);
       if (data.events && data.events.length > 0) {
         allEvents.push(...data.events);

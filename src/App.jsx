@@ -7191,17 +7191,20 @@ export default function App() {
       }
       const categoryMatches = liveMatches;
       const selectedMatch = categoryMatches.find(m => m.id === selectedMatchCenterId) || categoryMatches[0];
+      const nowMs = Date.now();
+      // A match is "stale" if its kickoff was more than 90 min ago but status is still not FT/live
+      const isStaleScheduled = m => !m.isLive && m.minute !== 'FT' && m.startTime && (nowMs - m.startTime) > 90 * 60 * 1000;
       const filteredMatches = categoryMatches.filter(m => {
         if (matchFilter === 'live') return m.isLive && m.minute !== 'FT';
-        if (matchFilter === 'completed') return m.minute === 'FT';
-        if (matchFilter === 'upcoming') return !m.isLive && m.minute !== 'FT';
+        if (matchFilter === 'completed') return m.minute === 'FT' || isStaleScheduled(m);
+        if (matchFilter === 'upcoming') return !m.isLive && m.minute !== 'FT' && !isStaleScheduled(m);
         return true;
       });
       const liveGroup = filteredMatches.filter(m => m.isLive && m.minute !== 'FT');
-      const todayUpcomingGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date === TODAY_LABEL);
-      const tomorrowGroup = filteredMatches.filter(m => m.date === TOMORROW_LABEL && !m.isLive && m.minute !== 'FT');
-      const completedGroup = filteredMatches.filter(m => m.minute === 'FT');
-      const upcomingFutureGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && m.date !== TODAY_LABEL && m.date !== TOMORROW_LABEL);
+      const todayUpcomingGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && !isStaleScheduled(m) && m.date === TODAY_LABEL);
+      const tomorrowGroup = filteredMatches.filter(m => m.date === TOMORROW_LABEL && !m.isLive && m.minute !== 'FT' && !isStaleScheduled(m));
+      const completedGroup = filteredMatches.filter(m => m.minute === 'FT' || isStaleScheduled(m));
+      const upcomingFutureGroup = filteredMatches.filter(m => !m.isLive && m.minute !== 'FT' && !isStaleScheduled(m) && m.date !== TODAY_LABEL && m.date !== TOMORROW_LABEL);
       const handleCategoryChange = category => {
         setCompetitionCategory(category);
         const targetMatches = liveMatches.filter(m => {
